@@ -2,10 +2,14 @@ import React, { useState } from "react";
 import SearchBar from "../SearchBar/SearchBar";
 import "./SideBar.css";
 import VendorMaster from "../Modals/VendorMaster";
+import api from "../../services/api";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const SideBar = () => {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [openSubmenus, setOpenSubmenus] = useState({});
+  const navigate = useNavigate();
 
   const [activeMenu, setIsActiveMenu] = useState(null);
   const toggleMenu = (menuItem) => {
@@ -95,6 +99,15 @@ const SideBar = () => {
       label: "Settings",
     },
   ];
+
+  const handleLogout = async () => {
+    try {
+      await api.post("/auth/logout");
+      navigate('/');
+    } catch (err) {
+      console.error("Logout Failed", err);
+    }
+  };
 
   const toggleSubmenu = (label) => {
     setOpenSubmenus((prev) => {
@@ -195,10 +208,13 @@ const SideBar = () => {
       <div className="mt-auto text-white d-flex align-items-center menuListItem">
         <ul className="nav nav-pills flex-column mb-auto">
           <li className="nav-item">
-            <a href="/logout" className="nav-link text-white">
+            <button
+              onClick={handleLogout}
+              className="nav-link text-white bg-transparent border-0"
+            >
               <i className="fas fa-sign-out-alt me-2"></i>{" "}
               {!isCollapsed && "Logout"}
-            </a>
+            </button>
           </li>
         </ul>
       </div>
