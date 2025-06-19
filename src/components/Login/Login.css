@@ -1,0 +1,45 @@
+.wrapper {
+    background: linear-gradient(135deg, var(--lightBlue1) 75%, var(--gray1) 25%);
+    box-shadow: 5px 10px var(--gray);
+}
+
+.leftPanel {
+    background: linear-gradient(135deg, var(--blue), var(--lightBlue));
+    border-radius: 20px 0px 0px 20px;
+    font-family: 'Montserrat';
+}
+
+.leftPanelImg {
+    height: 50%;
+    position: absolute;
+    right: 48rem;
+}
+
+.leftPanelTreeImg {
+    height: 120%;
+    width: 25%;
+}
+
+.textAlign {
+    margin-top: 20% !important; 
+}
+
+.rightPanel {
+    background-color: var(--white);
+    border-radius: 0px 20px 20px 0px;
+}
+
+.loginBtn {
+    background-color: var(--gold) !important;
+    color: var(--white) !important;
+}
+
+.loginBtn:hover {
+    background-color: var(--lightGold) !important;
+    color: var(--white) !important;
+    border-color: 1px solid var(--gold) !important;
+}
+
+.description {
+    color: var(--lightGray);
+}

@@ -1,0 +1,21 @@
+:root {
+    --white: white;
+    --white1: #c8c9cc;
+
+    --gold: #EB963C;
+    --lightGold: #eda557;
+
+    --lightGray: #85898c;
+    --gray: gray;
+    --gray1: #333538;
+    --gray2: #474b51;
+
+    --blue: #1E5CD0;
+    --blue1: #0d52bd;
+    --lightBlue: #5b80c4;
+    --lightBlue1: #dbe0ea;
+    --lightBlue2: #4880d3;
+
+    --coalBlack: #242424;
+    --coalBlackLight: #2d2d2d;
+}
