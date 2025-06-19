@@ -4,6 +4,9 @@ import "./SideBar.css";
 import VendorMaster from "../Forms/VendorMaster";
 import { AppContext } from "../../context/AppContext";
 import litWhiteLogo from "../../assets/images/litWhiteLogo.png";
+import api from "../../services/api";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const SideBar = () => {
   const { setRightSideComponent, setIsActiveComponent } =
@@ -11,6 +14,7 @@ const SideBar = () => {
 
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [openSubmenus, setOpenSubmenus] = useState({});
+  const navigate = useNavigate();
 
   const [activeMenu, setIsActiveMenu] = useState(null);
   const toggleMenu = (menuItem) => {
@@ -114,6 +118,15 @@ const SideBar = () => {
       label: "Settings",
     },
   ];
+
+  const handleLogout = async () => {
+    try {
+      await api.post("/auth/logout");
+      navigate('/');
+    } catch (err) {
+      console.error("Logout Failed", err);
+    }
+  };
 
   const toggleSubmenu = (label) => {
     setOpenSubmenus((prev) => {

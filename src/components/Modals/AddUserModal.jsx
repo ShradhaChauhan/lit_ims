@@ -1,6 +1,52 @@
-import React from "react";
+import React, { useState } from "react";
 
 const AddUserModal = () => {
+  const [accessModules, setAccessModules] = useState([]);
+
+  const handleCheckboxChange = (e) => {
+    const { id, checked } = e.target;
+
+    setAccessModules((prev) =>
+      checked ? [...prev, id] : prev.filter((item) => item !== id)
+    );
+  };
+
+  const modules = [
+    "vendorMaster",
+    "itemMaster",
+    "warehouseMaster",
+    "bom",
+    "typeMaster",
+    "groupMaster",
+    "partMaster",
+    "incoming",
+    "incomingMaster",
+    "iqc",
+    "requisition",
+    "issueProduction",
+    "requisitionReceipt",
+    "productionReceipt",
+    "wipReturn",
+  ];
+
+  const moduleLabels = {
+    vendorMaster: "Vendor Master",
+    itemMaster: "Item Master",
+    warehouseMaster: "Warehouse Master",
+    bom: "BOM",
+    typeMaster: "Type Master",
+    groupMaster: "Group Master",
+    partMaster: "Part Master",
+    incoming: "Incoming",
+    incomingMaster: "Incoming Reprint",
+    iqc: "IQC",
+    requisition: "Requisition",
+    issueProduction: "Issue Production",
+    requisitionReceipt: "Requisition Receipt",
+    productionReceipt: "Production Receipt",
+    wipReturn: "WIP Return",
+  };
+
   return (
     <div>
       <form>
@@ -22,6 +68,7 @@ const AddUserModal = () => {
             />
           </div>
         </div>
+
         <div className="row">
           <div className="col-6 d-flex align-items-center justify-content-center mt-2">
             <input
@@ -32,6 +79,7 @@ const AddUserModal = () => {
               disabled
             />
           </div>
+
           <div className="col-6 d-flex align-items-center mt-2">
             <div className="dropdown col-12">
               <button
@@ -41,130 +89,35 @@ const AddUserModal = () => {
               >
                 Access
               </button>
-              <ul className="dropdown-menu p-3">
-                <li>
-                  <input
-                    type="checkbox"
-                    className="form-check-input me-2"
-                    id="vendorMaster"
-                  />
-                  <label htmlFor="vendorMaster">Vendor Master</label>
-                </li>
-                <li>
-                  <input
-                    type="checkbox"
-                    className="form-check-input me-2"
-                    id="itemMaster"
-                  />
-                  <label htmlFor="itemMaster">Item Master</label>
-                </li>
-                <li>
-                  <input
-                    type="checkbox"
-                    className="form-check-input me-2"
-                    id="warehouseMaster"
-                  />
-                  <label htmlFor="warehouseMaster">Warehouse Master</label>
-                </li>
-                <li>
-                  <input
-                    type="checkbox"
-                    className="form-check-input me-2"
-                    id="bom"
-                  />
-                  <label htmlFor="bom">BOM</label>
-                </li>
-                <li>
-                  <input
-                    type="checkbox"
-                    className="form-check-input me-2"
-                    id="typeMaster"
-                  />
-                  <label htmlFor="typeMaster">Type Master</label>
-                </li>
-                <li>
-                  <input
-                    type="checkbox"
-                    className="form-check-input me-2"
-                    id="groupMaster"
-                  />
-                  <label htmlFor="groupMaster">Group Master</label>
-                </li>
-                <li>
-                  <input
-                    type="checkbox"
-                    className="form-check-input me-2"
-                    id="partMaster"
-                  />
-                  <label htmlFor="partMaster">Part Master</label>
-                </li>
-                <li>
-                  <input
-                    type="checkbox"
-                    className="form-check-input me-2"
-                    id="incoming"
-                  />
-                  <label htmlFor="incoming">Incoming</label>
-                </li>
-                <li>
-                  <input
-                    type="checkbox"
-                    className="form-check-input me-2"
-                    id="incomingMaster"
-                  />
-                  <label htmlFor="incomingMaster">Incoming Reprint</label>
-                </li>
-                <li>
-                  <input
-                    type="checkbox"
-                    className="form-check-input me-2"
-                    id="iqc"
-                  />
-                  <label htmlFor="iqc">IQC</label>
-                </li>
-                <li>
-                  <input
-                    type="checkbox"
-                    className="form-check-input me-2"
-                    id="requisition"
-                  />
-                  <label htmlFor="requisition">Requisition</label>
-                </li>{" "}
-                <li>
-                  <input
-                    type="checkbox"
-                    className="form-check-input me-2"
-                    id="issueProduction"
-                  />
-                  <label htmlFor="issueProduction">Issue Production</label>
-                </li>
-                <li>
-                  <input
-                    type="checkbox"
-                    className="form-check-input me-2"
-                    id="requisitionReceipt"
-                  />
-                  <label htmlFor="requisitionReceipt">
-                    Requisition Receipt
-                  </label>
-                </li>{" "}
-                <li>
-                  <input
-                    type="checkbox"
-                    className="form-check-input me-2"
-                    id="productionReceipt"
-                  />
-                  <label htmlFor="productionReceipt">Production Receipt</label>
-                </li>
-                <li>
-                  <input
-                    type="checkbox"
-                    className="form-check-input me-2"
-                    id="wipReturn"
-                  />
-                  <label htmlFor="wipReturn">WIP Return</label>
-                </li>
+
+              <ul
+                className="dropdown-menu p-3"
+                style={{ maxHeight: "300px", overflowY: "auto" }}
+              >
+                {modules.map((id) => (
+                  <li key={id}>
+                    <input
+                      type="checkbox"
+                      className="form-check-input me-2"
+                      id={id}
+                      checked={accessModules.includes(id)}
+                      onChange={handleCheckboxChange}
+                    />
+                    <label htmlFor={id}>{moduleLabels[id]}</label>
+                  </li>
+                ))}
               </ul>
+
+              {/* Selected Access Display */}
+              {accessModules.length > 0 && (
+                <div className="mt-2 ms-2 d-flex flex-wrap gap-2">
+                  {accessModules.map((id) => (
+                    <span key={id} className="badge bg-success">
+                      {moduleLabels[id]}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

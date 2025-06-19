@@ -3,6 +3,7 @@ import React from "react";
 const VendorMaster = () => {
   return (
     <div className="row">
+      {/* Add User Form */}
       <div className="col-10">
         <form>
           <div className="row">
@@ -71,6 +72,7 @@ const VendorMaster = () => {
           </div>
         </form>
       </div>
+      {/* Search bar */}
       <div className="col-2">
         <div className="search-container mx-1 mt-2 position-relative">
           <input
