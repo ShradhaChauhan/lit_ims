@@ -10,9 +10,13 @@ const Navbar = () => {
   const handleLogout = async (e) => {
     e.preventDefault();
     try {
-      await api.post("/auth/logout", {}, {
-        withCredentials: true,
-      });
+      await api.post(
+        "/auth/logout",
+        {},
+        {
+          withCredentials: true,
+        }
+      );
       navigate("/");
     } catch (error) {
       console.error("Logout failed", error);
@@ -21,7 +25,10 @@ const Navbar = () => {
 
   return (
     <div>
-      <nav className="navbar bg-dark border-bottom border-body" data-bs-theme="dark">
+      <nav
+        className="navbar bg-body-tertiary border-bottom border-body"
+        data-bs-theme="dark"
+      >
         <div className="container-fluid">
           <a className="navbar-brand" href="#">
             {activeComponent ? activeComponent : "Users"}
@@ -29,7 +36,10 @@ const Navbar = () => {
           <div>
             <ul className="nav nav-pills flex-column mb-auto">
               <li className="nav-item">
-                <button onClick={handleLogout} className="nav-link text-white btn btn-link p-0 text-decoration-none">
+                <button
+                  onClick={handleLogout}
+                  className="nav-link text-white btn btn-link p-0 text-decoration-none"
+                >
                   <i className="fas fa-sign-out-alt"></i> Logout
                 </button>
               </li>

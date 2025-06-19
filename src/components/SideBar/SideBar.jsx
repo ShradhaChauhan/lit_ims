@@ -1,7 +1,7 @@
 import React, { useContext, useState } from "react";
 import SearchBar from "../SearchBar/SearchBar";
 import "./SideBar.css";
-import VendorMaster from "../Forms/VendorMaster";
+import VendorMaster from "../Forms/VendorMaster/VendorMaster";
 import { AppContext } from "../../context/AppContext";
 import litWhiteLogo from "../../assets/images/litWhiteLogo.png";
 import api from "../../services/api";
@@ -122,7 +122,7 @@ const SideBar = () => {
   const handleLogout = async () => {
     try {
       await api.post("/auth/logout");
-      navigate('/');
+      navigate("/");
     } catch (err) {
       console.error("Logout Failed", err);
     }
@@ -244,40 +244,6 @@ const SideBar = () => {
           </div>
         </div>
       )}
-      {/* Modals */}
-      {/* {showModal && (
-        <div
-          className="modal show fade d-block"
-          tabIndex="-1"
-          role="dialog"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-        >
-          <div className="modal-dialog modal-lg" role="document">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">{showModal}</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setShowModel(null)}
-                ></button>
-              </div>
-              <div className="modal-body">
-                {showModal == "Vendor Master" && <VendorMaster />}
-              </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setShowModel(null)}
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )} */}
     </div>
   );
 };

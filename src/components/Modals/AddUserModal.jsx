@@ -111,10 +111,17 @@ const AddUserModal = () => {
               {/* Selected Access Display */}
               {accessModules.length > 0 && (
                 <div className="mt-2 ms-2 d-flex flex-wrap gap-2">
-                  {accessModules.map((id) => (
-                    <span key={id} className="badge bg-success">
-                      {moduleLabels[id]}
-                    </span>
+                  {accessModules.map((id, key) => (
+                    <div>
+                      <span key={id} className="badge bg-success">
+                        {moduleLabels[id]}
+                        {/* <button
+                          type="button"
+                          className="btn-close"
+                          onClick={() => ""}
+                        ></button> */}
+                      </span>
+                    </div>
                   ))}
                 </div>
               )}
