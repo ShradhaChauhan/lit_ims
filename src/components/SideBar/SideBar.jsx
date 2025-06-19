@@ -1,12 +1,17 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import SearchBar from "../SearchBar/SearchBar";
 import "./SideBar.css";
 import VendorMaster from "../Modals/VendorMaster";
+import { AppContext } from "../../context/AppContext";
+import litWhiteLogo from "../../assets/images/litWhiteLogo.png";
 import api from "../../services/api";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const SideBar = () => {
+  const { setRightSideComponent, setIsActiveComponent } =
+    useContext(AppContext);
+
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [openSubmenus, setOpenSubmenus] = useState({});
   const navigate = useNavigate();
@@ -15,7 +20,6 @@ const SideBar = () => {
   const toggleMenu = (menuItem) => {
     setIsActiveMenu((prev) => (prev === menuItem ? null : menuItem));
   };
-  const [showModal, setShowModel] = useState(null);
 
   const menuItems = [
     {
@@ -24,30 +28,37 @@ const SideBar = () => {
       submenu: [
         {
           label: "Vendor Master",
+          compName: "VendorMaster",
           icon: "fas fa-truck",
         },
         {
           label: "Item Master",
+          compName: "ItemMaster",
           icon: "fas fa-box",
         },
         {
           label: "Warehouse Master",
+          compName: "WarehouseMaster",
           icon: "fas fa-warehouse",
         },
         {
           label: "BOM",
+          compName: "BOM",
           icon: "fas fa-cubes",
         },
         {
           label: "Type Master",
+          compName: "TypeMaster",
           icon: "fas fa-list-alt",
         },
         {
           label: "Group Master",
+          compName: "GroupMaster",
           icon: "fas fa-layer-group",
         },
         {
           label: "Part Master",
+          compName: "PartMaster",
           icon: "fas fa-cog",
         },
       ],
@@ -58,34 +69,42 @@ const SideBar = () => {
       submenu: [
         {
           label: "Incoming",
+          compName: "Incoming",
           icon: "fas fa-arrow-down",
         },
         {
           label: "Incoming Reprint",
+          compName: "IncomingReprint",
           icon: "fas fa-print",
         },
         {
           label: "IQC",
+          compName: "IQC",
           icon: "fas fa-clipboard-check",
         },
         {
           label: "Requisition",
+          compName: "Requisition",
           icon: "fas fa-clipboard-list",
         },
         {
           label: "Issue Production",
+          compName: "IssueProduction",
           icon: "fas fa-cogs",
         },
         {
           label: "Requisition Receipt",
+          compName: "RequisitionReceipt",
           icon: "fas fa-clipboard",
         },
         {
           label: "Production Receipt",
+          compName: "ProductionReceipt",
           icon: "fas fa-cog",
         },
         {
           label: "WIP Return",
+          compName: "WIPReturn",
           icon: "fas fa-undo",
         },
       ],
@@ -122,6 +141,16 @@ const SideBar = () => {
     setIsActiveMenu((prev) => (prev === label ? null : label));
   };
 
+  const handleRightSideComponentName = (name) => {
+    name === "VendorMaster" && setRightSideComponent(<VendorMaster />);
+    name === "ItemMaster" && setRightSideComponent(<VendorMaster />);
+    name === "WarehouseMaster" && setRightSideComponent(<VendorMaster />);
+    name === "BOM" && setRightSideComponent(<VendorMaster />);
+    name === "TypeMaster" && setRightSideComponent(<VendorMaster />);
+    name === "GroupMaster" && setRightSideComponent(<VendorMaster />);
+    name === "PartMaster" && setRightSideComponent(<VendorMaster />);
+  };
+
   return (
     <div
       className={`d-flex flex-column vh-100 sidebar ${
@@ -129,18 +158,7 @@ const SideBar = () => {
       }`}
     >
       <div className="p-2 d-flex justify-content-between align-items-center">
-        <div>
-          <div className="col-12">
-            <span className="fs-5 fw-bold text-white ms-2">
-              {!isCollapsed && "John"}
-            </span>
-          </div>
-          <div className="col-12">
-            <div className="fs-6 fw-bold text-white ms-3">
-              <p>{!isCollapsed && "B1"}</p>
-            </div>
-          </div>
-        </div>
+        {!isCollapsed && <img src={litWhiteLogo} width={40} height={40} />}
         <button
           className="btn btn-sm btn-outline-light"
           onClick={() => setIsCollapsed(!isCollapsed)}
@@ -182,7 +200,10 @@ const SideBar = () => {
                     {item.submenu.map((sub, subIdx) => (
                       <li key={subIdx} className="nav-item">
                         <div
-                          onClick={() => setShowModel(sub.label)}
+                          onClick={() => {
+                            handleRightSideComponentName(sub.compName);
+                            setIsActiveComponent(sub.label);
+                          }}
                           className="nav-link text-white small menuListItem"
                         >
                           <span>
@@ -204,23 +225,27 @@ const SideBar = () => {
           </li>
         ))}
       </ul>
-
-      <div className="mt-auto text-white d-flex align-items-center menuListItem">
-        <ul className="nav nav-pills flex-column mb-auto">
-          <li className="nav-item">
-            <button
-              onClick={handleLogout}
-              className="nav-link text-white bg-transparent border-0"
-            >
-              <i className="fas fa-sign-out-alt me-2"></i>{" "}
-              {!isCollapsed && "Logout"}
-            </button>
-          </li>
-        </ul>
-      </div>
-
+      {!isCollapsed && (
+        <div className="ms-2">
+          <div className="row p-2">
+            <div className="col-2">
+              <a className="nav-link text-white userLogo">
+                <i className="d-flex justify-content-center fa-solid fa-user"></i>
+              </a>
+            </div>
+            <div className="col-10">
+              <div>
+                <span className="fs-5 fw-bold text-white">Hi! John</span>
+              </div>
+              <div className="fs-6 fw-bold text-white ms-3">
+                <p>B1</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Modals */}
-      {showModal && (
+      {/* {showModal && (
         <div
           className="modal show fade d-block"
           tabIndex="-1"
@@ -252,7 +277,7 @@ const SideBar = () => {
             </div>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 };

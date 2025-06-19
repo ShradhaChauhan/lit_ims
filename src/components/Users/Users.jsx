@@ -11,7 +11,9 @@ const Users = () => {
 
   return (
     <div>
-      <button onClick={handleAddUser}>Add User</button>
+      <button className="btn btn-secondary m-3" onClick={handleAddUser}>
+        Add User
+      </button>
 
       {/* Add User Modal */}
       {showAddUserModal && (
