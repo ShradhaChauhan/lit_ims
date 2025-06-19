@@ -225,7 +225,7 @@ const SideBar = () => {
                 <span className="fs-5 fw-bold text-white">Hi! John</span>
               </div>
               <div className="fs-6 fw-bold text-white ms-3">
-                <p>B1</p>
+                <p>Branch 1</p>
               </div>
             </div>
           </div>
