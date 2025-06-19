@@ -2,7 +2,7 @@ import React, { useContext } from "react";
 import SideBar from "../SideBar/SideBar";
 import Users from "../Users/Users";
 import { AppContext } from "../../context/AppContext";
-import Navbar from "../../Navbar/Navbar";
+import Navbar from "../Navbar/Navbar";
 
 const Dashboard = () => {
   const { rightSideComponent, setRightSideComponent } = useContext(AppContext);
@@ -18,7 +18,10 @@ const Dashboard = () => {
       <div className="w-100 d-none d-md-flex flex-column">
         {/* Navbar */}
         <Navbar />
-        {rightSideComponent ? rightSideComponent : <Users />}
+        {/* Content */}
+        <div className="p-2 mt-3">
+          {rightSideComponent ? rightSideComponent : <Users />}
+        </div>
       </div>
     </div>
   );

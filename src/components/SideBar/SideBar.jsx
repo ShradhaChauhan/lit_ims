@@ -1,7 +1,7 @@
 import React, { useContext, useState } from "react";
 import SearchBar from "../SearchBar/SearchBar";
 import "./SideBar.css";
-import VendorMaster from "../Modals/VendorMaster";
+import VendorMaster from "../Forms/VendorMaster";
 import { AppContext } from "../../context/AppContext";
 import litWhiteLogo from "../../assets/images/litWhiteLogo.png";
 
