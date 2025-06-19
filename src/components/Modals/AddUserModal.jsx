@@ -10,7 +10,7 @@ const AddUserModal = () => {
               type="text"
               className="form-control ms-2"
               id="userId"
-              placeholder="User ID"
+              placeholder="User Name"
             />
           </div>
           <div className="col-6 d-flex align-items-center justify-content-center mt-2">
