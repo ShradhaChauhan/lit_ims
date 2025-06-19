@@ -1,12 +1,27 @@
 import React, { useContext, useState } from "react";
 import SearchBar from "../SearchBar/SearchBar";
 import "./SideBar.css";
-import VendorMaster from "../Forms/VendorMaster/VendorMaster";
 import { AppContext } from "../../context/AppContext";
 import litWhiteLogo from "../../assets/images/litWhiteLogo.png";
 import api from "../../services/api";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+
+import VendorMaster from "../Forms/VendorMaster/VendorMaster";
+import ItemMaster from "../Forms/ItemMaster/ItemMaster";
+import WarehouseMaster from "../Forms/WarehouseMaster/WarehouseMaster";
+import BOM from "../Forms/BOM/BOM";
+import TypeMaster from "../Forms/TypeMaster/TypeMaster";
+import GroupMaster from "../Forms/GroupMaster/GroupMaster";
+import PartMaster from "../Forms/PartMaster/PartMaster";
+import Incoming from "../Forms/Incoming/Incoming";
+import IncomingReprint from "../Forms/IncomingReprint/IncomingReprint";
+import IQC from "../Forms/IQC/IQC";
+import Requisition from "../Forms/Requisition/Requisition";
+import IssueProduction from "../Forms/IssueProduction/IssueProduction";
+import RequisitionReceipt from "../Forms/RequisitionReceipt/RequisitionReceipt";
+import ProductionReceipt from "../Forms/ProductionReceipt/ProductionReceipt";
+import WIPReturn from "../Forms/WIPReturn/WIPReturn";
 
 const SideBar = () => {
   const { setRightSideComponent, setIsActiveComponent } =
@@ -142,13 +157,26 @@ const SideBar = () => {
   };
 
   const handleRightSideComponentName = (name) => {
+    // Master Submenu component list
     name === "VendorMaster" && setRightSideComponent(<VendorMaster />);
-    name === "ItemMaster" && setRightSideComponent(<VendorMaster />);
-    name === "WarehouseMaster" && setRightSideComponent(<VendorMaster />);
-    name === "BOM" && setRightSideComponent(<VendorMaster />);
-    name === "TypeMaster" && setRightSideComponent(<VendorMaster />);
-    name === "GroupMaster" && setRightSideComponent(<VendorMaster />);
-    name === "PartMaster" && setRightSideComponent(<VendorMaster />);
+    name === "ItemMaster" && setRightSideComponent(<ItemMaster />);
+    name === "WarehouseMaster" && setRightSideComponent(<WarehouseMaster />);
+    name === "BOM" && setRightSideComponent(<BOM />);
+    name === "TypeMaster" && setRightSideComponent(<TypeMaster />);
+    name === "GroupMaster" && setRightSideComponent(<GroupMaster />);
+    name === "PartMaster" && setRightSideComponent(<PartMaster />);
+
+    // Transaction Submenu component list
+    name === "Incoming" && setRightSideComponent(<Incoming />);
+    name === "IncomingReprint" && setRightSideComponent(<IncomingReprint />);
+    name === "IQC" && setRightSideComponent(<IQC />);
+    name === "Requisition" && setRightSideComponent(<Requisition />);
+    name === "IssueProduction" && setRightSideComponent(<IssueProduction />);
+    name === "RequisitionReceipt" &&
+      setRightSideComponent(<RequisitionReceipt />);
+    name === "ProductionReceipt" &&
+      setRightSideComponent(<ProductionReceipt />);
+    name === "WIPReturn" && setRightSideComponent(<WIPReturn />);
   };
 
   return (

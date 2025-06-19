@@ -1,19 +1,10 @@
-import React, { useState } from "react";
-import "./VendorMaster.css";
-import VendorModal from "../../Modals/VendorModal";
+import React from "react";
+import ItemMasterModal from "../../Modals/ItemMasterModal";
 
-const VendorMaster = () => {
-  const [showModal, setShowModal] = useState(false);
-  const [vendorName, setVendorName] = useState("");
-
-  const handleShowVendorDetails = (name) => {
-    setVendorName(name);
-    setShowModal(true);
-  };
-
+const ItemMaster = () => {
   return (
     <div className="row">
-      {/* Add Vendor Form */}
+      {/* Add User Form */}
       <div className="col-10">
         <form>
           <div className="row">
@@ -130,7 +121,7 @@ const VendorMaster = () => {
       </div>
 
       {/* Modal */}
-      <VendorModal
+      <ItemMasterModal
         vendorName={vendorName}
         showModal={showModal}
         setShowModal={setShowModal}
@@ -139,4 +130,4 @@ const VendorMaster = () => {
   );
 };
 
-export default VendorMaster;
+export default ItemMaster;
