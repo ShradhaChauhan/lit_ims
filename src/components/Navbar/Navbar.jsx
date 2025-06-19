@@ -1,7 +1,5 @@
 import React, { useContext } from "react";
-import { AppContext } from "../context/AppContext";
-import api from "../services/api";
-import { useNavigate } from "react-router-dom";
+import { AppContext } from "../../context/AppContext";
 
 const Navbar = () => {
   const { activeComponent } = useContext(AppContext);
