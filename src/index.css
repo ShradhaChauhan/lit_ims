@@ -1,3 +1,10 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
 :root {
     --white: white;
     --white1: #c8c9cc;
@@ -40,8 +47,11 @@
     --warning-color: #f59e0b;
     --background-color: #f8fafc;
     --sidebar-color: #1e293b;
-    --text-color: #334155;
-    --text-light: #94a3b8;
+    --text-color: #8D91AD;
+    --text-light-gray: #94a3b8;
+    --header-color: #334155;
     --border-color: #e2e8f0;
     --hover-color: #f1f5f9;
+    --hover-gray: rgba(255, 255, 255, 0.05);
+
 }

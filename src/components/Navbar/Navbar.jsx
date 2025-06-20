@@ -2,9 +2,10 @@ import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppContext } from "../../context/AppContext";
 import api from "../../services/api"; // Adjust if needed
+import "./Navbar.css";
 
 const Navbar = () => {
-  const { activeComponent } = useContext(AppContext);
+  const { activeComponent, setIsAddUser } = useContext(AppContext);
   const navigate = useNavigate();
 
   const handleLogout = async (e) => {
@@ -30,21 +31,26 @@ const Navbar = () => {
         data-bs-theme="light"
       >
         <div className="container-fluid">
-          <div className="ps-2 mt-2">
-            <h3>{activeComponent ? activeComponent : "Users"} Management</h3>
+          <div className="ps-3 mt-4">
+            <h3 className="nav-header">
+              {activeComponent ? activeComponent : "User"} Management
+            </h3>
             <p className="breadcrumb">
               <a href="#">
                 <i className="fas fa-home pe-2"></i>
               </a>{" "}
-              /
-              <span className="ps-2">
+              / Settings /
+              <span>
                 {activeComponent ? activeComponent : "User"} Management
               </span>
             </p>
           </div>
           {/* Add User Button */}
           {!activeComponent && (
-            <button className="btn btn-primary float-end border border-0 add-new me-3">
+            <button
+              className="btn btn-primary float-end border border-0 add-new me-3"
+              onClick={() => setIsAddUser(true)}
+            >
               <i className="fa-solid fa-user-plus"></i> Add New User
             </button>
           )}

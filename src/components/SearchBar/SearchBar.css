@@ -3,18 +3,20 @@
 }
 
 .search-input {
-    height: 40px;
+    margin: auto;
+    height: 2.2rem;
+    width: 90%;
     border-radius: 30px;
     padding-left: 35px;
     border: none;
-    border-radius: 30px !important;
+    border-radius: 10px !important;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 .search-icon {
     position: absolute;
     top: 50%;
-    left: 15px;
+    left: 1.5rem;
     transform: translateY(-50%);
     color: #888;
     left: '15px';

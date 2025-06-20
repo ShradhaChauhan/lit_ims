@@ -1,6 +1,21 @@
+/* Sidebar Styles */
+.heading {
+  color: var(--text-color);  
+  font-size: 0.8rem;
+  padding-top: 20px;
+  padding-left: 20px;
+  display: flex;
+  align-items: center;
+  margin: 0;
+}
+
+.border-top {
+  margin-top: 20px;
+}
+
 .sidebar {
   width: 240px;
-  background-color: var(--blue1);
+  background-color: var(--sidebar-color);
   transition: width 0.3s ease;
   overflow-y: auto;
   overflow-x: hidden;
@@ -21,18 +36,79 @@
   border-radius: 10px;
 }
 
+.menuListItem {
+  font-size: 0.9rem;
+  color: var(--text-color) !important;
+  cursor: pointer;
+}
+
 .menuListItem:hover {
-  background-color: var(--lightBlue2);
-  font-size: 18px;
+  background-color: var(--hover-gray);
+  font-size: 0.95rem;
 }
 
 .searchBar {
   background-color: var(--white1) !important;
 }
 
-.userLogo {
-  border-radius: 100%;
-  border: 1px solid white;
-  padding: 10px;
-  width: 2rem;
+.user-profile {
+    margin-top: auto;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.user-details p {
+    font-size: 0.9rem;
+}
+
+.user-details small {
+    color: var(--text-light);
+    font-size: 0.8rem;
+}
+
+.profile-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background-color: rgba(255, 255, 255, 0.05);
+    margin-right: 10px !important;
+    cursor: pointer;
+}
+
+.profile-info img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--primary-light);
+}
+
+.user-details p {
+    font-size: 0.9rem;
+}
+
+.user-details small {
+    color: var(--white);
+    font-size: 0.8rem;
+}
+
+.logout {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-color) !important;
+    text-decoration: none;
+    padding: 0.75rem 1rem;
+    margin-bottom: 20px;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.logout:hover {
+    color: white;
+    background-color: var(--hover-gray);
 }

@@ -128,10 +128,6 @@ const SideBar = () => {
       icon: "fas fa-chart-pie",
       label: "Reports",
     },
-    {
-      icon: "fas fa-sliders-h",
-      label: "Settings",
-    },
   ];
 
   const handleLogout = async () => {
@@ -191,9 +187,7 @@ const SideBar = () => {
           className="btn btn-sm btn-outline-light"
           onClick={() => setIsCollapsed(!isCollapsed)}
         >
-          <i
-            className={`fas fa-${isCollapsed ? "angle-right" : "angle-left"}`}
-          ></i>
+          <i className="fa-solid fa-bars"></i>
         </button>
       </div>
 
@@ -201,6 +195,7 @@ const SideBar = () => {
       <SearchBar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
 
       {/* Menu Items */}
+      {!isCollapsed && <p className="heading">MAIN MENU</p>}
       <ul className="nav nav-pills flex-column mb-auto mt-3">
         {menuItems.map((item, idx) => (
           <li key={idx} className="nav-item">
@@ -209,7 +204,6 @@ const SideBar = () => {
                 <div
                   className="nav-link text-white d-flex justify-content-between align-items-center menuListItem"
                   onClick={() => toggleSubmenu(item.label)}
-                  style={{ cursor: "pointer" }}
                 >
                   <span>
                     <i className={`${item.icon} me-2`}></i>
@@ -252,23 +246,33 @@ const SideBar = () => {
             )}
           </li>
         ))}
+
+        {!isCollapsed && <p className="heading">ADMINISTRATION</p>}
+        <li className="nav-item">
+          <a className="nav-link text-white menuListItem mt-3">
+            <i className="fas fa-sliders-h me-2"></i>
+            {!isCollapsed && "Settings"}
+          </a>
+        </li>
       </ul>
       {!isCollapsed && (
         <div className="ms-2">
-          <div className="row p-2">
-            <div className="col-2">
-              <a className="nav-link text-white userLogo">
-                <i className="d-flex justify-content-center fa-solid fa-user"></i>
-              </a>
-            </div>
-            <div className="col-10">
-              <div>
-                <span className="fs-5 fw-bold text-white">Hi! John</span>
+          <div className="user-profile">
+            <div className="profile-info" title="John Doe">
+              <img
+                src="https://ui-avatars.com/api/?name=John+Doe&background=2563eb&color=fff"
+                alt="Profile"
+              />
+              <div className="user-details">
+                <p className="m-0 text-white">
+                  Hi, <span>John Doe</span>
+                </p>
+                <small>Administrator</small>
               </div>
-              <div className="fs-6 fw-bold text-white ms-3">
-                <p>Branch 1</p>
-              </div>
             </div>
+            <button onClick={handleLogout} className="btn logout">
+              <i className="fas fa-sign-out-alt"></i> Logout
+            </button>
           </div>
         </div>
       )}

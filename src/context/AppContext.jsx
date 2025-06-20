@@ -5,12 +5,15 @@ export const AppContext = createContext();
 const AppContextProvider = (props) => {
   const [rightSideComponent, setRightSideComponent] = useState(null);
   const [activeComponent, setIsActiveComponent] = useState(null);
+  const [isAddUser, setIsAddUser] = useState(false);
 
   const value = {
     rightSideComponent,
     setRightSideComponent,
     activeComponent,
     setIsActiveComponent,
+    isAddUser,
+    setIsAddUser,
   };
 
   return (
