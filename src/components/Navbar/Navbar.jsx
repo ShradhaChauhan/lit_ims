@@ -26,25 +26,40 @@ const Navbar = () => {
   return (
     <div>
       <nav
-        className="navbar bg-body-tertiary border-bottom border-body"
-        data-bs-theme="dark"
+        className="navbar bg-light border-bottom border-body"
+        data-bs-theme="light"
       >
         <div className="container-fluid">
-          <a className="navbar-brand" href="#">
-            {activeComponent ? activeComponent : "Users"}
-          </a>
-          <div>
+          <div className="ps-2 mt-2">
+            <h3>{activeComponent ? activeComponent : "Users"} Management</h3>
+            <p className="breadcrumb">
+              <a href="#">
+                <i className="fas fa-home pe-2"></i>
+              </a>{" "}
+              /
+              <span className="ps-2">
+                {activeComponent ? activeComponent : "User"} Management
+              </span>
+            </p>
+          </div>
+          {/* Add User Button */}
+          {!activeComponent && (
+            <button className="btn btn-primary float-end border border-0 add-new me-3">
+              <i className="fa-solid fa-user-plus"></i> Add New User
+            </button>
+          )}
+          {/* <div>
             <ul className="nav nav-pills flex-column mb-auto">
               <li className="nav-item">
                 <button
                   onClick={handleLogout}
-                  className="nav-link text-white btn btn-link p-0 text-decoration-none"
+                  className="nav-link text-black btn btn-link p-0 text-decoration-none"
                 >
                   <i className="fas fa-sign-out-alt"></i> Logout
                 </button>
               </li>
             </ul>
-          </div>
+          </div> */}
         </div>
       </nav>
     </div>

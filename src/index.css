@@ -5,6 +5,9 @@
     --gold: #EB963C;
     --lightGold: #eda557;
 
+    --lightYellow: #FEF7E7;
+    --yellow: #EA9D19;
+
     --lightGray: #85898c;
     --gray: gray;
     --gray1: #333538;
@@ -16,6 +19,29 @@
     --lightBlue1: #dbe0ea;
     --lightBlue2: #4880d3;
 
+    --lightBlue3: #E9EFFB;
+    --blue3: #306AE7;
+
     --coalBlack: #242424;
     --coalBlackLight: #2d2d2d;
+
+    --lightGreen: #EEF9EB;
+    --green: #36BC5D;
+
+    --red: rgb(240, 53, 53);
+    --lightRed: rgba(239, 68, 68, 0.1);
+
+    --primary-color: #2563eb;
+    --primary-dark: #1d4ed8;
+    --primary-light: #60a5fa;
+    --secondary-color: #64748b;
+    --success-color: #35c469;
+    --danger-color: #ef4444;
+    --warning-color: #f59e0b;
+    --background-color: #f8fafc;
+    --sidebar-color: #1e293b;
+    --text-color: #334155;
+    --text-light: #94a3b8;
+    --border-color: #e2e8f0;
+    --hover-color: #f1f5f9;
 }
