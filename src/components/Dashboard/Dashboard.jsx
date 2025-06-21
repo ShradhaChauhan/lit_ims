@@ -3,6 +3,7 @@ import SideBar from "../SideBar/SideBar";
 import Users from "../Users/Users";
 import { AppContext } from "../../context/AppContext";
 import Navbar from "../Navbar/Navbar";
+import "./Dashboard.css";
 
 const Dashboard = () => {
   const { rightSideComponent, setRightSideComponent } = useContext(AppContext);
@@ -19,7 +20,7 @@ const Dashboard = () => {
         {/* Navbar */}
         <Navbar />
         {/* Content */}
-        <div className="p-2 mt-3">
+        <div className="p-2 mt-3 right-side-div">
           {rightSideComponent ? rightSideComponent : <Users />}
         </div>
       </div>

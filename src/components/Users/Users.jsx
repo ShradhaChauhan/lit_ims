@@ -52,26 +52,20 @@ const Users = () => {
     wipReturn: "WIP Return",
   };
 
-  // const handleAddUser = () => {
-  //   // Add User Logic
-  //   setShowAddUserModal(true);
-  // };
-
   return (
     <div>
       {/* Search and Filter Section */}
       <div className="search-filter-container">
-        {/* <div className="form-control search-input">
-          <i className="fas fa-search"></i>
-          <input type="text" placeholder="Search by users by name" />
-        </div> */}
         <div className="search-container col-md-8">
-          <input
-            type="text"
-            className="form-control search-input ps-5"
-            placeholder="Search..."
-          />
-          <i className="fas fa-search search-icon position-absolute"></i>
+          <div className="position-relative w-100">
+            <i className="fas fa-search position-absolute input-icon"></i>
+            <input
+              type="text"
+              className="form-control search-bar-style ps-5"
+              id="userId"
+              placeholder="Search users by name, email, or role..."
+            />
+          </div>
         </div>
         <div className="filter-options">
           <select className="filter-select">
@@ -96,9 +90,13 @@ const Users = () => {
               <h2>
                 <i className="fas fa-user-plus"></i> Add New User
               </h2>
+              <button className="btn-close" onClick={() => setIsAddUser(false)}>
+                <i className="fas fa-xmark"></i>
+              </button>
             </div>
-            <form autoComplete="off" className="userForm">
-              <div className="row">
+            {/* Form Fields Section */}
+            <form autoComplete="off" className="righ-side-form">
+              <div className="row form-style">
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="userId" className="form-label">
                     User Name
@@ -124,11 +122,12 @@ const Users = () => {
                       className="form-control ps-5"
                       id="email"
                       placeholder="Enter Email"
+                      autoComplete="off"
                     />
                   </div>
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="userId" className="form-label">
+                  <label htmlFor="pass" className="form-label">
                     Password
                   </label>
                   <div className="position-relative w-100">
@@ -136,13 +135,14 @@ const Users = () => {
                     <input
                       type="password"
                       className="form-control ps-5 ms-2"
-                      id="password"
-                      placeholder="Password"
+                      id="pass"
+                      placeholder="Enter your password"
+                      autoComplete="off"
                     />
                   </div>
                 </div>
               </div>
-              <div className="row mt-2">
+              <div className="row form-style">
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="role" className="form-label">
                     Role
@@ -160,6 +160,7 @@ const Users = () => {
                       <option value="executive">Executive</option>
                       <option value="manager">Manager</option>
                     </select>
+                    <i class="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                   </div>
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
@@ -178,6 +179,7 @@ const Users = () => {
                       <option value="production">Production</option>
                       <option value="store">Store</option>
                     </select>
+                    <i class="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                   </div>
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
@@ -196,13 +198,14 @@ const Users = () => {
                       <option value="active">Active</option>
                       <option value="inactive">Inactive</option>
                     </select>
+                    <i class="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                   </div>
                 </div>
               </div>
               <div>
                 <p className="text-heading">Module Permissions</p>
-                <div className="row">
-                  <div className="col-md-3 table-list-container">
+                <div className="row form-style">
+                  <div className="table-list-container">
                     <table>
                       <thead>
                         <tr>
@@ -320,7 +323,7 @@ const Users = () => {
                       </tbody>
                     </table>
                   </div>
-                  <div className="col-md-3 table-list-container">
+                  <div className="table-list-container">
                     <table>
                       <thead>
                         <tr>
@@ -473,7 +476,7 @@ const Users = () => {
                       </tbody>
                     </table>
                   </div>
-                  <div className="col-md-3 table-list-container">
+                  <div className="table-list-container">
                     <table>
                       <thead>
                         <tr>
@@ -540,7 +543,7 @@ const Users = () => {
                       </tbody>
                     </table>
                   </div>
-                  <div className="col-md-3 table-list-container">
+                  <div className="table-list-container">
                     <table>
                       <thead>
                         <tr>
@@ -627,14 +630,14 @@ const Users = () => {
                   </div>
                 </div>
               </div>
-              <button className="btn btn-primary border border-0 add-user-btn me-3 mb-3 mt-3 float-end">
-                <i className="fa-solid fa-floppy-disk"></i> Save Changes
-              </button>
               <button
                 className="btn btn-primary border border-0 add-user-btn me-3 mb-3 mt-3 float-end"
                 onClick={() => setIsAddUser(false)}
               >
                 <i className="fa-solid fa-xmark"></i> Cancel
+              </button>
+              <button className="btn btn-secondary border border-0 add-user-btn me-3 mb-3 mt-3 float-end">
+                <i className="fa-solid fa-floppy-disk"></i> Save Changes
               </button>
               <div className="row">
                 <div className="col-6 d-flex align-items-center mt-2">
@@ -689,21 +692,23 @@ const Users = () => {
           </div>
         </div>
       )}
-      <div className="table-form-container">
+      <div>
         {/* Table Section */}
         <div className="table-container">
           {/* Table Header */}
           <div className="table-header">
             <div className="selected-count">
               <input type="checkbox" id="select-all" />
-              <label htmlFor="select-all">0 Selected</label>
+              <label className="select-label" htmlFor="select-all">
+                0 Selected
+              </label>
             </div>
             <div className="bulk-actions">
-              <button className="btn btn-outline-success">
+              <button className="btn btn-outline-success btn-style">
                 <i className="fas fa-envelope pe-2"></i>
                 Email Selected
               </button>
-              <button className="btn btn-outline-danger">
+              <button className="btn btn-outline-danger btn-style">
                 <i className="fas fa-trash pe-2"></i>
                 Delete Selected
               </button>

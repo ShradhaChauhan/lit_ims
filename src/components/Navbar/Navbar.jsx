@@ -5,7 +5,8 @@ import api from "../../services/api"; // Adjust if needed
 import "./Navbar.css";
 
 const Navbar = () => {
-  const { activeComponent, setIsAddUser } = useContext(AppContext);
+  const { activeComponent, setIsAddUser, setIsAddVendor } =
+    useContext(AppContext);
   const navigate = useNavigate();
 
   const handleLogout = async (e) => {
@@ -37,9 +38,9 @@ const Navbar = () => {
             </h3>
             <p className="breadcrumb">
               <a href="#">
-                <i className="fas fa-home pe-2"></i>
+                <i className="fas fa-home"></i>
               </a>{" "}
-              / Settings /
+              {activeComponent ? "" : "/ Settings "}/
               <span>
                 {activeComponent ? activeComponent : "User"} Management
               </span>
@@ -47,11 +48,13 @@ const Navbar = () => {
           </div>
           {/* Add User Button */}
           {!activeComponent && (
-            <button
-              className="btn btn-primary float-end border border-0 add-new me-3"
-              onClick={() => setIsAddUser(true)}
-            >
+            <button className="add-btn" onClick={() => setIsAddUser(true)}>
               <i className="fa-solid fa-user-plus"></i> Add New User
+            </button>
+          )}
+          {activeComponent === "Vendor & Customer" && (
+            <button className="add-btn" onClick={() => setIsAddVendor(true)}>
+              <i className="fa-solid fa-plus"></i> Add New
             </button>
           )}
           {/* <div>

@@ -42,7 +42,7 @@ const SideBar = () => {
       label: "Master",
       submenu: [
         {
-          label: "Vendor Master",
+          label: "Vendor & Customer",
           compName: "VendorMaster",
           icon: "fas fa-truck",
         },
