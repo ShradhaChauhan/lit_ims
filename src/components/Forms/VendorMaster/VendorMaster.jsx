@@ -5,6 +5,52 @@ import { AppContext } from "../../../context/AppContext";
 
 const VendorMaster = () => {
   const { isAddVendor, setIsAddVendor } = useContext(AppContext);
+  const [selectedVendors, setSelectedVendors] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
+
+  const handleVendorCheckboxChange = (vendorId) => {
+    setSelectedVendors((prevSelected) =>
+      prevSelected.includes(vendorId)
+        ? prevSelected.filter((id) => id !== vendorId)
+        : [...prevSelected, vendorId]
+    );
+  };
+
+  const handleSelectAllChange = (e) => {
+    const checked = e.target.checked;
+    setSelectAll(checked);
+    if (checked) {
+      const allVendorIds = vendors.map((vendor) => vendor.id);
+      setSelectedVendors(allVendorIds);
+    } else {
+      setSelectedVendors([]);
+    }
+  };
+
+  const vendors = [
+    {
+      id: 1,
+      name: "John Smith",
+      type: "Vendor",
+      mobile: "+1 234 567 890",
+      email: "john@example.com",
+      img: "https://ui-avatars.com/api/?name=John+Smith&size=32&background=2563eb&color=fff",
+      city: "New York",
+      pincode: "210250",
+      status: "Active",
+    },
+    {
+      id: 2,
+      name: "Sarah Johnson",
+      type: "Customer",
+      mobile: "+1 234 567 891",
+      email: "sarah@example.com",
+      img: "https://ui-avatars.com/api/?name=John+Smith&size=32&background=2563eb&color=fff",
+      city: "Los Angeles",
+      pincode: "100201",
+      status: "Inactive",
+    },
+  ];
 
   return (
     <div className="">
@@ -66,7 +112,7 @@ const VendorMaster = () => {
                     <option value="vendor">Vendor</option>
                     <option value="customer">Customer</option>
                   </select>
-                  <i class="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                  <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                 </div>
               </div>
               <div className="col-4 d-flex flex-column form-group">
@@ -145,11 +191,25 @@ const VendorMaster = () => {
                 </div>
               </div>
               <div className="col-4 d-flex flex-column form-group">
+                <label htmlFor="pincode" className="form-label">
+                  Pincode
+                </label>
+                <div className="position-relative w-100">
+                  <i className="fa-solid fa-map-pin position-absolute input-icon"></i>
+                  <input
+                    type="text"
+                    className="form-control ps-5 ms-2"
+                    id="pincode"
+                    placeholder="Enter pincode"
+                  />
+                </div>
+              </div>
+              <div className="col-4 d-flex flex-column form-group">
                 <label htmlFor="state" className="form-label">
                   State
                 </label>
                 <div className="position-relative w-100">
-                  <i className="fa-solid fa-map-pin position-absolute input-icon"></i>
+                  <i className="fa-solid fa-location-crosshairs position-absolute input-icon"></i>
                   <input
                     type="text"
                     className="form-control ps-5 ms-2"
@@ -190,7 +250,7 @@ const VendorMaster = () => {
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
                   </select>
-                  <i class="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                  <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                 </div>
               </div>
             </div>
@@ -211,8 +271,15 @@ const VendorMaster = () => {
       <div className="table-container">
         <div className="table-header">
           <div className="selected-count">
-            <input type="checkbox" id="select-all" />
-            <label htmlFor="select-all">0 Selected</label>
+            <input
+              type="checkbox"
+              id="select-all"
+              checked={selectAll}
+              onChange={handleSelectAllChange}
+            />
+            <label htmlFor="select-all">
+              {selectedVendors.length} Selected
+            </label>
           </div>
           <div className="bulk-actions">
             <button className="btn btn-outline-success btn-style">
@@ -244,79 +311,52 @@ const VendorMaster = () => {
               <th>
                 City <i className="fas fa-sort"></i>
               </th>
+              <th>Pincode</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td className="checkbox-cell">
-                <input type="checkbox" />
-              </td>
-              <td>
-                <div className="user-info">
-                  <img
-                    src="https://ui-avatars.com/api/?name=John+Smith&size=32&background=2563eb&color=fff"
-                    alt="John Smith"
+            {vendors.map((vendor) => (
+              <tr key={vendor.id}>
+                <td className="checkbox-cell">
+                  <input
+                    type="checkbox"
+                    checked={selectedVendors.includes(vendor.id)}
+                    onChange={() => handleVendorCheckboxChange(vendor.id)}
                   />
-                  <span>John Smith</span>
-                </div>
-              </td>
-              <td>
-                <span className="badge vendor">Vendor</span>
-              </td>
-              <td>john@example.com</td>
-              <td>+1 234 567 890</td>
-              <td>New York</td>
-              <td>
-                <span className="status active">Active</span>
-              </td>
-              <td className="actions">
-                <button className="btn-icon btn-primary" title="View Details">
-                  <i className="fas fa-eye"></i>
-                </button>
-                <button className="btn-icon btn-success" title="Edit">
-                  <i className="fas fa-edit"></i>
-                </button>
-                <button className="btn-icon btn-danger" title="Delete">
-                  <i className="fas fa-trash"></i>
-                </button>
-              </td>
-            </tr>
-            <tr>
-              <td className="checkbox-cell">
-                <input type="checkbox" />
-              </td>
-              <td>
-                <div className="user-info">
-                  <img
-                    src="https://ui-avatars.com/api/?name=Sarah+Johnson&size=32&background=2563eb&color=fff"
-                    alt="Sarah Johnson"
-                  />
-                  <span>Sarah Johnson</span>
-                </div>
-              </td>
-              <td>
-                <span className="badge customer">Customer</span>
-              </td>
-              <td>sarah@example.com</td>
-              <td>+1 234 567 891</td>
-              <td>Los Angeles</td>
-              <td>
-                <span className="status inactive">Inactive</span>
-              </td>
-              <td className="actions">
-                <button className="btn-icon  btn-primary" title="View Details">
-                  <i className="fas fa-eye"></i>
-                </button>
-                <button className="btn-icon  btn-success" title="Edit">
-                  <i className="fas fa-edit"></i>
-                </button>
-                <button className="btn-icon btn-danger" title="Delete">
-                  <i className="fas fa-trash"></i>
-                </button>
-              </td>
-            </tr>
+                </td>
+                <td>
+                  <div className="user-info">
+                    <img src={vendor.img} alt={vendor.name} />
+                    <span>{vendor.name}</span>
+                  </div>
+                </td>
+                <td>
+                  <span>{vendor.type}</span>
+                </td>
+                <td>{vendor.email}</td>
+                <td>{vendor.mobile}</td>
+                <td>{vendor.city}</td>
+                <td>{vendor.pincode}</td>
+                <td>
+                  <span className={`status ${vendor.status.toLowerCase()}`}>
+                    {vendor.status}
+                  </span>
+                </td>
+                <td className="actions">
+                  <button className="btn-icon btn-primary" title="View Details">
+                    <i className="fas fa-eye"></i>
+                  </button>
+                  <button className="btn-icon btn-success" title="Edit">
+                    <i className="fas fa-edit"></i>
+                  </button>
+                  <button className="btn-icon btn-danger" title="Delete">
+                    <i className="fas fa-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
 

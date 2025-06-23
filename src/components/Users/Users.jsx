@@ -7,6 +7,48 @@ const Users = () => {
   const { isAddUser, setIsAddUser } = useContext(AppContext);
 
   const [accessModules, setAccessModules] = useState([]);
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
+
+  const users = [
+    {
+      id: 1,
+      name: "John Smith",
+      role: "Admin",
+      time: "2024-02-20 10:30 AM",
+      email: "john@example.com",
+      img: "https://ui-avatars.com/api/?name=John+Smith&size=32&background=2563eb&color=fff",
+      status: "Active",
+    },
+    {
+      id: 2,
+      name: "Mike Johnson",
+      role: "Manager",
+      time: "2024-06-12 08:52 AM",
+      email: "mike@example.com",
+      img: "https://ui-avatars.com/api/?name=Mike+Johnson&size=32&background=2563eb&color=fff",
+      status: "Inactive",
+    },
+  ];
+
+  const handleUserCheckboxChange = (userId) => {
+    setSelectedUsers((prevSelected) =>
+      prevSelected.includes(userId)
+        ? prevSelected.filter((id) => id !== userId)
+        : [...prevSelected, userId]
+    );
+  };
+
+  const handleSelectAllChange = (e) => {
+    const checked = e.target.checked;
+    setSelectAll(checked);
+    if (checked) {
+      const allUserIds = users.map((user) => user.id);
+      setSelectedUsers(allUserIds);
+    } else {
+      setSelectedUsers([]);
+    }
+  };
 
   const handleCheckboxChange = (e) => {
     const { id, checked } = e.target;
@@ -160,7 +202,7 @@ const Users = () => {
                       <option value="executive">Executive</option>
                       <option value="manager">Manager</option>
                     </select>
-                    <i class="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                    <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                   </div>
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
@@ -179,7 +221,7 @@ const Users = () => {
                       <option value="production">Production</option>
                       <option value="store">Store</option>
                     </select>
-                    <i class="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                    <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                   </div>
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
@@ -198,7 +240,7 @@ const Users = () => {
                       <option value="active">Active</option>
                       <option value="inactive">Inactive</option>
                     </select>
-                    <i class="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                    <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                   </div>
                 </div>
               </div>
@@ -698,10 +740,20 @@ const Users = () => {
           {/* Table Header */}
           <div className="table-header">
             <div className="selected-count">
-              <input type="checkbox" id="select-all" />
+              <input
+                type="checkbox"
+                id="select-all"
+                checked={selectAll}
+                onChange={handleSelectAllChange}
+              />
+              <label htmlFor="select-all">
+                {selectedUsers.length} Selected
+              </label>
+
+              {/* <input type="checkbox" id="select-all" />
               <label className="select-label" htmlFor="select-all">
                 0 Selected
-              </label>
+              </label> */}
             </div>
             <div className="bulk-actions">
               <button className="btn btn-outline-success btn-style">
@@ -738,40 +790,50 @@ const Users = () => {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td className="checkbox-cell">
-                  <input type="checkbox" />
-                </td>
-                <td>
-                  <div className="user-info">
-                    <img
-                      src="https://ui-avatars.com/api/?name=John+Smith&size=32&background=2563eb&color=fff"
-                      alt="John Smith"
+              {users.map((user) => (
+                <tr key={user.id}>
+                  <td className="checkbox-cell">
+                    <input
+                      type="checkbox"
+                      checked={selectedUsers.includes(user.id)}
+                      onChange={() => handleUserCheckboxChange(user.id)}
                     />
-                    <span>John Smith</span>
-                  </div>
-                </td>
-                <td>
-                  <span className="badge admin">Admin</span>
-                </td>
-                <td>john@example.com</td>
-                <td>2024-02-20 10:30 AM</td>
-                <td>
-                  <span className="status active">active</span>
-                </td>
-                <td className="actions">
-                  <button className="btn-icon btn-primary" title="View Details">
-                    <i className="fas fa-eye"></i>
-                  </button>
-                  <button className="btn-icon btn-success" title="Edit">
-                    <i className="fas fa-edit"></i>
-                  </button>
-                  <button className="btn-icon btn-danger" title="Delete">
-                    <i className="fas fa-trash"></i>
-                  </button>
-                </td>
-              </tr>
-              <tr>
+                  </td>
+                  <td>
+                    <div className="user-info">
+                      <img src={user.img} alt={user.name} />
+                      <span>{user.name}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span className={`badge ${user.role.toLowerCase()}`}>
+                      {user.role}
+                    </span>
+                  </td>
+                  <td>{user.email}</td>
+                  <td>{user.time}</td>
+                  <td>
+                    <span className={`status ${user.status.toLowerCase()}`}>
+                      {user.status}
+                    </span>
+                  </td>
+                  <td className="actions">
+                    <button
+                      className="btn-icon btn-primary"
+                      title="View Details"
+                    >
+                      <i className="fas fa-eye"></i>
+                    </button>
+                    <button className="btn-icon btn-success" title="Edit">
+                      <i className="fas fa-edit"></i>
+                    </button>
+                    <button className="btn-icon btn-danger" title="Delete">
+                      <i className="fas fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {/* <tr>
                 <td className="checkbox-cell">
                   <input type="checkbox" />
                 </td>
@@ -803,7 +865,7 @@ const Users = () => {
                     <i className="fas fa-trash"></i>
                   </button>
                 </td>
-              </tr>
+              </tr> */}
             </tbody>
           </table>
 
