@@ -191,20 +191,6 @@ const VendorMaster = () => {
                 </div>
               </div>
               <div className="col-4 d-flex flex-column form-group">
-                <label htmlFor="pincode" className="form-label">
-                  Pincode
-                </label>
-                <div className="position-relative w-100">
-                  <i className="fa-solid fa-map-pin position-absolute input-icon"></i>
-                  <input
-                    type="text"
-                    className="form-control ps-5 ms-2"
-                    id="pincode"
-                    placeholder="Enter pincode"
-                  />
-                </div>
-              </div>
-              <div className="col-4 d-flex flex-column form-group">
                 <label htmlFor="state" className="form-label">
                   State
                 </label>
@@ -220,6 +206,20 @@ const VendorMaster = () => {
               </div>
             </div>
             <div className="row form-style">
+              <div className="col-4 d-flex flex-column form-group">
+                <label htmlFor="pincode" className="form-label">
+                  Pincode
+                </label>
+                <div className="position-relative w-100">
+                  <i className="fa-solid fa-map-pin position-absolute input-icon"></i>
+                  <input
+                    type="text"
+                    className="form-control ps-5 ms-2"
+                    id="pincode"
+                    placeholder="Enter pincode"
+                  />
+                </div>
+              </div>
               <div className="col-4 d-flex flex-column form-group">
                 <label htmlFor="address" className="form-label">
                   Address
