@@ -252,10 +252,11 @@
 
 .search-box input {
     width: 100%;
-    padding: 0.75rem 1rem 0.75rem 2.5rem;
+    padding: 0.5rem 2.5rem;
     border: 1px solid var(--border-color);
     border-radius: 0.5rem;
-    font-size: 0.9rem;
+    font-size: 1rem;
+    font-weight: 400;
     transition: all 0.3s ease;
 }
 
@@ -284,7 +285,7 @@
 }
 
 .btn-filter {
-    padding: 0.75rem 1.5rem;
+    padding: 0.5rem 1rem;
     border: 1px solid var(--border-color);
     border-radius: 0.5rem;
     background-color: white;
@@ -634,7 +635,7 @@ tbody tr:hover {
   left: 15px;
   transform: translateY(-50%);
   position: absolute;
-  color: #aaa;
+  color: #aaa !important;
   font-size: 1rem;
   z-index: 10;
   pointer-events: none;
@@ -692,4 +693,9 @@ tbody tr:hover {
     float: left;
     font-weight: 500;
     font-size: 0.9rem;
+}
+
+/* Global text related styles */
+.text-center {
+    text-align: center;
 }

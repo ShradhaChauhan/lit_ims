@@ -21,7 +21,15 @@
 }
 
 .textAlign {
-    margin-top: 20% !important; 
+    margin-top: 5% !important; 
+}
+
+.margin-top-10 {
+    margin-top: 10%;
+}
+
+.margin-bottom-5 {
+    margin-top: 5%;
 }
 
 .rightPanel {
