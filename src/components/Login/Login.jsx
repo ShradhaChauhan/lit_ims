@@ -58,7 +58,7 @@ const Login = () => {
             <div className="mb-3">
               <input
                 type="text"
-                className="form-control"
+                className="form-control text-color-gray"
                 placeholder="Username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -67,21 +67,27 @@ const Login = () => {
             <div className="mb-3">
               <input
                 type="password"
-                className="form-control"
+                className="form-control text-color-gray"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
             <div className="dropdown mb-3">
-              <select className="form-select" aria-label="Branch">
+              <select
+                className="form-select text-color-gray"
+                aria-label="Branch"
+              >
                 <option selected>Select branch</option>
                 <option value="iqc">IQC</option>
                 <option value="production">Production</option>
               </select>
             </div>
             <div className="dropdown mb-3">
-              <select className="form-select" aria-label="Database">
+              <select
+                className="form-select text-color-gray"
+                aria-label="Database"
+              >
                 <option selected>Select database</option>
                 <option value="1">A.124</option>
                 <option value="2">A.250</option>
