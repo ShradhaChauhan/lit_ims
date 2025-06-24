@@ -5,8 +5,16 @@ import api from "../../services/api"; // Adjust if needed
 import "./Navbar.css";
 
 const Navbar = () => {
-  const { activeComponent, setIsAddUser, setIsAddVendor } =
-    useContext(AppContext);
+  const {
+    activeComponent,
+    setIsAddUser,
+    setIsAddVendor,
+    setIsAddItem,
+    setIsAddWarehouse,
+    setIsAddType,
+    setIsAddGroup,
+    setIsAddPart,
+  } = useContext(AppContext);
   const navigate = useNavigate();
 
   const handleLogout = async (e) => {
@@ -55,6 +63,31 @@ const Navbar = () => {
           )}
           {activeComponent === "Vendor & Customer" && (
             <button className="add-btn" onClick={() => setIsAddVendor(true)}>
+              <i className="fa-solid fa-plus"></i> Add New
+            </button>
+          )}
+          {activeComponent === "Item Master" && (
+            <button className="add-btn" onClick={() => setIsAddItem(true)}>
+              <i className="fa-solid fa-plus"></i> Add New
+            </button>
+          )}
+          {activeComponent === "Warehouse Master" && (
+            <button className="add-btn" onClick={() => setIsAddWarehouse(true)}>
+              <i className="fa-solid fa-plus"></i> Add New
+            </button>
+          )}
+          {activeComponent === "Type Master" && (
+            <button className="add-btn" onClick={() => setIsAddType(true)}>
+              <i className="fa-solid fa-plus"></i> Add New
+            </button>
+          )}
+          {activeComponent === "Group Master" && (
+            <button className="add-btn" onClick={() => setIsAddGroup(true)}>
+              <i className="fa-solid fa-plus"></i> Add New
+            </button>
+          )}
+          {activeComponent === "Part Master" && (
+            <button className="add-btn" onClick={() => setIsAddPart(true)}>
               <i className="fa-solid fa-plus"></i> Add New
             </button>
           )}

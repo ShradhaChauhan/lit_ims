@@ -1,12 +1,14 @@
 import React, { useContext, useState } from "react";
 import "./VendorMaster.css";
-import VendorModal from "../../Modals/VendorModal";
 import { AppContext } from "../../../context/AppContext";
 
 const VendorMaster = () => {
   const { isAddVendor, setIsAddVendor } = useContext(AppContext);
   const [selectedVendors, setSelectedVendors] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
+  const [isReset, setIsReset] = useState(false);
+  const [formData, setFormData] = useState({});
+
   const initialFormState = {
     type: "",
     name: "",
@@ -18,7 +20,6 @@ const VendorMaster = () => {
     address: "",
     status: "",
   };
-  const [formData, setFormData] = useState(initialFormState);
 
   const handleChange = (e) => {
     const { type, name, mobile, email, city, state, pincode, address, status } =
@@ -38,7 +39,13 @@ const VendorMaster = () => {
   };
 
   const handleReset = () => {
-    setFormData(initialFormState); // 🔁 Reset to initial state
+    alert("Coming soon...");
+    // setFormData(initialFormState);
+  };
+
+  const handleAddVendor = () => {
+    e.preventDefault();
+    alert("Coming soon...");
   };
 
   const handleVendorCheckboxChange = (vendorId) => {
@@ -122,9 +129,10 @@ const VendorMaster = () => {
             <h2>
               <i className="fas fa-user-plus"></i> Add New Item
             </h2>
-            <button className="btn-close" onClick={() => setIsAddVendor(false)}>
-              <i className="fa-solid fa-xmark"></i>
-            </button>
+            <button
+              className="btn-close"
+              onClick={() => setIsAddVendor(false)}
+            ></button>
           </div>
           {/* Form Fields */}
           <form autoComplete="off" className="padding-2">
@@ -308,14 +316,17 @@ const VendorMaster = () => {
               </div>
             </div>
             <div className="form-actions">
-              <button className="btn btn-primary border border-0 add-user-btn me-3 float-end">
+              <button
+                className="btn btn-primary border border-0 add-btn me-3 float-end"
+                onClick={handleAddVendor}
+              >
                 <i className="fa-solid fa-floppy-disk me-1"></i> Save Changes
               </button>
               <button
-                className="btn btn-secondary border border-0 add-user-btn me-3 float-end"
-                onClick={handleReset}
+                className="btn btn-secondary border border-0 add-btn bg-secondary me-3 float-end"
+                onClick={() => setIsReset(true)}
               >
-                <i className="fa-solid fa-xmark me-1"></i> Reset
+                <i className="fa-solid fa-arrows-rotate me-1"></i> Reset
               </button>
             </div>
           </form>

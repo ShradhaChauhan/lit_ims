@@ -639,13 +639,13 @@ const Users = () => {
               </div>
               <div className="form-actions">
                 <button
-                  className="btn btn-primary border border-0 add-user-btn me-3 float-end"
+                  className="btn btn-primary border border-0 add-btn me-3 float-end"
                   onClick={handleAddUser}
                 >
                   <i className="fa-solid fa-floppy-disk me-1"></i> Save Changes
                 </button>
                 <button
-                  className="btn btn-secondary border border-0 add-user-btn me-3 float-end"
+                  className="btn btn-secondary border border-0 bg-secondary add-btn me-3 float-end"
                   onClick={() => setIsReset(true)}
                 >
                   {/* <i className="fa-solid fa-xmark me-1"></i> */}
