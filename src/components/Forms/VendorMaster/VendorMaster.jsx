@@ -7,6 +7,39 @@ const VendorMaster = () => {
   const { isAddVendor, setIsAddVendor } = useContext(AppContext);
   const [selectedVendors, setSelectedVendors] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
+  const initialFormState = {
+    type: "",
+    name: "",
+    mobile: "",
+    email: "",
+    city: "",
+    state: "",
+    pincode: "",
+    address: "",
+    status: "",
+  };
+  const [formData, setFormData] = useState(initialFormState);
+
+  const handleChange = (e) => {
+    const { type, name, mobile, email, city, state, pincode, address, status } =
+      e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [type]: type,
+      [name]: name,
+      [mobile]: mobile,
+      [email]: email,
+      [city]: city,
+      [state]: state,
+      [pincode]: pincode,
+      [address]: address,
+      [status]: status,
+    }));
+  };
+
+  const handleReset = () => {
+    setFormData(initialFormState); // 🔁 Reset to initial state
+  };
 
   const handleVendorCheckboxChange = (vendorId) => {
     setSelectedVendors((prevSelected) =>
@@ -53,7 +86,7 @@ const VendorMaster = () => {
   ];
 
   return (
-    <div className="">
+    <div>
       {/* Search and Filter Section */}
       <div className="search-filter-container">
         <div className="search-box">
@@ -75,8 +108,8 @@ const VendorMaster = () => {
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
           </select>
-          <button className="btn-filter more-filter">
-            <i className="fas fa-filter"></i>
+          <button className="filter-select">
+            <i className="fas fa-filter me-2"></i>
             More Filters
           </button>
         </div>
@@ -87,78 +120,87 @@ const VendorMaster = () => {
         <div className="table-form-container">
           <div className="form-header">
             <h2>
-              <i className="fas fa-user-plus"></i> Add New Vendor/Customer
+              <i className="fas fa-user-plus"></i> Add New Item
             </h2>
             <button className="btn-close" onClick={() => setIsAddVendor(false)}>
               <i className="fa-solid fa-xmark"></i>
             </button>
           </div>
           {/* Form Fields */}
-          <form autoComplete="off" className="righ-side-form">
-            <div className="row form-style">
-              <div className="col-4 d-flex flex-column form-group">
-                <label htmlFor="type" className="form-label">
-                  Type
-                </label>
-                <div className="position-relative w-100">
-                  <i className="fas fa-user-tag position-absolute input-icon"></i>
-                  <select
-                    className="form-control ps-5 ms-2"
-                    id="type"
-                    placeholder="Type"
-                    data-bs-toggle="dropdown"
-                  >
-                    <option value="">Select Type</option>
-                    <option value="vendor">Vendor</option>
-                    <option value="customer">Customer</option>
-                  </select>
-                  <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+          <form autoComplete="off" className="padding-2">
+            <div className="form-grid border-bottom pt-0">
+              <div className="row form-style">
+                <div className="col-4 d-flex flex-column form-group">
+                  <label htmlFor="type" className="form-label ms-2">
+                    Type
+                  </label>
+                  <div className="position-relative w-100">
+                    <i className="fas fa-user-tag position-absolute input-icon"></i>
+                    <select
+                      className="form-control ps-5 ms-2 text-font"
+                      id="type"
+                      placeholder="Type"
+                      data-bs-toggle="dropdown"
+                      value={formData.type}
+                      onChange={handleChange}
+                    >
+                      <option value="">Select Type</option>
+                      <option value="vendor">Vendor</option>
+                      <option value="customer">Customer</option>
+                    </select>
+                    <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                  </div>
+                </div>
+                <div className="col-4 d-flex flex-column form-group">
+                  <label htmlFor="name" className="form-label  ms-2">
+                    Name
+                  </label>
+                  <div className="position-relative w-100">
+                    <i className="fas fa-user position-absolute input-icon"></i>
+                    <input
+                      type="text"
+                      className="form-control ps-5 text-font"
+                      id="name"
+                      placeholder="Enter full name"
+                      value={formData.name}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
+                <div className="col-4 d-flex flex-column form-group">
+                  <label htmlFor="mobile" className="form-label  ms-2">
+                    Mobile
+                  </label>
+                  <div className="position-relative w-100">
+                    <i className="fas fa-phone position-absolute input-icon"></i>
+                    <input
+                      type="tel"
+                      className="form-control ps-5 ms-2 text-font"
+                      id="mobile"
+                      placeholder="Enter mobile number"
+                      value={formData.mobile}
+                      onChange={handleChange}
+                    />
+                  </div>
                 </div>
               </div>
-              <div className="col-4 d-flex flex-column form-group">
-                <label htmlFor="name" className="form-label">
-                  Name
-                </label>
-                <div className="position-relative w-100">
-                  <i className="fas fa-user position-absolute input-icon"></i>
-                  <input
-                    type="text"
-                    className="form-control ps-5"
-                    id="name"
-                    placeholder="Enter full name"
-                  />
-                </div>
-              </div>
-              <div className="col-4 d-flex flex-column form-group">
-                <label htmlFor="mobile" className="form-label">
-                  Mobile
-                </label>
-                <div className="position-relative w-100">
-                  <i className="fas fa-phone position-absolute input-icon"></i>
-                  <input
-                    type="tel"
-                    className="form-control ps-5 ms-2"
-                    id="mobile"
-                    placeholder="Enter mobile number"
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="row form-style">
-              <div className="col-4 d-flex flex-column form-group">
-                <label htmlFor="email" className="form-label">
-                  Email
-                </label>
-                <div className="position-relative w-100">
-                  <i className="fa-solid fa-envelope position-absolute input-icon"></i>
-                  <input
-                    type="email"
-                    className="form-control ps-5 ms-2"
-                    id="email"
-                    placeholder="Enter email address"
-                  />
-                </div>
-                {/* <label htmlFor="role" className="form-label">
+              <div className="row form-style">
+                <div className="col-4 d-flex flex-column form-group">
+                  <label htmlFor="email" className="form-label  ms-2">
+                    Email
+                  </label>
+                  <div className="position-relative w-100">
+                    <i className="fa-solid fa-envelope position-absolute input-icon"></i>
+                    <input
+                      type="email"
+                      className="form-control ps-5 ms-2 text-font"
+                      id="email"
+                      placeholder="Enter email address"
+                      value={formData.email}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  {/* <label htmlFor="role" className="form-label">
                 Role
               </label>
               <div className="position-relative w-100">
@@ -175,214 +217,232 @@ const VendorMaster = () => {
                   <option value="manager">Manager</option>
                 </select>
               </div> */}
-              </div>
-              <div className="col-4 d-flex flex-column form-group">
-                <label htmlFor="city" className="form-label">
-                  City
-                </label>
-                <div className="position-relative w-100">
-                  <i className="fas fa-city position-absolute input-icon"></i>
-                  <input
-                    type="text"
-                    className="form-control ps-5 ms-2"
-                    id="city"
-                    placeholder="Enter city"
-                  />
+                </div>
+                <div className="col-4 d-flex flex-column form-group">
+                  <label htmlFor="city" className="form-label  ms-2">
+                    City
+                  </label>
+                  <div className="position-relative w-100">
+                    <i className="fas fa-city position-absolute input-icon"></i>
+                    <input
+                      type="text"
+                      className="form-control ps-5 ms-2 text-font"
+                      id="city"
+                      placeholder="Enter city"
+                      value={formData.city}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
+                <div className="col-4 d-flex flex-column form-group">
+                  <label htmlFor="state" className="form-label  ms-2">
+                    State
+                  </label>
+                  <div className="position-relative w-100">
+                    <i className="fa-solid fa-location-crosshairs position-absolute input-icon"></i>
+                    <input
+                      type="text"
+                      className="form-control ps-5 ms-2 text-font"
+                      id="state"
+                      placeholder="Enter state"
+                      value={formData.state}
+                      onChange={handleChange}
+                    />
+                  </div>
                 </div>
               </div>
-              <div className="col-4 d-flex flex-column form-group">
-                <label htmlFor="state" className="form-label">
-                  State
-                </label>
-                <div className="position-relative w-100">
-                  <i className="fa-solid fa-location-crosshairs position-absolute input-icon"></i>
-                  <input
-                    type="text"
-                    className="form-control ps-5 ms-2"
-                    id="state"
-                    placeholder="Enter state"
-                  />
+              <div className="row form-style">
+                <div className="col-4 d-flex flex-column form-group">
+                  <label htmlFor="pincode" className="form-label  ms-2">
+                    Pincode
+                  </label>
+                  <div className="position-relative w-100">
+                    <i className="fa-solid fa-map-pin position-absolute input-icon"></i>
+                    <input
+                      type="text"
+                      className="form-control ps-5 ms-2 text-font"
+                      id="pincode"
+                      placeholder="Enter pincode"
+                      value={formData.pincode}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
+                <div className="col-4 d-flex flex-column form-group">
+                  <label htmlFor="address" className="form-label  ms-2">
+                    Address
+                  </label>
+                  <div className="position-relative w-100">
+                    <i className="fas fa-map-marker-alt position-absolute input-icon"></i>
+                    <textarea
+                      type="text"
+                      className="form-control ps-5 ms-2 text-font"
+                      id="address"
+                      placeholder="Enter complete address"
+                      value={formData.address}
+                      onChange={handleChange}
+                    ></textarea>
+                  </div>
+                </div>
+                <div className="col-4 d-flex flex-column form-group">
+                  <label htmlFor="status" className="form-label  ms-2">
+                    Status
+                  </label>
+                  <div className="position-relative w-100">
+                    <i className="fa-solid fa-toggle-on position-absolute input-icon"></i>
+                    <select
+                      className="form-control ps-5 ms-2 text-font"
+                      id="status"
+                      placeholder="Status"
+                      data-bs-toggle="dropdown"
+                      value={formData.status}
+                      onChange={handleChange}
+                    >
+                      <option value="">Select Status</option>
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
+                    <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="row form-style">
-              <div className="col-4 d-flex flex-column form-group">
-                <label htmlFor="pincode" className="form-label">
-                  Pincode
-                </label>
-                <div className="position-relative w-100">
-                  <i className="fa-solid fa-map-pin position-absolute input-icon"></i>
-                  <input
-                    type="text"
-                    className="form-control ps-5 ms-2"
-                    id="pincode"
-                    placeholder="Enter pincode"
-                  />
-                </div>
-              </div>
-              <div className="col-4 d-flex flex-column form-group">
-                <label htmlFor="address" className="form-label">
-                  Address
-                </label>
-                <div className="position-relative w-100">
-                  <i className="fas fa-map-marker-alt position-absolute input-icon"></i>
-                  <textarea
-                    type="text"
-                    className="form-control ps-5 ms-2"
-                    id="address"
-                    placeholder="Enter complete address"
-                  ></textarea>
-                </div>
-              </div>
-              <div className="col-4 d-flex flex-column form-group">
-                <label htmlFor="status" className="form-label">
-                  Status
-                </label>
-                <div className="position-relative w-100">
-                  <i className="fa-solid fa-toggle-on position-absolute input-icon"></i>
-                  <select
-                    className="form-control ps-5 ms-2"
-                    id="status"
-                    placeholder="Status"
-                    data-bs-toggle="dropdown"
-                  >
-                    <option value="">Select Status</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
-                  <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
-                </div>
-              </div>
+            <div className="form-actions">
+              <button className="btn btn-primary border border-0 add-user-btn me-3 float-end">
+                <i className="fa-solid fa-floppy-disk me-1"></i> Save Changes
+              </button>
+              <button
+                className="btn btn-secondary border border-0 add-user-btn me-3 float-end"
+                onClick={handleReset}
+              >
+                <i className="fa-solid fa-xmark me-1"></i> Reset
+              </button>
             </div>
-            <button
-              className="btn btn-primary border border-0 add-user-btn me-3 mb-3 mt-3 float-end"
-              onClick={() => setIsAddVendor(false)}
-            >
-              <i className="fa-solid fa-xmark"></i> Cancel
-            </button>
-            <button className="btn btn-secondary border border-0 add-user-btn me-3 mb-3 mt-3 float-end">
-              <i className="fa-solid fa-floppy-disk"></i> Save Changes
-            </button>
           </form>
         </div>
       )}
 
-      {/* Table Section */}
-      <div className="table-container">
-        <div className="table-header">
-          <div className="selected-count">
-            <input
-              type="checkbox"
-              id="select-all"
-              checked={selectAll}
-              onChange={handleSelectAllChange}
-            />
-            <label htmlFor="select-all">
-              {selectedVendors.length} Selected
-            </label>
+      <div className="margin-2">
+        {/* Table Section */}
+        <div className="table-container">
+          <div className="table-header">
+            <div className="selected-count">
+              <input
+                type="checkbox"
+                id="select-all"
+                checked={selectAll}
+                onChange={handleSelectAllChange}
+              />
+              <label htmlFor="select-all">
+                {selectedVendors.length} Selected
+              </label>
+            </div>
+            <div className="bulk-actions">
+              <button className="btn-action">
+                <i className="fas fa-envelope"></i>
+                Email Selected
+              </button>
+              <button className="btn-action btn-danger">
+                <i className="fas fa-trash"></i>
+                Delete Selected
+              </button>
+            </div>
           </div>
-          <div className="bulk-actions">
-            <button className="btn btn-outline-success btn-style">
-              <i className="fas fa-envelope pe-2"></i>
-              Email Selected
-            </button>
-            <button className="btn btn-outline-danger btn-style">
-              <i className="fas fa-trash pe-2"></i>
-              Delete Selected
-            </button>
-          </div>
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th className="checkbox-cell">
-                <input type="checkbox" id="select-all" />
-              </th>
-              <th>
-                Name <i className="fas fa-sort"></i>
-              </th>
-              <th>
-                Type <i className="fas fa-sort"></i>
-              </th>
-              <th>
-                Email <i className="fas fa-sort"></i>
-              </th>
-              <th>Mobile</th>
-              <th>
-                City <i className="fas fa-sort"></i>
-              </th>
-              <th>Pincode</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {vendors.map((vendor) => (
-              <tr key={vendor.id}>
-                <td className="checkbox-cell">
-                  <input
-                    type="checkbox"
-                    checked={selectedVendors.includes(vendor.id)}
-                    onChange={() => handleVendorCheckboxChange(vendor.id)}
-                  />
-                </td>
-                <td>
-                  <div className="user-info">
-                    <img src={vendor.img} alt={vendor.name} />
-                    <span>{vendor.name}</span>
-                  </div>
-                </td>
-                <td>
-                  <span>{vendor.type}</span>
-                </td>
-                <td>{vendor.email}</td>
-                <td>{vendor.mobile}</td>
-                <td>{vendor.city}</td>
-                <td>{vendor.pincode}</td>
-                <td>
-                  <span className={`status ${vendor.status.toLowerCase()}`}>
-                    {vendor.status}
-                  </span>
-                </td>
-                <td className="actions">
-                  <button className="btn-icon btn-primary" title="View Details">
-                    <i className="fas fa-eye"></i>
-                  </button>
-                  <button className="btn-icon btn-success" title="Edit">
-                    <i className="fas fa-edit"></i>
-                  </button>
-                  <button className="btn-icon btn-danger" title="Delete">
-                    <i className="fas fa-trash"></i>
-                  </button>
-                </td>
+          <table>
+            <thead>
+              <tr>
+                <th className="checkbox-cell">
+                  <input type="checkbox" id="select-all" />
+                </th>
+                <th>
+                  Name <i className="fas fa-sort color-gray ms-2"></i>
+                </th>
+                <th>
+                  Type <i className="fas fa-sort color-gray ms-2"></i>
+                </th>
+                <th>
+                  Email <i className="fas fa-sort color-gray ms-2"></i>
+                </th>
+                <th>Mobile</th>
+                <th>
+                  City <i className="fas fa-sort color-gray ms-2"></i>
+                </th>
+                <th>Pincode</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {vendors.map((vendor) => (
+                <tr key={vendor.id}>
+                  <td className="checkbox-cell">
+                    <input
+                      type="checkbox"
+                      checked={selectedVendors.includes(vendor.id)}
+                      onChange={() => handleVendorCheckboxChange(vendor.id)}
+                    />
+                  </td>
+                  <td>
+                    <div className="user-info">
+                      <img src={vendor.img} alt={vendor.name} />
+                      <span>{vendor.name}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span className={`badge ${vendor.type.toLowerCase()}`}>
+                      {vendor.type}
+                    </span>
+                  </td>
+                  <td>{vendor.email}</td>
+                  <td>{vendor.mobile}</td>
+                  <td>{vendor.city}</td>
+                  <td>{vendor.pincode}</td>
+                  <td>
+                    <span
+                      className={`badge status ${vendor.status.toLowerCase()}`}
+                    >
+                      {vendor.status}
+                    </span>
+                  </td>
+                  <td className="actions">
+                    <button
+                      className="btn-icon btn-primary"
+                      title="View Details"
+                    >
+                      <i className="fas fa-eye"></i>
+                    </button>
+                    <button className="btn-icon btn-success" title="Edit">
+                      <i className="fas fa-edit"></i>
+                    </button>
+                    <button className="btn-icon btn-danger" title="Delete">
+                      <i className="fas fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
 
-        {/* Pagination */}
-        <div className="pagination-container">
-          <div className="pagination-info">Showing 1-2 of 25 entries</div>
-          <div className="pagination">
-            <button className="btn-page" disabled>
-              <i className="fas fa-chevron-left"></i>
-            </button>
-            <button className="btn-page active">1</button>
-            <button className="btn-page">2</button>
-            <button className="btn-page">3</button>
-            <span className="pagination-ellipsis">...</span>
-            <button className="btn-page">12</button>
-            <button className="btn-page">
-              <i className="fas fa-chevron-right"></i>
-            </button>
-          </div>
-          <div className="items-per-page">
-            <select>
-              <option value="10">10 per page</option>
-              <option value="25">25 per page</option>
-              <option value="50">50 per page</option>
-              <option value="100">100 per page</option>
-            </select>
+          {/* Pagination */}
+          <div className="pagination-container">
+            <div className="pagination-info">Showing 1-2 of 25 entries</div>
+            <div className="pagination">
+              <button className="btn-page" disabled>
+                <i className="fas fa-chevron-left"></i>
+              </button>
+              <button className="btn-page active">1</button>
+              <button className="btn-page disabled">
+                <i className="fas fa-chevron-right"></i>
+              </button>
+            </div>
+            <div className="items-per-page">
+              <select>
+                <option value="10">10 per page</option>
+                <option value="25">25 per page</option>
+                <option value="50">50 per page</option>
+                <option value="100">100 per page</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>

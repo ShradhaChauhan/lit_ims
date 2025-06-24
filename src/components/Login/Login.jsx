@@ -54,7 +54,7 @@ const Login = () => {
             Monitor inventory levels and streamline operations
           </p> */}
           {error && <div className="alert alert-danger">{error}</div>}
-          <form>
+          <form className="mt-4">
             <div className="mb-3">
               <input
                 type="text"
@@ -83,7 +83,7 @@ const Login = () => {
                 <option value="production">Production</option>
               </select>
             </div>
-            <div className="dropdown mb-3">
+            {/* <div className="dropdown mb-3">
               <select
                 className="form-select text-color-gray"
                 aria-label="Database"
@@ -92,7 +92,7 @@ const Login = () => {
                 <option value="1">A.124</option>
                 <option value="2">A.250</option>
               </select>
-            </div>
+            </div> */}
             <div className="form-check mb-4">
               <input
                 type="checkbox"

@@ -182,7 +182,7 @@ const SideBar = () => {
       }`}
     >
       <div className="p-2 d-flex justify-content-between align-items-center">
-        {!isCollapsed && <img src={litWhiteLogo} width={40} height={40} />}
+        {!isCollapsed && <img src={litWhiteLogo} width={60} height={60} />}
         <button
           className="btn btn-sm btn-outline-light"
           onClick={() => setIsCollapsed(!isCollapsed)}
@@ -252,6 +252,12 @@ const SideBar = () => {
           <a className="nav-link text-white menuListItem mt-3">
             <i className="fas fa-sliders-h me-2"></i>
             {!isCollapsed && "Settings"}
+          </a>
+        </li>
+        <li className="nav-item">
+          <a className="nav-link text-white menuListItem">
+            <i className="fa-solid fa-layer-group me-2"></i>
+            {!isCollapsed && "Logs"}
           </a>
         </li>
       </ul>

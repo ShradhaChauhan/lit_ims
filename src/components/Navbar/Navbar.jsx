@@ -27,14 +27,13 @@ const Navbar = () => {
 
   return (
     <div>
-      <nav
-        className="navbar bg-light border-bottom border-body"
-        data-bs-theme="light"
-      >
+      <nav className="navbar bg-light border-body" data-bs-theme="light">
         <div className="container-fluid">
           <div className="ps-3 mt-4">
             <h3 className="nav-header">
-              {activeComponent ? activeComponent : "User"} Management
+              {activeComponent
+                ? activeComponent + " Management"
+                : "Business Partner"}
             </h3>
             <p className="breadcrumb">
               <a href="#">
@@ -42,7 +41,9 @@ const Navbar = () => {
               </a>{" "}
               {activeComponent ? "" : "/ Settings "}/
               <span>
-                {activeComponent ? activeComponent : "User"} Management
+                {activeComponent
+                  ? activeComponent + " Management"
+                  : "Business Partner"}
               </span>
             </p>
           </div>
@@ -57,18 +58,6 @@ const Navbar = () => {
               <i className="fa-solid fa-plus"></i> Add New
             </button>
           )}
-          {/* <div>
-            <ul className="nav nav-pills flex-column mb-auto">
-              <li className="nav-item">
-                <button
-                  onClick={handleLogout}
-                  className="nav-link text-black btn btn-link p-0 text-decoration-none"
-                >
-                  <i className="fas fa-sign-out-alt"></i> Logout
-                </button>
-              </li>
-            </ul>
-          </div> */}
         </div>
       </nav>
     </div>
