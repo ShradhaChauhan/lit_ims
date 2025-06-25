@@ -5,6 +5,7 @@ export const AppContext = createContext();
 const AppContextProvider = (props) => {
   const [rightSideComponent, setRightSideComponent] = useState(null);
   const [activeComponent, setIsActiveComponent] = useState(null);
+  const [labelName, setLabelName] = useState(null);
   const [isAddUser, setIsAddUser] = useState(false);
   const [isAddVendor, setIsAddVendor] = useState(false);
   const [isAddItem, setIsAddItem] = useState(false);
@@ -12,12 +13,15 @@ const AppContextProvider = (props) => {
   const [isAddType, setIsAddType] = useState(false);
   const [isAddGroup, setIsAddGroup] = useState(false);
   const [isAddPart, setIsAddPart] = useState(false);
+  const [isAddBom, setIsAddBom] = useState(false);
 
   const value = {
     rightSideComponent,
     setRightSideComponent,
     activeComponent,
     setIsActiveComponent,
+    labelName,
+    setLabelName,
     isAddUser,
     setIsAddUser,
     isAddVendor,
@@ -32,6 +36,8 @@ const AppContextProvider = (props) => {
     setIsAddGroup,
     isAddPart,
     setIsAddPart,
+    isAddBom,
+    setIsAddBom,
   };
 
   return (

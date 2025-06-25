@@ -7,6 +7,7 @@ import "./Navbar.css";
 const Navbar = () => {
   const {
     activeComponent,
+    labelName,
     setIsAddUser,
     setIsAddVendor,
     setIsAddItem,
@@ -14,6 +15,7 @@ const Navbar = () => {
     setIsAddType,
     setIsAddGroup,
     setIsAddPart,
+    setIsAddBom,
   } = useContext(AppContext);
   const navigate = useNavigate();
 
@@ -39,9 +41,7 @@ const Navbar = () => {
         <div className="container-fluid">
           <div className="ps-3 mt-4">
             <h3 className="nav-header">
-              {activeComponent
-                ? activeComponent + " Management"
-                : "Business Partner"}
+              {labelName ? labelName : "User Management"}
             </h3>
             <p className="breadcrumb">
               <a href="#">
@@ -49,9 +49,7 @@ const Navbar = () => {
               </a>{" "}
               {activeComponent ? "" : "/ Settings "}/
               <span>
-                {activeComponent
-                  ? activeComponent + " Management"
-                  : "Business Partner"}
+                {activeComponent ? activeComponent : "User Management"}
               </span>
             </p>
           </div>
@@ -61,34 +59,40 @@ const Navbar = () => {
               <i className="fa-solid fa-user-plus"></i> Add New User
             </button>
           )}
-          {activeComponent === "Vendor & Customer" && (
+          {activeComponent === "Masters / Business Partner" && (
             <button className="add-btn" onClick={() => setIsAddVendor(true)}>
-              <i className="fa-solid fa-plus"></i> Add New
+              <i className="fa-solid fa-plus"></i> Add New Partner
             </button>
           )}
-          {activeComponent === "Item Master" && (
+          {activeComponent === "Masters / Item Master" && (
             <button className="add-btn" onClick={() => setIsAddItem(true)}>
-              <i className="fa-solid fa-plus"></i> Add New
+              <i className="fa-solid fa-plus"></i> Add New Item
             </button>
           )}
-          {activeComponent === "Warehouse Master" && (
+          {activeComponent === "Masters / Warehouse Master" && (
             <button className="add-btn" onClick={() => setIsAddWarehouse(true)}>
-              <i className="fa-solid fa-plus"></i> Add New
+              <i className="fa-solid fa-plus"></i> Add New Warehouse
             </button>
           )}
-          {activeComponent === "Type Master" && (
+          {activeComponent === "Masters / Type Master" && (
             <button className="add-btn" onClick={() => setIsAddType(true)}>
-              <i className="fa-solid fa-plus"></i> Add New
+              <i className="fa-solid fa-plus"></i> Add New Type
             </button>
           )}
-          {activeComponent === "Group Master" && (
+          {activeComponent === "Masters / Group Master" && (
             <button className="add-btn" onClick={() => setIsAddGroup(true)}>
-              <i className="fa-solid fa-plus"></i> Add New
+              <i className="fa-solid fa-plus"></i> Add New Group
             </button>
           )}
-          {activeComponent === "Part Master" && (
+          {activeComponent === "Masters / Part Master" && (
             <button className="add-btn" onClick={() => setIsAddPart(true)}>
-              <i className="fa-solid fa-plus"></i> Add New
+              <i className="fa-solid fa-plus"></i> Add New Part
+            </button>
+          )}
+
+          {activeComponent === "Masters / BOM Master" && (
+            <button className="add-btn" onClick={() => setIsAddBom(true)}>
+              <i className="fa-solid fa-plus"></i> Add New BOM
             </button>
           )}
         </div>

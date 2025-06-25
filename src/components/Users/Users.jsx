@@ -1,6 +1,7 @@
 import React, { useContext, useState } from "react";
 import "./Users.css";
 import { AppContext } from "../../context/AppContext";
+import AddUserModal from "../Modals/AddUserModal";
 
 const Users = () => {
   // const [showAddUserModal, setShowAddUserModal] = useState(false);
@@ -11,6 +12,58 @@ const Users = () => {
   const [status, setStatus] = useState("active");
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    role: "",
+    department: "",
+    status: "",
+    branch: "",
+  });
+  const [isShowUserDetails, setIsShowUserDetails] = useState(false);
+  const [userDetails, setUserDetails] = useState({
+    id: "",
+    name: "",
+    role: "",
+    time: "",
+    email: "",
+    img: "",
+    status: "",
+  });
+
+  const [masterViewPermissions, setMasterViewPermissions] = useState({});
+  const [isAllMastersViewChecked, setIsAllMastersViewChecked] = useState(false);
+  const [masterEditPermissions, setMasterEditPermissions] = useState({});
+  const [isAllMastersEditChecked, setIsAllMastersEditChecked] = useState(false);
+  const [isAllTransactionsEditChecked, setIsAllTransactionsEditChecked] =
+    useState(false);
+
+  const [isAllTransactionsViewChecked, setIsAllTransactionsViewChecked] =
+    useState(false);
+
+  const [isAllReportsEditChecked, setIsAllReportsEditChecked] = useState(false);
+
+  const [isAllReportsViewChecked, setIsAllReportsViewChecked] = useState(false);
+
+  const [isAllAdministrationsEditChecked, setIsAllAdministrationsEditChecked] =
+    useState(false);
+
+  const [isAllAdministrationsViewChecked, setIsAllAdministrationsViewChecked] =
+    useState(false);
+
+  const [transactionViewPermissions, setTransactionViewPermissions] = useState(
+    {}
+  );
+  const [transactionEditPermissions, setTransactionEditPermissions] = useState(
+    {}
+  );
+
+  const [reportViewPermissions, setReportViewPermissions] = useState({});
+  const [reportEditPermissions, setReportEditPermissions] = useState({});
+
+  const [adminViewPermissions, setAdminViewPermissions] = useState({});
+  const [adminEditPermissions, setAdminEditPermissions] = useState({});
 
   const users = [
     {
@@ -46,8 +99,8 @@ const Users = () => {
     },
     {
       id: 3,
-      name: "BOM",
-      type: "bom",
+      name: "BOM Master",
+      type: "bomMaster",
     },
     {
       id: 4,
@@ -154,7 +207,7 @@ const Users = () => {
     "vendorMaster",
     "itemMaster",
     "warehouseMaster",
-    "bom",
+    "bomMaster",
     "typeMaster",
     "groupMaster",
     "partMaster",
@@ -172,7 +225,7 @@ const Users = () => {
     vendorMaster: "Vendor Master",
     itemMaster: "Item Master",
     warehouseMaster: "Warehouse Master",
-    bom: "BOM",
+    bom: "BOM Master",
     typeMaster: "Type Master",
     groupMaster: "Group Master",
     partMaster: "Part Master",
@@ -184,6 +237,159 @@ const Users = () => {
     requisitionReceipt: "Requisition Receipt",
     productionReceipt: "Production Receipt",
     wipReturn: "WIP Return",
+  };
+
+  const collectPermissions = () => {
+    const all = [...masters, ...transactions, ...reports, ...administrations];
+    return all.map((mod) => ({
+      pageName: mod.name,
+      canView:
+        masterViewPermissions[mod.type] ||
+        transactionViewPermissions[mod.type] ||
+        reportViewPermissions[mod.type] ||
+        adminViewPermissions[mod.type] ||
+        false,
+      canEdit:
+        masterEditPermissions[mod.type] ||
+        transactionEditPermissions[mod.type] ||
+        reportEditPermissions[mod.type] ||
+        adminEditPermissions[mod.type] ||
+        false,
+    }));
+  };
+
+  const handleAddUser = (e) => {
+    e.preventDefault();
+    // const selectedViewPermissions = Object.entries(masterViewPermissions)
+    //   .filter(([_, isChecked]) => isChecked)
+    //   .map(([key]) => key);
+    // const selectedEditPermissions = Object.entries(masterEditPermissions)
+    //   .filter(([_, isChecked]) => isChecked)
+    //   .map(([key]) => key);
+    // console.log("Form Data:", formData);
+    // console.log("Access Modules:", accessModules);
+    // console.log("View Permissions:", selectedViewPermissions);
+    // console.log("Edit Permissions:", selectedEditPermissions);
+    // alert("User Added Successfully");
+
+    const finalData = {
+      username: formData.name,
+      email: formData.email,
+      password: formData.password,
+      role: formData.role.toUpperCase(),
+      branch: formData.branch,
+      department: formData.department,
+      status: formData.status,
+      permissions: collectPermissions(),
+    };
+
+    console.log("Final Submit Payload:", finalData);
+  };
+
+  const handleMasterViewAllChange = (e) => {
+    const checked = e.target.checked;
+    setIsAllMastersViewChecked(checked);
+
+    const updatedPermissions = {};
+    masters.forEach((item) => {
+      updatedPermissions[item.type] = checked;
+    });
+    setMasterViewPermissions(updatedPermissions);
+  };
+
+  const handleMasterEditAllChange = (e) => {
+    const checked = e.target.checked;
+    setIsAllMastersEditChecked(checked);
+
+    const updatedPermissions = {};
+    masters.forEach((item) => {
+      updatedPermissions[item.type] = checked;
+    });
+    setMasterEditPermissions(updatedPermissions);
+  };
+
+  const handleTransactionViewAllChange = (e) => {
+    const checked = e.target.checked;
+    setIsAllTransactionsViewChecked(checked);
+
+    const updatedTransViewPermissions = {};
+    transactions.forEach((item) => {
+      updatedTransViewPermissions[item.type] = checked;
+    });
+    setTransactionViewPermissions(updatedTransViewPermissions);
+  };
+
+  const handleTransactionEditAllChange = (e) => {
+    const checked = e.target.checked;
+    setIsAllTransactionsEditChecked(checked);
+
+    const updatedTransEditPermissions = {};
+    transactions.forEach((item) => {
+      updatedTransEditPermissions[item.type] = checked;
+    });
+    setTransactionEditPermissions(updatedTransEditPermissions);
+  };
+
+  const handleReportViewAllChange = (e) => {
+    const checked = e.target.checked;
+    setIsAllReportsViewChecked(checked);
+
+    const updatedReportViewPermissions = {};
+    reports.forEach((item) => {
+      updatedReportViewPermissions[item.type] = checked;
+    });
+    setReportViewPermissions(updatedReportViewPermissions);
+  };
+
+  const handleReportEditAllChange = (e) => {
+    const checked = e.target.checked;
+    setIsAllReportsEditChecked(checked);
+
+    const updatedReportEditPermissions = {};
+    reports.forEach((item) => {
+      updatedReportEditPermissions[item.type] = checked;
+    });
+    setReportEditPermissions(updatedReportEditPermissions);
+  };
+
+  const handleAdministrationViewAllChange = (e) => {
+    const checked = e.target.checked;
+    setIsAllAdministrationsViewChecked(checked);
+
+    const updatedAdminViewPermissions = {};
+    administrations.forEach((item) => {
+      updatedAdminViewPermissions[item.type] = checked;
+    });
+    setAdminViewPermissions(updatedAdminViewPermissions);
+  };
+
+  const handleAdministrationEditAllChange = (e) => {
+    const checked = e.target.checked;
+    setIsAllAdministrationsEditChecked(checked);
+
+    const updatedAdminEditPermissions = {};
+    administrations.forEach((item) => {
+      updatedAdminEditPermissions[item.type] = checked;
+    });
+    setAdminEditPermissions(updatedAdminEditPermissions);
+  };
+
+  const handleSingleMasterViewChange = (type) => {
+    setMasterViewPermissions((prev) => {
+      const updated = { ...prev, [type]: !prev[type] };
+      const allChecked = masters.every((item) => updated[item.type]);
+      setIsAllMastersViewChecked(allChecked);
+      return updated;
+    });
+  };
+
+  const handleSingleMasterEditChange = (type) => {
+    setMasterEditPermissions((prev) => {
+      const updated = { ...prev, [type]: !prev[type] };
+      const allChecked = masters.every((item) => updated[item.type]);
+      setIsAllMastersEditChecked(allChecked);
+      return updated;
+    });
   };
 
   const handleUserCheckboxChange = (userId) => {
@@ -205,11 +411,6 @@ const Users = () => {
     }
   };
 
-  const handleAddUser = (e) => {
-    e.preventDefault();
-    alert("User Added Successfully");
-  };
-
   const handleCheckboxChange = (e) => {
     const { id, checked } = e.target;
 
@@ -223,9 +424,30 @@ const Users = () => {
     status === "active" ? setIsChecked(true) : setIsChecked(false);
   };
 
-  const handleViewDetails = (e) => {
+  const handleReset = (e) => {
     e.preventDefault();
-    alert("Will come soon...");
+    setFormData({
+      name: "",
+      email: "",
+      password: "",
+      role: "",
+      department: "",
+      status: "active",
+      branch: "",
+    });
+    setIsChecked(true);
+    setAccessModules([]);
+    setMasterViewPermissions({});
+    setIsAllMastersViewChecked(false);
+    setMasterEditPermissions({});
+    setIsAllMastersEditChecked(false);
+  };
+
+  const handleViewDetails = (user, e) => {
+    e.preventDefault();
+    console.log(user);
+    setUserDetails(user);
+    setIsShowUserDetails(true);
   };
 
   const handleEditUser = (e) => {
@@ -263,6 +485,7 @@ const Users = () => {
           </select>
         </div>
       </div>
+
       {/* Form Section */}
       {isAddUser && (
         <div className="table-form-container">
@@ -277,7 +500,11 @@ const Users = () => {
               ></button>
             </div>
             {/* Form Fields Section */}
-            <form autoComplete="off" className="user-form">
+            <form
+              autoComplete="off"
+              className="user-form"
+              onSubmit={handleAddUser}
+            >
               <div className="form-grid">
                 <div className="row">
                   <div className="col-4 d-flex flex-column form-group">
@@ -290,6 +517,10 @@ const Users = () => {
                         type="text"
                         className="form-control text-font ps-5"
                         id="userId"
+                        value={formData.name}
+                        onChange={(e) =>
+                          setFormData({ ...formData, name: e.target.value })
+                        }
                         placeholder="Enter full name"
                       />
                     </div>
@@ -305,6 +536,10 @@ const Users = () => {
                         className="form-control text-font ps-5"
                         id="email"
                         placeholder="Enter email address"
+                        value={formData.email}
+                        onChange={(e) =>
+                          setFormData({ ...formData, email: e.target.value })
+                        }
                         autoComplete="off"
                       />
                     </div>
@@ -320,6 +555,10 @@ const Users = () => {
                         className="form-control text-font ps-5"
                         id="pass"
                         placeholder="Enter your password"
+                        value={formData.password}
+                        onChange={(e) =>
+                          setFormData({ ...formData, password: e.target.value })
+                        }
                         autoComplete="off"
                       />
                     </div>
@@ -336,7 +575,10 @@ const Users = () => {
                         className="form-control ps-5 text-font"
                         id="role"
                         placeholder="Role"
-                        data-bs-toggle="dropdown"
+                        value={formData.role}
+                        onChange={(e) =>
+                          setFormData({ ...formData, role: e.target.value })
+                        }
                       >
                         <option value="">Select Role</option>
                         <option value="admin">Admin</option>
@@ -356,7 +598,13 @@ const Users = () => {
                         className="form-control ps-5 text-font"
                         id="department"
                         placeholder="Department"
-                        data-bs-toggle="dropdown"
+                        value={formData.department}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            department: e.target.value,
+                          })
+                        }
                       >
                         <option value="">Select Department</option>
                         <option value="production">Production</option>
@@ -378,8 +626,15 @@ const Users = () => {
                           id="switchCheckChecked"
                           checked={isChecked}
                           onChange={(e) => {
+                            const newStatus = e.target.checked
+                              ? "active"
+                              : "inactive";
                             setIsChecked(e.target.checked);
-                            setStatus(e.target.checked ? "active" : "inactive");
+                            setStatus(newStatus);
+                            setFormData({
+                              ...formData,
+                              status: newStatus,
+                            });
                           }}
                         />
 
@@ -396,6 +651,11 @@ const Users = () => {
                           const newStatus = e.target.value;
                           setStatus(newStatus);
                           setIsChecked(newStatus === "active");
+
+                          setFormData((prev) => ({
+                            ...prev,
+                            status: newStatus,
+                          }));
                         }}
                       >
                         <option value="active">Active</option>
@@ -416,7 +676,13 @@ const Users = () => {
                         className="form-control ps-5 text-font"
                         id="branch"
                         placeholder="Branch"
-                        data-bs-toggle="dropdown"
+                        value={formData.branch}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            branch: e.target.value,
+                          })
+                        }
                       >
                         <option value="">Select Branch</option>
                         <option value="iqc">IQC</option>
@@ -441,18 +707,31 @@ const Users = () => {
                           </th>
                           <th className="p-0">
                             <span className="icon-align">
-                              <button
-                                className="btn-icon btn-primary margin-right-10"
-                                title="View Details"
-                              >
-                                <i className="fas fa-eye view-primary view-icon"></i>
-                              </button>
-                              <button
-                                className="btn-icon btn-success"
-                                title="Edit"
-                              >
-                                <i className="fas fa-edit edit-success view-icon"></i>
-                              </button>
+                              <div className="permission-controls">
+                                <label
+                                  className="checkbox-wrapper"
+                                  title="View Access"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={isAllMastersViewChecked}
+                                    onChange={handleMasterViewAllChange}
+                                  />
+                                  <i className="fas fa-eye permission-icon primary"></i>
+                                </label>
+                                <label
+                                  className="checkbox-wrapper"
+                                  title="Edit Access"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={isAllMastersEditChecked}
+                                    onChange={handleMasterEditAllChange}
+                                  />
+
+                                  <i className="fas fa-edit permission-icon success"></i>
+                                </label>
+                              </div>
                             </span>
                           </th>
                         </tr>
@@ -462,20 +741,39 @@ const Users = () => {
                           <tr key={master.type}>
                             <td className="user-info">{master.name}</td>
                             <td className="icon-align">
-                              <button
-                                className="btn-icon btn-primary margin-right-10"
-                                title="View Details"
-                                onClick={handleViewDetails}
-                              >
-                                <i className="fas fa-eye view-primary view-icon"></i>
-                              </button>
-                              <button
-                                className="btn-icon btn-success"
-                                title="Edit"
-                                onClick={handleEditUser}
-                              >
-                                <i className="fas fa-edit edit-success view-icon"></i>
-                              </button>
+                              <div className="permission-controls">
+                                <label
+                                  className="checkbox-wrapper"
+                                  title="View Access"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={
+                                      !!masterViewPermissions[master.type]
+                                    }
+                                    onChange={() =>
+                                      handleSingleMasterViewChange(master.type)
+                                    }
+                                  />
+                                  <i className="fas fa-eye permission-icon primary"></i>
+                                </label>
+                                <label
+                                  className="checkbox-wrapper"
+                                  title="Edit Access"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={
+                                      !!masterEditPermissions[master.type]
+                                    }
+                                    onChange={() =>
+                                      handleSingleMasterEditChange(master.type)
+                                    }
+                                  />
+
+                                  <i className="fas fa-edit permission-icon success"></i>
+                                </label>
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -492,18 +790,30 @@ const Users = () => {
                           </th>
                           <th className="p-0">
                             <span className="icon-align">
-                              <button
-                                className="btn-icon btn-primary margin-right-10"
-                                title="View Details"
-                              >
-                                <i className="fas fa-eye view-primary view-icon"></i>
-                              </button>
-                              <button
-                                className="btn-icon btn-success"
-                                title="Edit"
-                              >
-                                <i className="fas fa-edit edit-success view-icon"></i>
-                              </button>
+                              <div className="permission-controls">
+                                <label
+                                  className="checkbox-wrapper"
+                                  title="View Access"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={isAllTransactionsViewChecked}
+                                    onChange={handleTransactionViewAllChange}
+                                  />
+                                  <i className="fas fa-eye permission-icon primary"></i>
+                                </label>
+                                <label
+                                  className="checkbox-wrapper"
+                                  title="Edit Access"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={isAllTransactionsEditChecked}
+                                    onChange={handleTransactionEditAllChange}
+                                  />
+                                  <i className="fas fa-edit permission-icon success"></i>
+                                </label>
+                              </div>
                             </span>
                           </th>
                         </tr>
@@ -513,20 +823,51 @@ const Users = () => {
                           <tr key={transaction.type}>
                             <td className="user-info">{transaction.name}</td>
                             <td className="icon-align">
-                              <button
-                                className="btn-icon btn-primary margin-right-10"
-                                title="View Details"
-                                onClick={handleViewDetails}
-                              >
-                                <i className="fas fa-eye view-primary view-icon"></i>
-                              </button>
-                              <button
-                                className="btn-icon btn-success"
-                                title="Edit"
-                                onClick={handleEditUser}
-                              >
-                                <i className="fas fa-edit edit-success view-icon"></i>
-                              </button>
+                              <div className="permission-controls">
+                                <label
+                                  className="checkbox-wrapper"
+                                  title="View Access"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={
+                                      !!transactionViewPermissions[
+                                        transaction.type
+                                      ]
+                                    }
+                                    onChange={() =>
+                                      setTransactionViewPermissions((prev) => ({
+                                        ...prev,
+                                        [transaction.type]:
+                                          !prev[transaction.type],
+                                      }))
+                                    }
+                                  />
+
+                                  <i className="fas fa-eye permission-icon primary"></i>
+                                </label>
+                                <label
+                                  className="checkbox-wrapper"
+                                  title="Edit Access"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={
+                                      !!transactionEditPermissions[
+                                        transaction.type
+                                      ]
+                                    }
+                                    onChange={() =>
+                                      setTransactionEditPermissions((prev) => ({
+                                        ...prev,
+                                        [transaction.type]:
+                                          !prev[transaction.type],
+                                      }))
+                                    }
+                                  />
+                                  <i className="fas fa-edit permission-icon success"></i>
+                                </label>
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -543,18 +884,30 @@ const Users = () => {
                           </th>
                           <th className="p-0">
                             <span className="icon-align">
-                              <button
-                                className="btn-icon btn-primary margin-right-10"
-                                title="View Details"
-                              >
-                                <i className="fas fa-eye view-primary view-icon"></i>
-                              </button>
-                              <button
-                                className="btn-icon btn-success"
-                                title="Edit"
-                              >
-                                <i className="fas fa-edit edit-success view-icon"></i>
-                              </button>
+                              <div className="permission-controls">
+                                <label
+                                  className="checkbox-wrapper"
+                                  title="View Access"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={isAllReportsViewChecked}
+                                    onChange={handleReportViewAllChange}
+                                  />
+                                  <i className="fas fa-eye permission-icon primary"></i>
+                                </label>
+                                <label
+                                  className="checkbox-wrapper"
+                                  title="Edit Access"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={isAllReportsEditChecked}
+                                    onChange={handleReportEditAllChange}
+                                  />
+                                  <i className="fas fa-edit permission-icon success"></i>
+                                </label>
+                              </div>
                             </span>
                           </th>
                         </tr>
@@ -564,20 +917,44 @@ const Users = () => {
                           <tr key={report.type}>
                             <td className="user-info">{report.name}</td>
                             <td className="icon-align">
-                              <button
-                                className="btn-icon btn-primary margin-right-10"
-                                title="View Details"
-                                onClick={handleViewDetails}
-                              >
-                                <i className="fas fa-eye view-primary view-icon"></i>
-                              </button>
-                              <button
-                                className="btn-icon btn-success"
-                                title="Edit"
-                                onClick={handleEditUser}
-                              >
-                                <i className="fas fa-edit edit-success view-icon"></i>
-                              </button>
+                              <div className="permission-controls">
+                                <label
+                                  className="checkbox-wrapper"
+                                  title="View Access"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={
+                                      !!reportViewPermissions[report.type]
+                                    }
+                                    onChange={() =>
+                                      setReportViewPermissions((prev) => ({
+                                        ...prev,
+                                        [report.type]: !prev[report.type],
+                                      }))
+                                    }
+                                  />
+                                  <i className="fas fa-eye permission-icon primary"></i>
+                                </label>
+                                <label
+                                  className="checkbox-wrapper"
+                                  title="Edit Access"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={
+                                      !!reportEditPermissions[report.type]
+                                    }
+                                    onChange={() =>
+                                      setReportEditPermissions((prev) => ({
+                                        ...prev,
+                                        [report.type]: !prev[report.type],
+                                      }))
+                                    }
+                                  />
+                                  <i className="fas fa-edit permission-icon success"></i>
+                                </label>
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -594,18 +971,30 @@ const Users = () => {
                           </th>
                           <th className="p-0">
                             <span className="icon-align">
-                              <button
-                                className="btn-icon btn-primary margin-right-10"
-                                title="View Details"
-                              >
-                                <i className="fas fa-eye view-primary view-icon"></i>
-                              </button>
-                              <button
-                                className="btn-icon btn-success"
-                                title="Edit"
-                              >
-                                <i className="fas fa-edit edit-success view-icon"></i>
-                              </button>
+                              <div className="permission-controls">
+                                <label
+                                  className="checkbox-wrapper"
+                                  title="View Access"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={isAllAdministrationsViewChecked}
+                                    onChange={handleAdministrationViewAllChange}
+                                  />
+                                  <i className="fas fa-eye permission-icon primary"></i>
+                                </label>
+                                <label
+                                  className="checkbox-wrapper"
+                                  title="Edit Access"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={isAllAdministrationsEditChecked}
+                                    onChange={handleAdministrationEditAllChange}
+                                  />
+                                  <i className="fas fa-edit permission-icon success"></i>
+                                </label>
+                              </div>
                             </span>
                           </th>
                         </tr>
@@ -615,20 +1004,50 @@ const Users = () => {
                           <tr key={administration.type}>
                             <td className="user-info">{administration.name}</td>
                             <td className="icon-align">
-                              <button
-                                className="btn-icon btn-primary margin-right-10"
-                                title="View Details"
-                                onClick={handleViewDetails}
-                              >
-                                <i className="fas fa-eye view-primary view-icon"></i>
-                              </button>
-                              <button
-                                className="btn-icon btn-success"
-                                title="Edit"
-                                onClick={handleEditUser}
-                              >
-                                <i className="fas fa-edit edit-success view-icon"></i>
-                              </button>
+                              <div className="permission-controls">
+                                <label
+                                  className="checkbox-wrapper"
+                                  title="View Access"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={
+                                      !!adminViewPermissions[
+                                        administration.type
+                                      ]
+                                    }
+                                    onChange={() =>
+                                      setAdminViewPermissions((prev) => ({
+                                        ...prev,
+                                        [administration.type]:
+                                          !prev[administration.type],
+                                      }))
+                                    }
+                                  />
+                                  <i className="fas fa-eye permission-icon primary"></i>
+                                </label>
+                                <label
+                                  className="checkbox-wrapper"
+                                  title="Edit Access"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={
+                                      !!adminEditPermissions[
+                                        administration.type
+                                      ]
+                                    }
+                                    onChange={() =>
+                                      setAdminEditPermissions((prev) => ({
+                                        ...prev,
+                                        [administration.type]:
+                                          !prev[administration.type],
+                                      }))
+                                    }
+                                  />
+                                  <i className="fas fa-edit permission-icon success"></i>
+                                </label>
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -646,7 +1065,7 @@ const Users = () => {
                 </button>
                 <button
                   className="btn btn-secondary border border-0 bg-secondary add-btn me-3 float-end"
-                  onClick={() => setIsReset(true)}
+                  onClick={handleReset}
                 >
                   {/* <i className="fa-solid fa-xmark me-1"></i> */}
                   <i className="fa-solid fa-arrows-rotate me-1"></i> Reset
@@ -658,7 +1077,6 @@ const Users = () => {
                     {/* <button
                   className="btn btn-light dropdown-toggle ms-2"
                   type="button"
-                  data-bs-toggle="dropdown"
                 >
                   Access
                 </button> */}
@@ -705,8 +1123,9 @@ const Users = () => {
           </div>
         </div>
       )}
+
+      {/* Table Section */}
       <div className="margin-2">
-        {/* Table Section */}
         <div className="table-container">
           {/* Table Header */}
           <div className="table-header">
@@ -787,6 +1206,7 @@ const Users = () => {
                     <button
                       className="btn-icon btn-primary"
                       title="View Details"
+                      onClick={(e) => handleViewDetails(user, e)}
                     >
                       <i className="fas fa-eye"></i>
                     </button>
@@ -825,6 +1245,41 @@ const Users = () => {
           </div>
         </div>
       </div>
+
+      {/* View User Details Modal */}
+      {isShowUserDetails && (
+        <AddUserModal />
+        // <div className="modal fade" id="exampleModal" tabIndex="-1">
+        //   <div className="modal-dialog">
+        //     <div className="modal-content">
+        //       <div className="modal-header">
+        //         <h1 className="modal-title fs-5" id="exampleModalLabel">
+        //           {userDetails.name}
+        //         </h1>
+        //         <button
+        //           type="button"
+        //           className="btn-close"
+        //           data-bs-dismiss="modal"
+        //           aria-label="Close"
+        //         ></button>
+        //       </div>
+        //       <div className="modal-body">...</div>
+        //       <div className="modal-footer">
+        //         <button
+        //           type="button"
+        //           className="btn btn-secondary"
+        //           data-bs-dismiss="modal"
+        //         >
+        //           Close
+        //         </button>
+        //         <button type="button" className="btn btn-primary">
+        //           Save changes
+        //         </button>
+        //       </div>
+        //     </div>
+        //   </div>
+        // </div>
+      )}
     </div>
   );
 };

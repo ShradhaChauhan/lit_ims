@@ -8,20 +8,7 @@ const WarehouseMaster = () => {
   const [selectAll, setSelectAll] = useState(false);
   const [isReset, setIsReset] = useState(false);
 
-  const warehouses = [
-    {
-      id: 1,
-      trNo: "1W00001",
-      name: "Store 1st floor",
-      warehouse: "RM1",
-    },
-    {
-      id: 2,
-      trNo: "1W00002",
-      name: "Store 2nd floor",
-      warehouse: "RM2",
-    },
-  ];
+  const warehouses = [];
 
   const handleWarehouseCheckboxChange = (warehouseId) => {
     setSelectedWarehouses((prevSelected) =>
@@ -60,24 +47,15 @@ const WarehouseMaster = () => {
           <input
             type="text"
             className="form-control vendor-search-bar"
-            placeholder="Search by name or code..."
+            placeholder="Search by warehouses..."
           />
         </div>
         <div className="filter-options">
-          <input
-            type="text"
-            className="form-control text-font"
-            id="name"
-            placeholder="Name"
-            aria-label="Name"
-          />
-          <input
-            type="text"
-            className="form-control text-font"
-            id="code"
-            placeholder="Code"
-            aria-label="Code"
-          />
+          <select className="filter-select">
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
         </div>
       </div>
 
@@ -86,7 +64,7 @@ const WarehouseMaster = () => {
         <div className="table-form-container">
           <div className="form-header">
             <h2>
-              <i className="fas fa-user-plus"></i> Add New Warehouse
+              <i className="fas fa-warehouse"></i> Add New Warehouse
             </h2>
             <button
               className="btn-close"
@@ -102,12 +80,13 @@ const WarehouseMaster = () => {
                     TRNO
                   </label>
                   <div className="position-relative w-100">
-                    <i className="fas fa-user position-absolute input-icon"></i>
+                    <i className="fas fa-hashtag position-absolute input-icon"></i>
                     <input
                       type="text"
                       className="form-control ps-5 text-font"
                       id="trNo"
-                      placeholder="Enter TRNO"
+                      placeholder="********************"
+                      disabled
                     />
                   </div>
                 </div>
@@ -116,12 +95,12 @@ const WarehouseMaster = () => {
                     Code
                   </label>
                   <div className="position-relative w-100">
-                    <i className="fas fa-user position-absolute input-icon"></i>
+                    <i className="fas fa-barcode position-absolute input-icon"></i>
                     <input
                       type="text"
                       className="form-control ps-5 text-font"
                       id="code"
-                      placeholder="Enter code"
+                      placeholder="Enter warehouse code"
                     />
                   </div>
                 </div>
@@ -130,13 +109,48 @@ const WarehouseMaster = () => {
                     Name
                   </label>
                   <div className="position-relative w-100">
-                    <i className="fas fa-user position-absolute input-icon"></i>
+                    <i className="fas fa-font position-absolute input-icon"></i>
                     <input
                       type="text"
                       className="form-control ps-5 text-font"
                       id="name"
-                      placeholder="Enter name"
+                      placeholder="Enter warehouse name"
                     />
+                  </div>
+                </div>
+              </div>
+              <div className="row form-style">
+                <div className="col-4 d-flex flex-column form-group">
+                  <label htmlFor="status" className="form-label mb-0">
+                    Status
+                  </label>
+                  <div className="position-relative w-100">
+                    <div className="form-check form-switch position-absolute input-icon padding-left-2">
+                      <input
+                        className="form-check-input text-font switch-style"
+                        type="checkbox"
+                        role="switch"
+                        id="switchCheckChecked"
+                      />
+
+                      <label
+                        className="form-check-label"
+                        htmlFor="switchCheckChecked"
+                      ></label>
+                    </div>
+                    <select
+                      className="form-control text-font switch-padding"
+                      id="status"
+                      defaultValue=""
+                      required
+                    >
+                      <option value="" disabled hidden className="text-muted">
+                        Select Status
+                      </option>
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
+                    <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                   </div>
                 </div>
               </div>
@@ -174,6 +188,10 @@ const WarehouseMaster = () => {
                 {selectedWarehouses.length} Selected
               </label>
             </div>
+            <button className="btn-action btn-danger">
+              <i className="fas fa-trash"></i>
+              Delete Selected
+            </button>
           </div>
           <table>
             <thead>
@@ -185,11 +203,12 @@ const WarehouseMaster = () => {
                   TRNO <i className="fas fa-sort color-gray ms-2"></i>
                 </th>
                 <th>
-                  Warehouse Name <i className="fas fa-sort color-gray ms-2"></i>
+                  Code <i className="fas fa-sort color-gray ms-2"></i>
                 </th>
                 <th>
-                  Warehouse <i className="fas fa-sort color-gray ms-2"></i>
+                  Name <i className="fas fa-sort color-gray ms-2"></i>
                 </th>
+                <th>Status</th>
                 <td className="actions">
                   <button className="btn-icon btn-primary" title="View Details">
                     <i className="fas fa-eye"></i>
@@ -204,48 +223,63 @@ const WarehouseMaster = () => {
               </tr>
             </thead>
             <tbody>
-              {warehouses.map((warehouse) => (
-                <tr key={warehouse.id}>
-                  <td className="checkbox-cell">
-                    <input
-                      type="checkbox"
-                      checked={selectedWarehouses.includes(warehouse.id)}
-                      onChange={() =>
-                        handleWarehouseCheckboxChange(warehouse.id)
-                      }
-                    />
-                  </td>
-                  <td>
-                    <div>
-                      <span>{warehouse.trNo}</span>
+              {warehouses.length === 0 ? (
+                <tr className="no-data-row">
+                  <td colSpan="6" className="no-data-cell">
+                    <div className="no-data-content">
+                      <i className="fas fa-warehouse no-data-icon"></i>
+                      <p className="no-data-text">No warehouses found</p>
+                      <p className="no-data-subtext">
+                        Click the "Add New Warehouse" button to create your
+                        first warehouse
+                      </p>
                     </div>
-                  </td>
-                  <td>
-                    <div>
-                      <span>{warehouse.name}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <div>
-                      <span>{warehouse.warehouse}</span>
-                    </div>
-                  </td>
-                  <td className="actions">
-                    <button
-                      className="btn-icon btn-primary"
-                      title="View Details"
-                    >
-                      <i className="fas fa-eye"></i>
-                    </button>
-                    <button className="btn-icon btn-success" title="Edit">
-                      <i className="fas fa-edit"></i>
-                    </button>
-                    <button className="btn-icon btn-danger" title="Delete">
-                      <i className="fas fa-trash"></i>
-                    </button>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                warehouses.map((warehouse) => (
+                  <tr key={warehouse.id}>
+                    <td className="checkbox-cell">
+                      <input
+                        type="checkbox"
+                        checked={selectedWarehouses.includes(warehouse.id)}
+                        onChange={() =>
+                          handleWarehouseCheckboxChange(warehouse.id)
+                        }
+                      />
+                    </td>
+                    <td>
+                      <div>
+                        <span>{warehouse.trNo}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div>
+                        <span>{warehouse.name}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div>
+                        <span>{warehouse.warehouse}</span>
+                      </div>
+                    </td>
+                    <td className="actions">
+                      <button
+                        className="btn-icon btn-primary"
+                        title="View Details"
+                      >
+                        <i className="fas fa-eye"></i>
+                      </button>
+                      <button className="btn-icon btn-success" title="Edit">
+                        <i className="fas fa-edit"></i>
+                      </button>
+                      <button className="btn-icon btn-danger" title="Delete">
+                        <i className="fas fa-trash"></i>
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
 

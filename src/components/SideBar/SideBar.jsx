@@ -3,6 +3,7 @@ import SearchBar from "../SearchBar/SearchBar";
 import "./SideBar.css";
 import { AppContext } from "../../context/AppContext";
 import litWhiteLogo from "../../assets/images/litWhiteLogo.png";
+import ims_logo from "../../assets/images/ims_logo.png";
 import api from "../../services/api";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -10,7 +11,7 @@ import axios from "axios";
 import VendorMaster from "../Forms/VendorMaster/VendorMaster";
 import ItemMaster from "../Forms/ItemMaster/ItemMaster";
 import WarehouseMaster from "../Forms/WarehouseMaster/WarehouseMaster";
-import BOM from "../Forms/BOM/BOM";
+import BOMMaster from "../Forms/BOMMaster/BOMMaster";
 import TypeMaster from "../Forms/TypeMaster/TypeMaster";
 import GroupMaster from "../Forms/GroupMaster/GroupMaster";
 import PartMaster from "../Forms/PartMaster/PartMaster";
@@ -22,9 +23,10 @@ import IssueProduction from "../Forms/IssueProduction/IssueProduction";
 import RequisitionReceipt from "../Forms/RequisitionReceipt/RequisitionReceipt";
 import ProductionReceipt from "../Forms/ProductionReceipt/ProductionReceipt";
 import WIPReturn from "../Forms/WIPReturn/WIPReturn";
+import ActivityLogs from "../ActivityLogs/ActivityLogs";
 
 const SideBar = () => {
-  const { setRightSideComponent, setIsActiveComponent } =
+  const { setRightSideComponent, setIsActiveComponent, setLabelName } =
     useContext(AppContext);
 
   const [isCollapsed, setIsCollapsed] = useState(true);
@@ -38,94 +40,112 @@ const SideBar = () => {
 
   const menuItems = [
     {
-      icon: "fas fa-cog",
-      label: "Master",
+      icon: "fas fa-database",
+      label: "Masters",
+      path: "Masters",
       submenu: [
         {
-          label: "Vendor & Customer",
+          label: "Business Partner",
           compName: "VendorMaster",
+          path: "Masters / Business Partner",
           icon: "fas fa-truck",
         },
         {
           label: "Item Master",
           compName: "ItemMaster",
+          path: "Masters / Item Master",
           icon: "fas fa-box",
         },
         {
           label: "Warehouse Master",
           compName: "WarehouseMaster",
+          path: "Masters / Warehouse Master",
           icon: "fas fa-warehouse",
         },
         {
-          label: "BOM",
-          compName: "BOM",
+          label: "BOM Master",
+          compName: "BOMMaster",
+          path: "Masters / BOM Master",
           icon: "fas fa-cubes",
         },
         {
           label: "Type Master",
           compName: "TypeMaster",
+          path: "Masters / Type Master",
           icon: "fas fa-list-alt",
         },
         {
           label: "Group Master",
           compName: "GroupMaster",
+          path: "Masters / Group Master",
           icon: "fas fa-layer-group",
         },
         {
           label: "Part Master",
           compName: "PartMaster",
+          path: "Masters / Part Master",
           icon: "fas fa-cog",
         },
       ],
     },
     {
       icon: "fas fa-sync-alt",
-      label: "Transaction",
+      label: "Transactions",
+      path: "Transactions",
       submenu: [
         {
           label: "Incoming",
           compName: "Incoming",
+          path: "Transactions / Incoming",
           icon: "fas fa-arrow-down",
         },
         {
           label: "Incoming Reprint",
           compName: "IncomingReprint",
+          path: "Transactions / Incoming Reprint",
           icon: "fas fa-print",
         },
         {
           label: "IQC",
           compName: "IQC",
+          path: "Transactions / IQC",
           icon: "fas fa-clipboard-check",
         },
         {
           label: "Requisition",
           compName: "Requisition",
+          path: "Transactions / Requisition",
           icon: "fas fa-clipboard-list",
         },
         {
           label: "Issue Production",
           compName: "IssueProduction",
+          path: "Transactions / Issue Production",
           icon: "fas fa-cogs",
         },
         {
           label: "Requisition Receipt",
           compName: "RequisitionReceipt",
+          path: "Transactions / Requisition Receipt",
           icon: "fas fa-clipboard",
         },
         {
           label: "Production Receipt",
           compName: "ProductionReceipt",
+          path: "Transactions / Production Receipt",
           icon: "fas fa-cog",
         },
         {
           label: "WIP Return",
           compName: "WIPReturn",
+          path: "Transactions / WIP Return",
           icon: "fas fa-undo",
         },
       ],
     },
     {
       icon: "fas fa-chart-pie",
+      path: "Reports",
       label: "Reports",
     },
   ];
@@ -157,7 +177,7 @@ const SideBar = () => {
     name === "VendorMaster" && setRightSideComponent(<VendorMaster />);
     name === "ItemMaster" && setRightSideComponent(<ItemMaster />);
     name === "WarehouseMaster" && setRightSideComponent(<WarehouseMaster />);
-    name === "BOM" && setRightSideComponent(<BOM />);
+    name === "BOMMaster" && setRightSideComponent(<BOMMaster />);
     name === "TypeMaster" && setRightSideComponent(<TypeMaster />);
     name === "GroupMaster" && setRightSideComponent(<GroupMaster />);
     name === "PartMaster" && setRightSideComponent(<PartMaster />);
@@ -173,6 +193,7 @@ const SideBar = () => {
     name === "ProductionReceipt" &&
       setRightSideComponent(<ProductionReceipt />);
     name === "WIPReturn" && setRightSideComponent(<WIPReturn />);
+    name === "Activity Logs" && setRightSideComponent(<ActivityLogs />);
   };
 
   return (
@@ -182,7 +203,7 @@ const SideBar = () => {
       }`}
     >
       <div className="p-2 d-flex justify-content-between align-items-center">
-        {!isCollapsed && <img src={litWhiteLogo} width={60} height={60} />}
+        {!isCollapsed && <img src={ims_logo} width={70} height={60} />}
         <button
           className="btn btn-sm btn-outline-light"
           onClick={() => setIsCollapsed(!isCollapsed)}
@@ -196,7 +217,7 @@ const SideBar = () => {
 
       {/* Menu Items */}
       {!isCollapsed && <p className="heading">MAIN MENU</p>}
-      <ul className="nav nav-pills flex-column mb-auto mt-3">
+      <ul className="nav nav-pills flex-column mb-auto mt-1">
         {menuItems.map((item, idx) => (
           <li key={idx} className="nav-item">
             {item.submenu ? (
@@ -224,7 +245,8 @@ const SideBar = () => {
                         <div
                           onClick={() => {
                             handleRightSideComponentName(sub.compName);
-                            setIsActiveComponent(sub.label);
+                            setIsActiveComponent(sub.path);
+                            setLabelName(sub.label);
                           }}
                           className="nav-link text-white small menuListItem"
                         >
@@ -254,7 +276,14 @@ const SideBar = () => {
             {!isCollapsed && "Settings"}
           </a>
         </li>
-        <li className="nav-item">
+        <li
+          className="nav-item"
+          onClick={() => {
+            handleRightSideComponentName("ActivityLogs");
+            setLabelName("Activity Logs");
+            setIsActiveComponent("Activity Logs");
+          }}
+        >
           <a className="nav-link text-white menuListItem">
             <i className="fa-solid fa-layer-group me-2"></i>
             {!isCollapsed && "Logs"}

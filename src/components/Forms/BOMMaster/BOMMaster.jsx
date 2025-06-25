@@ -1,20 +1,20 @@
 import React, { useContext, useState } from "react";
 import { AppContext } from "../../../context/AppContext";
 
-const PartMaster = () => {
-  const { isAddPart, setIsAddPart } = useContext(AppContext);
+const BOM = () => {
+  const { isAddBom, setIsAddBom } = useContext(AppContext);
 
-  const [selectedParts, setSelectedParts] = useState([]);
+  const [selectedBoms, setSelectedBoms] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [isReset, setIsReset] = useState(false);
 
-  const parts = [];
+  const boms = [];
 
-  const handlePartCheckboxChange = (partId) => {
-    setSelectedParts((prevSelected) =>
-      prevSelected.includes(partId)
-        ? prevSelected.filter((id) => id !== partId)
-        : [...prevSelected, partId]
+  const handleBomCheckboxChange = (bomId) => {
+    setSelectedBoms((prevSelected) =>
+      prevSelected.includes(bomId)
+        ? prevSelected.filter((id) => id !== bomId)
+        : [...prevSelected, bomId]
     );
   };
 
@@ -22,22 +22,21 @@ const PartMaster = () => {
     const checked = e.target.checked;
     setSelectAll(checked);
     if (checked) {
-      const allPartIds = parts.map((part) => part.id);
-      setSelectedParts(allPartIds);
+      const allBomIds = boms.map((bom) => bom.id);
+      setSelectedBoms(allBomIds);
     } else {
-      setSelectedParts([]);
+      setSelectedBoms([]);
     }
   };
 
-  const handleAddParts = (e) => {
+  const handleAddBoms = (e) => {
     e.preventDefault();
-    alert("Part Added Successfully");
+    alert("Bom Added Successfully");
   };
 
   const handleReset = () => {
     // setFormData(initialFormState); //
   };
-
   return (
     <div>
       {/* Search and Filter Section */}
@@ -52,13 +51,10 @@ const PartMaster = () => {
         </div>
         <div className="filter-options">
           <select className="filter-select">
-            <option value="">All UOM</option>
-            <option value="pcs">Pieces (PCS)</option>
-            <option value="kg">Kilogram (KG)</option>
-            <option value="gm">Gram (GM)</option>
-            <option value="ltr">Litre (LTR)</option>
-            <option value="mtr">Meter (MTR)</option>
-            <option value="box">Box (BOX)</option>
+            <option value="">All Parts</option>
+          </select>
+          <select className="filter-select">
+            <option value="">All Warehouses</option>
           </select>
           <select className="filter-select">
             <option value="">All Status</option>
@@ -69,15 +65,15 @@ const PartMaster = () => {
       </div>
 
       {/* Form Header Section */}
-      {isAddPart && (
+      {isAddBom && (
         <div className="table-form-container">
           <div className="form-header">
             <h2>
-              <i className="fas fa-cogs"></i> Add New Part
+              <i className="fas fa-sitemap"></i> Add New Bom
             </h2>
             <button
               className="btn-close"
-              onClick={() => setIsAddPart(false)}
+              onClick={() => setIsAddBom(false)}
             ></button>
           </div>
 
@@ -86,60 +82,33 @@ const PartMaster = () => {
             <div className="form-grid border-bottom pt-0">
               <div className="row form-style">
                 <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="code" className="form-label  ms-2">
-                    Code
+                  <label htmlFor="bomName" className="form-label  ms-2">
+                    BOM Name
+                  </label>
+                  <div className="position-relative w-100">
+                    <i className="fas fa-file-alt position-absolute input-icon"></i>
+                    <input
+                      type="text"
+                      className="form-control ps-5 text-font"
+                      id="bomName"
+                      placeholder="Enter BOM name"
+                    />
+                  </div>
+                </div>
+                <div className="col-4 d-flex flex-column form-group">
+                  <label htmlFor="bomCode" className="form-label  ms-2">
+                    BOM Code
                   </label>
                   <div className="position-relative w-100">
                     <i className="fas fa-barcode position-absolute input-icon"></i>
                     <input
                       type="text"
                       className="form-control ps-5 text-font"
-                      id="code"
-                      placeholder="Enter part code"
+                      id="bomCode"
+                      placeholder="Enter BOM code"
                     />
                   </div>
                 </div>
-                <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="name" className="form-label  ms-2">
-                    Name
-                  </label>
-                  <div className="position-relative w-100">
-                    <i className="fas fa-font position-absolute input-icon"></i>
-                    <input
-                      type="text"
-                      className="form-control ps-5 text-font"
-                      id="name"
-                      placeholder="Enter part name"
-                    />
-                  </div>
-                </div>
-                <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="uom" className="form-label  ms-2">
-                    UOM
-                  </label>
-                  <div className="position-relative w-100">
-                    <i className="fas fa-ruler position-absolute input-icon"></i>
-                    <select
-                      className="form-control ps-5 ms-2 text-font"
-                      id="uom"
-                      defaultValue=""
-                      required
-                    >
-                      <option value="" disabled hidden className="text-muted">
-                        Select UOM
-                      </option>
-                      <option value="pcs">Pieces (PCS)</option>
-                      <option value="kg">Kilogram (KG)</option>
-                      <option value="gm">Gram (GM)</option>
-                      <option value="ltr">Litre (LTR)</option>
-                      <option value="mtr">Meter (MTR)</option>
-                      <option value="box">Box (BOX)</option>
-                    </select>
-                    <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
-                  </div>
-                </div>
-              </div>
-              <div className="row form-style">
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="status" className="form-label mb-0">
                     Status
@@ -175,10 +144,93 @@ const PartMaster = () => {
                 </div>
               </div>
             </div>
+
+            <div className="parts-section">
+              <div className="list-header">
+                <h2>Items List</h2>
+              </div>
+              <div className="table-container mt-3">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Item</th>
+                      <th>Code</th>
+                      <th>UOM</th>
+                      <th>Quantity</th>
+                      <th>Warehouse</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <td>
+                      <select className="form-control text-font" required>
+                        <option value="">Select Part</option>$
+                        {/* {loadPartsOptions()} */}
+                      </select>
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        className="form-control text-font"
+                        readonly
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        className="form-control text-font"
+                        readonly
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="number"
+                        className="form-control text-font"
+                        min="0.01"
+                        step="0.01"
+                        required
+                      />
+                    </td>
+                    <td>
+                      <select
+                        className="form-control ps-5 ms-2 text-font"
+                        id="type"
+                      >
+                        <option value="">Select Warehouse</option>
+                      </select>
+                    </td>
+                    <td className="actions">
+                      <button
+                        type="button"
+                        className="btn-icon btn-primary"
+                        title="View Part Details"
+                      >
+                        <i className="fas fa-info-circle"></i>
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-icon btn-danger"
+                        title="Remove Part"
+                      >
+                        <i className="fas fa-trash"></i>
+                      </button>
+                    </td>
+                  </tbody>
+                </table>
+                <button
+                  type="button"
+                  className="btn btn-secondary text-font m-3"
+                >
+                  <i className="fas fa-plus me-2"></i>
+                  Add Item
+                </button>
+              </div>
+            </div>
+
             <div className="form-actions">
               <button
                 className="btn btn-primary border border-0 add-btn me-3 float-end"
-                onClick={handleAddParts}
+                onClick={handleAddBoms}
               >
                 <i className="fa-solid fa-floppy-disk me-1"></i> Save Changes
               </button>
@@ -204,9 +256,17 @@ const PartMaster = () => {
                 checked={selectAll}
                 onChange={handleSelectAllChange}
               />
-              <label htmlFor="select-all">
-                {selectedParts.length} Selected
-              </label>
+              <label htmlFor="select-all">{selectedBoms.length} Selected</label>
+            </div>
+            <div className="bulk-actions">
+              <button className="btn-action">
+                <i className="fas fa-file-export"></i>
+                Export Selected
+              </button>
+              <button className="btn-action btn-danger">
+                <i className="fas fa-trash"></i>
+                Delete Selected
+              </button>
             </div>
           </div>
           <table>
@@ -216,14 +276,14 @@ const PartMaster = () => {
                   <input type="checkbox" id="select-all" />
                 </th>
                 <th>
-                  Code <i className="fas fa-sort color-gray ms-2"></i>
-                </th>
-                <th>
                   Name <i className="fas fa-sort color-gray ms-2"></i>
                 </th>
                 <th>
-                  UOM <i className="fas fa-sort color-gray ms-2"></i>
+                  Code <i className="fas fa-sort color-gray ms-2"></i>
                 </th>
+                <th>Items Count</th>
+                <th>Total Quantity</th>
+                <th>Total Value</th>
                 <th>Status</th>
                 <td className="actions">
                   <button className="btn-icon btn-primary" title="View Details">
@@ -239,42 +299,55 @@ const PartMaster = () => {
               </tr>
             </thead>
             <tbody>
-              {parts.length === 0 ? (
+              {boms.length === 0 ? (
                 <tr className="no-data-row">
-                  <td colSpan="6" className="no-data-cell">
-                    <div className="no-data-content">
-                      <i className="fas fa-cogs no-data-icon"></i>
-                      <p className="no-data-text">No parts found</p>
+                  <td colSpan="8" className="no-data-cell text-center">
+                    <div
+                      className="no-data-content d-flex flex-column align-items-center justify-content-center"
+                      style={{ minHeight: "200px" }}
+                    >
+                      <i className="fas fa-sitemap no-data-icon mb-3"></i>
+                      <p className="no-data-text mb-1">No BOM's added</p>
                       <p className="no-data-subtext">
-                        Click the "Add New Part" button to create your first
-                        part
+                        Click the "Add New BOM" button to create your first Bill
+                        of Materials
                       </p>
                     </div>
                   </td>
                 </tr>
               ) : (
-                parts.map((part) => (
-                  <tr key={part.id}>
+                boms.map((bom) => (
+                  <tr key={bom.id}>
                     <td className="checkbox-cell">
                       <input
                         type="checkbox"
-                        checked={selectedParts.includes(part.id)}
-                        onChange={() => handlePartCheckboxChange(part.id)}
+                        checked={selectedBoms.includes(bom.id)}
+                        onChange={() => handleBomCheckboxChange(bom.id)}
                       />
                     </td>
                     <td>
                       <div>
-                        <span>{part.trNo}</span>
+                        <span>{bom.name}</span>
                       </div>
                     </td>
                     <td>
                       <div>
-                        <span>{part.name}</span>
+                        <span>{bom.code}</span>
                       </div>
                     </td>
                     <td>
                       <div>
-                        <span>{part.code}</span>
+                        <span>{bom.uom}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div>
+                        <span>{bom.qty}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div>
+                        <span>{bom.warehouse}</span>
                       </div>
                     </td>
                     <td className="actions">
@@ -324,4 +397,4 @@ const PartMaster = () => {
   );
 };
 
-export default PartMaster;
+export default BOM;

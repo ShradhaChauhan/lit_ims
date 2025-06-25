@@ -127,7 +127,7 @@ const VendorMaster = () => {
         <div className="table-form-container">
           <div className="form-header">
             <h2>
-              <i className="fas fa-user-plus"></i> Add New Item
+              <i className="fas fa-user-plus"></i> Add New Partner
             </h2>
             <button
               className="btn-close"
@@ -148,7 +148,6 @@ const VendorMaster = () => {
                       className="form-control ps-5 ms-2 text-font"
                       id="type"
                       placeholder="Type"
-                      data-bs-toggle="dropdown"
                       value={formData.type}
                       onChange={handleChange}
                     >

@@ -15,7 +15,7 @@ const AddUserModal = () => {
     "vendorMaster",
     "itemMaster",
     "warehouseMaster",
-    "bom",
+    "bomMaster",
     "typeMaster",
     "groupMaster",
     "partMaster",
@@ -33,7 +33,7 @@ const AddUserModal = () => {
     vendorMaster: "Vendor Master",
     itemMaster: "Item Master",
     warehouseMaster: "Warehouse Master",
-    bom: "BOM",
+    bom: "BOM Master",
     typeMaster: "Type Master",
     groupMaster: "Group Master",
     partMaster: "Part Master",
@@ -49,86 +49,36 @@ const AddUserModal = () => {
 
   return (
     <div>
-      <form>
-        <div className="row">
-          <div className="col-6 d-flex align-items-center justify-content-center">
-            <input
-              type="text"
-              className="form-control ms-2"
-              id="userId"
-              placeholder="User Name"
-            />
-          </div>
-          <div className="col-6 d-flex align-items-center justify-content-center mt-2">
-            <input
-              type="password"
-              className="form-control ms-2"
-              id="password"
-              placeholder="Password"
-            />
-          </div>
-        </div>
-
-        <div className="row">
-          <div className="col-6 d-flex align-items-center justify-content-center mt-2">
-            <input
-              type="text"
-              className="form-control ms-2"
-              id="role"
-              placeholder="Role"
-              disabled
-            />
-          </div>
-
-          <div className="col-6 d-flex align-items-center mt-2">
-            <div className="dropdown col-12">
+      <div className="modal" tabIndex="-1">
+        <div className="modal-dialog">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title">Modal title</h5>
               <button
-                className="btn btn-light dropdown-toggle ms-2"
                 type="button"
-                data-bs-toggle="dropdown"
+                className="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div className="modal-body">
+              <p>Modal body text goes here.</p>
+            </div>
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                data-bs-dismiss="modal"
               >
-                Access
+                Close
               </button>
-
-              <ul
-                className="dropdown-menu p-3"
-                style={{ maxHeight: "300px", overflowY: "auto" }}
-              >
-                {modules.map((id) => (
-                  <li key={id}>
-                    <input
-                      type="checkbox"
-                      className="form-check-input me-2"
-                      id={id}
-                      checked={accessModules.includes(id)}
-                      onChange={handleCheckboxChange}
-                    />
-                    <label htmlFor={id}>{moduleLabels[id]}</label>
-                  </li>
-                ))}
-              </ul>
-
-              {/* Selected Access Display */}
-              {accessModules.length > 0 && (
-                <div className="mt-2 ms-2 d-flex flex-wrap gap-2">
-                  {accessModules.map((id, key) => (
-                    <div>
-                      <span key={id} className="badge bg-success">
-                        {moduleLabels[id]}
-                        {/* <button
-                          type="button"
-                          className="btn-close"
-                          onClick={() => ""}
-                        ></button> */}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <button type="button" className="btn btn-primary">
+                Save changes
+              </button>
             </div>
           </div>
         </div>
-      </form>
+      </div>
     </div>
   );
 };
