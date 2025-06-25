@@ -260,18 +260,6 @@ const Users = () => {
 
   const handleAddUser = (e) => {
     e.preventDefault();
-    // const selectedViewPermissions = Object.entries(masterViewPermissions)
-    //   .filter(([_, isChecked]) => isChecked)
-    //   .map(([key]) => key);
-    // const selectedEditPermissions = Object.entries(masterEditPermissions)
-    //   .filter(([_, isChecked]) => isChecked)
-    //   .map(([key]) => key);
-    // console.log("Form Data:", formData);
-    // console.log("Access Modules:", accessModules);
-    // console.log("View Permissions:", selectedViewPermissions);
-    // console.log("Edit Permissions:", selectedEditPermissions);
-    // alert("User Added Successfully");
-
     const finalData = {
       username: formData.name,
       email: formData.email,
@@ -283,7 +271,15 @@ const Users = () => {
       permissions: collectPermissions(),
     };
 
-    console.log("Final Submit Payload:", finalData);
+    console.log("Submitting form");
+    fetch("", {
+      method: "POST",
+      body: finalData,
+    }).then(function (response) {
+      console.log(response);
+      return response.json();
+    });
+    console.log("Form submitted. ", finalData);
   };
 
   const handleMasterViewAllChange = (e) => {
