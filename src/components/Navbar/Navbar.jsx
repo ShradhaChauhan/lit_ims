@@ -16,6 +16,7 @@ const Navbar = () => {
     setIsAddGroup,
     setIsAddPart,
     setIsAddBom,
+    setBranchDropdownValues,
   } = useContext(AppContext);
   const navigate = useNavigate();
 
@@ -33,6 +34,13 @@ const Navbar = () => {
     } catch (error) {
       console.error("Logout failed", error);
     }
+  };
+
+  const handleLoadBranchDropdownValues = (e) => {
+    e.preventDefault();
+
+    setBranchDropdownValues(); //Add branches array in this function.
+    setIsAddUser(true);
   };
 
   return (
@@ -55,7 +63,10 @@ const Navbar = () => {
           </div>
           {/* Add User Button */}
           {!activeComponent && (
-            <button className="add-btn" onClick={() => setIsAddUser(true)}>
+            <button
+              className="add-btn"
+              onClick={() => handleLoadBranchDropdownValues}
+            >
               <i className="fa-solid fa-user-plus"></i> Add New User
             </button>
           )}

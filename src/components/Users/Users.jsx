@@ -5,7 +5,8 @@ import AddUserModal from "../Modals/AddUserModal";
 
 const Users = () => {
   // const [showAddUserModal, setShowAddUserModal] = useState(false);
-  const { isAddUser, setIsAddUser } = useContext(AppContext);
+  const { isAddUser, setIsAddUser, branchDropdownValues } =
+    useContext(AppContext);
   const [isReset, setIsReset] = useState(false);
   const [accessModules, setAccessModules] = useState([]);
   const [isChecked, setIsChecked] = useState(true);
@@ -669,8 +670,11 @@ const Users = () => {
                         <option value="" disabled hidden className="text-muted">
                           Select Branch
                         </option>
-                        <option value="iqc">IQC</option>
-                        <option value="executive">Production</option>
+                        {branchDropdownValues.map((val) => (
+                          <option value={val.name} key={val.id}>
+                            {val.name}
+                          </option>
+                        ))}
                       </select>
                       <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                     </div>

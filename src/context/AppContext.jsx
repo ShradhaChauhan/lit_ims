@@ -14,6 +14,7 @@ const AppContextProvider = (props) => {
   const [isAddGroup, setIsAddGroup] = useState(false);
   const [isAddPart, setIsAddPart] = useState(false);
   const [isAddBom, setIsAddBom] = useState(false);
+  const [branchDropdownValues, setBranchDropdownValues] = useState([{}]);
 
   const value = {
     rightSideComponent,
@@ -38,6 +39,8 @@ const AppContextProvider = (props) => {
     setIsAddPart,
     isAddBom,
     setIsAddBom,
+    branchDropdownValues,
+    setBranchDropdownValues,
   };
 
   return (
