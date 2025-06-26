@@ -6,47 +6,40 @@
 }
 
 :root {
+    --lightYellow: #FEF7E7;
+    --yellow: #EA9D19;    
+    --warning-color: #f59e0b;
+    --lightGold: #eda557;
+    --gold: #EB963C;    
+    --lightBlue: #5b80c4;
+    --lightBlue1: #dbe0ea;
+    --lightBlue2: #4880d3;
+    --lightBlue3: #E9EFFB;
+    --blue: #1E5CD0;
+    --blue1: #0d52bd;
+    --blue3: #306AE7;
+    --primary-color: #2563eb;
+    --primary-dark: #1d4ed8;
+    --primary-light: #60a5fa;
+    --secondary-color: #64748b;
+    --lightGreen: #EEF9EB;
+    --green: #36BC5D;
+    --success-color: #35c469;
+    --lightRed: rgba(239, 68, 68, 0.1);
+    --red: rgb(240, 53, 53);
+    --danger-color: #ef4444;  
     --white: white;
     --white1: #c8c9cc;
-
-    --gold: #EB963C;
-    --lightGold: #eda557;
-
-    --lightYellow: #FEF7E7;
-    --yellow: #EA9D19;
-
+    --background-color: #f8fafc;  
+    --border-color: #e2e8f0;
+    --hover-color: #f1f5f9;
     --lightGray: #85898c;
     --gray: gray;
     --gray1: #333538;
     --gray2: #474b51;
     --gray3: #94A3B8;
-
-    --blue: #1E5CD0;
-    --blue1: #0d52bd;
-    --lightBlue: #5b80c4;
-    --lightBlue1: #dbe0ea;
-    --lightBlue2: #4880d3;
-
-    --lightBlue3: #E9EFFB;
-    --blue3: #306AE7;
-
-    --coalBlack: #242424;
     --coalBlackLight: #2d2d2d;
-
-    --lightGreen: #EEF9EB;
-    --green: #36BC5D;
-
-    --red: rgb(240, 53, 53);
-    --lightRed: rgba(239, 68, 68, 0.1);
-
-    --primary-color: #2563eb;
-    --primary-dark: #1d4ed8;
-    --primary-light: #60a5fa;
-    --secondary-color: #64748b;
-    --success-color: #35c469;
-    --danger-color: #ef4444;
-    --warning-color: #f59e0b;
-    --background-color: #f8fafc;
+    --coalBlack: #242424;
     --sidebar-color: #1e293b;
     --text-color: #8D91AD;
     --text-color-gray: #373A41;
@@ -54,10 +47,7 @@
     --text-light: #94a3b8;
     --text-light-gray: #94a3b8;
     --header-color: #334155;
-    --border-color: #e2e8f0;
-    --hover-color: #f1f5f9;
     --hover-gray: rgba(255, 255, 255, 0.05);
-
 }
 
 /* Responsive Styles for Permissions */
@@ -266,7 +256,7 @@
 .checkbox-wrapper input[type="checkbox"]:checked + .permission-icon.success {
     color: var(--success-color);
 }
-/*  */
+
 .main-content {
     flex: 1;
     margin-left: 280px;
@@ -376,8 +366,6 @@
     cursor: pointer;
     min-width: 150px;
 }
-
-
 
 .search-box {
     flex: 1;
@@ -630,8 +618,6 @@ td {
   padding-bottom: 0 !important;
   font-size: 0.85rem;
 }
-
-
 
 .padding-2 {
     padding: 2rem;

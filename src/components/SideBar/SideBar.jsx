@@ -2,7 +2,6 @@ import React, { useContext, useState } from "react";
 import SearchBar from "../SearchBar/SearchBar";
 import "./SideBar.css";
 import { AppContext } from "../../context/AppContext";
-import litWhiteLogo from "../../assets/images/litWhiteLogo.png";
 import ims_logo from "../../assets/images/ims_logo.png";
 import api from "../../services/api";
 import { useNavigate } from "react-router-dom";

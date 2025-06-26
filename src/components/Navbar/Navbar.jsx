@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppContext } from "../../context/AppContext";
-import api from "../../services/api"; // Adjust if needed
+import api from "../../services/api";
 import "./Navbar.css";
 
 const Navbar = () => {
@@ -61,6 +61,7 @@ const Navbar = () => {
               </span>
             </p>
           </div>
+
           {/* Add User Button */}
           {!activeComponent && (
             <button
@@ -70,37 +71,43 @@ const Navbar = () => {
               <i className="fa-solid fa-user-plus"></i> Add New User
             </button>
           )}
+          {/* Add Partner Button */}
           {activeComponent === "Masters / Business Partner" && (
             <button className="add-btn" onClick={() => setIsAddVendor(true)}>
               <i className="fa-solid fa-plus"></i> Add New Partner
             </button>
           )}
+          {/* Add Item Button */}
           {activeComponent === "Masters / Item Master" && (
             <button className="add-btn" onClick={() => setIsAddItem(true)}>
               <i className="fa-solid fa-plus"></i> Add New Item
             </button>
           )}
+          {/* Add Warehouse Button */}
           {activeComponent === "Masters / Warehouse Master" && (
             <button className="add-btn" onClick={() => setIsAddWarehouse(true)}>
               <i className="fa-solid fa-plus"></i> Add New Warehouse
             </button>
           )}
+          {/* Add Type Button */}
           {activeComponent === "Masters / Type Master" && (
             <button className="add-btn" onClick={() => setIsAddType(true)}>
               <i className="fa-solid fa-plus"></i> Add New Type
             </button>
           )}
+          {/* Add Group Button */}
           {activeComponent === "Masters / Group Master" && (
             <button className="add-btn" onClick={() => setIsAddGroup(true)}>
               <i className="fa-solid fa-plus"></i> Add New Group
             </button>
           )}
+          {/* Add Part Button */}
           {activeComponent === "Masters / Part Master" && (
             <button className="add-btn" onClick={() => setIsAddPart(true)}>
               <i className="fa-solid fa-plus"></i> Add New Part
             </button>
           )}
-
+          {/* Add BOM Button */}
           {activeComponent === "Masters / BOM Master" && (
             <button className="add-btn" onClick={() => setIsAddBom(true)}>
               <i className="fa-solid fa-plus"></i> Add New BOM

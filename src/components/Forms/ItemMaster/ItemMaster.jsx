@@ -395,7 +395,6 @@ const ItemMaster = () => {
                 className="btn btn-secondary border border-0 add-btn bg-secondary me-3 float-end"
                 onClick={handleReset}
               >
-                {/* <i className="fa-solid fa-xmark me-1"></i> */}
                 <i className="fa-solid fa-arrows-rotate me-1"></i> Reset
               </button>
             </div>

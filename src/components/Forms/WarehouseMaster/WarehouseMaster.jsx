@@ -6,7 +6,6 @@ const WarehouseMaster = () => {
 
   const [selectedWarehouses, setSelectedWarehouses] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
-  const [isReset, setIsReset] = useState(false);
   const [status, setStatus] = useState("active");
   const [isChecked, setIsChecked] = useState(true);
   const [formData, setFormData] = useState({
