@@ -7,7 +7,8 @@ const BOM = () => {
   const [selectedBoms, setSelectedBoms] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [isReset, setIsReset] = useState(false);
-  const [isAddBomPart, setIsAddBomPart] = useState([{}]);
+  let id = 1;
+  const [isAddBomPart, setIsAddBomPart] = useState([{ id: id }]);
 
   const boms = [];
 
@@ -248,6 +249,9 @@ const BOM = () => {
                 <button
                   type="button"
                   className="btn btn-secondary text-font m-3"
+                  onClick={(key) => {
+                    setIsAddBomPart(...isAddBomPart, [{ id: id + 1 }]);
+                  }}
                 >
                   <i className="fas fa-plus me-2"></i>
                   Add Item

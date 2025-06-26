@@ -11,6 +11,25 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [branch, setBranch] = useState("");
   const [error, setError] = useState("");
+  const [loginBtnFun, setLoginBtnFun] = useState(handleVerify);
+  const [responseUsername, setResponseUsername] = useState("");
+
+  const handleVerify = async (e) => {
+    e.preventDefault();
+    try {
+      const data = { username, password };
+      console.log(data);
+      const response = await api.post("/api/auth/login", {
+        data,
+      });
+      console.log(response);
+      setBranch(response.branches);
+      setResponseUsername(response.username);
+      setLoginBtnFun(handleLogin);
+    } catch (err) {
+      setError("Invalid Credentials");
+    }
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -21,9 +40,11 @@ const Login = () => {
         data,
       });
       console.log(response);
-      setBranch(response.branches);
+      setLoginBtnFun(handleLogin);
     } catch (err) {
-      setError("Invalid Credentials");
+      setError(
+        "Some error occured while logging in. Please contact the support team"
+      );
     }
   };
 
@@ -86,8 +107,8 @@ const Login = () => {
                   defaultValue=""
                 >
                   <option value="">Select branch</option>
-                  <option value="iqc">IQC</option>
-                  <option value="production">Production</option>
+                  <option value="1">IQC</option>
+                  <option value="2">Production</option>
                 </select>
               </div>
             )}
@@ -113,7 +134,7 @@ const Login = () => {
             </div>
             <button
               type="submit"
-              onClick={handleLogin}
+              onClick={loginBtnFun}
               className="btn loginBtn w-100"
             >
               {branch ? "Login" : "Verify"}
