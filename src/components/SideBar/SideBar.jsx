@@ -48,7 +48,7 @@ const SideBar = () => {
           label: "Business Partner",
           compName: "VendorMaster",
           path: "Masters / Business Partner",
-          icon: "fas fa-truck",
+          icon: "fas fa-user-group",
         },
         {
           label: "Item Master",

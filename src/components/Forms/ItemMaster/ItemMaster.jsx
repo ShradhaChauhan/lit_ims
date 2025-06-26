@@ -102,7 +102,7 @@ const ItemMaster = () => {
                     Item Code
                   </label>
                   <div className="position-relative w-100">
-                    <i className="fas fa-barcode position-absolute input-icon"></i>
+                    <i className="fas fa-qrcode position-absolute input-icon"></i>
                     <input
                       type="text"
                       className="form-control ps-5 text-font"
@@ -212,27 +212,17 @@ const ItemMaster = () => {
                   </div>
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="stQty" className="form-label mb-0 ms-2">
+                  <label htmlFor="stQty" className="form-label mb-0  ms-2">
                     ST QTY
                   </label>
                   <div className="position-relative w-100">
                     <i className="fas fa-cubes position-absolute input-icon"></i>
-                    <select
-                      className="form-control ps-5 ms-2 text-font"
+                    <input
+                      type="text"
+                      className="form-control ps-5 text-font"
                       id="stQty"
-                      placeholder="ST QTY"
-                      defaultValue=""
-                      required
-                    >
-                      <option value="" disabled hidden className="text-muted">
-                        Select ST QTY
-                      </option>
-                      <option value="smt">SMT</option>
-                      <option value="mi">MI</option>
-                      <option value="molding">Molding</option>
-                      <option value="assemble">Assemble</option>
-                    </select>
-                    <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                      placeholder="Enter ST QTY"
+                    />
                   </div>
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
@@ -256,7 +246,7 @@ const ItemMaster = () => {
                     Status
                   </label>
                   <div className="position-relative w-100">
-                    <div className="form-check form-switch position-absolute input-icon padding-left-2">
+                    <div className="form-check form-switch position-absolute input-icon mt-1 padding-left-2">
                       <input
                         className="form-check-input text-font switch-style"
                         type="checkbox"
@@ -350,17 +340,7 @@ const ItemMaster = () => {
                 <th>ST Qty</th>
                 <th>Life</th>
                 <th>Status</th>
-                <td className="actions">
-                  <button className="btn-icon btn-primary" title="View Details">
-                    <i className="fas fa-eye"></i>
-                  </button>
-                  <button className="btn-icon btn-success" title="Edit">
-                    <i className="fas fa-edit"></i>
-                  </button>
-                  <button className="btn-icon btn-danger" title="Delete">
-                    <i className="fas fa-trash"></i>
-                  </button>
-                </td>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>

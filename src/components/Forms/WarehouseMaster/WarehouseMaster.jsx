@@ -83,24 +83,10 @@ const WarehouseMaster = () => {
                     <i className="fas fa-hashtag position-absolute input-icon"></i>
                     <input
                       type="text"
-                      className="form-control ps-5 text-font"
+                      className="form-control ps-5 text-font input-centered"
                       id="trNo"
                       placeholder="********************"
                       disabled
-                    />
-                  </div>
-                </div>
-                <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="code" className="form-label  ms-2">
-                    Code
-                  </label>
-                  <div className="position-relative w-100">
-                    <i className="fas fa-barcode position-absolute input-icon"></i>
-                    <input
-                      type="text"
-                      className="form-control ps-5 text-font"
-                      id="code"
-                      placeholder="Enter warehouse code"
                     />
                   </div>
                 </div>
@@ -118,6 +104,20 @@ const WarehouseMaster = () => {
                     />
                   </div>
                 </div>
+                <div className="col-4 d-flex flex-column form-group">
+                  <label htmlFor="code" className="form-label  ms-2">
+                    Code
+                  </label>
+                  <div className="position-relative w-100">
+                    <i className="fas fa-qrcode position-absolute input-icon"></i>
+                    <input
+                      type="text"
+                      className="form-control ps-5 text-font"
+                      id="code"
+                      placeholder="Enter warehouse code"
+                    />
+                  </div>
+                </div>
               </div>
               <div className="row form-style">
                 <div className="col-4 d-flex flex-column form-group">
@@ -125,7 +125,7 @@ const WarehouseMaster = () => {
                     Status
                   </label>
                   <div className="position-relative w-100">
-                    <div className="form-check form-switch position-absolute input-icon padding-left-2">
+                    <div className="form-check form-switch position-absolute input-icon mt-1 padding-left-2">
                       <input
                         className="form-check-input text-font switch-style"
                         type="checkbox"
@@ -209,17 +209,7 @@ const WarehouseMaster = () => {
                   Name <i className="fas fa-sort color-gray ms-2"></i>
                 </th>
                 <th>Status</th>
-                <td className="actions">
-                  <button className="btn-icon btn-primary" title="View Details">
-                    <i className="fas fa-eye"></i>
-                  </button>
-                  <button className="btn-icon btn-success" title="Edit">
-                    <i className="fas fa-edit"></i>
-                  </button>
-                  <button className="btn-icon btn-danger" title="Delete">
-                    <i className="fas fa-trash"></i>
-                  </button>
-                </td>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>

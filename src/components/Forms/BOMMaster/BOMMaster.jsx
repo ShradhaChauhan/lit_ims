@@ -7,6 +7,7 @@ const BOM = () => {
   const [selectedBoms, setSelectedBoms] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [isReset, setIsReset] = useState(false);
+  const [isAddBomPart, setIsAddBomPart] = useState([{}]);
 
   const boms = [];
 
@@ -82,7 +83,7 @@ const BOM = () => {
             <div className="form-grid border-bottom pt-0">
               <div className="row form-style">
                 <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="bomName" className="form-label  ms-2">
+                  <label htmlFor="bomName" className="form-label">
                     BOM Name
                   </label>
                   <div className="position-relative w-100">
@@ -96,11 +97,11 @@ const BOM = () => {
                   </div>
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="bomCode" className="form-label  ms-2">
+                  <label htmlFor="bomCode" className="form-label">
                     BOM Code
                   </label>
                   <div className="position-relative w-100">
-                    <i className="fas fa-barcode position-absolute input-icon"></i>
+                    <i className="fas fa-qrcode position-absolute input-icon"></i>
                     <input
                       type="text"
                       className="form-control ps-5 text-font"
@@ -110,11 +111,11 @@ const BOM = () => {
                   </div>
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="status" className="form-label mb-0">
+                  <label htmlFor="status" className="form-label">
                     Status
                   </label>
                   <div className="position-relative w-100">
-                    <div className="form-check form-switch position-absolute input-icon padding-left-2">
+                    <div className="form-check form-switch position-absolute input-icon mt-1 padding-left-2">
                       <input
                         className="form-check-input text-font switch-style"
                         type="checkbox"
@@ -146,10 +147,10 @@ const BOM = () => {
             </div>
 
             <div className="parts-section">
-              <div className="list-header">
+              <div className="bom-list-header">
                 <h2>Items List</h2>
               </div>
-              <div className="table-container mt-3">
+              <div className="item-table-container mt-3">
                 <table>
                   <thead>
                     <tr>
@@ -162,59 +163,86 @@ const BOM = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    <td>
-                      <select className="form-control text-font" required>
-                        <option value="">Select Part</option>$
-                        {/* {loadPartsOptions()} */}
-                      </select>
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="form-control text-font"
-                        readonly
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="form-control text-font"
-                        readonly
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="number"
-                        className="form-control text-font"
-                        min="0.01"
-                        step="0.01"
-                        required
-                      />
-                    </td>
-                    <td>
-                      <select
-                        className="form-control ps-5 ms-2 text-font"
-                        id="type"
-                      >
-                        <option value="">Select Warehouse</option>
-                      </select>
-                    </td>
-                    <td className="actions">
-                      <button
-                        type="button"
-                        className="btn-icon btn-primary"
-                        title="View Part Details"
-                      >
-                        <i className="fas fa-info-circle"></i>
-                      </button>
-                      <button
-                        type="button"
-                        className="btn-icon btn-danger"
-                        title="Remove Part"
-                      >
-                        <i className="fas fa-trash"></i>
-                      </button>
-                    </td>
+                    {isAddBomPart.map(() => (
+                      <tr>
+                        <td>
+                          <div className="field-wrapper">
+                            <div className="position-relative w-100">
+                              <i className="fas fa-cogs position-absolute input-icon"></i>
+                              <select
+                                className="form-control text-font w-100 ps-5"
+                                required
+                              >
+                                <option value="">Select Part</option>$
+                                {/* {loadPartsOptions()} */}
+                              </select>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <div className="field-wrapper">
+                            <input
+                              type="text"
+                              className="form-control text-font w-100"
+                              readOnly
+                            />
+                          </div>
+                        </td>
+                        <td>
+                          <div className="field-wrapper">
+                            <input
+                              type="text"
+                              className="form-control text-font w-100"
+                              readOnly
+                            />
+                          </div>
+                        </td>
+                        <td>
+                          <div className="field-wrapper">
+                            <input
+                              type="number"
+                              className="form-control text-font w-100"
+                              min="0.01"
+                              step="0.01"
+                              required
+                            />
+                          </div>
+                        </td>
+                        <td>
+                          <div className="">
+                            <div className="position-relative w-100">
+                              <i className="fas fa-warehouse position-absolute input-icon"></i>
+                              <select
+                                className="form-control text-font w-100 ps-5"
+                                id="warehouse"
+                                title="Select Warehouse"
+                                required
+                              >
+                                <option value="">Select Warehouse</option>
+                              </select>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="actions">
+                          <div className="field-wrapper">
+                            <button
+                              type="button"
+                              className="btn-icon btn-primary ms-2"
+                              title="View Part Details"
+                            >
+                              <i className="fas fa-info-circle"></i>
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-icon btn-danger ms-2"
+                              title="Remove Part"
+                            >
+                              <i className="fas fa-trash"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
                 <button
@@ -285,17 +313,7 @@ const BOM = () => {
                 <th>Total Quantity</th>
                 <th>Total Value</th>
                 <th>Status</th>
-                <td className="actions">
-                  <button className="btn-icon btn-primary" title="View Details">
-                    <i className="fas fa-eye"></i>
-                  </button>
-                  <button className="btn-icon btn-success" title="Edit">
-                    <i className="fas fa-edit"></i>
-                  </button>
-                  <button className="btn-icon btn-danger" title="Delete">
-                    <i className="fas fa-trash"></i>
-                  </button>
-                </td>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>

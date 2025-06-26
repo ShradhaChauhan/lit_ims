@@ -83,7 +83,7 @@ const TypeMaster = () => {
                     <i className="fas fa-hashtag position-absolute input-icon"></i>
                     <input
                       type="text"
-                      className="form-control ps-5 text-font"
+                      className="form-control ps-5 text-font input-centered"
                       id="trNo"
                       placeholder="********************"
                       disabled
@@ -109,7 +109,7 @@ const TypeMaster = () => {
                     Status
                   </label>
                   <div className="position-relative w-100">
-                    <div className="form-check form-switch position-absolute input-icon padding-left-2">
+                    <div className="form-check form-switch position-absolute input-icon mt-1 padding-left-2">
                       <input
                         className="form-check-input text-font switch-style"
                         type="checkbox"
@@ -190,17 +190,7 @@ const TypeMaster = () => {
                   Name <i className="fas fa-sort color-gray ms-2"></i>
                 </th>
                 <th>Status</th>
-                <td className="actions">
-                  <button className="btn-icon btn-primary" title="View Details">
-                    <i className="fas fa-eye"></i>
-                  </button>
-                  <button className="btn-icon btn-success" title="Edit">
-                    <i className="fas fa-edit"></i>
-                  </button>
-                  <button className="btn-icon btn-danger" title="Delete">
-                    <i className="fas fa-trash"></i>
-                  </button>
-                </td>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>

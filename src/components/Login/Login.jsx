@@ -9,17 +9,19 @@ const Login = () => {
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [branch, setBranch] = useState("");
   const [error, setError] = useState("");
 
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      await api.post("/auth/login", {
-        username,
-        password,
+      const data = { username, password, branch };
+      console.log(data);
+      const response = await api.post("/api/auth/login", {
+        data,
       });
-
-      navigate("/dashboard");
+      console.log(response);
+      setBranch(response.branches);
     } catch (err) {
       setError("Invalid Credentials");
     }
@@ -55,34 +57,40 @@ const Login = () => {
           </p> */}
           {error && <div className="alert alert-danger">{error}</div>}
           <form className="mt-4">
-            <div className="mb-3">
-              <input
-                type="text"
-                className="form-control text-color-gray"
-                placeholder="Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
-            </div>
-            <div className="mb-3">
-              <input
-                type="password"
-                className="form-control text-color-gray"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-            <div className="dropdown mb-3">
-              <select
-                className="form-select text-color-gray"
-                aria-label="Branch"
-              >
-                <option selected>Select branch</option>
-                <option value="iqc">IQC</option>
-                <option value="production">Production</option>
-              </select>
-            </div>
+            {!branch ? (
+              <div>
+                <div className="mb-3">
+                  <input
+                    type="text"
+                    className="form-control text-color-gray"
+                    placeholder="Username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                  />
+                </div>
+                <div className="mb-3">
+                  <input
+                    type="password"
+                    className="form-control text-color-gray"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="dropdown mb-3">
+                <select
+                  className="form-select text-color-gray"
+                  aria-label="Branch"
+                  defaultValue=""
+                >
+                  <option value="">Select branch</option>
+                  <option value="iqc">IQC</option>
+                  <option value="production">Production</option>
+                </select>
+              </div>
+            )}
             {/* <div className="dropdown mb-3">
               <select
                 className="form-select text-color-gray"
@@ -108,7 +116,7 @@ const Login = () => {
               onClick={handleLogin}
               className="btn loginBtn w-100"
             >
-              Login
+              {branch ? "Login" : "Verify"}
             </button>
           </form>
         </div>

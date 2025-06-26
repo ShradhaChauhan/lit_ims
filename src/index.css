@@ -484,6 +484,27 @@
     padding: 1.5rem !important;
 }
 
+.table-list-container > table > thead > tr > th {
+  background-color: transparent !important;
+  padding-bottom: 1rem !important;
+  vertical-align: middle !important;
+}
+
+.table-list-container th i {
+  vertical-align: middle;
+  font-size: 0.7rem;
+}
+
+table td .form-control {
+  width: 100% !important;
+}
+
+
+.permission-controls i {
+    font-size: 0.7rem;
+}
+
+
 .table-container {
     background-color: white;
     border-radius: 1rem;
@@ -491,6 +512,27 @@
     overflow: hidden;
     border: 1px solid var(--border-color);
 }
+
+.table-container table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.table-container td .form-control,
+.table-container td select {
+  width: 100% !important;
+}
+
+.field-wrapper {
+  padding: 0 0.75rem;
+}
+
+.item-table-container table {
+  width: 100%;
+  table-layout: fixed;
+}
+
 
 .table-header {
     padding: 1rem 1.5rem;
@@ -568,6 +610,7 @@ th i {
 
 tr {
     border-bottom: 1px solid var(--border-color) !important;
+    padding-bottom: 2rem !important;
 }
 
 thead {
@@ -575,10 +618,20 @@ thead {
 }
 
 td {
-    padding: 1rem 1.5rem 1rem 1.5rem;
+    padding: 1rem 1.5rem 1rem 0rem;
     border-bottom: 1px solid var(--border-color);
     font-size: 0.8rem;
 }
+
+.input-centered {
+  height: 2rem;
+  line-height: 2rem;
+  padding-top: 0.3rem !important;
+  padding-bottom: 0 !important;
+  font-size: 0.85rem;
+}
+
+
 
 .padding-2 {
     padding: 2rem;
@@ -816,7 +869,7 @@ select:invalid {
   transform: translateY(-50%);
   position: absolute;
   color: var(--gray3) !important;
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   z-index: 10;
   pointer-events: none;
 }
@@ -863,6 +916,23 @@ select:invalid {
 }
 
 .list-header h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+}
+
+.bom-list-header {
+    font-size: 0.8rem;
+    color: var(--text-color-gray);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.bom-list-header h2 {
     font-size: 1.1rem;
     font-weight: 600;
     display: flex;

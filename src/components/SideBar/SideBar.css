@@ -1,9 +1,8 @@
 /* Sidebar Styles */
 .heading {
   color: var(--text-color);  
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   padding-top: 20px;
-  /* padding-left: 15px; */
   padding-bottom: 0.5rem;  
   border-bottom: 1px solid var(--text-color);
   display: flex;
@@ -14,16 +13,6 @@
 .border-top {
   margin-top: 20px;
 }
-
-/* .sidebar {
-  width: 250px;
-  background-color: var(--sidebar-color);
-  transition: width 0.3s ease;
-  overflow-y: auto;
-  overflow-x: hidden;
-  min-height: 100vh;
-  position: relative;
-} */
 
 .sidebar {
   width: 250px;

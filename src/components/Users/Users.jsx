@@ -31,37 +31,28 @@ const Users = () => {
     img: "",
     status: "",
   });
-
   const [masterViewPermissions, setMasterViewPermissions] = useState({});
   const [isAllMastersViewChecked, setIsAllMastersViewChecked] = useState(false);
   const [masterEditPermissions, setMasterEditPermissions] = useState({});
   const [isAllMastersEditChecked, setIsAllMastersEditChecked] = useState(false);
   const [isAllTransactionsEditChecked, setIsAllTransactionsEditChecked] =
     useState(false);
-
   const [isAllTransactionsViewChecked, setIsAllTransactionsViewChecked] =
     useState(false);
-
   const [isAllReportsEditChecked, setIsAllReportsEditChecked] = useState(false);
-
   const [isAllReportsViewChecked, setIsAllReportsViewChecked] = useState(false);
-
   const [isAllAdministrationsEditChecked, setIsAllAdministrationsEditChecked] =
     useState(false);
-
   const [isAllAdministrationsViewChecked, setIsAllAdministrationsViewChecked] =
     useState(false);
-
   const [transactionViewPermissions, setTransactionViewPermissions] = useState(
     {}
   );
   const [transactionEditPermissions, setTransactionEditPermissions] = useState(
     {}
   );
-
   const [reportViewPermissions, setReportViewPermissions] = useState({});
   const [reportEditPermissions, setReportEditPermissions] = useState({});
-
   const [adminViewPermissions, setAdminViewPermissions] = useState({});
   const [adminEditPermissions, setAdminEditPermissions] = useState({});
 
@@ -85,7 +76,6 @@ const Users = () => {
       status: "Inactive",
     },
   ];
-
   const masters = [
     {
       id: 1,
@@ -118,7 +108,6 @@ const Users = () => {
       type: "warehouseMaster",
     },
   ];
-
   const transactions = [
     {
       id: 1,
@@ -161,7 +150,6 @@ const Users = () => {
       type: "wip",
     },
   ];
-
   const reports = [
     {
       id: 1,
@@ -179,7 +167,6 @@ const Users = () => {
       type: "productionReports",
     },
   ];
-
   const administrations = [
     {
       id: 1,
@@ -202,7 +189,6 @@ const Users = () => {
       type: "auditLogs",
     },
   ];
-
   const modules = [
     "vendorMaster",
     "itemMaster",
@@ -304,6 +290,24 @@ const Users = () => {
     setMasterEditPermissions(updatedPermissions);
   };
 
+  const handleSingleMasterViewChange = (type) => {
+    setMasterViewPermissions((prev) => {
+      const updated = { ...prev, [type]: !prev[type] };
+      const allChecked = masters.every((item) => updated[item.type]);
+      setIsAllMastersViewChecked(allChecked);
+      return updated;
+    });
+  };
+
+  const handleSingleMasterEditChange = (type) => {
+    setMasterEditPermissions((prev) => {
+      const updated = { ...prev, [type]: !prev[type] };
+      const allChecked = masters.every((item) => updated[item.type]);
+      setIsAllMastersEditChecked(allChecked);
+      return updated;
+    });
+  };
+
   const handleTransactionViewAllChange = (e) => {
     const checked = e.target.checked;
     setIsAllTransactionsViewChecked(checked);
@@ -370,24 +374,6 @@ const Users = () => {
     setAdminEditPermissions(updatedAdminEditPermissions);
   };
 
-  const handleSingleMasterViewChange = (type) => {
-    setMasterViewPermissions((prev) => {
-      const updated = { ...prev, [type]: !prev[type] };
-      const allChecked = masters.every((item) => updated[item.type]);
-      setIsAllMastersViewChecked(allChecked);
-      return updated;
-    });
-  };
-
-  const handleSingleMasterEditChange = (type) => {
-    setMasterEditPermissions((prev) => {
-      const updated = { ...prev, [type]: !prev[type] };
-      const allChecked = masters.every((item) => updated[item.type]);
-      setIsAllMastersEditChecked(allChecked);
-      return updated;
-    });
-  };
-
   const handleUserCheckboxChange = (userId) => {
     setSelectedUsers((prevSelected) =>
       prevSelected.includes(userId)
@@ -415,11 +401,6 @@ const Users = () => {
     );
   };
 
-  const handleSwitchState = (e, status) => {
-    e.preventDefault();
-    status === "active" ? setIsChecked(true) : setIsChecked(false);
-  };
-
   const handleReset = (e) => {
     e.preventDefault();
     setFormData({
@@ -434,6 +415,12 @@ const Users = () => {
     setIsChecked(true);
     setAccessModules([]);
     setMasterViewPermissions({});
+    setTransactionViewPermissions({});
+    setTransactionEditPermissions({});
+    setReportViewPermissions({});
+    setReportEditPermissions({});
+    setAdminViewPermissions({});
+    setAdminEditPermissions({});
     setIsAllMastersViewChecked(false);
     setMasterEditPermissions({});
     setIsAllMastersEditChecked(false);
@@ -444,11 +431,6 @@ const Users = () => {
     console.log(user);
     setUserDetails(user);
     setIsShowUserDetails(true);
-  };
-
-  const handleEditUser = (e) => {
-    e.preventDefault();
-    alert("Coming soon...");
   };
 
   return (
@@ -570,13 +552,15 @@ const Users = () => {
                       <select
                         className="form-control ps-5 text-font"
                         id="role"
-                        placeholder="Role"
+                        required
                         value={formData.role}
                         onChange={(e) =>
                           setFormData({ ...formData, role: e.target.value })
                         }
                       >
-                        <option value="">Select Role</option>
+                        <option value="" disabled hidden className="text-muted">
+                          Select Role
+                        </option>
                         <option value="admin">Admin</option>
                         <option value="executive">Executive</option>
                         <option value="manager">Manager</option>
@@ -593,7 +577,7 @@ const Users = () => {
                       <select
                         className="form-control ps-5 text-font"
                         id="department"
-                        placeholder="Department"
+                        required
                         value={formData.department}
                         onChange={(e) =>
                           setFormData({
@@ -602,7 +586,9 @@ const Users = () => {
                           })
                         }
                       >
-                        <option value="">Select Department</option>
+                        <option value="" disabled hidden className="text-muted">
+                          Select Department
+                        </option>
                         <option value="production">Production</option>
                         <option value="store">Store</option>
                       </select>
@@ -614,7 +600,7 @@ const Users = () => {
                       Status
                     </label>
                     <div className="position-relative w-100">
-                      <div className="form-check form-switch position-absolute input-icon padding-left-2">
+                      <div className="form-check form-switch position-absolute input-icon mt-1 padding-left-2">
                         <input
                           className="form-check-input text-font switch-style"
                           type="checkbox"
@@ -671,7 +657,7 @@ const Users = () => {
                       <select
                         className="form-control ps-5 text-font"
                         id="branch"
-                        placeholder="Branch"
+                        required
                         value={formData.branch}
                         onChange={(e) =>
                           setFormData({
@@ -680,7 +666,9 @@ const Users = () => {
                           })
                         }
                       >
-                        <option value="">Select Branch</option>
+                        <option value="" disabled hidden className="text-muted">
+                          Select Branch
+                        </option>
                         <option value="iqc">IQC</option>
                         <option value="executive">Production</option>
                       </select>
