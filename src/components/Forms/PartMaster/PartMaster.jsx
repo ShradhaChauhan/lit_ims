@@ -6,8 +6,14 @@ const PartMaster = () => {
 
   const [selectedParts, setSelectedParts] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
-  const [isReset, setIsReset] = useState(false);
-
+  const [status, setStatus] = useState("active");
+  const [isChecked, setIsChecked] = useState(true);
+  const [formData, setFormData] = useState({
+    name: "",
+    code: "",
+    uom: "",
+    status: "active",
+  });
   const parts = [];
 
   const handlePartCheckboxChange = (partId) => {
@@ -31,11 +37,33 @@ const PartMaster = () => {
 
   const handleAddParts = (e) => {
     e.preventDefault();
-    alert("Part Added Successfully");
+    const finalData = {
+      name: formData.name,
+      code: formData.code,
+      uom: formData.uom,
+      status: formData.status,
+    };
+
+    console.log("Submitting add part form");
+    fetch("", {
+      method: "POST",
+      body: finalData,
+    }).then(function (response) {
+      console.log(response);
+      return response.json();
+    });
+    console.log("Form submitted. ", finalData);
   };
 
-  const handleReset = () => {
-    // setFormData(initialFormState); //
+  const handleReset = (e) => {
+    e.preventDefault();
+    setFormData({
+      name: "",
+      code: "",
+      uom: "",
+      status: "active",
+    });
+    setIsChecked(true);
   };
 
   return (
@@ -82,25 +110,15 @@ const PartMaster = () => {
           </div>
 
           {/* Form Fields */}
-          <form autoComplete="off" className="padding-2">
+          <form
+            autoComplete="off"
+            className="padding-2"
+            onSubmit={handleAddParts}
+          >
             <div className="form-grid border-bottom pt-0">
               <div className="row form-style">
                 <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="code" className="form-label  ms-2">
-                    Code
-                  </label>
-                  <div className="position-relative w-100">
-                    <i className="fas fa-qrcode position-absolute input-icon"></i>
-                    <input
-                      type="text"
-                      className="form-control ps-5 text-font"
-                      id="code"
-                      placeholder="Enter part code"
-                    />
-                  </div>
-                </div>
-                <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="name" className="form-label  ms-2">
+                  <label htmlFor="name" className="form-label">
                     Name
                   </label>
                   <div className="position-relative w-100">
@@ -110,20 +128,47 @@ const PartMaster = () => {
                       className="form-control ps-5 text-font"
                       id="name"
                       placeholder="Enter part name"
+                      required
+                      value={formData.name}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
                     />
                   </div>
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="uom" className="form-label  ms-2">
+                  <label htmlFor="code" className="form-label">
+                    Code
+                  </label>
+                  <div className="position-relative w-100">
+                    <i className="fas fa-qrcode position-absolute input-icon"></i>
+                    <input
+                      type="text"
+                      className="form-control ps-5 text-font"
+                      id="code"
+                      placeholder="Enter part code"
+                      required
+                      value={formData.code}
+                      onChange={(e) =>
+                        setFormData({ ...formData, code: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="col-4 d-flex flex-column form-group">
+                  <label htmlFor="uom" className="form-label">
                     UOM
                   </label>
                   <div className="position-relative w-100">
                     <i className="fas fa-ruler position-absolute input-icon"></i>
                     <select
-                      className="form-control ps-5 ms-2 text-font"
+                      className="form-control ps-5 text-font"
                       id="uom"
-                      defaultValue=""
                       required
+                      value={formData.uom}
+                      onChange={(e) =>
+                        setFormData({ ...formData, uom: e.target.value })
+                      }
                     >
                       <option value="" disabled hidden className="text-muted">
                         Select UOM
@@ -141,7 +186,7 @@ const PartMaster = () => {
               </div>
               <div className="row form-style">
                 <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="status" className="form-label mb-0">
+                  <label htmlFor="status" className="form-label">
                     Status
                   </label>
                   <div className="position-relative w-100">
@@ -151,6 +196,18 @@ const PartMaster = () => {
                         type="checkbox"
                         role="switch"
                         id="switchCheckChecked"
+                        checked={isChecked}
+                        onChange={(e) => {
+                          const newStatus = e.target.checked
+                            ? "active"
+                            : "inactive";
+                          setIsChecked(e.target.checked);
+                          setStatus(newStatus);
+                          setFormData({
+                            ...formData,
+                            status: newStatus,
+                          });
+                        }}
                       />
 
                       <label
@@ -161,12 +218,18 @@ const PartMaster = () => {
                     <select
                       className="form-control text-font switch-padding"
                       id="status"
-                      defaultValue=""
-                      required
+                      value={status}
+                      onChange={(e) => {
+                        const newStatus = e.target.value;
+                        setStatus(newStatus);
+                        setIsChecked(newStatus === "active");
+
+                        setFormData((prev) => ({
+                          ...prev,
+                          status: newStatus,
+                        }));
+                      }}
                     >
-                      <option value="" disabled hidden className="text-muted">
-                        Select Status
-                      </option>
                       <option value="active">Active</option>
                       <option value="inactive">Inactive</option>
                     </select>
@@ -184,7 +247,7 @@ const PartMaster = () => {
               </button>
               <button
                 className="btn btn-secondary border border-0 add-btn bg-secondary me-3 float-end"
-                onClick={() => setIsReset(true)}
+                onClick={handleReset}
               >
                 <i className="fa-solid fa-arrows-rotate me-1"></i> Reset
               </button>
@@ -225,17 +288,7 @@ const PartMaster = () => {
                   UOM <i className="fas fa-sort color-gray ms-2"></i>
                 </th>
                 <th>Status</th>
-                <td className="actions">
-                  <button className="btn-icon btn-primary" title="View Details">
-                    <i className="fas fa-eye"></i>
-                  </button>
-                  <button className="btn-icon btn-success" title="Edit">
-                    <i className="fas fa-edit"></i>
-                  </button>
-                  <button className="btn-icon btn-danger" title="Delete">
-                    <i className="fas fa-trash"></i>
-                  </button>
-                </td>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>

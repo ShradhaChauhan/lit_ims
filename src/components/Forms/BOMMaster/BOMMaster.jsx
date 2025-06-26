@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useRef, useState } from "react";
 import { AppContext } from "../../../context/AppContext";
 
 const BOM = () => {
@@ -7,8 +7,28 @@ const BOM = () => {
   const [selectedBoms, setSelectedBoms] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [isReset, setIsReset] = useState(false);
-  let id = 1;
-  const [isAddBomPart, setIsAddBomPart] = useState([{ id: id }]);
+  const idRef = useRef(2);
+  const [status, setStatus] = useState("active");
+  const [isChecked, setIsChecked] = useState(true);
+  const [formData, setFormData] = useState({
+    name: "",
+    code: "",
+    status: "active",
+    items: [
+      {
+        item: "",
+        code: "",
+        uom: "",
+        quantity: "",
+        warehouse: "",
+        actions: {
+          view: false,
+          delete: false,
+        },
+      },
+    ],
+  });
+  const [isAddBomPart, setIsAddBomPart] = useState([{ id: 1 }]);
 
   const boms = [];
 
@@ -33,12 +53,59 @@ const BOM = () => {
 
   const handleAddBoms = (e) => {
     e.preventDefault();
-    alert("Bom Added Successfully");
+    const finalData = {
+      name: formData.name,
+      code: formData.code,
+      status: formData.status,
+      items: [
+        {
+          item: formData.items.item,
+          code: formData.items.code,
+          uom: formData.items.uom,
+          quantity: formData.items.quantity,
+          warehouse: formData.items.warehouse,
+          actions: {
+            view: false,
+            delete: false,
+          },
+        },
+      ],
+    };
+
+    console.log("Submitting add bom form");
+    fetch("", {
+      method: "POST",
+      body: finalData,
+    }).then(function (response) {
+      console.log(response);
+      return response.json();
+    });
+    console.log("Form submitted. ", finalData);
   };
 
-  const handleReset = () => {
-    // setFormData(initialFormState); //
+  const handleReset = (e) => {
+    e.preventDefault();
+    setFormData({
+      name: "",
+      code: "",
+      status: "active",
+      items: [
+        {
+          item: "",
+          code: "",
+          uom: "",
+          quantity: "",
+          warehouse: "",
+          actions: {
+            view: false,
+            delete: false,
+          },
+        },
+      ],
+    });
+    setIsChecked(true);
   };
+
   return (
     <div>
       {/* Search and Filter Section */}
@@ -80,7 +147,11 @@ const BOM = () => {
           </div>
 
           {/* Form Fields */}
-          <form autoComplete="off" className="padding-2">
+          <form
+            autoComplete="off"
+            className="padding-2"
+            onSubmit={handleAddBoms}
+          >
             <div className="form-grid border-bottom pt-0">
               <div className="row form-style">
                 <div className="col-4 d-flex flex-column form-group">
@@ -94,6 +165,11 @@ const BOM = () => {
                       className="form-control ps-5 text-font"
                       id="bomName"
                       placeholder="Enter BOM name"
+                      required
+                      value={formData.name}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
                     />
                   </div>
                 </div>
@@ -108,6 +184,11 @@ const BOM = () => {
                       className="form-control ps-5 text-font"
                       id="bomCode"
                       placeholder="Enter BOM code"
+                      required
+                      value={formData.code}
+                      onChange={(e) =>
+                        setFormData({ ...formData, code: e.target.value })
+                      }
                     />
                   </div>
                 </div>
@@ -122,6 +203,18 @@ const BOM = () => {
                         type="checkbox"
                         role="switch"
                         id="switchCheckChecked"
+                        checked={isChecked}
+                        onChange={(e) => {
+                          const newStatus = e.target.checked
+                            ? "active"
+                            : "inactive";
+                          setIsChecked(e.target.checked);
+                          setStatus(newStatus);
+                          setFormData({
+                            ...formData,
+                            status: newStatus,
+                          });
+                        }}
                       />
 
                       <label
@@ -132,8 +225,17 @@ const BOM = () => {
                     <select
                       className="form-control text-font switch-padding"
                       id="status"
-                      defaultValue=""
-                      required
+                      value={status}
+                      onChange={(e) => {
+                        const newStatus = e.target.value;
+                        setStatus(newStatus);
+                        setIsChecked(newStatus === "active");
+
+                        setFormData((prev) => ({
+                          ...prev,
+                          status: newStatus,
+                        }));
+                      }}
                     >
                       <option value="" disabled hidden className="text-muted">
                         Select Status
@@ -164,8 +266,8 @@ const BOM = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {isAddBomPart.map(() => (
-                      <tr>
+                    {isAddBomPart.map((item) => (
+                      <tr key={item.id}>
                         <td>
                           <div className="field-wrapper">
                             <div className="position-relative w-100">
@@ -173,9 +275,15 @@ const BOM = () => {
                               <select
                                 className="form-control text-font w-100 ps-5"
                                 required
+                                value={formData.items.item}
+                                onChange={(e) =>
+                                  setFormData({
+                                    ...formData,
+                                    pincode: e.target.value,
+                                  })
+                                }
                               >
-                                <option value="">Select Part</option>$
-                                {/* {loadPartsOptions()} */}
+                                <option value="">Select Part</option>
                               </select>
                             </div>
                           </div>
@@ -186,6 +294,14 @@ const BOM = () => {
                               type="text"
                               className="form-control text-font w-100"
                               readOnly
+                              required
+                              value={formData.items.code}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  code: e.target.value,
+                                })
+                              }
                             />
                           </div>
                         </td>
@@ -195,6 +311,14 @@ const BOM = () => {
                               type="text"
                               className="form-control text-font w-100"
                               readOnly
+                              required
+                              value={formData.items.uom}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  uom: e.target.value,
+                                })
+                              }
                             />
                           </div>
                         </td>
@@ -206,6 +330,13 @@ const BOM = () => {
                               min="0.01"
                               step="0.01"
                               required
+                              value={formData.items.quantity}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  quantity: e.target.value,
+                                })
+                              }
                             />
                           </div>
                         </td>
@@ -218,6 +349,13 @@ const BOM = () => {
                                 id="warehouse"
                                 title="Select Warehouse"
                                 required
+                                value={formData.items.warehouse}
+                                onChange={(e) =>
+                                  setFormData({
+                                    ...formData,
+                                    warehouse: e.target.value,
+                                  })
+                                }
                               >
                                 <option value="">Select Warehouse</option>
                               </select>
@@ -249,8 +387,11 @@ const BOM = () => {
                 <button
                   type="button"
                   className="btn btn-secondary text-font m-3"
-                  onClick={(key) => {
-                    setIsAddBomPart(...isAddBomPart, [{ id: id + 1 }]);
+                  onClick={() => {
+                    setIsAddBomPart((prevParts) => [
+                      ...prevParts,
+                      { id: idRef.current++ },
+                    ]);
                   }}
                 >
                   <i className="fas fa-plus me-2"></i>
@@ -268,7 +409,7 @@ const BOM = () => {
               </button>
               <button
                 className="btn btn-secondary border border-0 add-btn bg-secondary me-3 float-end"
-                onClick={() => setIsReset(true)}
+                onClick={handleReset}
               >
                 <i className="fa-solid fa-arrows-rotate me-1"></i> Reset
               </button>

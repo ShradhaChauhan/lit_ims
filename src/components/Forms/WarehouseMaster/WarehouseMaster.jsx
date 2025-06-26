@@ -7,7 +7,13 @@ const WarehouseMaster = () => {
   const [selectedWarehouses, setSelectedWarehouses] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [isReset, setIsReset] = useState(false);
-
+  const [status, setStatus] = useState("active");
+  const [isChecked, setIsChecked] = useState(true);
+  const [formData, setFormData] = useState({
+    name: "",
+    code: "",
+    status: "active",
+  });
   const warehouses = [];
 
   const handleWarehouseCheckboxChange = (warehouseId) => {
@@ -31,11 +37,31 @@ const WarehouseMaster = () => {
 
   const handleAddWarehouse = (e) => {
     e.preventDefault();
-    alert("Warehouse Added Successfully");
+    const finalData = {
+      name: formData.name,
+      code: formData.code,
+      status: formData.status,
+    };
+
+    console.log("Submitting add warehouse form");
+    fetch("", {
+      method: "POST",
+      body: finalData,
+    }).then(function (response) {
+      console.log(response);
+      return response.json();
+    });
+    console.log("Form submitted. ", finalData);
   };
 
-  const handleReset = () => {
-    // setFormData(initialFormState); //
+  const handleReset = (e) => {
+    e.preventDefault();
+    setFormData({
+      name: "",
+      code: "",
+      status: "active",
+    });
+    setIsChecked(true);
   };
 
   return (
@@ -72,7 +98,11 @@ const WarehouseMaster = () => {
             ></button>
           </div>
           {/* Form Fields */}
-          <form autoComplete="off" className="padding-2">
+          <form
+            autoComplete="off"
+            className="padding-2"
+            onSubmit={handleAddWarehouse}
+          >
             <div className="form-grid border-bottom pt-0">
               <div className="row form-style">
                 <div className="col-4 d-flex flex-column form-group">
@@ -101,6 +131,11 @@ const WarehouseMaster = () => {
                       className="form-control ps-5 text-font"
                       id="name"
                       placeholder="Enter warehouse name"
+                      required
+                      value={formData.name}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
                     />
                   </div>
                 </div>
@@ -115,13 +150,18 @@ const WarehouseMaster = () => {
                       className="form-control ps-5 text-font"
                       id="code"
                       placeholder="Enter warehouse code"
+                      required
+                      value={formData.code}
+                      onChange={(e) =>
+                        setFormData({ ...formData, code: e.target.value })
+                      }
                     />
                   </div>
                 </div>
               </div>
               <div className="row form-style">
                 <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="status" className="form-label mb-0">
+                  <label htmlFor="status" className="form-label">
                     Status
                   </label>
                   <div className="position-relative w-100">
@@ -131,6 +171,18 @@ const WarehouseMaster = () => {
                         type="checkbox"
                         role="switch"
                         id="switchCheckChecked"
+                        checked={isChecked}
+                        onChange={(e) => {
+                          const newStatus = e.target.checked
+                            ? "active"
+                            : "inactive";
+                          setIsChecked(e.target.checked);
+                          setStatus(newStatus);
+                          setFormData({
+                            ...formData,
+                            status: newStatus,
+                          });
+                        }}
                       />
 
                       <label
@@ -141,12 +193,18 @@ const WarehouseMaster = () => {
                     <select
                       className="form-control text-font switch-padding"
                       id="status"
-                      defaultValue=""
-                      required
+                      value={status}
+                      onChange={(e) => {
+                        const newStatus = e.target.value;
+                        setStatus(newStatus);
+                        setIsChecked(newStatus === "active");
+
+                        setFormData((prev) => ({
+                          ...prev,
+                          status: newStatus,
+                        }));
+                      }}
                     >
-                      <option value="" disabled hidden className="text-muted">
-                        Select Status
-                      </option>
                       <option value="active">Active</option>
                       <option value="inactive">Inactive</option>
                     </select>
@@ -164,7 +222,7 @@ const WarehouseMaster = () => {
               </button>
               <button
                 className="btn btn-secondary border border-0 add-btn bg-secondary me-3 float-end"
-                onClick={() => setIsReset(true)}
+                onClick={handleReset}
               >
                 <i className="fa-solid fa-arrows-rotate me-1"></i> Reset
               </button>

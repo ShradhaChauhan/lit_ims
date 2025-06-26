@@ -18,7 +18,7 @@ const Users = () => {
     password: "",
     role: "",
     department: "",
-    status: "",
+    status: "active",
     branch: "",
   });
   const [isShowUserDetails, setIsShowUserDetails] = useState(false);

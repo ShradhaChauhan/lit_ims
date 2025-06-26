@@ -7,7 +7,20 @@ const ItemMaster = () => {
   const [selectAll, setSelectAll] = useState(false);
   const { isAddItem, setIsAddItem } = useContext(AppContext);
   const [isReset, setIsReset] = useState(false);
-
+  const [status, setStatus] = useState("active");
+  const [isChecked, setIsChecked] = useState(true);
+  const [formData, setFormData] = useState({
+    name: "",
+    code: "",
+    uom: "",
+    type: "",
+    barcode: "",
+    group: "",
+    price: "",
+    stQty: "",
+    life: "",
+    status: "active",
+  });
   const items = [];
 
   const handleItemCheckboxChange = (itemId) => {
@@ -31,11 +44,45 @@ const ItemMaster = () => {
 
   const handleAddItem = (e) => {
     e.preventDefault();
-    alert("Item Added Successfully");
+    const finalData = {
+      name: formData.name,
+      code: formData.code,
+      uom: formData.uom,
+      type: formData.type,
+      barcode: formData.barcode,
+      group: formData.group,
+      price: formData.price,
+      stQty: formData.stQty,
+      life: formData.life,
+      status: formData.status,
+    };
+
+    console.log("Submitting add item form");
+    fetch("", {
+      method: "POST",
+      body: finalData,
+    }).then(function (response) {
+      console.log(response);
+      return response.json();
+    });
+    console.log("Form submitted. ", finalData);
   };
 
-  const handleReset = () => {
-    // setFormData(initialFormState); //
+  const handleReset = (e) => {
+    e.preventDefault();
+    setFormData({
+      name: "",
+      code: "",
+      uom: "",
+      type: "",
+      barcode: "",
+      group: "",
+      price: "",
+      stQty: "",
+      life: "",
+      status: "active",
+    });
+    setIsChecked(true);
   };
 
   return (
@@ -80,7 +127,11 @@ const ItemMaster = () => {
             ></button>
           </div>
           {/* Form Fields */}
-          <form autoComplete="off" className="padding-2">
+          <form
+            autoComplete="off"
+            className="padding-2"
+            onSubmit={handleAddItem}
+          >
             <div className="form-grid border-bottom pt-0">
               <div className="row form-style">
                 <div className="col-4 d-flex flex-column form-group">
@@ -94,6 +145,11 @@ const ItemMaster = () => {
                       className="form-control ps-5 text-font"
                       id="name"
                       placeholder="Enter item name"
+                      required
+                      value={formData.name}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
                     />
                   </div>
                 </div>
@@ -108,6 +164,11 @@ const ItemMaster = () => {
                       className="form-control ps-5 text-font"
                       id="code"
                       placeholder="Enter item code"
+                      required
+                      value={formData.code}
+                      onChange={(e) =>
+                        setFormData({ ...formData, code: e.target.value })
+                      }
                     />
                   </div>
                 </div>
@@ -121,8 +182,11 @@ const ItemMaster = () => {
                       className="form-control ps-5 ms-2 text-font"
                       id="uom"
                       placeholder="UOM"
-                      defaultValue=""
                       required
+                      value={formData.uom}
+                      onChange={(e) =>
+                        setFormData({ ...formData, uom: e.target.value })
+                      }
                     >
                       <option value="" disabled hidden className="text-muted">
                         Select UOM
@@ -145,8 +209,11 @@ const ItemMaster = () => {
                       className="form-control ps-5 ms-2 text-font"
                       id="type"
                       placeholder="Type"
-                      defaultValue=""
                       required
+                      value={formData.type}
+                      onChange={(e) =>
+                        setFormData({ ...formData, type: e.target.value })
+                      }
                     >
                       <option value="" disabled hidden className="text-muted">
                         Select Type Name
@@ -169,6 +236,11 @@ const ItemMaster = () => {
                       className="form-control ps-5 text-font"
                       id="barcode"
                       placeholder="Enter barcode"
+                      required
+                      value={formData.barcode}
+                      onChange={(e) =>
+                        setFormData({ ...formData, barcode: e.target.value })
+                      }
                     />
                   </div>
                 </div>
@@ -182,8 +254,11 @@ const ItemMaster = () => {
                       className="form-control ps-5 ms-2 text-font"
                       id="group"
                       placeholder="Group"
-                      defaultValue=""
                       required
+                      value={formData.group}
+                      onChange={(e) =>
+                        setFormData({ ...formData, group: e.target.value })
+                      }
                     >
                       <option value="" disabled hidden className="text-muted">
                         Select Group
@@ -208,6 +283,11 @@ const ItemMaster = () => {
                       className="form-control ps-5 text-font"
                       id="price"
                       placeholder="Enter price"
+                      required
+                      value={formData.price}
+                      onChange={(e) =>
+                        setFormData({ ...formData, price: e.target.value })
+                      }
                     />
                   </div>
                 </div>
@@ -222,6 +302,11 @@ const ItemMaster = () => {
                       className="form-control ps-5 text-font"
                       id="stQty"
                       placeholder="Enter ST QTY"
+                      required
+                      value={formData.stQty}
+                      onChange={(e) =>
+                        setFormData({ ...formData, stQty: e.target.value })
+                      }
                     />
                   </div>
                 </div>
@@ -236,13 +321,18 @@ const ItemMaster = () => {
                       className="form-control ps-5 text-font"
                       id="life"
                       placeholder="Enter life (in days)"
+                      required
+                      value={formData.life}
+                      onChange={(e) =>
+                        setFormData({ ...formData, life: e.target.value })
+                      }
                     />
                   </div>
                 </div>
               </div>
               <div className="row form-style">
                 <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="status" className="form-label mb-0">
+                  <label htmlFor="status" className="form-label">
                     Status
                   </label>
                   <div className="position-relative w-100">
@@ -252,6 +342,18 @@ const ItemMaster = () => {
                         type="checkbox"
                         role="switch"
                         id="switchCheckChecked"
+                        checked={isChecked}
+                        onChange={(e) => {
+                          const newStatus = e.target.checked
+                            ? "active"
+                            : "inactive";
+                          setIsChecked(e.target.checked);
+                          setStatus(newStatus);
+                          setFormData({
+                            ...formData,
+                            status: newStatus,
+                          });
+                        }}
                       />
 
                       <label
@@ -262,12 +364,18 @@ const ItemMaster = () => {
                     <select
                       className="form-control text-font switch-padding"
                       id="status"
-                      defaultValue=""
-                      required
+                      value={status}
+                      onChange={(e) => {
+                        const newStatus = e.target.value;
+                        setStatus(newStatus);
+                        setIsChecked(newStatus === "active");
+
+                        setFormData((prev) => ({
+                          ...prev,
+                          status: newStatus,
+                        }));
+                      }}
                     >
-                      <option value="" disabled hidden className="text-muted">
-                        Select Status
-                      </option>
                       <option value="active">Active</option>
                       <option value="inactive">Inactive</option>
                     </select>
@@ -285,7 +393,7 @@ const ItemMaster = () => {
               </button>
               <button
                 className="btn btn-secondary border border-0 add-btn bg-secondary me-3 float-end"
-                onClick={() => setIsReset(true)}
+                onClick={handleReset}
               >
                 {/* <i className="fa-solid fa-xmark me-1"></i> */}
                 <i className="fa-solid fa-arrows-rotate me-1"></i> Reset

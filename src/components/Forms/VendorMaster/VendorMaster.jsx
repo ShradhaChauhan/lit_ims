@@ -6,7 +6,6 @@ const VendorMaster = () => {
   const { isAddVendor, setIsAddVendor } = useContext(AppContext);
   const [selectedVendors, setSelectedVendors] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
-  const [isReset, setIsReset] = useState(false);
   const [status, setStatus] = useState("active");
   const [isChecked, setIsChecked] = useState(true);
   const [formData, setFormData] = useState({
@@ -18,7 +17,7 @@ const VendorMaster = () => {
     state: "",
     pincode: "",
     address: "",
-    status: "",
+    status: "active",
   });
 
   const initialFormState = {
@@ -47,7 +46,7 @@ const VendorMaster = () => {
       status: formData.status,
     };
 
-    console.log("Submitting form");
+    console.log("Submitting add partner form");
     fetch("", {
       method: "POST",
       body: finalData,
@@ -56,23 +55,6 @@ const VendorMaster = () => {
       return response.json();
     });
     console.log("Form submitted. ", finalData);
-  };
-
-  const handleChange = (e) => {
-    const { type, name, mobile, email, city, state, pincode, address, status } =
-      e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [type]: type,
-      [name]: name,
-      [mobile]: mobile,
-      [email]: email,
-      [city]: city,
-      [state]: state,
-      [pincode]: pincode,
-      [address]: address,
-      [status]: status,
-    }));
   };
 
   const handleReset = (e) => {
@@ -89,11 +71,6 @@ const VendorMaster = () => {
       status: "active",
     });
     setIsChecked(true);
-  };
-
-  const handleAddVendor = () => {
-    e.preventDefault();
-    alert("Coming soon...");
   };
 
   const handleVendorCheckboxChange = (vendorId) => {
@@ -225,6 +202,7 @@ const VendorMaster = () => {
                       className="form-control ps-5 text-font"
                       id="name"
                       placeholder="Enter full name"
+                      required
                       value={formData.name}
                       onChange={(e) =>
                         setFormData({ ...formData, name: e.target.value })
@@ -243,6 +221,7 @@ const VendorMaster = () => {
                       className="form-control ps-5 ms-2 text-font"
                       id="mobile"
                       placeholder="Enter mobile number"
+                      required
                       value={formData.mobile}
                       onChange={(e) =>
                         setFormData({ ...formData, mobile: e.target.value })
@@ -263,6 +242,7 @@ const VendorMaster = () => {
                       className="form-control ps-5 ms-2 text-font"
                       id="email"
                       placeholder="Enter email address"
+                      required
                       value={formData.email}
                       onChange={(e) =>
                         setFormData({ ...formData, email: e.target.value })
@@ -281,6 +261,7 @@ const VendorMaster = () => {
                       className="form-control ps-5 ms-2 text-font"
                       id="city"
                       placeholder="Enter city"
+                      required
                       value={formData.city}
                       onChange={(e) =>
                         setFormData({ ...formData, city: e.target.value })
@@ -299,6 +280,7 @@ const VendorMaster = () => {
                       className="form-control ps-5 ms-2 text-font"
                       id="state"
                       placeholder="Enter state"
+                      required
                       value={formData.state}
                       onChange={(e) =>
                         setFormData({ ...formData, state: e.target.value })
@@ -319,6 +301,7 @@ const VendorMaster = () => {
                       className="form-control ps-5 ms-2 text-font"
                       id="pincode"
                       placeholder="Enter pincode"
+                      required
                       value={formData.pincode}
                       onChange={(e) =>
                         setFormData({ ...formData, pincode: e.target.value })
@@ -337,6 +320,7 @@ const VendorMaster = () => {
                       className="form-control pt-3 ps-5 ms-2 text-font"
                       id="address"
                       placeholder="Enter complete address"
+                      required
                       value={formData.address}
                       onChange={(e) =>
                         setFormData({ ...formData, address: e.target.value })

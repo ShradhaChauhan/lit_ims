@@ -6,7 +6,12 @@ const TypeMaster = () => {
 
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
-  const [isReset, setIsReset] = useState(false);
+  const [status, setStatus] = useState("active");
+  const [isChecked, setIsChecked] = useState(true);
+  const [formData, setFormData] = useState({
+    name: "",
+    status: "active",
+  });
 
   const types = [];
 
@@ -31,11 +36,29 @@ const TypeMaster = () => {
 
   const handleAddTypes = (e) => {
     e.preventDefault();
-    alert("Type Added Successfully");
+    const finalData = {
+      name: formData.name,
+      status: formData.status,
+    };
+
+    console.log("Submitting add type form");
+    fetch("", {
+      method: "POST",
+      body: finalData,
+    }).then(function (response) {
+      console.log(response);
+      return response.json();
+    });
+    console.log("Form submitted. ", finalData);
   };
 
-  const handleReset = () => {
-    // setFormData(initialFormState); //
+  const handleReset = (e) => {
+    e.preventDefault();
+    setFormData({
+      name: "",
+      status: "active",
+    });
+    setIsChecked(true);
   };
 
   return (
@@ -72,7 +95,11 @@ const TypeMaster = () => {
             ></button>
           </div>
           {/* Form Fields */}
-          <form autoComplete="off" className="padding-2">
+          <form
+            autoComplete="off"
+            className="padding-2"
+            onSubmit={handleAddTypes}
+          >
             <div className="form-grid border-bottom pt-0">
               <div className="row form-style">
                 <div className="col-4 d-flex flex-column form-group">
@@ -101,11 +128,16 @@ const TypeMaster = () => {
                       className="form-control ps-5 text-font"
                       id="name"
                       placeholder="Enter type name"
+                      required
+                      value={formData.name}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
                     />
                   </div>
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="status" className="form-label mb-0">
+                  <label htmlFor="status" className="form-label">
                     Status
                   </label>
                   <div className="position-relative w-100">
@@ -115,6 +147,18 @@ const TypeMaster = () => {
                         type="checkbox"
                         role="switch"
                         id="switchCheckChecked"
+                        checked={isChecked}
+                        onChange={(e) => {
+                          const newStatus = e.target.checked
+                            ? "active"
+                            : "inactive";
+                          setIsChecked(e.target.checked);
+                          setStatus(newStatus);
+                          setFormData({
+                            ...formData,
+                            status: newStatus,
+                          });
+                        }}
                       />
 
                       <label
@@ -125,12 +169,18 @@ const TypeMaster = () => {
                     <select
                       className="form-control text-font switch-padding"
                       id="status"
-                      defaultValue=""
-                      required
+                      value={status}
+                      onChange={(e) => {
+                        const newStatus = e.target.value;
+                        setStatus(newStatus);
+                        setIsChecked(newStatus === "active");
+
+                        setFormData((prev) => ({
+                          ...prev,
+                          status: newStatus,
+                        }));
+                      }}
                     >
-                      <option value="" disabled hidden className="text-muted">
-                        Select Status
-                      </option>
                       <option value="active">Active</option>
                       <option value="inactive">Inactive</option>
                     </select>
@@ -148,7 +198,7 @@ const TypeMaster = () => {
               </button>
               <button
                 className="btn btn-secondary border border-0 add-btn bg-secondary me-3 float-end"
-                onClick={() => setIsReset(true)}
+                onClick={handleReset}
               >
                 <i className="fa-solid fa-arrows-rotate me-1"></i> Reset
               </button>
