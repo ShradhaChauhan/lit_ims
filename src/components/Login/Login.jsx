@@ -11,7 +11,6 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [branch, setBranch] = useState("");
   const [error, setError] = useState("");
-  const [loginBtnFun, setLoginBtnFun] = useState(handleVerify);
   const [responseUsername, setResponseUsername] = useState("");
 
   const handleVerify = async (e) => {
@@ -48,6 +47,7 @@ const Login = () => {
     }
   };
 
+  const [loginBtnFun, setLoginBtnFun] = useState(handleVerify);
   return (
     <div className="container-fluid min-vh-100 d-flex p-5 wrapper">
       {/* Left Panel */}
