@@ -151,7 +151,7 @@ const SideBar = () => {
 
   const handleLogout = async () => {
     try {
-      await api.post("/auth/logout");
+      await api.post("/api/auth/logout");
       navigate("/");
     } catch (err) {
       console.error("Logout Failed", err);
