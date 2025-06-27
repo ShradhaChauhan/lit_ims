@@ -66,7 +66,7 @@ const Navbar = () => {
           {!activeComponent && (
             <button
               className="add-btn"
-              onClick={() => handleLoadBranchDropdownValues}
+              onClick={handleLoadBranchDropdownValues}
             >
               <i className="fa-solid fa-user-plus"></i> Add New User
             </button>
