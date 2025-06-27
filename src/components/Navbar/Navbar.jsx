@@ -36,11 +36,22 @@ const Navbar = () => {
     }
   };
 
-  const handleLoadBranchDropdownValues = (e) => {
+  const handleLoadBranchDropdownValues = async (e) => {
     e.preventDefault();
 
-    setBranchDropdownValues(); //Add branches array in this function.
-    setIsAddUser(true);
+    try {
+      const response = await api.get("/api/branch/by-company"); // Replace with your actual API endpoint
+      const branchList = response.data;
+      const formattedBranches = branchList.map((branch) => ({
+        label: `${branch.name} (${branch.code})`,
+        value: branch.id,
+      }));
+      setBranchDropdownValues(formattedBranches); // Update dropdown with branch list
+      setIsAddUser(true);
+    } catch (error) {
+      console.error("Failed to load branch dropdown values:", error);
+      alert("Failed to load branches. Please try again.");
+    }
   };
 
   return (
@@ -66,7 +77,7 @@ const Navbar = () => {
           {!activeComponent && (
             <button
               className="add-btn"
-              onClick={() => handleLoadBranchDropdownValues}
+              onClick={handleLoadBranchDropdownValues}
             >
               <i className="fa-solid fa-user-plus"></i> Add New User
             </button>

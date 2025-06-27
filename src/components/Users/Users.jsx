@@ -668,9 +668,10 @@ const Users = () => {
                         <option value="" disabled hidden className="text-muted">
                           Select Branch
                         </option>
+
                         {branchDropdownValues.map((val) => (
-                          <option value={val.name} key={val.id}>
-                            {val.name}
+                          <option key={val.value} value={val.value}>
+                            {val.label}
                           </option>
                         ))}
                       </select>
