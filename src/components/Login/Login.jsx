@@ -4,7 +4,6 @@ import ims_logo from "../../assets/images/ims_logo.png";
 import lit_logo from "../../assets/images/lit_logo.png";
 import leftImg from "../../assets/images/leftImg2.png";
 import { useNavigate } from "react-router-dom";
-import "./Login.css";
 import api from "../../services/api";
 
 const LoginPage = () => {
@@ -15,53 +14,74 @@ const LoginPage = () => {
   const [branches, setBranches] = useState([]);
   const [error, setError] = useState("");
   const [responseUsername, setResponseUsername] = useState("");
-  const [loginBtnFun, setLoginBtnFun] = useState("handleVerify");
 
   const handleVerify = async (e) => {
     if (e?.preventDefault) e.preventDefault();
+    setError("");
     try {
       const response = await api.post("/api/auth/login", {
         username,
         password,
       });
 
-      console.log(response);
-      setBranch(response.branches);
-      setResponseUsername(response.username);
-      setLoginBtnFun("handleLogin");
+      console.log("Verify Response:", response);
+
+      if (response.data && response.data.branches) {
+        setBranches(response.data.branches);
+        setResponseUsername(response.data.username);
+        setBranch(""); // Clear any previous branch selection
+      } else {
+        setError("No branches found for this user.");
+      }
     } catch (err) {
-      setError("Invalid Credentials");
+      console.error(err);
+      setError("Invalid credentials. Please try again.");
     }
   };
+
   const handleLogin = async (e) => {
     if (e?.preventDefault) e.preventDefault();
+    setError("");
+    if (!branch) {
+      setError("Please select a branch.");
+      return;
+    }
     try {
-      const data = { username, password, branch };
-      console.log(data);
-      const response = await api.post("/api/auth/login", {
-        data,
+      const response = await api.post("/api/auth/select-branch", null, {
+        params: {
+          username: responseUsername,
+          branchId: branch,
+        },
       });
-      console.log(response);
-      setLoginBtnFun("handleLogin");
+
+      console.log("Login Response:", response);
+
+      // ✅ Navigate to dashboard after successful login
+      navigate("/dashboard");
     } catch (err) {
+      console.error(err);
       setError("Login failed. Please contact support.");
     }
   };
 
+  const isBranchSelection = branches.length > 0;
+
   return (
     <div className="container-fluid container-bg min-vh-100 d-flex align-items-center justify-content-center bg-light">
       <div className="row shadow-lg login-container bg-white rounded-4 overflow-hidden">
-        {/* Left Panel - Login */}
+        {/* Left Panel */}
         <div className="col-md-6 p-5">
           <img src={lit_logo} alt="LIT logo" width={100} height={100} />
           <h2 className="fw-semibold mb-3">Welcome Back!</h2>
           <p className="tmb-4 description-font">
             Enter your username and password to access your account.
           </p>
+
           {error && <div className="alert alert-danger">{error}</div>}
+
           <form>
-            {!branch ? (
-              <div>
+            {!isBranchSelection ? (
+              <>
                 <div className="mb-3">
                   <label htmlFor="username" className="form-label">
                     Username
@@ -101,35 +121,40 @@ const LoginPage = () => {
                       Remember Me
                     </label>
                   </div>
-                  {/* <a href="#" className="text-decoration-none text-primary">
-                Forgot Your Password?
-              </a> */}
                 </div>
                 <button
                   type="submit"
-                  onClick={
-                    loginBtnFun === "handleVerify" ? handleVerify : handleLogin
-                  }
+                  onClick={handleVerify}
                   className="btn btn-primary w-100 mt-3 mb-5"
                 >
-                  {branch ? "Login" : "Verify"}
+                  Verify
                 </button>
-              </div>
+              </>
             ) : (
-              <div className="mb-3">
-                <select
-                  className="form-select text-color-gray"
-                  value={branch}
-                  onChange={(e) => setBranch(e.target.value)}
+              <>
+                <div className="mb-3">
+                  <label className="form-label">Select Branch</label>
+                  <select
+                    className="form-select text-color-gray"
+                    value={branch}
+                    onChange={(e) => setBranch(e.target.value)}
+                  >
+                    <option value="">-- Select Branch --</option>
+                    {branches.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <button
+                  type="submit"
+                  onClick={handleLogin}
+                  className="btn btn-primary w-100 mt-3 mb-5"
                 >
-                  <option value="">Select Branch</option>
-                  {branches.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  Login
+                </button>
+              </>
             )}
           </form>
 
@@ -141,7 +166,7 @@ const LoginPage = () => {
           </div>
         </div>
 
-        {/* Right Panel - Branding */}
+        {/* Right Panel */}
         <div className="col-md-6 d-none d-md-flex flex-column align-items-center justify-content-center text-white p-5 bg-primary">
           <div className="mb-4">
             <img src={ims_logo} width={110} height={110} alt="IMS logo" />
@@ -155,7 +180,7 @@ const LoginPage = () => {
             </p>
             <img
               src={leftImg}
-              alt="IMS logo"
+              alt="IMS Visual"
               className="img-fluid shadow left-image-border"
               width={430}
             />
