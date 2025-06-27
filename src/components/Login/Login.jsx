@@ -10,21 +10,26 @@ const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [branch, setBranch] = useState("");
+  const [branches, setBranches] = useState([]);
   const [error, setError] = useState("");
-  const [responseUsername, setResponseUsername] = useState("");
 
   const handleVerify = async (e) => {
     e.preventDefault();
+    setError("");
     try {
-      const data = { username, password };
-      console.log(data);
       const response = await api.post("/api/auth/login", {
-        data,
+        username,
+        password,
       });
+
       console.log(response);
-      setBranch(response.branches);
-      setResponseUsername(response.username);
-      setLoginBtnFun(handleLogin);
+
+      const branches = response.data.branches;
+      if (branches && branches.length > 0) {
+        setBranches(branches);
+      } else {
+        setError("No branches found for this user.");
+      }
     } catch (err) {
       setError("Invalid Credentials");
     }
@@ -32,22 +37,27 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setError("");
+
+    if (!branch) {
+      setError("Please select a branch.");
+      return;
+    }
+
     try {
-      const data = { username, password, branch };
-      console.log(data);
-      const response = await api.post("/api/auth/login", {
-        data,
-      });
-      console.log(response);
-      setLoginBtnFun(handleLogin);
-    } catch (err) {
-      setError(
-        "Some error occured while logging in. Please contact the support team"
+      const response = await api.post(
+        `/api/auth/select-branch?username=${username}&branchId=${branch}`
       );
+
+      console.log(response);
+      navigate("/dashboard");
+    } catch (err) {
+      setError("Login failed. Please contact support.");
     }
   };
 
-  const [loginBtnFun, setLoginBtnFun] = useState(handleVerify);
+  const isVerifying = branches.length === 0;
+
   return (
     <div className="container-fluid min-vh-100 d-flex p-5 wrapper">
       {/* Left Panel */}
@@ -59,7 +69,6 @@ const Login = () => {
           alt="LIT logo"
           className="img-fluid mt-4 pt-4 position-absolute top-0 left-0"
         />
-
         <h1 className="text-center margin-top-10">IMS</h1>
         <p className="fs-4 textAlign text-center">
           Where Innovation, Quality & You Converge
@@ -72,14 +81,13 @@ const Login = () => {
       {/* Right Panel */}
       <div className="col-md-6 d-flex align-items-center justify-content-center rightPanel">
         <div className="w-60">
-          <h2 className="">Login to your account</h2>
-          {/* <p className="mb-4 description">
-            Monitor inventory levels and streamline operations
-          </p> */}
+          <h2>Login to your account</h2>
+
           {error && <div className="alert alert-danger">{error}</div>}
+
           <form className="mt-4">
-            {!branch ? (
-              <div>
+            {isVerifying ? (
+              <>
                 <div className="mb-3">
                   <input
                     type="text"
@@ -87,6 +95,7 @@ const Login = () => {
                     placeholder="Username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
+                    autoComplete="username"
                   />
                 </div>
                 <div className="mb-3">
@@ -96,32 +105,27 @@ const Login = () => {
                     placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
                   />
                 </div>
-              </div>
+              </>
             ) : (
-              <div className="dropdown mb-3">
+              <div className="mb-3">
                 <select
                   className="form-select text-color-gray"
-                  aria-label="Branch"
-                  defaultValue=""
+                  value={branch}
+                  onChange={(e) => setBranch(e.target.value)}
                 >
-                  <option value="">Select branch</option>
-                  <option value="1">IQC</option>
-                  <option value="2">Production</option>
+                  <option value="">Select Branch</option>
+                  {branches.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name}
+                    </option>
+                  ))}
                 </select>
               </div>
             )}
-            {/* <div className="dropdown mb-3">
-              <select
-                className="form-select text-color-gray"
-                aria-label="Database"
-              >
-                <option selected>Select database</option>
-                <option value="1">A.124</option>
-                <option value="2">A.250</option>
-              </select>
-            </div> */}
+
             <div className="form-check mb-4">
               <input
                 type="checkbox"
@@ -132,12 +136,13 @@ const Login = () => {
                 Remember me
               </label>
             </div>
+
             <button
               type="submit"
-              onClick={loginBtnFun}
+              onClick={isVerifying ? handleVerify : handleLogin}
               className="btn loginBtn w-100"
             >
-              {branch ? "Login" : "Verify"}
+              {isVerifying ? "Verify" : "Login"}
             </button>
           </form>
         </div>
