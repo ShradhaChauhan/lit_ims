@@ -37,22 +37,24 @@ const Navbar = () => {
   };
 
   const handleLoadBranchDropdownValues = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    try {
-      const response = await api.get("/api/branch/by-company"); // Replace with your actual API endpoint
-      const branchList = response.data;
-      const formattedBranches = branchList.map((branch) => ({
-        label: `${branch.name} (${branch.code})`,
-        value: branch.id,
-      }));
-      setBranchDropdownValues(formattedBranches); // Update dropdown with branch list
-      setIsAddUser(true);
-    } catch (error) {
-      console.error("Failed to load branch dropdown values:", error);
-      alert("Failed to load branches. Please try again.");
-    }
-  };
+  try {
+    const response = await api.get("/api/branch/by-company"); // API call
+    const branchList = response.data;
+
+    const formattedBranches = branchList.map((branch) => ({
+      label: `${branch.name} (${branch.code})`,
+      value: branch.id,
+    }));
+
+    setBranchDropdownValues(formattedBranches); // ✅ Set dropdown values
+    setIsAddUser(true); // ✅ Open the Add User form/modal
+  } catch (error) {
+    console.error("Failed to load branch dropdown values:", error);
+    alert("Failed to load branches. Please try again.");
+  }
+};
 
   return (
     <div>
