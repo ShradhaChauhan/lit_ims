@@ -9,6 +9,11 @@
     font-family: 'Montserrat';
 }
 
+.description-font {
+    font-size: 0.9rem;
+    color: var(--text-color);
+}
+
 .leftPanelImg {
     height: 50%;
     position: absolute;
@@ -54,4 +59,34 @@
 
 .description {
     color: var(--lightGray);
+}
+
+/* New UI CSS */
+body {
+  background-color: #f8f9fa;
+}
+
+input:focus, button:focus {
+  box-shadow: none !important;
+}
+
+.container-bg {
+background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4'%3E%3Cpath fill='%232563eb' fill-opacity='0.4' d='M1 3h1v1H1V3zm2-2h1v1H3V1z'%3E%3C/path%3E%3C/svg%3E");
+background-repeat: repeat;
+}
+
+.left-image-border {
+    border-radius: 30%;
+}
+
+.login-container {
+  width: 80vw !important;  
+  height: 90vh !important;            /* Use 90% of the viewport width */
+  max-width: 1400px !important;        /* Optional: Cap width for very wide screens */
+  margin: auto !important;        /* Center horizontally with space above/below */
+  display: flex !important;
+  background-color: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
