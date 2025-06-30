@@ -758,12 +758,13 @@ const Users = () => {
                           Select Branch
                         </option>
 
-                        {branchDropdownValues.map((val) => (
-                          <option key={val.value} value={val.value}>
-                            {val.label}
+                        {branchDropdownValues.map((branch) => (
+                          <option key={branch.value} value={branch.value}>
+                            {branch.label}
                           </option>
                         ))}
                       </select>
+
                       <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                     </div>
                   </div>

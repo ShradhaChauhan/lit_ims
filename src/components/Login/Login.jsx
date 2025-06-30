@@ -21,6 +21,7 @@ const LoginPage = () => {
     if (e?.preventDefault) e.preventDefault();
     setIsAuthenticated(true);
     setError("");
+    setError("");
     try {
       const response = await api.post("/api/auth/login", {
         username,
@@ -36,7 +37,18 @@ const LoginPage = () => {
       } else {
         setError("No branches found for this user.");
       }
+      console.log("Verify Response:", response);
+
+      if (response.data && response.data.branches) {
+        setBranches(response.data.branches);
+        setResponseUsername(response.data.username);
+        setBranch(""); // Clear any previous branch selection
+      } else {
+        setError("No branches found for this user.");
+      }
     } catch (err) {
+      console.error(err);
+      setError("Invalid credentials. Please try again.");
       console.error(err);
       setError("Invalid credentials. Please try again.");
     }
@@ -61,8 +73,14 @@ const LoginPage = () => {
       // setIsAuthenticated(true);
       // Navigate to dashboard after successful login
       navigate("/dashboard");
+
+      console.log("Login Response:", response);
+
+      // ✅ Navigate to dashboard after successful login
+      navigate("/dashboard");
     } catch (err) {
       setIsAuthenticated(false);
+      console.error(err);
       console.error(err);
       setError("Login failed. Please contact support.");
     }
