@@ -1,13 +1,22 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import "./VendorMaster.css";
 import { AppContext } from "../../../context/AppContext";
+import api from "../../../services/api";
 
 const VendorMaster = () => {
   const { isAddVendor, setIsAddVendor } = useContext(AppContext);
+  const [vendors, setVendors] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [selectedVendors, setSelectedVendors] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [status, setStatus] = useState("active");
   const [isChecked, setIsChecked] = useState(true);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+  
   const [formData, setFormData] = useState({
     type: "",
     name: "",
@@ -20,41 +29,120 @@ const VendorMaster = () => {
     status: "active",
   });
 
-  const initialFormState = {
-    type: "",
-    name: "",
-    mobile: "",
-    email: "",
-    city: "",
-    state: "",
-    pincode: "",
-    address: "",
-    status: "",
+  // Fetch vendor/customer data from the API
+  const fetchVendors = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/api/vendor-customer/all");
+      if (response.data && response.data.businessPartner) {
+        setVendors(response.data.businessPartner);
+        setTotalItems(response.data.businessPartner.length);
+      }
+    } catch (error) {
+      console.error("Error fetching vendor/customer data:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleAddPartner = (e) => {
-    e.preventDefault();
-    const finalData = {
-      type: formData.type,
-      name: formData.name,
-      mobile: formData.mobile,
-      email: formData.email,
-      city: formData.city,
-      state: formData.state,
-      pincode: formData.pincode,
-      address: formData.address,
-      status: formData.status,
-    };
+  useEffect(() => {
+    fetchVendors();
+  }, []);
 
-    console.log("Submitting add partner form");
-    fetch("", {
-      method: "POST",
-      body: finalData,
-    }).then(function (response) {
-      console.log(response);
-      return response.json();
-    });
-    console.log("Form submitted. ", finalData);
+  // Calculate pagination values
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = vendors.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  // Change page
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  
+  // Previous page
+  const goToPrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+  
+  // Next page
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  // Handle items per page change
+  const handleItemsPerPageChange = (e) => {
+    setItemsPerPage(parseInt(e.target.value, 10));
+    setCurrentPage(1); // Reset to first page when changing items per page
+  };
+
+  const handleAddPartner = async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await api.post("/api/vendor-customer/add", formData);
+      console.log("Partner added successfully:", response.data);
+
+      alert("Partner added successfully!");
+
+      // Reset the form
+      handleReset(e);
+
+      // Close the form popup/modal
+      setIsAddVendor(false);
+      
+      // Refresh the vendor list
+      fetchVendors();
+    } catch (error) {
+      console.error("Error adding partner:", error);
+      alert("Error adding partner. Please try again.");
+    }
+  };
+
+  const handleDeletePartner = async (id) => {
+    if (window.confirm("Are you sure you want to delete this partner?")) {
+      try {
+        await api.delete(`/api/vendor-customer/delete/${id}`);
+        alert("Partner deleted successfully!");
+        
+        // Refresh the vendor list
+        fetchVendors();
+      } catch (error) {
+        console.error("Error deleting partner:", error);
+        alert("Error deleting partner. Please try again.");
+      }
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedVendors.length === 0) {
+      alert("Please select at least one partner to delete.");
+      return;
+    }
+
+    if (window.confirm(`Are you sure you want to delete ${selectedVendors.length} selected partner(s)?`)) {
+      try {
+        // Create an array of promises for each delete operation
+        const deletePromises = selectedVendors.map(id => 
+          api.delete(`/api/vendor-customer/delete/${id}`)
+        );
+        
+        // Wait for all delete operations to complete
+        await Promise.all(deletePromises);
+        
+        alert("Selected partners deleted successfully!");
+        
+        // Clear selection and refresh the vendor list
+        setSelectedVendors([]);
+        setSelectAll(false);
+        fetchVendors();
+      } catch (error) {
+        console.error("Error deleting selected partners:", error);
+        alert("Error deleting selected partners. Please try again.");
+      }
+    }
   };
 
   const handleReset = (e) => {
@@ -85,37 +173,12 @@ const VendorMaster = () => {
     const checked = e.target.checked;
     setSelectAll(checked);
     if (checked) {
-      const allVendorIds = vendors.map((vendor) => vendor.id);
+      const allVendorIds = currentItems.map((vendor) => vendor.id);
       setSelectedVendors(allVendorIds);
     } else {
       setSelectedVendors([]);
     }
   };
-
-  const vendors = [
-    {
-      id: 1,
-      name: "John Smith",
-      type: "Vendor",
-      mobile: "+1 234 567 890",
-      email: "john@example.com",
-      img: "https://ui-avatars.com/api/?name=John+Smith&size=32&background=2563eb&color=fff",
-      city: "New York",
-      pincode: "210250",
-      status: "Active",
-    },
-    {
-      id: 2,
-      name: "Sarah Johnson",
-      type: "Customer",
-      mobile: "+1 234 567 891",
-      email: "sarah@example.com",
-      img: "https://ui-avatars.com/api/?name=John+Smith&size=32&background=2563eb&color=fff",
-      city: "Los Angeles",
-      pincode: "100201",
-      status: "Inactive",
-    },
-  ];
 
   return (
     <div>
@@ -419,108 +482,172 @@ const VendorMaster = () => {
                 <i className="fas fa-envelope"></i>
                 Email Selected
               </button>
-              <button className="btn-action btn-danger">
+              <button 
+                className="btn-action btn-danger"
+                onClick={handleDeleteSelected}
+              >
                 <i className="fas fa-trash"></i>
                 Delete Selected
               </button>
             </div>
           </div>
-          <table>
-            <thead>
-              <tr>
-                <th className="checkbox-cell">
-                  <input type="checkbox" id="select-all" />
-                </th>
-                <th>
-                  Name <i className="fas fa-sort color-gray ms-2"></i>
-                </th>
-                <th>
-                  Type <i className="fas fa-sort color-gray ms-2"></i>
-                </th>
-                <th>
-                  Email <i className="fas fa-sort color-gray ms-2"></i>
-                </th>
-                <th>Mobile</th>
-                <th>
-                  City <i className="fas fa-sort color-gray ms-2"></i>
-                </th>
-                <th>Pincode</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {vendors.map((vendor) => (
-                <tr key={vendor.id}>
-                  <td className="checkbox-cell">
-                    <input
-                      type="checkbox"
-                      checked={selectedVendors.includes(vendor.id)}
-                      onChange={() => handleVendorCheckboxChange(vendor.id)}
+          {loading ? (
+            <div className="text-center p-4">Loading vendors and customers...</div>
+          ) : (
+            <table>
+              <thead>
+                <tr>
+                  <th className="checkbox-cell">
+                    <input 
+                      type="checkbox" 
+                      id="select-all-header"
+                      checked={selectAll}
+                      onChange={handleSelectAllChange}
                     />
-                  </td>
-                  <td>
-                    <div className="user-info">
-                      <img src={vendor.img} alt={vendor.name} />
-                      <span>{vendor.name}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <span className={`badge ${vendor.type.toLowerCase()}`}>
-                      {vendor.type}
-                    </span>
-                  </td>
-                  <td>{vendor.email}</td>
-                  <td>{vendor.mobile}</td>
-                  <td>{vendor.city}</td>
-                  <td>{vendor.pincode}</td>
-                  <td>
-                    <span
-                      className={`badge status ${vendor.status.toLowerCase()}`}
-                    >
-                      {vendor.status}
-                    </span>
-                  </td>
-                  <td className="actions">
-                    <button
-                      className="btn-icon btn-primary"
-                      title="View Details"
-                    >
-                      <i className="fas fa-eye"></i>
-                    </button>
-                    <button className="btn-icon btn-success" title="Edit">
-                      <i className="fas fa-edit"></i>
-                    </button>
-                    <button className="btn-icon btn-danger" title="Delete">
-                      <i className="fas fa-trash"></i>
-                    </button>
-                  </td>
+                  </th>
+                  <th>
+                    Name <i className="fas fa-sort color-gray ms-2"></i>
+                  </th>
+                  <th>
+                    Type <i className="fas fa-sort color-gray ms-2"></i>
+                  </th>
+                  <th>
+                    Email <i className="fas fa-sort color-gray ms-2"></i>
+                  </th>
+                  <th>Mobile</th>
+                  <th>
+                    City <i className="fas fa-sort color-gray ms-2"></i>
+                  </th>
+                  <th>Pincode</th>
+                  <th>Status</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {vendors.length === 0 ? (
+                  <tr>
+                    <td colSpan="9" className="text-center">
+                      <div className="p-4">
+                        <i className="fas fa-users fa-3x mb-3 text-muted"></i>
+                        <h5>No business partners found</h5>
+                        <p className="text-muted">Click the "Add New" button to create your first business partner</p>
+                        <button 
+                          className="btn btn-primary mt-2"
+                          onClick={() => setIsAddVendor(true)}
+                        >
+                          <i className="fas fa-plus-circle me-2"></i>
+                          Add New
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  currentItems.map((vendor) => (
+                    <tr key={vendor.id}>
+                      <td className="checkbox-cell">
+                        <input
+                          type="checkbox"
+                          checked={selectedVendors.includes(vendor.id)}
+                          onChange={() => handleVendorCheckboxChange(vendor.id)}
+                        />
+                      </td>
+                      <td>
+                        <div className="user-info">
+                          <img 
+                            src={`https://ui-avatars.com/api/?name=${vendor.name}&size=32&background=2563eb&color=fff`} 
+                            alt={vendor.name} 
+                          />
+                          <span>{vendor.name}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <span className={`badge ${vendor.type.toLowerCase()}`}>
+                          {vendor.type.charAt(0).toUpperCase() + vendor.type.slice(1)}
+                        </span>
+                      </td>
+                      <td>{vendor.email}</td>
+                      <td>{vendor.mobile}</td>
+                      <td>{vendor.city}</td>
+                      <td>{vendor.pincode}</td>
+                      <td>
+                        <span
+                          className={`badge status ${vendor.status.toLowerCase()}`}
+                        >
+                          {vendor.status.charAt(0).toUpperCase() + vendor.status.slice(1)}
+                        </span>
+                      </td>
+                      <td className="actions">
+                        <button
+                          className="btn-icon btn-primary"
+                          title="View Details"
+                        >
+                          <i className="fas fa-eye"></i>
+                        </button>
+                        <button className="btn-icon btn-success" title="Edit">
+                          <i className="fas fa-edit"></i>
+                        </button>
+                        <button 
+                          className="btn-icon btn-danger" 
+                          title="Delete"
+                          onClick={() => handleDeletePartner(vendor.id)}
+                        >
+                          <i className="fas fa-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          )}
 
           {/* Pagination */}
-          <div className="pagination-container">
-            <div className="pagination-info">Showing 1-2 of 25 entries</div>
-            <div className="pagination">
-              <button className="btn-page" disabled>
-                <i className="fas fa-chevron-left"></i>
-              </button>
-              <button className="btn-page active">1</button>
-              <button className="btn-page disabled">
-                <i className="fas fa-chevron-right"></i>
-              </button>
+          {!loading && vendors.length > 0 && (
+            <div className="pagination-container">
+              <div className="pagination-info">
+                Showing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, totalItems)} of {totalItems} entries
+              </div>
+              <div className="pagination">
+                <button 
+                  className="btn-page" 
+                  onClick={goToPrevPage}
+                  disabled={currentPage === 1}
+                >
+                  <i className="fas fa-chevron-left"></i>
+                </button>
+                
+                {/* Generate page buttons */}
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <button
+                    key={i + 1}
+                    className={`btn-page ${currentPage === i + 1 ? 'active' : ''}`}
+                    onClick={() => paginate(i + 1)}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                
+                <button 
+                  className="btn-page"
+                  onClick={goToNextPage}
+                  disabled={currentPage === totalPages}
+                >
+                  <i className="fas fa-chevron-right"></i>
+                </button>
+              </div>
+              <div className="items-per-page">
+                <select 
+                  value={itemsPerPage} 
+                  onChange={handleItemsPerPageChange}
+                >
+                  <option value="10">10 per page</option>
+                  <option value="25">25 per page</option>
+                  <option value="50">50 per page</option>
+                  <option value="100">100 per page</option>
+                </select>
+              </div>
             </div>
-            <div className="items-per-page">
-              <select>
-                <option value="10">10 per page</option>
-                <option value="25">25 per page</option>
-                <option value="50">50 per page</option>
-                <option value="100">100 per page</option>
-              </select>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

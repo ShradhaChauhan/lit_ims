@@ -1,5 +1,6 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { AppContext } from "../../../context/AppContext";
+import api from "../../../services/api";
 
 const PartMaster = () => {
   const { isAddPart, setIsAddPart } = useContext(AppContext);
@@ -14,7 +15,29 @@ const PartMaster = () => {
     uom: "",
     status: "active",
   });
-  const parts = [];
+  const [parts, setParts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchParts();
+  }, []);
+
+  const fetchParts = () => {
+    setLoading(true);
+    setError(null);
+    api.get("/api/part/all")
+      .then(response => {
+        console.log("Parts loaded:", response.data);
+        setParts(response.data.parts || []);
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error("Error loading parts:", error);
+        setError("Failed to load parts. Please try again.");
+        setLoading(false);
+      });
+  };
 
   const handlePartCheckboxChange = (partId) => {
     setSelectedParts((prevSelected) =>
@@ -45,14 +68,18 @@ const PartMaster = () => {
     };
 
     console.log("Submitting add part form");
-    fetch("", {
-      method: "POST",
-      body: finalData,
-    }).then(function (response) {
-      console.log(response);
-      return response.json();
-    });
-    console.log("Form submitted. ", finalData);
+    api.post("/api/part/save", finalData)
+      .then(response => {
+        console.log("Part added successfully:", response.data);
+        setIsAddPart(false);
+        // Reset form after successful submission
+        handleReset(e);
+        // Refresh parts list
+        fetchParts();
+      })
+      .catch(error => {
+        console.error("Error adding part:", error);
+      });
   };
 
   const handleReset = (e) => {
@@ -64,6 +91,23 @@ const PartMaster = () => {
       status: "active",
     });
     setIsChecked(true);
+  };
+
+  const handleDeletePart = (partId) => {
+    if (window.confirm("Are you sure you want to delete this part?")) {
+      setLoading(true);
+      api.delete(`/api/part/delete/${partId}`)
+        .then(response => {
+          console.log("Part deleted successfully:", response.data);
+          // Refresh parts list after deletion
+          fetchParts();
+        })
+        .catch(error => {
+          console.error("Error deleting part:", error);
+          setError("Failed to delete part. Please try again.");
+          setLoading(false);
+        });
+    }
   };
 
   return (
@@ -272,87 +316,113 @@ const PartMaster = () => {
               </label>
             </div>
           </div>
-          <table>
-            <thead>
-              <tr>
-                <th className="checkbox-cell">
-                  <input type="checkbox" id="select-all" />
-                </th>
-                <th>
-                  Code <i className="fas fa-sort color-gray ms-2"></i>
-                </th>
-                <th>
-                  Name <i className="fas fa-sort color-gray ms-2"></i>
-                </th>
-                <th>
-                  UOM <i className="fas fa-sort color-gray ms-2"></i>
-                </th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {parts.length === 0 ? (
-                <tr className="no-data-row">
-                  <td colSpan="6" className="no-data-cell">
-                    <div className="no-data-content">
-                      <i className="fas fa-cogs no-data-icon"></i>
-                      <p className="no-data-text">No parts found</p>
-                      <p className="no-data-subtext">
-                        Click the "Add New Part" button to create your first
-                        part
-                      </p>
-                    </div>
-                  </td>
+          {loading ? (
+            <div className="text-center p-3">
+              <i className="fas fa-spinner fa-spin me-2"></i> Loading parts...
+            </div>
+          ) : error ? (
+            <div className="alert alert-danger">{error}</div>
+          ) : (
+            <table>
+              <thead>
+                <tr>
+                  <th className="checkbox-cell">
+                    <input 
+                      type="checkbox" 
+                      id="select-all-header"
+                      checked={selectAll}
+                      onChange={handleSelectAllChange}
+                    />
+                  </th>
+                  <th>
+                    Code <i className="fas fa-sort color-gray ms-2"></i>
+                  </th>
+                  <th>
+                    Name <i className="fas fa-sort color-gray ms-2"></i>
+                  </th>
+                  <th>
+                    UOM <i className="fas fa-sort color-gray ms-2"></i>
+                  </th>
+                  <th>Status</th>
+                  <th>Actions</th>
                 </tr>
-              ) : (
-                parts.map((part) => (
-                  <tr key={part.id}>
-                    <td className="checkbox-cell">
-                      <input
-                        type="checkbox"
-                        checked={selectedParts.includes(part.id)}
-                        onChange={() => handlePartCheckboxChange(part.id)}
-                      />
-                    </td>
-                    <td>
-                      <div>
-                        <span>{part.trNo}</span>
+              </thead>
+              <tbody>
+                {parts.length === 0 ? (
+                  <tr className="no-data-row">
+                    <td colSpan="6" className="no-data-cell">
+                      <div className="no-data-content">
+                        <i className="fas fa-cogs no-data-icon"></i>
+                        <p className="no-data-text">No parts found</p>
+                        <p className="no-data-subtext">
+                          Click the "Add New Part" button to create your first
+                          part
+                        </p>
                       </div>
-                    </td>
-                    <td>
-                      <div>
-                        <span>{part.name}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <div>
-                        <span>{part.code}</span>
-                      </div>
-                    </td>
-                    <td className="actions">
-                      <button
-                        className="btn-icon btn-primary"
-                        title="View Details"
-                      >
-                        <i className="fas fa-eye"></i>
-                      </button>
-                      <button className="btn-icon btn-success" title="Edit">
-                        <i className="fas fa-edit"></i>
-                      </button>
-                      <button className="btn-icon btn-danger" title="Delete">
-                        <i className="fas fa-trash"></i>
-                      </button>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  parts.map((part) => (
+                    <tr key={part.id}>
+                      <td className="checkbox-cell">
+                        <input
+                          type="checkbox"
+                          checked={selectedParts.includes(part.id)}
+                          onChange={() => handlePartCheckboxChange(part.id)}
+                        />
+                      </td>
+                      <td>
+                        <div>
+                          <span>{part.code}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <div>
+                          <span>{part.name}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <div>
+                          <span>{part.uom}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <div>
+                          <span className={`status-badge ${part.status}`}>
+                            {part.status === "active" ? "Active" : "Inactive"}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="actions">
+                        <button
+                          className="btn-icon btn-primary"
+                          title="View Details"
+                        >
+                          <i className="fas fa-eye"></i>
+                        </button>
+                        <button className="btn-icon btn-success" title="Edit">
+                          <i className="fas fa-edit"></i>
+                        </button>
+                        <button 
+                          className="btn-icon btn-danger" 
+                          title="Delete"
+                          onClick={() => handleDeletePart(part.id)}
+                        >
+                          <i className="fas fa-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          )}
 
           {/* Pagination */}
           <div className="pagination-container">
-            <div className="pagination-info">Showing 1-2 of 25 entries</div>
+            <div className="pagination-info">
+              {parts.length > 0 ? `Showing 1-${parts.length} of ${parts.length} entries` : "No entries"}
+            </div>
             <div className="pagination">
               <button className="btn-page" disabled>
                 <i className="fas fa-chevron-left"></i>

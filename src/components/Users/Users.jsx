@@ -1,7 +1,8 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import "./Users.css";
 import { AppContext } from "../../context/AppContext";
 import AddUserModal from "../Modals/AddUserModal";
+import api from "../../services/api";
 
 const Users = () => {
   const { isAddUser, setIsAddUser, branchDropdownValues } =
@@ -54,27 +55,97 @@ const Users = () => {
   const [reportEditPermissions, setReportEditPermissions] = useState({});
   const [adminViewPermissions, setAdminViewPermissions] = useState({});
   const [adminEditPermissions, setAdminEditPermissions] = useState({});
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
-  const users = [
-    {
-      id: 1,
-      name: "John Smith",
-      role: "Admin",
-      time: "2024-02-20 10:30 AM",
-      email: "john@example.com",
-      img: "https://ui-avatars.com/api/?name=John+Smith&size=32&background=2563eb&color=fff",
-      status: "Active",
-    },
-    {
-      id: 2,
-      name: "Mike Johnson",
-      role: "Manager",
-      time: "2024-06-12 08:52 AM",
-      email: "mike@example.com",
-      img: "https://ui-avatars.com/api/?name=Mike+Johnson&size=32&background=2563eb&color=fff",
-      status: "Inactive",
-    },
-  ];
+  // Fetch users from API
+  useEffect(() => {
+    fetchUsers();
+  }, [currentPage, itemsPerPage]);
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const response = await api.get("/api/users/all-staff");
+      if (response.data && response.data.users) {
+        const allUsers = response.data.users.map(user => ({
+          id: user.id,
+          name: user.username,
+          role: user.role,
+          time: formatDateTime(user.lastLoginDateTime),
+          email: user.email,
+          img: `https://ui-avatars.com/api/?name=${user.username.replace(/ /g, '+')}&size=32&background=2563eb&color=fff`,
+          status: user.status,
+          department: user.department,
+          lastLoginIp: user.lastLoginIp,
+          companyId: user.companyId,
+          branchIds: user.branchIds
+        }));
+        
+        setTotalItems(allUsers.length);
+        setTotalPages(Math.ceil(allUsers.length / itemsPerPage));
+        
+        // Apply pagination to the users
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const paginatedUsers = allUsers.slice(startIndex, startIndex + itemsPerPage);
+        setUsers(paginatedUsers);
+      }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDateTime = (dateTimeString) => {
+    if (!dateTimeString) return "Never";
+    try {
+      const date = new Date(dateTimeString);
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const year = date.getFullYear();
+      
+      // Format time with AM/PM
+      let hours = date.getHours();
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12; // the hour '0' should be '12'
+      const formattedHours = hours.toString().padStart(2, '0');
+      
+      return `${day}/${month}/${year} ${formattedHours}:${minutes} ${ampm}`;
+    } catch (error) {
+      return "Invalid Date";
+    }
+  };
+  
+  // Handle page change
+  const handlePageChange = (pageNumber) => {
+    if (pageNumber < 1 || pageNumber > totalPages) return;
+    setCurrentPage(pageNumber);
+  };
+  
+  // Handle items per page change
+  const handleItemsPerPageChange = (e) => {
+    const newItemsPerPage = parseInt(e.target.value, 10);
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1); // Reset to first page when changing items per page
+  };
+  
+  // Calculate displayed item range
+  const getItemRange = () => {
+    const start = (currentPage - 1) * itemsPerPage + 1;
+    const end = Math.min(start + itemsPerPage - 1, totalItems);
+    return `${start}-${end}`;
+  };
+
   const masters = [
     {
       id: 1,
@@ -245,6 +316,7 @@ const Users = () => {
 
   const handleAddUser = (e) => {
     e.preventDefault();
+    
     const finalData = {
       username: formData.name,
       email: formData.email,
@@ -257,13 +329,24 @@ const Users = () => {
     };
 
     console.log("Submitting form");
-    fetch("", {
-      method: "POST",
-      body: finalData,
-    }).then(function (response) {
-      console.log(response);
-      return response.json();
-    });
+    api.post("/api/users/create", finalData)
+      .then((response) => {
+        console.log(response);
+        if (response.data && response.data.status === "success") {
+          alert(response.data.message); // Show success message
+          handleReset(e); // Reset form after successful submission
+          setIsAddUser(false); // Close the form
+          fetchUsers(); // Refresh the user list
+        }
+      })
+      .catch((error) => {
+        console.error("Error submitting form:", error);
+        if (error.response && error.response.data && error.response.data.message) {
+          alert(error.response.data.message); // Show error message
+        } else {
+          alert("An error occurred. Please try again later.");
+        }
+      });
     console.log("Form submitted. ", finalData);
   };
 
@@ -430,6 +513,74 @@ const Users = () => {
     console.log(user);
     setUserDetails(user);
     setIsShowUserDetails(true);
+  };
+
+  // Handle delete user
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm("Are you sure you want to delete this user?")) {
+      return;
+    }
+    
+    setDeleteLoading(true);
+    try {
+      const response = await api.delete(`/api/users/delete/${userId}`);
+      if (response.data && response.data.status === "success") {
+        alert(response.data.message);
+        fetchUsers(); // Refresh the user list
+        // Remove from selected users if it was selected
+        if (selectedUsers.includes(userId)) {
+          setSelectedUsers(selectedUsers.filter(id => id !== userId));
+        }
+      }
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      if (error.response && error.response.data && error.response.data.message) {
+        alert(error.response.data.message);
+      } else {
+        alert("An error occurred while deleting the user.");
+      }
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  // Handle bulk delete
+  const handleBulkDelete = async () => {
+    if (selectedUsers.length === 0) {
+      alert("Please select users to delete");
+      return;
+    }
+    
+    if (!window.confirm(`Are you sure you want to delete ${selectedUsers.length} selected users?`)) {
+      return;
+    }
+    
+    setDeleteLoading(true);
+    let successCount = 0;
+    let errorCount = 0;
+    
+    try {
+      for (const userId of selectedUsers) {
+        try {
+          const response = await api.delete(`/api/users/delete/${userId}`);
+          if (response.data && response.data.status === "success") {
+            successCount++;
+          }
+        } catch (error) {
+          errorCount++;
+          console.error(`Error deleting user ${userId}:`, error);
+        }
+      }
+      
+      alert(`${successCount} users deleted successfully. ${errorCount} deletions failed.`);
+      fetchUsers(); // Refresh the user list
+      setSelectedUsers([]); // Clear selection
+      setSelectAll(false);
+    } catch (error) {
+      console.error("Error in bulk delete:", error);
+    } finally {
+      setDeleteLoading(false);
+    }
   };
 
   return (
@@ -1120,9 +1271,16 @@ const Users = () => {
                 <i className="fas fa-envelope"></i>
                 Email Selected
               </button>
-              <button className="btn-action btn-danger">
-                <i className="fas fa-trash"></i>
-                Delete Selected
+              <button 
+                className="btn-action btn-danger"
+                onClick={handleBulkDelete}
+                disabled={selectedUsers.length === 0 || deleteLoading}
+              >
+                {deleteLoading ? (
+                  <><i className="fas fa-spinner fa-spin"></i> Deleting...</>
+                ) : (
+                  <><i className="fas fa-trash"></i> Delete Selected</>
+                )}
               </button>
             </div>
           </div>
@@ -1148,69 +1306,115 @@ const Users = () => {
               </tr>
             </thead>
             <tbody>
-              {users.map((user) => (
-                <tr key={user.id}>
-                  <td className="checkbox-cell">
-                    <input
-                      type="checkbox"
-                      checked={selectedUsers.includes(user.id)}
-                      onChange={() => handleUserCheckboxChange(user.id)}
-                    />
-                  </td>
-                  <td>
-                    <div className="user-info">
-                      <img src={user.img} alt={user.name} />
-                      <span>{user.name}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <span className={`badge ${user.role.toLowerCase()}`}>
-                      {user.role}
-                    </span>
-                  </td>
-                  <td>{user.email}</td>
-                  <td>{user.time}</td>
-                  <td>
-                    <span
-                      className={`badge status ${user.status.toLowerCase()}`}
-                    >
-                      {user.status}
-                    </span>
-                  </td>
-                  <td className="actions">
-                    <button
-                      className="btn-icon btn-primary"
-                      title="View Details"
-                      onClick={(e) => handleViewDetails(user, e)}
-                    >
-                      <i className="fas fa-eye"></i>
-                    </button>
-                    <button className="btn-icon btn-success" title="Edit">
-                      <i className="fas fa-edit"></i>
-                    </button>
-                    <button className="btn-icon btn-danger" title="Delete">
-                      <i className="fas fa-trash"></i>
-                    </button>
-                  </td>
+              {loading ? (
+                <tr>
+                  <td colSpan="7" className="text-center">Loading users...</td>
                 </tr>
-              ))}
+              ) : users.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="text-center">No users found</td>
+                </tr>
+              ) : (
+                users.map((user) => (
+                  <tr key={user.id}>
+                    <td className="checkbox-cell">
+                      <input
+                        type="checkbox"
+                        checked={selectedUsers.includes(user.id)}
+                        onChange={() => handleUserCheckboxChange(user.id)}
+                      />
+                    </td>
+                    <td>
+                      <div className="user-info">
+                        <img src={user.img} alt={user.name} />
+                        <span>{user.name}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <span className={`badge ${user.role.toLowerCase()}`}>
+                        {user.role}
+                      </span>
+                    </td>
+                    <td>{user.email}</td>
+                    <td>{user.time}</td>
+                    <td>
+                      <span
+                        className={`badge status ${user.status.toLowerCase()}`}
+                      >
+                        {user.status}
+                      </span>
+                    </td>
+                    <td className="actions">
+                      <button
+                        className="btn-icon btn-primary"
+                        title="View Details"
+                        onClick={(e) => handleViewDetails(user, e)}
+                      >
+                        <i className="fas fa-eye"></i>
+                      </button>
+                      <button className="btn-icon btn-success" title="Edit">
+                        <i className="fas fa-edit"></i>
+                      </button>
+                      <button 
+                        className="btn-icon btn-danger" 
+                        title="Delete"
+                        onClick={() => handleDeleteUser(user.id)}
+                        disabled={deleteLoading}
+                      >
+                        <i className={deleteLoading ? "fas fa-spinner fa-spin" : "fas fa-trash"}></i>
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
 
           {/* Pagination */}
           <div className="pagination-container">
-            <div className="pagination-info">Showing 1-2 of 25 entries</div>
+            <div className="pagination-info">Showing {getItemRange()} of {totalItems} entries</div>
             <div className="pagination">
-              <button className="btn-page" disabled>
+              <button 
+                className="btn-page" 
+                disabled={currentPage === 1} 
+                onClick={() => handlePageChange(currentPage - 1)}
+              >
                 <i className="fas fa-chevron-left"></i>
               </button>
-              <button className="btn-page active">1</button>
-              <button className="btn-page" disabled>
+              {/* Generate page buttons */}
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                // Show pages around current page
+                let pageNum;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+                
+                return (
+                  <button
+                    key={pageNum}
+                    className={`btn-page ${currentPage === pageNum ? 'active' : ''}`}
+                    onClick={() => handlePageChange(pageNum)}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+              <button 
+                className="btn-page" 
+                disabled={currentPage === totalPages} 
+                onClick={() => handlePageChange(currentPage + 1)}
+              >
                 <i className="fas fa-chevron-right"></i>
               </button>
             </div>
             <div className="items-per-page">
-              <select>
+              <select value={itemsPerPage} onChange={handleItemsPerPageChange}>
                 <option value="10">10 per page</option>
                 <option value="25">25 per page</option>
                 <option value="50">50 per page</option>

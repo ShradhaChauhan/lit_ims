@@ -1,5 +1,6 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { AppContext } from "../../../context/AppContext";
+import api from "../../../services/api";
 
 const WarehouseMaster = () => {
   const { isAddWarehouse, setIsAddWarehouse } = useContext(AppContext);
@@ -13,24 +14,57 @@ const WarehouseMaster = () => {
     code: "",
     status: "active",
   });
-  const warehouses = [];
+  const [warehouses, setWarehouses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    fetchWarehouses();
+  }, []);
+  
+  const fetchWarehouses = () => {
+    setLoading(true);
+    api.get("/api/warehouses")
+      .then(response => {
+        console.log("Warehouses fetched:", response.data);
+        if (response.data && response.data.warehouses) {
+          setWarehouses(response.data.warehouses);
+        }
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error("Error fetching warehouses:", error);
+        setLoading(false);
+      });
+  };
 
   const handleWarehouseCheckboxChange = (warehouseId) => {
-    setSelectedWarehouses((prevSelected) =>
-      prevSelected.includes(warehouseId)
+    setSelectedWarehouses((prevSelected) => {
+      const newSelected = prevSelected.includes(warehouseId)
         ? prevSelected.filter((id) => id !== warehouseId)
-        : [...prevSelected, warehouseId]
-    );
+        : [...prevSelected, warehouseId];
+      
+      console.log("Warehouse selection changed:", warehouseId, "New selection:", newSelected);
+      
+      // Update select all checkbox state based on whether all warehouses are selected
+      setSelectAll(newSelected.length === warehouses.length);
+      
+      return newSelected;
+    });
   };
 
   const handleSelectAllChange = (e) => {
     const checked = e.target.checked;
     setSelectAll(checked);
+    
     if (checked) {
+      // Select all warehouses
       const allWarehouseIds = warehouses.map((warehouse) => warehouse.id);
       setSelectedWarehouses(allWarehouseIds);
+      console.log("Selected all warehouses:", allWarehouseIds);
     } else {
+      // Deselect all warehouses
       setSelectedWarehouses([]);
+      console.log("Deselected all warehouses");
     }
   };
 
@@ -43,14 +77,19 @@ const WarehouseMaster = () => {
     };
 
     console.log("Submitting add warehouse form");
-    fetch("", {
-      method: "POST",
-      body: finalData,
-    }).then(function (response) {
-      console.log(response);
-      return response.json();
-    });
-    console.log("Form submitted. ", finalData);
+    api.post("/api/warehouses/add", finalData)
+      .then(response => {
+        console.log(response);
+        console.log("Form submitted. ", finalData);
+        // Reset form and close it
+        handleReset(e);
+        setIsAddWarehouse(false);
+        // Refresh warehouse list
+        fetchWarehouses();
+      })
+      .catch(error => {
+        console.error("Error adding warehouse:", error);
+      });
   };
 
   const handleReset = (e) => {
@@ -61,6 +100,56 @@ const WarehouseMaster = () => {
       status: "active",
     });
     setIsChecked(true);
+  };
+  
+  const handleDeleteWarehouse = (warehouseId) => {
+    if (!window.confirm("Are you sure you want to delete this warehouse?")) {
+      return;
+    }
+    
+    api.delete(`/api/warehouses/delete/${warehouseId}`)
+      .then(response => {
+        console.log("Warehouse deleted successfully:", response.data);
+        // Refresh the warehouses list
+        fetchWarehouses();
+      })
+      .catch(error => {
+        console.error("Error deleting warehouse:", error);
+        // Handle error (show error message)
+        alert("Error deleting warehouse. Please try again.");
+      });
+  };
+  
+  const handleDeleteSelected = () => {
+    console.log("Current selected warehouses:", selectedWarehouses);
+    
+    if (selectedWarehouses.length === 0) {
+      alert("Please select at least one warehouse to delete.");
+      return;
+    }
+    
+    if (!window.confirm(`Are you sure you want to delete ${selectedWarehouses.length} selected warehouse(s)?`)) {
+      return;
+    }
+    
+    console.log("Sending delete request for warehouses:", selectedWarehouses);
+    
+    // Make API call to delete selected warehouses
+    api.post("/api/warehouses/delete-multiple", selectedWarehouses)
+      .then(response => {
+        console.log("Selected warehouses deleted successfully:", response.data);
+        // Clear selection state
+        setSelectedWarehouses([]);
+        setSelectAll(false);
+        // Refresh the warehouses list
+        fetchWarehouses();
+        // Show success message
+        alert(`Successfully deleted ${selectedWarehouses.length} warehouse(s).`);
+      })
+      .catch(error => {
+        console.error("Error deleting selected warehouses:", error);
+        alert("Error deleting selected warehouses. Please try again.");
+      });
   };
 
   return (
@@ -237,15 +326,15 @@ const WarehouseMaster = () => {
             <div className="selected-count">
               <input
                 type="checkbox"
-                id="select-all"
+                id="select-all-count"
                 checked={selectAll}
                 onChange={handleSelectAllChange}
               />
-              <label htmlFor="select-all">
+              <label htmlFor="select-all-count">
                 {selectedWarehouses.length} Selected
               </label>
             </div>
-            <button className="btn-action btn-danger">
+            <button className="btn-action btn-danger" onClick={handleDeleteSelected}>
               <i className="fas fa-trash"></i>
               Delete Selected
             </button>
@@ -254,7 +343,12 @@ const WarehouseMaster = () => {
             <thead>
               <tr>
                 <th className="checkbox-cell">
-                  <input type="checkbox" id="select-all" />
+                  <input 
+                    type="checkbox" 
+                    id="select-all-header"
+                    checked={selectAll}
+                    onChange={handleSelectAllChange}
+                  />
                 </th>
                 <th>
                   TRNO <i className="fas fa-sort color-gray ms-2"></i>
@@ -270,7 +364,15 @@ const WarehouseMaster = () => {
               </tr>
             </thead>
             <tbody>
-              {warehouses.length === 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan="6" className="text-center">
+                    <div className="spinner-border text-primary" role="status">
+                      <span className="visually-hidden">Loading...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : warehouses.length === 0 ? (
                 <tr className="no-data-row">
                   <td colSpan="6" className="no-data-cell">
                     <div className="no-data-content">
@@ -297,7 +399,12 @@ const WarehouseMaster = () => {
                     </td>
                     <td>
                       <div>
-                        <span>{warehouse.trNo}</span>
+                        <span>{warehouse.trno}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div>
+                        <span>{warehouse.code}</span>
                       </div>
                     </td>
                     <td>
@@ -307,7 +414,9 @@ const WarehouseMaster = () => {
                     </td>
                     <td>
                       <div>
-                        <span>{warehouse.warehouse}</span>
+                        <span className={`status-badge ${warehouse.status.toLowerCase()}`}>
+                          {warehouse.status}
+                        </span>
                       </div>
                     </td>
                     <td className="actions">
@@ -320,7 +429,11 @@ const WarehouseMaster = () => {
                       <button className="btn-icon btn-success" title="Edit">
                         <i className="fas fa-edit"></i>
                       </button>
-                      <button className="btn-icon btn-danger" title="Delete">
+                      <button
+                        className="btn-icon btn-danger"
+                        title="Delete"
+                        onClick={() => handleDeleteWarehouse(warehouse.id)}
+                      >
                         <i className="fas fa-trash"></i>
                       </button>
                     </td>
@@ -332,7 +445,9 @@ const WarehouseMaster = () => {
 
           {/* Pagination */}
           <div className="pagination-container">
-            <div className="pagination-info">Showing 1-2 of 25 entries</div>
+            <div className="pagination-info">
+            Showing {warehouses.length > 0 ? 1 : 0}-{warehouses.length} of {warehouses.length} entries
+          </div>
             <div className="pagination">
               <button className="btn-page" disabled>
                 <i className="fas fa-chevron-left"></i>
