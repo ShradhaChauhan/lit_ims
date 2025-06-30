@@ -2,28 +2,42 @@ import React, { useContext } from "react";
 import SideBar from "../SideBar/SideBar";
 import Users from "../Users/Users";
 import { AppContext } from "../../context/AppContext";
-import Navbar from "../Navbar/Navbar";
 import "./Dashboard.css";
+import { Routes, Route } from "react-router-dom";
+import ItemMaster from "../Forms/ItemMaster/ItemMaster";
+import VendorMaster from "../Forms/VendorMaster/VendorMaster";
+import { Link } from "react-router-dom";
+import PartMaster from "../Forms/PartMaster/PartMaster";
+import GroupMaster from "../Forms/GroupMaster/GroupMaster";
+import WarehouseMaster from "../Forms/WarehouseMaster/WarehouseMaster";
+import BOMMaster from "../Forms/BOMMaster/BOMMaster";
+import TypeMaster from "../Forms/TypeMaster/TypeMaster";
 
 const Dashboard = () => {
   const { rightSideComponent, setRightSideComponent } = useContext(AppContext);
 
   return (
-    <div className="container-fluid min-vh-100 d-flex flex-1 p-0 app-container">
-      {/* Sidebar */}
-      <div className="d-none d-md-flex flex-column">
-        <SideBar />
-      </div>
-
-      {/* Right Side Content */}
-      <div className="w-100 d-none d-md-flex flex-column content-area">
-        {/* Navbar */}
-        <Navbar />
-        {/* Content */}
-        <div className="right-side-div bg-light flex-grow-1 overflow-auto">
-          {rightSideComponent ? rightSideComponent : <Users />}
-        </div>
-      </div>
+    <div className="right-side-div bg-light flex-grow-1 overflow-auto">
+      {/* {rightSideComponent ? rightSideComponent : <Users />} */}
+      {rightSideComponent === "/item-master" ? (
+        <ItemMaster />
+      ) : rightSideComponent === "/vendor-master" ? (
+        <VendorMaster />
+      ) : rightSideComponent === "/part-master" ? (
+        <PartMaster />
+      ) : rightSideComponent === "/group-master" ? (
+        <GroupMaster />
+      ) : rightSideComponent === "/warehouse-master" ? (
+        <WarehouseMaster />
+      ) : rightSideComponent === "/bom-master" ? (
+        <BOMMaster />
+      ) : rightSideComponent === "/type-master" ? (
+        <TypeMaster />
+      ) : (
+        <Users />
+      )}
+      {/* <Link to={"/item-master"}>Item Master</Link> */}
+      {/* <Link to="/vendor-master">Vendor Master</Link> */}
     </div>
   );
 };

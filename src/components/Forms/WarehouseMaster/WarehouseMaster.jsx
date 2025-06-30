@@ -1,5 +1,6 @@
 import React, { useContext, useState } from "react";
 import { AppContext } from "../../../context/AppContext";
+import { Link } from "react-router-dom";
 
 const WarehouseMaster = () => {
   const { isAddWarehouse, setIsAddWarehouse } = useContext(AppContext);
@@ -61,12 +62,43 @@ const WarehouseMaster = () => {
       status: "active",
     });
     setIsChecked(true);
+    setStatus("active");
+  };
+
+  const handleSetIsAddWarehouse = () => {
+    setIsAddWarehouse(true);
   };
 
   return (
     <div>
+      {/* Header section */}
+      <nav className="navbar bg-light border-body" data-bs-theme="light">
+        <div className="container-fluid">
+          <div className="mt-4">
+            <h3 className="nav-header header-style">Warehouse Master</h3>
+            <p className="breadcrumb">
+              <Link to="/dashboard">
+                <i className="fas fa-home text-8"></i>
+              </Link>{" "}
+              <span className="ms-1 mt-1 text-small-gray">
+                / Masters / Warehouse Master
+              </span>
+            </p>
+          </div>
+
+          {/* Add Warehouse Button */}
+
+          <button
+            className="btn btn-primary add-btn"
+            onClick={handleSetIsAddWarehouse}
+          >
+            <i className="fa-solid fa-user-plus"></i> Add New Warehouse
+          </button>
+        </div>
+      </nav>
+
       {/* Search and Filter Section */}
-      <div className="search-filter-container">
+      <div className="search-filter-container mx-2">
         <div className="search-box">
           <i className="fas fa-search position-absolute input-icon"></i>
           <input
@@ -86,7 +118,7 @@ const WarehouseMaster = () => {
 
       {/* Form Header Section */}
       {isAddWarehouse && (
-        <div className="table-form-container">
+        <div className="table-form-container mx-2">
           <div className="form-header">
             <h2>
               <i className="fas fa-warehouse"></i> Add New Warehouse
@@ -105,7 +137,7 @@ const WarehouseMaster = () => {
             <div className="form-grid border-bottom pt-0">
               <div className="row form-style">
                 <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="trNo" className="form-label  ms-2">
+                  <label htmlFor="trNo" className="form-label">
                     TRNO
                   </label>
                   <div className="position-relative w-100">
@@ -120,7 +152,7 @@ const WarehouseMaster = () => {
                   </div>
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="name" className="form-label  ms-2">
+                  <label htmlFor="name" className="form-label">
                     Name
                   </label>
                   <div className="position-relative w-100">
@@ -139,7 +171,7 @@ const WarehouseMaster = () => {
                   </div>
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="code" className="form-label  ms-2">
+                  <label htmlFor="code" className="form-label">
                     Code
                   </label>
                   <div className="position-relative w-100">
@@ -214,13 +246,13 @@ const WarehouseMaster = () => {
             </div>
             <div className="form-actions">
               <button
-                className="btn btn-primary border border-0 add-btn me-3 float-end"
+                className="btn btn-primary border border-0 text-8 px-3 fw-medium py-2 me-3 float-end"
                 onClick={handleAddWarehouse}
               >
                 <i className="fa-solid fa-floppy-disk me-1"></i> Save Changes
               </button>
               <button
-                className="btn btn-secondary border border-0 add-btn bg-secondary me-3 float-end"
+                className="btn btn-secondary border border-0 text-8 px-3 fw-medium py-2 bg-secondary me-3 float-end"
                 onClick={handleReset}
               >
                 <i className="fa-solid fa-arrows-rotate me-1"></i> Reset
@@ -231,7 +263,7 @@ const WarehouseMaster = () => {
       )}
 
       {/* Table Section */}
-      <div className="margin-2">
+      <div className="margin-2 mx-2">
         <div className="table-container">
           <div className="table-header">
             <div className="selected-count">

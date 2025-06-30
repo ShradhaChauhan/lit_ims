@@ -4,7 +4,7 @@ import "./SideBar.css";
 import { AppContext } from "../../context/AppContext";
 import ims_logo from "../../assets/images/ims_logo.png";
 import api from "../../services/api";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 import VendorMaster from "../Forms/VendorMaster/VendorMaster";
@@ -25,8 +25,12 @@ import WIPReturn from "../Forms/WIPReturn/WIPReturn";
 import ActivityLogs from "../ActivityLogs/ActivityLogs";
 
 const SideBar = () => {
-  const { setRightSideComponent, setIsActiveComponent, setLabelName } =
-    useContext(AppContext);
+  const {
+    rightSideComponent,
+    setRightSideComponent,
+    setIsActiveComponent,
+    setLabelName,
+  } = useContext(AppContext);
 
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [openSubmenus, setOpenSubmenus] = useState({});
@@ -46,42 +50,49 @@ const SideBar = () => {
         {
           label: "Business Partner",
           compName: "VendorMaster",
+          newPath: "business-partner",
           path: "Masters / Business Partner",
           icon: "fas fa-user-group",
         },
         {
           label: "Item Master",
           compName: "ItemMaster",
+          newPath: "item-master",
           path: "Masters / Item Master",
           icon: "fas fa-box",
         },
         {
           label: "Warehouse Master",
           compName: "WarehouseMaster",
+          newPath: "warehouse-master",
           path: "Masters / Warehouse Master",
           icon: "fas fa-warehouse",
         },
         {
           label: "BOM Master",
           compName: "BOMMaster",
+          newPath: "bom-master",
           path: "Masters / BOM Master",
           icon: "fas fa-cubes",
         },
         {
           label: "Type Master",
           compName: "TypeMaster",
+          newPath: "type-master",
           path: "Masters / Type Master",
           icon: "fas fa-list-alt",
         },
         {
           label: "Group Master",
           compName: "GroupMaster",
+          newPath: "group-master",
           path: "Masters / Group Master",
           icon: "fas fa-layer-group",
         },
         {
           label: "Part Master",
           compName: "PartMaster",
+          newPath: "part-master",
           path: "Masters / Part Master",
           icon: "fas fa-cog",
         },
@@ -95,48 +106,56 @@ const SideBar = () => {
         {
           label: "Incoming",
           compName: "Incoming",
+          newPath: "incoming",
           path: "Transactions / Incoming",
           icon: "fas fa-arrow-down",
         },
         {
           label: "Incoming Reprint",
           compName: "IncomingReprint",
+          newPath: "incoming-reprint",
           path: "Transactions / Incoming Reprint",
           icon: "fas fa-print",
         },
         {
           label: "IQC",
           compName: "IQC",
+          newPath: "iqc",
           path: "Transactions / IQC",
           icon: "fas fa-clipboard-check",
         },
         {
           label: "Requisition",
           compName: "Requisition",
+          newPath: "requisition",
           path: "Transactions / Requisition",
           icon: "fas fa-clipboard-list",
         },
         {
           label: "Issue Production",
           compName: "IssueProduction",
+          newPath: "issue-production",
           path: "Transactions / Issue Production",
           icon: "fas fa-cogs",
         },
         {
           label: "Requisition Receipt",
           compName: "RequisitionReceipt",
+          newPath: "requisition-recepit",
           path: "Transactions / Requisition Receipt",
           icon: "fas fa-clipboard",
         },
         {
           label: "Production Receipt",
           compName: "ProductionReceipt",
+          newPath: "production-receipt",
           path: "Transactions / Production Receipt",
           icon: "fas fa-cog",
         },
         {
           label: "WIP Return",
           compName: "WIPReturn",
+          newPath: "wip-return",
           path: "Transactions / WIP Return",
           icon: "fas fa-undo",
         },
@@ -251,7 +270,12 @@ const SideBar = () => {
                         >
                           <span>
                             <i className={`${sub.icon} me-2`}></i>
-                            {sub.label}
+                            <Link
+                              to={sub.newPath}
+                              className="text-decoration-none menuListItem"
+                            >
+                              {sub.label}
+                            </Link>
                           </span>
                         </div>
                       </li>

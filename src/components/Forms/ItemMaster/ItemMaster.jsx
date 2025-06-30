@@ -1,6 +1,7 @@
 import React, { useContext, useState } from "react";
 import ItemMasterModal from "../../Modals/ItemMasterModal";
 import { AppContext } from "../../../context/AppContext";
+import { Link } from "react-router-dom";
 
 const ItemMaster = () => {
   const [selectedItems, setSelectedItems] = useState([]);
@@ -83,12 +84,43 @@ const ItemMaster = () => {
       status: "active",
     });
     setIsChecked(true);
+    setStatus("active");
+  };
+
+  const handleSetIsAddVendor = () => {
+    setIsAddItem(true);
   };
 
   return (
     <div>
+      {/* Header section */}
+      <nav className="navbar bg-light border-body" data-bs-theme="light">
+        <div className="container-fluid">
+          <div className="mt-4">
+            <h3 className="nav-header header-style">Item Master</h3>
+            <p className="breadcrumb">
+              <Link to="/dashboard">
+                <i className="fas fa-home text-8"></i>
+              </Link>{" "}
+              <span className="ms-1 mt-1 text-small-gray">
+                / Masters / Item Master
+              </span>
+            </p>
+          </div>
+
+          {/* Add Item Button */}
+
+          <button
+            className="btn btn-primary add-btn"
+            onClick={handleSetIsAddVendor}
+          >
+            <i className="fa-solid fa-user-plus"></i> Add New Item
+          </button>
+        </div>
+      </nav>
+
       {/* Search and Filter Section */}
-      <div className="search-filter-container">
+      <div className="search-filter-container mx-2">
         <div className="search-box">
           <i className="fas fa-search position-absolute input-icon"></i>
           <input
@@ -116,7 +148,7 @@ const ItemMaster = () => {
 
       {/* Form Header Section */}
       {isAddItem && (
-        <div className="table-form-container">
+        <div className="table-form-container mx-2">
           <div className="form-header">
             <h2>
               <i className="fas fa-box"></i> Add New Item
@@ -134,8 +166,8 @@ const ItemMaster = () => {
           >
             <div className="form-grid border-bottom pt-0">
               <div className="row form-style">
-                <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="name" className="form-label mb-0 ms-2">
+                <div className="col-4 d-flex flex-column form-group ps-2">
+                  <label htmlFor="name" className="form-label mb-0">
                     Item Name
                   </label>
                   <div className="position-relative w-100">
@@ -154,7 +186,7 @@ const ItemMaster = () => {
                   </div>
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="code" className="form-label mb-0 ms-2">
+                  <label htmlFor="code" className="form-label mb-0">
                     Item Code
                   </label>
                   <div className="position-relative w-100">
@@ -199,14 +231,14 @@ const ItemMaster = () => {
                 </div>
               </div>
               <div className="row form-style">
-                <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="type" className="form-label mb-0 ms-2">
+                <div className="col-4 d-flex flex-column form-group ps-2">
+                  <label htmlFor="type" className="form-label mb-0">
                     Type
                   </label>
                   <div className="position-relative w-100">
                     <i className="fas fa-tags position-absolute input-icon"></i>
                     <select
-                      className="form-control ps-5 ms-2 text-font"
+                      className="form-control ps-5 text-font"
                       id="type"
                       placeholder="Type"
                       required
@@ -226,7 +258,7 @@ const ItemMaster = () => {
                   </div>
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="barcode" className="form-label mb-0  ms-2">
+                  <label htmlFor="barcode" className="form-label mb-0">
                     Barcode
                   </label>
                   <div className="position-relative w-100">
@@ -273,7 +305,7 @@ const ItemMaster = () => {
               </div>
               <div className="row form-style">
                 <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="price" className="form-label mb-0  ms-2">
+                  <label htmlFor="price" className="form-label mb-0">
                     Price
                   </label>
                   <div className="position-relative w-100">
@@ -292,7 +324,7 @@ const ItemMaster = () => {
                   </div>
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="stQty" className="form-label mb-0  ms-2">
+                  <label htmlFor="stQty" className="form-label mb-0">
                     ST QTY
                   </label>
                   <div className="position-relative w-100">
@@ -318,7 +350,7 @@ const ItemMaster = () => {
                     <i className="fas fa-clock position-absolute input-icon"></i>
                     <input
                       type="text"
-                      className="form-control ps-5 text-font"
+                      className="form-control ps-5 text-font ms-2"
                       id="life"
                       placeholder="Enter life (in days)"
                       required
@@ -386,13 +418,13 @@ const ItemMaster = () => {
             </div>
             <div className="form-actions">
               <button
-                className="btn btn-primary border border-0 add-btn me-3 float-end"
+                className="btn btn-primary border border-0 text-8 px-3 fw-medium py-2 me-3 float-end"
                 onClick={handleAddItem}
               >
                 <i className="fa-solid fa-floppy-disk me-1"></i> Save Changes
               </button>
               <button
-                className="btn btn-secondary border border-0 add-btn bg-secondary me-3 float-end"
+                className="btn btn-secondary border border-0 text-8 px-3 fw-medium py-2 bg-secondary me-3 float-end"
                 onClick={handleReset}
               >
                 <i className="fa-solid fa-arrows-rotate me-1"></i> Reset
@@ -403,7 +435,7 @@ const ItemMaster = () => {
       )}
 
       {/* Table Section */}
-      <div className="margin-2">
+      <div className="margin-2 mx-2">
         <div className="table-container">
           <div className="table-header">
             <div className="selected-count">

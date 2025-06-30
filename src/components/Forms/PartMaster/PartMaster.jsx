@@ -1,5 +1,6 @@
 import React, { useContext, useState } from "react";
 import { AppContext } from "../../../context/AppContext";
+import { Link } from "react-router-dom";
 
 const PartMaster = () => {
   const { isAddPart, setIsAddPart } = useContext(AppContext);
@@ -57,6 +58,7 @@ const PartMaster = () => {
 
   const handleReset = (e) => {
     e.preventDefault();
+
     setFormData({
       name: "",
       code: "",
@@ -64,12 +66,43 @@ const PartMaster = () => {
       status: "active",
     });
     setIsChecked(true);
+    setStatus("active");
+  };
+
+  const handleSetIsAddPart = () => {
+    setIsAddPart(true);
   };
 
   return (
     <div>
+      {/* Header section */}
+      <nav className="navbar bg-light border-body" data-bs-theme="light">
+        <div className="container-fluid">
+          <div className="mt-4">
+            <h3 className="nav-header header-style">Part Master</h3>
+            <p className="breadcrumb">
+              <Link to="/dashboard">
+                <i className="fas fa-home text-8"></i>
+              </Link>{" "}
+              <span className="ms-1 mt-1 text-small-gray">
+                / Masters / Part Master
+              </span>
+            </p>
+          </div>
+
+          {/* Add Part Button */}
+
+          <button
+            className="btn btn-primary add-btn"
+            onClick={handleSetIsAddPart}
+          >
+            <i className="fa-solid fa-user-plus"></i> Add New Part
+          </button>
+        </div>
+      </nav>
+
       {/* Search and Filter Section */}
-      <div className="search-filter-container">
+      <div className="search-filter-container mx-2">
         <div className="search-box">
           <i className="fas fa-search position-absolute input-icon"></i>
           <input
@@ -98,7 +131,7 @@ const PartMaster = () => {
 
       {/* Form Header Section */}
       {isAddPart && (
-        <div className="table-form-container">
+        <div className="table-form-container mx-2">
           <div className="form-header">
             <h2>
               <i className="fas fa-cogs"></i> Add New Part
@@ -240,13 +273,13 @@ const PartMaster = () => {
             </div>
             <div className="form-actions">
               <button
-                className="btn btn-primary border border-0 add-btn me-3 float-end"
+                className="btn btn-primary border border-0 text-8 px-3 fw-medium py-2 me-3 float-end"
                 onClick={handleAddParts}
               >
                 <i className="fa-solid fa-floppy-disk me-1"></i> Save Changes
               </button>
               <button
-                className="btn btn-secondary border border-0 add-btn bg-secondary me-3 float-end"
+                className="btn btn-secondary border border-0 text-8 px-3 fw-medium py-2 bg-secondary me-3 float-end"
                 onClick={handleReset}
               >
                 <i className="fa-solid fa-arrows-rotate me-1"></i> Reset
@@ -257,7 +290,7 @@ const PartMaster = () => {
       )}
 
       {/* Table Section */}
-      <div className="margin-2">
+      <div className="margin-2 mx-2">
         <div className="table-container">
           <div className="table-header">
             <div className="selected-count">
@@ -270,6 +303,12 @@ const PartMaster = () => {
               <label htmlFor="select-all">
                 {selectedParts.length} Selected
               </label>
+            </div>
+            <div className="bulk-actions">
+              <button className="btn-action btn-danger">
+                <i className="fas fa-trash"></i>
+                Delete Selected
+              </button>
             </div>
           </div>
           <table>

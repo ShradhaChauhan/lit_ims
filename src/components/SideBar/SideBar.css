@@ -23,7 +23,7 @@
   display: flex;
   flex-direction: column;
   padding: 1rem;
-  overflow: scroll;
+  overflow-y: scroll;
 }
 
 .sidebar.collapsed {
@@ -46,7 +46,7 @@
 }
 
 .menuListItem:hover {
-  background-color: var(--hover-gray);
+  /* background-color: var(--hover-gray); */
   font-size: 0.85rem;
 }
 
@@ -114,4 +114,26 @@
 .logout:hover {
     color: white;
     background-color: var(--hover-gray);
+}
+
+/* Flyout styles */
+.sidebar.collapsed .flyout-submenu {
+  display: none;
+  position: absolute;
+  left: 100%;
+  top: 0;
+  background: #fff;
+  border: 1px solid #ccc;
+  z-index: 1000;
+  padding: 8px;
+  min-width: 150px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+}
+
+.sidebar.collapsed .nav-item {
+  position: relative;
+}
+
+.sidebar.collapsed .nav-item:hover .flyout-submenu {
+  display: block;
 }

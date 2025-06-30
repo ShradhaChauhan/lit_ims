@@ -1,5 +1,6 @@
 import React, { useContext, useRef, useState } from "react";
 import { AppContext } from "../../../context/AppContext";
+import { Link } from "react-router-dom";
 
 const BOM = () => {
   const { isAddBom, setIsAddBom } = useContext(AppContext);
@@ -104,12 +105,42 @@ const BOM = () => {
       ],
     });
     setIsChecked(true);
+    setStatus("active");
+  };
+
+  const handleSetIsAddBOM = () => {
+    setIsAddBom(true);
   };
 
   return (
     <div>
+      {/* Header section */}
+      <nav className="navbar bg-light border-body" data-bs-theme="light">
+        <div className="container-fluid">
+          <div className="mt-4">
+            <h3 className="nav-header header-style">BOM Master</h3>
+            <p className="breadcrumb">
+              <Link to="/dashboard">
+                <i className="fas fa-home text-8"></i>
+              </Link>{" "}
+              <span className="ms-1 mt-1 text-small-gray">
+                / Masters / BOM Master
+              </span>
+            </p>
+          </div>
+          {/* Add BOM Button */}
+
+          <button
+            className="btn btn-primary add-btn"
+            onClick={handleSetIsAddBOM}
+          >
+            <i className="fa-solid fa-user-plus"></i> Add New BOM
+          </button>
+        </div>
+      </nav>
+
       {/* Search and Filter Section */}
-      <div className="search-filter-container">
+      <div className="search-filter-container mx-2">
         <div className="search-box">
           <i className="fas fa-search position-absolute input-icon"></i>
           <input
@@ -135,7 +166,7 @@ const BOM = () => {
 
       {/* Form Header Section */}
       {isAddBom && (
-        <div className="table-form-container">
+        <div className="table-form-container mx-2">
           <div className="form-header">
             <h2>
               <i className="fas fa-sitemap"></i> Add New Bom
@@ -402,13 +433,13 @@ const BOM = () => {
 
             <div className="form-actions">
               <button
-                className="btn btn-primary border border-0 add-btn me-3 float-end"
+                className="btn btn-primary border border-0 text-8 px-3 fw-medium py-2 me-3 float-end"
                 onClick={handleAddBoms}
               >
                 <i className="fa-solid fa-floppy-disk me-1"></i> Save Changes
               </button>
               <button
-                className="btn btn-secondary border border-0 add-btn bg-secondary me-3 float-end"
+                className="btn btn-secondary border border-0 text-8 px-3 fw-medium py-2 bg-secondary me-3 float-end"
                 onClick={handleReset}
               >
                 <i className="fa-solid fa-arrows-rotate me-1"></i> Reset
@@ -419,7 +450,7 @@ const BOM = () => {
       )}
 
       {/* Table Section */}
-      <div className="margin-2">
+      <div className="margin-2 mx-2">
         <div className="table-container">
           <div className="table-header">
             <div className="selected-count">

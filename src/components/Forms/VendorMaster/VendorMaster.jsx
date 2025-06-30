@@ -1,6 +1,7 @@
 import React, { useContext, useState } from "react";
 import "./VendorMaster.css";
 import { AppContext } from "../../../context/AppContext";
+import { Link } from "react-router-dom";
 
 const VendorMaster = () => {
   const { isAddVendor, setIsAddVendor } = useContext(AppContext);
@@ -71,6 +72,7 @@ const VendorMaster = () => {
       status: "active",
     });
     setIsChecked(true);
+    setStatus("active");
   };
 
   const handleVendorCheckboxChange = (vendorId) => {
@@ -117,10 +119,41 @@ const VendorMaster = () => {
     },
   ];
 
+  const handleSetIsAddVendor = (e) => {
+    e.preventDefault();
+    setIsAddVendor(true);
+  };
+
   return (
     <div>
+      {/* Header section */}
+      <nav className="navbar bg-light border-body" data-bs-theme="light">
+        <div className="container-fluid">
+          <div className="mt-4">
+            <h3 className="nav-header header-style">Business Partner</h3>
+            <p className="breadcrumb">
+              <Link to="/dashboard">
+                <i className="fas fa-home text-8"></i>
+              </Link>{" "}
+              <span className="ms-1 mt-1 text-small-gray">
+                / Masters / Business Partner
+              </span>
+            </p>
+          </div>
+
+          {/* Add Partner Button */}
+
+          <button
+            className="btn btn-primary add-btn"
+            onClick={handleSetIsAddVendor}
+          >
+            <i className="fa-solid fa-user-plus"></i> Add New Partner
+          </button>
+        </div>
+      </nav>
+
       {/* Search and Filter Section */}
-      <div className="search-filter-container">
+      <div className="search-filter-container mx-2">
         <div className="search-box">
           <i className="fas fa-search position-absolute input-icon"></i>
           <input
@@ -149,7 +182,7 @@ const VendorMaster = () => {
 
       {/* Form Header Section */}
       {isAddVendor && (
-        <div className="table-form-container">
+        <div className="table-form-container mx-2">
           <div className="form-header">
             <h2>
               <i className="fas fa-user-plus"></i> Add New Partner
@@ -195,7 +228,7 @@ const VendorMaster = () => {
                   <label htmlFor="name" className="form-label  ms-2">
                     Name
                   </label>
-                  <div className="position-relative w-100">
+                  <div className="position-relative w-100 ms-2">
                     <i className="fas fa-user position-absolute ps-2 input-icon"></i>
                     <input
                       type="text"
@@ -329,10 +362,10 @@ const VendorMaster = () => {
                   </div>
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="status" className="form-label">
+                  <label htmlFor="status" className="form-label ms-2">
                     Status
                   </label>
-                  <div className="position-relative w-100">
+                  <div className="position-relative w-100 ms-2">
                     <div className="form-check form-switch position-absolute input-icon mt-1 padding-left-2">
                       <input
                         className="form-check-input text-font switch-style"
@@ -383,13 +416,13 @@ const VendorMaster = () => {
             </div>
             <div className="form-actions">
               <button
-                className="btn btn-primary border border-0 add-btn me-3 float-end"
+                className="btn btn-primary border border-0 text-8 px-3 fw-medium py-2 me-3 float-end"
                 onClick={handleAddPartner}
               >
                 <i className="fa-solid fa-floppy-disk me-1"></i> Save Changes
               </button>
               <button
-                className="btn btn-secondary border border-0 add-btn bg-secondary me-3 float-end"
+                className="btn btn-secondary border border-0 text-8 px-3 fw-medium py-2 bg-secondary me-3 float-end"
                 onClick={handleReset}
               >
                 <i className="fa-solid fa-arrows-rotate me-1"></i> Reset
@@ -399,7 +432,7 @@ const VendorMaster = () => {
         </div>
       )}
 
-      <div className="margin-2">
+      <div className="margin-2 mx-2">
         {/* Table Section */}
         <div className="table-container">
           <div className="table-header">

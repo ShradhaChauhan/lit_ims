@@ -1,4 +1,5 @@
-import { createContext, useState } from "react";
+import { createContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export const AppContext = createContext();
 
@@ -15,6 +16,13 @@ const AppContextProvider = (props) => {
   const [isAddPart, setIsAddPart] = useState(false);
   const [isAddBom, setIsAddBom] = useState(false);
   const [branchDropdownValues, setBranchDropdownValues] = useState([{}]);
+
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Sync changes to localStorage
+  useEffect(() => {
+    localStorage.setItem("isAuthenticated", isAuthenticated);
+  }, [isAuthenticated]);
 
   const value = {
     rightSideComponent,
@@ -41,6 +49,8 @@ const AppContextProvider = (props) => {
     setIsAddBom,
     branchDropdownValues,
     setBranchDropdownValues,
+    isAuthenticated,
+    setIsAuthenticated,
   };
 
   return (
