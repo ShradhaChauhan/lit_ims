@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { Modal } from "bootstrap";
 
 const ItemMaster = () => {
+  const [errors, setErrors] = useState({});
   const itemModalRef = useRef(null);
   const itemEditModalRef = useRef(null);
   const [isShowItemDetails, setIsShowItemDetails] = useState(false);
@@ -43,21 +44,7 @@ const ItemMaster = () => {
     status: "",
   });
 
-  const items = [
-    {
-      id: 1,
-      name: "Annie",
-      code: "023546",
-      uom: "Kg",
-      type: "A Type",
-      barcode: "123654",
-      group: "Capacitor",
-      price: "500",
-      stQty: "1000",
-      life: "1 year",
-      status: "active",
-    },
-  ];
+  const items = [];
 
   const handleItemCheckboxChange = (itemId) => {
     setSelectedItems((prevSelected) =>
@@ -80,28 +67,87 @@ const ItemMaster = () => {
 
   const handleAddItem = (e) => {
     e.preventDefault();
-    const finalData = {
-      name: formData.name,
-      code: formData.code,
-      uom: formData.uom,
-      type: formData.type,
-      barcode: formData.barcode,
-      group: formData.group,
-      price: formData.price,
-      stQty: formData.stQty,
-      life: formData.life,
-      status: formData.status,
-    };
+    const newErrors = validateForm(formData);
+    setErrors(newErrors);
 
-    console.log("Submitting add item form");
-    fetch("", {
-      method: "POST",
-      body: finalData,
-    }).then(function (response) {
-      console.log(response);
-      return response.json();
-    });
-    console.log("Form submitted. ", finalData);
+    if (Object.keys(newErrors).length === 0) {
+      const finalData = {
+        name: formData.name,
+        code: formData.code,
+        uom: formData.uom,
+        type: formData.type,
+        barcode: formData.barcode,
+        group: formData.group,
+        price: formData.price,
+        stQty: formData.stQty,
+        life: formData.life,
+        status: formData.status,
+      };
+
+      console.log("Submitting add item form");
+      fetch("", {
+        method: "POST",
+        body: finalData,
+      }).then(function (response) {
+        console.log(response);
+        return response.json();
+      });
+      console.log("Form submitted. ", finalData);
+    } else {
+      console.log("Form submission failed due to validation errors.");
+    }
+  };
+
+  const validateForm = (data) => {
+    const errors = {};
+
+    if (!data.name.trim()) {
+      errors.name = "Item name is required";
+    }
+
+    if (!data.code) {
+      errors.code = "Code is required";
+    } else if (!/^\d+$/.test(data.code)) {
+      errors.code = "Code must only be in digits";
+    }
+
+    if (!data.uom) {
+      errors.uom = "UOM is required";
+    }
+
+    if (!data.type) {
+      errors.type = "Type is required";
+    }
+
+    if (!data.barcode) {
+      errors.barcode = "Barcode is required";
+    } else if (!/^\d+$/.test(data.barcode)) {
+      errors.barcode = "Barcode must only be in digits";
+    }
+
+    if (!data.group) {
+      errors.group = "Group is required";
+    }
+
+    if (!data.price) {
+      errors.price = "Price is required";
+    } else if (!/^\d+$/.test(data.price)) {
+      errors.price = "Price must be digits";
+    }
+
+    if (!data.stQty) {
+      errors.stQty = "ST Qty is required";
+    } else if (!/^\d+$/.test(data.stQty)) {
+      errors.stQty = "ST QTY must be digits";
+    }
+
+    if (!data.life) {
+      errors.life = "Life is required";
+    } else if (!/^\d+$/.test(data.life)) {
+      errors.life = "Life must be digits";
+    }
+
+    return errors;
   };
 
   const handleReset = (e) => {
@@ -192,7 +238,7 @@ const ItemMaster = () => {
             className="btn btn-primary add-btn"
             onClick={handleSetIsAddVendor}
           >
-            <i className="fa-solid fa-user-plus"></i> Add New Item
+            <i className="fa-solid fa-plus pe-1"></i> Add New Item
           </button>
         </div>
       </nav>
@@ -255,13 +301,15 @@ const ItemMaster = () => {
                       className="form-control ps-5 text-font"
                       id="name"
                       placeholder="Enter item name"
-                      required
                       value={formData.name}
                       onChange={(e) =>
                         setFormData({ ...formData, name: e.target.value })
                       }
                     />
                   </div>
+                  {errors.name && (
+                    <span className="error-message">{errors.name}</span>
+                  )}
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="code" className="form-label mb-0">
@@ -274,13 +322,15 @@ const ItemMaster = () => {
                       className="form-control ps-5 text-font"
                       id="code"
                       placeholder="Enter item code"
-                      required
                       value={formData.code}
                       onChange={(e) =>
                         setFormData({ ...formData, code: e.target.value })
                       }
                     />
                   </div>
+                  {errors.code && (
+                    <span className="error-message">{errors.code}</span>
+                  )}
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="uom" className="form-label mb-0 ms-2">
@@ -292,7 +342,6 @@ const ItemMaster = () => {
                       className="form-control ps-5 ms-2 text-font"
                       id="uom"
                       placeholder="UOM"
-                      required
                       value={formData.uom}
                       onChange={(e) =>
                         setFormData({ ...formData, uom: e.target.value })
@@ -306,6 +355,9 @@ const ItemMaster = () => {
                     </select>
                     <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                   </div>
+                  {errors.uom && (
+                    <span className="error-message">{errors.uom}</span>
+                  )}
                 </div>
               </div>
               <div className="row form-style">
@@ -319,7 +371,6 @@ const ItemMaster = () => {
                       className="form-control ps-5 text-font"
                       id="type"
                       placeholder="Type"
-                      required
                       value={formData.type}
                       onChange={(e) =>
                         setFormData({ ...formData, type: e.target.value })
@@ -334,6 +385,9 @@ const ItemMaster = () => {
                     </select>
                     <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                   </div>
+                  {errors.type && (
+                    <span className="error-message">{errors.type}</span>
+                  )}
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="barcode" className="form-label mb-0">
@@ -346,13 +400,15 @@ const ItemMaster = () => {
                       className="form-control ps-5 text-font"
                       id="barcode"
                       placeholder="Enter barcode"
-                      required
                       value={formData.barcode}
                       onChange={(e) =>
                         setFormData({ ...formData, barcode: e.target.value })
                       }
                     />
                   </div>
+                  {errors.barcode && (
+                    <span className="error-message">{errors.barcode}</span>
+                  )}
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="group" className="form-label mb-0 ms-2">
@@ -364,7 +420,6 @@ const ItemMaster = () => {
                       className="form-control ps-5 ms-2 text-font"
                       id="group"
                       placeholder="Group"
-                      required
                       value={formData.group}
                       onChange={(e) =>
                         setFormData({ ...formData, group: e.target.value })
@@ -379,6 +434,9 @@ const ItemMaster = () => {
                     </select>
                     <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                   </div>
+                  {errors.group && (
+                    <span className="error-message">{errors.group}</span>
+                  )}
                 </div>
               </div>
               <div className="row form-style">
@@ -393,13 +451,15 @@ const ItemMaster = () => {
                       className="form-control ps-5 text-font"
                       id="price"
                       placeholder="Enter price"
-                      required
                       value={formData.price}
                       onChange={(e) =>
                         setFormData({ ...formData, price: e.target.value })
                       }
                     />
                   </div>
+                  {errors.price && (
+                    <span className="error-message">{errors.price}</span>
+                  )}
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="stQty" className="form-label mb-0">
@@ -412,13 +472,15 @@ const ItemMaster = () => {
                       className="form-control ps-5 text-font"
                       id="stQty"
                       placeholder="Enter ST QTY"
-                      required
                       value={formData.stQty}
                       onChange={(e) =>
                         setFormData({ ...formData, stQty: e.target.value })
                       }
                     />
                   </div>
+                  {errors.stQty && (
+                    <span className="error-message">{errors.stQty}</span>
+                  )}
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="life" className="form-label mb-0  ms-2">
@@ -431,13 +493,15 @@ const ItemMaster = () => {
                       className="form-control ps-5 text-font ms-2"
                       id="life"
                       placeholder="Enter life (in days)"
-                      required
                       value={formData.life}
                       onChange={(e) =>
                         setFormData({ ...formData, life: e.target.value })
                       }
                     />
                   </div>
+                  {errors.life && (
+                    <span className="error-message">{errors.life}</span>
+                  )}
                 </div>
               </div>
               <div className="row form-style">
@@ -780,7 +844,6 @@ const ItemMaster = () => {
                             className="form-control ps-5 text-font"
                             id="name"
                             placeholder="Enter item name"
-                            required
                             value={itemDetails.name}
                             onChange={(e) =>
                               setFormData({ ...formData, name: e.target.value })
@@ -799,7 +862,6 @@ const ItemMaster = () => {
                             className="form-control ps-5 text-font"
                             id="code"
                             placeholder="Enter item code"
-                            required
                             value={itemDetails.code}
                             onChange={(e) =>
                               setFormData({ ...formData, code: e.target.value })
@@ -817,7 +879,6 @@ const ItemMaster = () => {
                             className="form-control ps-5 ms-2 text-font"
                             id="uom"
                             placeholder="UOM"
-                            required
                             value={itemDetails.uom}
                             onChange={(e) =>
                               setFormData({ ...formData, uom: e.target.value })
@@ -849,7 +910,6 @@ const ItemMaster = () => {
                             className="form-control ps-5 text-font"
                             id="type"
                             placeholder="Type"
-                            required
                             value={itemDetails.type}
                             onChange={(e) =>
                               setFormData({ ...formData, type: e.target.value })
@@ -881,7 +941,6 @@ const ItemMaster = () => {
                             className="form-control ps-5 text-font"
                             id="barcode"
                             placeholder="Enter barcode"
-                            required
                             value={itemDetails.barcode}
                             onChange={(e) =>
                               setFormData({
@@ -902,7 +961,6 @@ const ItemMaster = () => {
                             className="form-control ps-5 ms-2 text-font"
                             id="group"
                             placeholder="Group"
-                            required
                             value={itemDetails.group}
                             onChange={(e) =>
                               setFormData({
@@ -939,7 +997,6 @@ const ItemMaster = () => {
                             className="form-control ps-5 text-font"
                             id="price"
                             placeholder="Enter price"
-                            required
                             value={itemDetails.price}
                             onChange={(e) =>
                               setFormData({
@@ -961,7 +1018,6 @@ const ItemMaster = () => {
                             className="form-control ps-5 text-font"
                             id="stQty"
                             placeholder="Enter ST QTY"
-                            required
                             value={itemDetails.stQty}
                             onChange={(e) =>
                               setFormData({
@@ -983,7 +1039,6 @@ const ItemMaster = () => {
                             className="form-control ps-5 text-font ms-2"
                             id="life"
                             placeholder="Enter life (in days)"
-                            required
                             value={itemDetails.life}
                             onChange={(e) =>
                               setFormData({ ...formData, life: e.target.value })

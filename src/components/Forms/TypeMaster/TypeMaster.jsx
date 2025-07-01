@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { Modal } from "bootstrap";
 
 const TypeMaster = () => {
+  const [errors, setErrors] = useState({});
   const { isAddType, setIsAddType } = useContext(AppContext);
   const typeModalRef = useRef(null);
   const typeEditModalRef = useRef(null);
@@ -24,14 +25,7 @@ const TypeMaster = () => {
     status: "active",
   });
 
-  const types = [
-    {
-      id: 1,
-      trNo: "*****",
-      name: "Kim Jennie",
-      status: "Active",
-    },
-  ];
+  const types = [];
 
   const handleTypeCheckboxChange = (typeId) => {
     setSelectedTypes((prevSelected) =>
@@ -54,20 +48,38 @@ const TypeMaster = () => {
 
   const handleAddTypes = (e) => {
     e.preventDefault();
-    const finalData = {
-      name: formData.name,
-      status: formData.status,
-    };
+    const newErrors = validateForm(formData);
+    setErrors(newErrors);
 
-    console.log("Submitting add type form");
-    fetch("", {
-      method: "POST",
-      body: finalData,
-    }).then(function (response) {
-      console.log(response);
-      return response.json();
-    });
-    console.log("Form submitted. ", finalData);
+    if (Object.keys(newErrors).length === 0) {
+      e.preventDefault();
+      const finalData = {
+        name: formData.name,
+        status: formData.status,
+      };
+
+      console.log("Submitting add type form");
+      fetch("", {
+        method: "POST",
+        body: finalData,
+      }).then(function (response) {
+        console.log(response);
+        return response.json();
+      });
+      console.log("Form submitted. ", finalData);
+    } else {
+      console.log("Form submission failed due to validation errors.");
+    }
+  };
+
+  const validateForm = (data) => {
+    const errors = {};
+
+    if (!data.name.trim()) {
+      errors.name = "Type name is required";
+    }
+
+    return errors;
   };
 
   const handleEditType = (e) => {
@@ -150,7 +162,7 @@ const TypeMaster = () => {
             className="btn btn-primary add-btn"
             onClick={handleSetIsAddType}
           >
-            <i className="fa-solid fa-user-plus"></i> Add New Type
+            <i className="fa-solid fa-plus pe-1"></i> Add New Type
           </button>
         </div>
       </nav>
@@ -220,13 +232,15 @@ const TypeMaster = () => {
                       className="form-control ps-5 text-font"
                       id="name"
                       placeholder="Enter type name"
-                      required
                       value={formData.name}
                       onChange={(e) =>
                         setFormData({ ...formData, name: e.target.value })
                       }
                     />
                   </div>
+                  {errors.name && (
+                    <span className="error-message">{errors.name}</span>
+                  )}
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="status" className="form-label">
@@ -528,7 +542,6 @@ const TypeMaster = () => {
                             className="form-control ps-5 text-font"
                             id="name"
                             placeholder="Enter type name"
-                            required
                             value={typeDetails.name}
                             onChange={(e) =>
                               setFormData({ ...formData, name: e.target.value })

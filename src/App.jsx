@@ -15,6 +15,7 @@ import BOMMaster from "./components/Forms/BOMMaster/BOMMaster";
 import TypeMaster from "./components/Forms/TypeMaster/TypeMaster";
 import GroupMaster from "./components/Forms/GroupMaster/GroupMaster";
 import PartMaster from "./components/Forms/PartMaster/PartMaster";
+import VendorItemsMaster from "./components/Forms/VendorItemsMaster/VendorItemsMaster";
 
 function App() {
   const { rightSideComponent, setRightSideComponent, isAuthenticated } =
@@ -49,6 +50,10 @@ function App() {
                 <Route path="/type-master" element={<TypeMaster />} />
                 <Route path="/group-master" element={<GroupMaster />} />
                 <Route path="/part-master" element={<PartMaster />} />
+                <Route
+                  path="/vendor-items-master"
+                  element={<VendorItemsMaster />}
+                />
               </Routes>
             </div>
           </div>

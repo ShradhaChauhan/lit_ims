@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { Modal } from "bootstrap";
 
 const PartMaster = () => {
+  const [errors, setErrors] = useState({});
   const { isAddPart, setIsAddPart } = useContext(AppContext);
   const partModalRef = useRef(null);
   const partEditModalRef = useRef(null);
@@ -26,16 +27,7 @@ const PartMaster = () => {
     uom: "",
     status: "active",
   });
-  const parts = [
-    {
-      id: 1,
-      trNo: "*****",
-      code: "856423",
-      name: "Jungkook",
-      uom: "Pcs",
-      status: "Active",
-    },
-  ];
+  const parts = [];
 
   const handlePartCheckboxChange = (partId) => {
     setSelectedParts((prevSelected) =>
@@ -57,23 +49,50 @@ const PartMaster = () => {
   };
 
   const handleAddParts = (e) => {
-    e.preventDefault();
-    const finalData = {
-      name: formData.name,
-      code: formData.code,
-      uom: formData.uom,
-      status: formData.status,
-    };
+    const newErrors = validateForm(formData);
+    setErrors(newErrors);
 
-    console.log("Submitting add part form");
-    fetch("", {
-      method: "POST",
-      body: finalData,
-    }).then(function (response) {
-      console.log(response);
-      return response.json();
-    });
-    console.log("Form submitted. ", finalData);
+    if (Object.keys(newErrors).length === 0) {
+      e.preventDefault();
+      const finalData = {
+        name: formData.name,
+        code: formData.code,
+        uom: formData.uom,
+        status: formData.status,
+      };
+
+      console.log("Submitting add part form");
+      fetch("", {
+        method: "POST",
+        body: finalData,
+      }).then(function (response) {
+        console.log(response);
+        return response.json();
+      });
+      console.log("Form submitted. ", finalData);
+    } else {
+      console.log("Form submission failed due to validation errors.");
+    }
+  };
+
+  const validateForm = (data) => {
+    const errors = {};
+
+    if (!data.name.trim()) {
+      errors.name = "Part name is required";
+    }
+
+    if (!data.code.trim()) {
+      errors.code = "Code is required";
+    } else if (!/^\d+$/.test(data.code)) {
+      errors.code = "Code must only be in digits";
+    }
+
+    if (!data.uom.trim()) {
+      errors.uom = "UOM is required";
+    }
+
+    return errors;
   };
 
   const handleEditPart = (e) => {
@@ -159,7 +178,7 @@ const PartMaster = () => {
             className="btn btn-primary add-btn"
             onClick={handleSetIsAddPart}
           >
-            <i className="fa-solid fa-user-plus"></i> Add New Part
+            <i className="fa-solid fa-plus pe-1"></i> Add New Part
           </button>
         </div>
       </nav>
@@ -224,13 +243,15 @@ const PartMaster = () => {
                       className="form-control ps-5 text-font"
                       id="name"
                       placeholder="Enter part name"
-                      required
                       value={formData.name}
                       onChange={(e) =>
                         setFormData({ ...formData, name: e.target.value })
                       }
                     />
                   </div>
+                  {errors.name && (
+                    <span className="error-message">{errors.name}</span>
+                  )}
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="code" className="form-label">
@@ -243,13 +264,15 @@ const PartMaster = () => {
                       className="form-control ps-5 text-font"
                       id="code"
                       placeholder="Enter part code"
-                      required
                       value={formData.code}
                       onChange={(e) =>
                         setFormData({ ...formData, code: e.target.value })
                       }
                     />
                   </div>
+                  {errors.code && (
+                    <span className="error-message">{errors.code}</span>
+                  )}
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="uom" className="form-label">
@@ -260,7 +283,6 @@ const PartMaster = () => {
                     <select
                       className="form-control ps-5 text-font"
                       id="uom"
-                      required
                       value={formData.uom}
                       onChange={(e) =>
                         setFormData({ ...formData, uom: e.target.value })
@@ -278,6 +300,9 @@ const PartMaster = () => {
                     </select>
                     <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                   </div>
+                  {errors.uom && (
+                    <span className="error-message">{errors.uom}</span>
+                  )}
                 </div>
               </div>
               <div className="row form-style">
@@ -579,7 +604,6 @@ const PartMaster = () => {
                             className="form-control ps-5 text-font"
                             id="name"
                             placeholder="Enter part name"
-                            required
                             value={partDetails.name}
                             onChange={(e) =>
                               setFormData({ ...formData, name: e.target.value })
@@ -598,7 +622,6 @@ const PartMaster = () => {
                             className="form-control ps-5 text-font"
                             id="code"
                             placeholder="Enter part code"
-                            required
                             value={partDetails.code}
                             onChange={(e) =>
                               setFormData({ ...formData, code: e.target.value })
@@ -615,7 +638,6 @@ const PartMaster = () => {
                           <select
                             className="form-control ps-5 text-font"
                             id="uom"
-                            required
                             value={partDetails.uom}
                             onChange={(e) =>
                               setFormData({ ...formData, uom: e.target.value })

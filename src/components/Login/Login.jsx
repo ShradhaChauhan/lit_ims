@@ -76,7 +76,7 @@ const LoginPage = () => {
 
       console.log("Login Response:", response);
 
-      // ✅ Navigate to dashboard after successful login
+      // Navigate to dashboard after successful login
       navigate("/dashboard");
     } catch (err) {
       setIsAuthenticated(false);
@@ -147,7 +147,7 @@ const LoginPage = () => {
                 <button
                   type="submit"
                   onClick={handleVerify}
-                  className="btn btn-primary w-100 mt-3 mb-5"
+                  className="btn loginBtn w-100 mt-3 mb-5"
                 >
                   Verify
                 </button>
@@ -172,7 +172,7 @@ const LoginPage = () => {
                 <button
                   type="submit"
                   onClick={handleLogin}
-                  className="btn btn-primary w-100 mt-3 mb-5"
+                  className="btn loginBtn w-100 mt-3 mb-5"
                 >
                   Login
                 </button>
@@ -189,7 +189,7 @@ const LoginPage = () => {
         </div>
 
         {/* Right Panel */}
-        <div className="col-md-6 d-none d-md-flex flex-column align-items-center justify-content-center text-white p-5 bg-primary">
+        <div className="col-md-6 d-none d-md-flex flex-column align-items-center justify-content-center text-white p-5 bg-blue">
           <div className="mb-4">
             <img src={ims_logo} width={110} height={110} alt="IMS logo" />
           </div>

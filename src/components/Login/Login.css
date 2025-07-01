@@ -47,12 +47,12 @@
 }
 
 .loginBtn {
-    background-color: var(--gold) !important;
+    background-color: #1559BC !important;
     color: var(--white) !important;
 }
 
 .loginBtn:hover {
-    background-color: var(--lightGold) !important;
+    background-color: #266bd1 !important;
     color: var(--white) !important;
     border-color: 1px solid var(--gold) !important;
 }
@@ -62,6 +62,10 @@
 }
 
 /* New UI CSS */
+.bg-blue {
+    background-color: #1559BC;
+}
+
 body {
   background-color: #f8f9fa;
 }

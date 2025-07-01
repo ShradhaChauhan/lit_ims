@@ -5,6 +5,7 @@ import { AppContext } from "../../../context/AppContext";
 import { Link } from "react-router-dom";
 
 const VendorMaster = () => {
+  const [errors, setErrors] = useState({});
   const partnerModalRef = useRef(null);
   const partnerEditModalRef = useRef(null);
   const { isAddVendor, setIsAddVendor } = useContext(AppContext);
@@ -41,27 +42,34 @@ const VendorMaster = () => {
 
   const handleAddPartner = (e) => {
     e.preventDefault();
-    const finalData = {
-      type: formData.type,
-      name: formData.name,
-      mobile: formData.mobile,
-      email: formData.email,
-      city: formData.city,
-      state: formData.state,
-      pincode: formData.pincode,
-      address: formData.address,
-      status: formData.status,
-    };
+    const newErrors = validateForm(formData);
+    setErrors(newErrors);
 
-    console.log("Submitting add partner form");
-    fetch("", {
-      method: "POST",
-      body: finalData,
-    }).then(function (response) {
-      console.log(response);
-      return response.json();
-    });
-    console.log("Form submitted. ", finalData);
+    if (Object.keys(newErrors).length === 0) {
+      const finalData = {
+        type: formData.type,
+        name: formData.name,
+        mobile: formData.mobile,
+        email: formData.email,
+        city: formData.city,
+        state: formData.state,
+        pincode: formData.pincode,
+        address: formData.address,
+        status: formData.status,
+      };
+
+      console.log("Submitting add partner form");
+      fetch("", {
+        method: "POST",
+        body: finalData,
+      }).then(function (response) {
+        console.log(response);
+        return response.json();
+      });
+      console.log("Form submitted. ", finalData);
+    } else {
+      console.log("Form submission failed due to validation errors.");
+    }
   };
 
   const handleEditPartner = (e) => {
@@ -173,6 +181,50 @@ const VendorMaster = () => {
     }
   }, [isShowPartnerDetails, isEditPartnerDetails]);
 
+  const validateForm = (data) => {
+    const errors = {};
+
+    if (!data.type.trim()) {
+      errors.type = "Please select a type";
+    }
+
+    if (!data.name.trim()) {
+      errors.name = "Full name is required";
+    } else if (data.name.length < 4) {
+      errors.name = "Full name must be at least 4 characters long";
+    }
+
+    if (!data.email.trim()) {
+      errors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(data.email)) {
+      errors.email = "Email is invalid";
+    }
+
+    if (!data.mobile.trim()) {
+      errors.mobile = "Mobile is required";
+    } else if (!/^(\+\d{1,3}[- ]?)?\d{10}$/.test(data.mobile)) {
+      errors.mobile = "Mobile is invalid";
+    }
+
+    if (!data.city) {
+      errors.city = "Please select a city";
+    }
+
+    if (!data.state) {
+      errors.state = "Please select a state";
+    }
+
+    if (!data.pincode) {
+      errors.pincode = "Please select a pincode";
+    }
+
+    if (!data.address) {
+      errors.address = "Address is required";
+    }
+
+    return errors;
+  };
+
   return (
     <div>
       {/* Header section */}
@@ -196,7 +248,7 @@ const VendorMaster = () => {
             className="btn btn-primary add-btn"
             onClick={handleSetIsAddVendor}
           >
-            <i className="fa-solid fa-user-plus"></i> Add New Partner
+            <i className="fa-solid fa-plus pe-1"></i> Add New Partner
           </button>
         </div>
       </nav>
@@ -234,11 +286,14 @@ const VendorMaster = () => {
         <div className="table-form-container mx-2">
           <div className="form-header">
             <h2>
-              <i className="fas fa-user-plus"></i> Add New Partner
+              <i className="fas fa-plus pe-1"></i> Add New Partner
             </h2>
             <button
               className="btn-close"
-              onClick={() => setIsAddVendor(false)}
+              onClick={() => {
+                handleReset;
+                setIsAddVendor(false);
+              }}
             ></button>
           </div>
           {/* Form Fields */}
@@ -258,7 +313,6 @@ const VendorMaster = () => {
                     <select
                       className="form-control ps-5 ms-2 text-font"
                       id="type"
-                      required
                       value={formData.type}
                       onChange={(e) =>
                         setFormData({ ...formData, type: e.target.value })
@@ -272,6 +326,9 @@ const VendorMaster = () => {
                     </select>
                     <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                   </div>
+                  {errors.type && (
+                    <span className="error-message ms-2">{errors.type}</span>
+                  )}
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="name" className="form-label  ms-2">
@@ -284,13 +341,15 @@ const VendorMaster = () => {
                       className="form-control ps-5 text-font"
                       id="name"
                       placeholder="Enter full name"
-                      required
                       value={formData.name}
                       onChange={(e) =>
                         setFormData({ ...formData, name: e.target.value })
                       }
                     />
                   </div>
+                  {errors.name && (
+                    <span className="error-message ms-2">{errors.name}</span>
+                  )}
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="mobile" className="form-label  ms-2">
@@ -303,13 +362,15 @@ const VendorMaster = () => {
                       className="form-control ps-5 ms-2 text-font"
                       id="mobile"
                       placeholder="Enter mobile number"
-                      required
                       value={formData.mobile}
                       onChange={(e) =>
                         setFormData({ ...formData, mobile: e.target.value })
                       }
                     />
                   </div>
+                  {errors.mobile && (
+                    <span className="error-message ms-2">{errors.mobile}</span>
+                  )}
                 </div>
               </div>
               <div className="row form-style">
@@ -324,13 +385,15 @@ const VendorMaster = () => {
                       className="form-control ps-5 ms-2 text-font"
                       id="email"
                       placeholder="Enter email address"
-                      required
                       value={formData.email}
                       onChange={(e) =>
                         setFormData({ ...formData, email: e.target.value })
                       }
                     />
                   </div>
+                  {errors.email && (
+                    <span className="error-message ms-2">{errors.email}</span>
+                  )}
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="city" className="form-label  ms-2">
@@ -343,13 +406,15 @@ const VendorMaster = () => {
                       className="form-control ps-5 ms-2 text-font"
                       id="city"
                       placeholder="Enter city"
-                      required
                       value={formData.city}
                       onChange={(e) =>
                         setFormData({ ...formData, city: e.target.value })
                       }
                     />
                   </div>
+                  {errors.city && (
+                    <span className="error-message ms-2">{errors.city}</span>
+                  )}
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="state" className="form-label  ms-2">
@@ -362,13 +427,15 @@ const VendorMaster = () => {
                       className="form-control ps-5 ms-2 text-font"
                       id="state"
                       placeholder="Enter state"
-                      required
                       value={formData.state}
                       onChange={(e) =>
                         setFormData({ ...formData, state: e.target.value })
                       }
                     />
                   </div>
+                  {errors.state && (
+                    <span className="error-message ms-2">{errors.state}</span>
+                  )}
                 </div>
               </div>
               <div className="row form-style">
@@ -383,13 +450,15 @@ const VendorMaster = () => {
                       className="form-control ps-5 ms-2 text-font"
                       id="pincode"
                       placeholder="Enter pincode"
-                      required
                       value={formData.pincode}
                       onChange={(e) =>
                         setFormData({ ...formData, pincode: e.target.value })
                       }
                     />
                   </div>
+                  {errors.pincode && (
+                    <span className="error-message ms-2">{errors.pincode}</span>
+                  )}
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="address" className="form-label  ms-2">
@@ -402,13 +471,15 @@ const VendorMaster = () => {
                       className="form-control pt-3 ps-5 ms-2 text-font"
                       id="address"
                       placeholder="Enter complete address"
-                      required
                       value={formData.address}
                       onChange={(e) =>
                         setFormData({ ...formData, address: e.target.value })
                       }
                     ></textarea>
                   </div>
+                  {errors.address && (
+                    <span className="error-message ms-2">{errors.address}</span>
+                  )}
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="status" className="form-label ms-2">
@@ -717,7 +788,6 @@ const VendorMaster = () => {
                             <select
                               className="form-control ps-5 ms-2 text-font"
                               id="type"
-                              required
                               value={partnerDetails.type}
                               onChange={(e) =>
                                 setFormData({
@@ -751,7 +821,6 @@ const VendorMaster = () => {
                               className="form-control ps-5 text-font"
                               id="name"
                               placeholder="Enter full name"
-                              required
                               value={partnerDetails.name}
                               onChange={(e) =>
                                 setFormData({
@@ -773,7 +842,6 @@ const VendorMaster = () => {
                               className="form-control ps-5 ms-2 text-font"
                               id="mobile"
                               placeholder="Enter mobile number"
-                              required
                               value={partnerDetails.mobile}
                               onChange={(e) =>
                                 setFormData({
@@ -797,7 +865,6 @@ const VendorMaster = () => {
                               className="form-control ps-5 ms-2 text-font"
                               id="email"
                               placeholder="Enter email address"
-                              required
                               value={partnerDetails.email}
                               onChange={(e) =>
                                 setFormData({
@@ -819,7 +886,6 @@ const VendorMaster = () => {
                               className="form-control ps-5 ms-2 text-font"
                               id="city"
                               placeholder="Enter city"
-                              required
                               value={partnerDetails.city}
                               onChange={(e) =>
                                 setFormData({
@@ -841,7 +907,6 @@ const VendorMaster = () => {
                               className="form-control ps-5 ms-2 text-font"
                               id="state"
                               placeholder="Enter state"
-                              required
                               value={partnerDetails.state}
                               onChange={(e) =>
                                 setFormData({
@@ -865,7 +930,6 @@ const VendorMaster = () => {
                               className="form-control ps-5 ms-2 text-font"
                               id="pincode"
                               placeholder="Enter pincode"
-                              required
                               value={partnerDetails.pincode}
                               onChange={(e) =>
                                 setFormData({
@@ -887,7 +951,6 @@ const VendorMaster = () => {
                               className="form-control pt-3 ps-5 ms-2 text-font"
                               id="address"
                               placeholder="Enter complete address"
-                              required
                               value={partnerDetails.address}
                               onChange={(e) =>
                                 setFormData({

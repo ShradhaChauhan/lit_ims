@@ -1040,3 +1040,11 @@ select:invalid {
     color: var(--header-color) !important;
     font-weight: 600 !important;
 }
+
+/* Error message styles */
+.error-message {
+  color: red;
+  font-size: 12px;
+  margin-top: -5px;
+  margin-bottom: 10px;
+}

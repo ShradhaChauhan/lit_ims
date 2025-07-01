@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { Modal } from "bootstrap";
 
 const BOM = () => {
+  const [errors, setErrors] = useState({});
   const { isAddBom, setIsAddBom } = useContext(AppContext);
   const bomModalRef = useRef(null);
   const bomEditModalRef = useRef(null);
@@ -44,17 +45,7 @@ const BOM = () => {
   });
   const [isAddBomPart, setIsAddBomPart] = useState([{ id: 1 }]);
 
-  const boms = [
-    {
-      id: 1,
-      code: "100101",
-      name: "Jack",
-      itemsCount: "500",
-      totalQuantity: "500",
-      totalValue: "500",
-      status: "Active",
-    },
-  ];
+  const boms = [];
 
   const handleBomCheckboxChange = (bomId) => {
     setSelectedBoms((prevSelected) =>
@@ -77,34 +68,58 @@ const BOM = () => {
 
   const handleAddBoms = (e) => {
     e.preventDefault();
-    const finalData = {
-      name: formData.name,
-      code: formData.code,
-      status: formData.status,
-      items: [
-        {
-          item: formData.items.item,
-          code: formData.items.code,
-          uom: formData.items.uom,
-          quantity: formData.items.quantity,
-          warehouse: formData.items.warehouse,
-          actions: {
-            view: false,
-            delete: false,
-          },
-        },
-      ],
-    };
+    const newErrors = validateForm(formData);
+    setErrors(newErrors);
 
-    console.log("Submitting add bom form");
-    fetch("", {
-      method: "POST",
-      body: finalData,
-    }).then(function (response) {
-      console.log(response);
-      return response.json();
-    });
-    console.log("Form submitted. ", finalData);
+    if (Object.keys(newErrors).length === 0) {
+      e.preventDefault();
+      const finalData = {
+        name: formData.name,
+        code: formData.code,
+        status: formData.status,
+        items: [
+          {
+            item: formData.items.item,
+            code: formData.items.code,
+            uom: formData.items.uom,
+            quantity: formData.items.quantity,
+            warehouse: formData.items.warehouse,
+            actions: {
+              view: false,
+              delete: false,
+            },
+          },
+        ],
+      };
+
+      console.log("Submitting add bom form");
+      fetch("", {
+        method: "POST",
+        body: finalData,
+      }).then(function (response) {
+        console.log(response);
+        return response.json();
+      });
+      console.log("Form submitted. ", finalData);
+    } else {
+      console.log("Form submission failed due to validation errors.");
+    }
+  };
+
+  const validateForm = (data) => {
+    const errors = {};
+
+    if (!data.name.trim()) {
+      errors.name = "BOM name is required";
+    }
+
+    if (!data.code) {
+      errors.code = "Code is required";
+    } else if (!/^\d+$/.test(data.code)) {
+      errors.code = "Code must only be in digits";
+    }
+
+    return errors;
   };
 
   const handleEditBom = (e) => {
@@ -200,7 +215,7 @@ const BOM = () => {
             className="btn btn-primary add-btn"
             onClick={handleSetIsAddBOM}
           >
-            <i className="fa-solid fa-user-plus"></i> Add New BOM
+            <i className="fa-solid fa-plus pe-1"></i> Add New BOM
           </button>
         </div>
       </nav>
@@ -262,13 +277,15 @@ const BOM = () => {
                       className="form-control ps-5 text-font"
                       id="bomName"
                       placeholder="Enter BOM name"
-                      required
                       value={formData.name}
                       onChange={(e) =>
                         setFormData({ ...formData, name: e.target.value })
                       }
                     />
                   </div>
+                  {errors.name && (
+                    <span className="error-message">{errors.name}</span>
+                  )}
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="bomCode" className="form-label">
@@ -281,13 +298,15 @@ const BOM = () => {
                       className="form-control ps-5 text-font"
                       id="bomCode"
                       placeholder="Enter BOM code"
-                      required
                       value={formData.code}
                       onChange={(e) =>
                         setFormData({ ...formData, code: e.target.value })
                       }
                     />
                   </div>
+                  {errors.code && (
+                    <span className="error-message">{errors.code}</span>
+                  )}
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="status" className="form-label">
@@ -371,8 +390,8 @@ const BOM = () => {
                               <i className="fas fa-cogs position-absolute input-icon"></i>
                               <select
                                 className="form-control text-font w-100 ps-5"
-                                required
                                 value={formData.items.item}
+                                id="item"
                                 onChange={(e) =>
                                   setFormData({
                                     ...formData,
@@ -380,7 +399,7 @@ const BOM = () => {
                                   })
                                 }
                               >
-                                <option value="">Select Part</option>
+                                <option value="">Select Item</option>
                               </select>
                             </div>
                           </div>
@@ -389,9 +408,10 @@ const BOM = () => {
                           <div className="field-wrapper">
                             <input
                               type="text"
+                              id="code"
                               className="form-control text-font w-100"
                               readOnly
-                              required
+                              disabled
                               value={formData.items.code}
                               onChange={(e) =>
                                 setFormData({
@@ -406,9 +426,10 @@ const BOM = () => {
                           <div className="field-wrapper">
                             <input
                               type="text"
+                              id="uom"
                               className="form-control text-font w-100"
                               readOnly
-                              required
+                              disabled
                               value={formData.items.uom}
                               onChange={(e) =>
                                 setFormData({
@@ -423,10 +444,11 @@ const BOM = () => {
                           <div className="field-wrapper">
                             <input
                               type="number"
+                              id="quantity"
                               className="form-control text-font w-100"
                               min="0.01"
                               step="0.01"
-                              required
+                              disabled
                               value={formData.items.quantity}
                               onChange={(e) =>
                                 setFormData({
@@ -445,7 +467,6 @@ const BOM = () => {
                                 className="form-control text-font w-100 ps-5"
                                 id="warehouse"
                                 title="Select Warehouse"
-                                required
                                 value={formData.items.warehouse}
                                 onChange={(e) =>
                                   setFormData({

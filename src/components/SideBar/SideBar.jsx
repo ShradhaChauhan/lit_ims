@@ -55,6 +55,13 @@ const SideBar = () => {
           icon: "fas fa-user-group",
         },
         {
+          label: "Vendor Items Master",
+          compName: "VendorItemsMaster",
+          newPath: "vendor-items-master",
+          path: "Masters / Vendor Items Master",
+          icon: "fas fa-box-open",
+        },
+        {
           label: "Item Master",
           compName: "ItemMaster",
           newPath: "item-master",

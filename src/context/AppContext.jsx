@@ -16,7 +16,7 @@ const AppContextProvider = (props) => {
   const [isAddPart, setIsAddPart] = useState(false);
   const [isAddBom, setIsAddBom] = useState(false);
   const [branchDropdownValues, setBranchDropdownValues] = useState([{}]);
-
+  const [isAddVendorItem, setIsAddVendorItem] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Sync changes to localStorage
@@ -51,6 +51,8 @@ const AppContextProvider = (props) => {
     setBranchDropdownValues,
     isAuthenticated,
     setIsAuthenticated,
+    isAddVendorItem,
+    setIsAddVendorItem,
   };
 
   return (

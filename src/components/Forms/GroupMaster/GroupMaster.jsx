@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { Modal } from "bootstrap";
 
 const GroupMaster = () => {
+  const [errors, setErrors] = useState({});
   const { isAddGroup, setIsAddGroup } = useContext(AppContext);
   const groupModalRef = useRef(null);
   const groupEditModalRef = useRef(null);
@@ -23,14 +24,7 @@ const GroupMaster = () => {
     name: "",
     status: "active",
   });
-  const groups = [
-    {
-      id: 1,
-      trNo: "*****",
-      name: "Lisa",
-      status: "Active",
-    },
-  ];
+  const groups = [];
 
   const handleGroupCheckboxChange = (groupId) => {
     setSelectedGroups((prevSelected) =>
@@ -52,21 +46,38 @@ const GroupMaster = () => {
   };
 
   const handleAddGroups = (e) => {
-    e.preventDefault();
-    const finalData = {
-      name: formData.name,
-      status: formData.status,
-    };
+    const newErrors = validateForm(formData);
+    setErrors(newErrors);
 
-    console.log("Submitting add group form");
-    fetch("", {
-      method: "POST",
-      body: finalData,
-    }).then(function (response) {
-      console.log(response);
-      return response.json();
-    });
-    console.log("Form submitted. ", finalData);
+    if (Object.keys(newErrors).length === 0) {
+      e.preventDefault();
+      const finalData = {
+        name: formData.name,
+        status: formData.status,
+      };
+
+      console.log("Submitting add group form");
+      fetch("", {
+        method: "POST",
+        body: finalData,
+      }).then(function (response) {
+        console.log(response);
+        return response.json();
+      });
+      console.log("Form submitted. ", finalData);
+    } else {
+      console.log("Form submission failed due to validation errors.");
+    }
+  };
+
+  const validateForm = (data) => {
+    const errors = {};
+
+    if (!data.name.trim()) {
+      errors.name = "Group name is required";
+    }
+
+    return errors;
   };
 
   const handleEditGroup = (e) => {
@@ -149,7 +160,7 @@ const GroupMaster = () => {
             className="btn btn-primary add-btn"
             onClick={handleSetIsAddGroup}
           >
-            <i className="fa-solid fa-user-plus"></i> Add New Group
+            <i className="fa-solid fa-plus pe-1"></i> Add New Group
           </button>
         </div>
       </nav>
@@ -178,7 +189,7 @@ const GroupMaster = () => {
         <div className="table-form-container mx-2">
           <div className="form-header">
             <h2>
-              <i className="fas fa-user-plus"></i> Add New Group
+              <i className="fas fa-plus pe-1"></i> Add New Group
             </h2>
             <button
               className="btn-close"
@@ -220,13 +231,15 @@ const GroupMaster = () => {
                       className="form-control ps-5 text-font"
                       id="name"
                       placeholder="Enter group name"
-                      required
                       value={formData.name}
                       onChange={(e) =>
                         setFormData({ ...formData, name: e.target.value })
                       }
                     />
                   </div>
+                  {errors.name && (
+                    <span className="error-message">{errors.name}</span>
+                  )}
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="status" className="form-label">
@@ -528,7 +541,6 @@ const GroupMaster = () => {
                             className="form-control ps-5 text-font"
                             id="name"
                             placeholder="Enter group name"
-                            required
                             value={groupDetails.name}
                             onChange={(e) =>
                               setFormData({ ...formData, name: e.target.value })

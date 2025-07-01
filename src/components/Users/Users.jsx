@@ -3,8 +3,18 @@ import "./Users.css";
 import { AppContext } from "../../context/AppContext";
 import { useRef, useEffect } from "react";
 import { Modal } from "bootstrap";
+import Select from "react-select";
 
 const Users = () => {
+  // const options = [
+  //   { value: "react", label: "React" },
+  //   { value: "angular", label: "Angular" },
+  //   { value: "vue", label: "Vue" },
+  // ];
+
+  const [selectedOptions, setSelectedOptions] = useState([]);
+
+  const [errors, setErrors] = useState({});
   const userModalRef = useRef(null);
   const userEditModalRef = useRef(null);
 
@@ -23,6 +33,7 @@ const Users = () => {
     name: "",
     email: "",
     password: "",
+    confirmPassword: "",
     role: "",
     department: "",
     status: "active",
@@ -254,26 +265,33 @@ const Users = () => {
 
   const handleAddUser = (e) => {
     e.preventDefault();
-    const finalData = {
-      username: formData.name,
-      email: formData.email,
-      password: formData.password,
-      role: formData.role.toUpperCase(),
-      branch: formData.branch,
-      department: formData.department,
-      status: formData.status,
-      permissions: collectPermissions(),
-    };
+    const newErrors = validateForm(formData);
+    setErrors(newErrors);
 
-    console.log("Submitting form");
-    fetch("", {
-      method: "POST",
-      body: finalData,
-    }).then(function (response) {
-      console.log(response);
-      return response.json();
-    });
-    console.log("Form submitted. ", finalData);
+    if (Object.keys(newErrors).length === 0) {
+      const finalData = {
+        username: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role.toUpperCase(),
+        branch: formData.branch,
+        department: formData.department,
+        status: formData.status,
+        permissions: collectPermissions(),
+      };
+
+      console.log("Submitting form");
+      fetch("", {
+        method: "POST",
+        body: finalData,
+      }).then(function (response) {
+        console.log(response);
+        return response.json();
+      });
+      console.log("Form submitted. ", finalData);
+    } else {
+      console.log("Form submission failed due to validation errors.");
+    }
   };
 
   const handleEditUser = (e) => {
@@ -497,6 +515,46 @@ const Users = () => {
     }
   }, [isShowUserDetails, isEditUserDetails]);
 
+  const validateForm = (data) => {
+    const errors = {};
+
+    if (!data.name.trim()) {
+      errors.name = "Full name is required";
+    } else if (data.name.length < 4) {
+      errors.name = "Full name must be at least 4 characters long";
+    }
+
+    if (!data.email.trim()) {
+      errors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(data.email)) {
+      errors.email = "Email is invalid";
+    }
+
+    if (!data.password) {
+      errors.password = "Password is required";
+    } else if (data.password.length < 8) {
+      errors.password = "Password must be at least 8 characters long";
+    }
+
+    if (data.confirmPassword !== data.password) {
+      errors.confirmPassword = "Passwords do not match";
+    }
+
+    if (!data.role) {
+      errors.role = "Role is required";
+    }
+
+    if (!data.department) {
+      errors.department = "Department is required";
+    }
+
+    if (!data.branch) {
+      errors.branch = "Branch is required";
+    }
+
+    return errors;
+  };
+
   return (
     <div>
       {/* Header section */}
@@ -520,7 +578,7 @@ const Users = () => {
             className="btn btn-primary add-btn"
             onClick={handleLoadBranchDropdownValues}
           >
-            <i className="fa-solid fa-user-plus"></i> Add New User
+            <i className="fa-solid fa-plus pe-1"></i> Add New User
           </button>
         </div>
       </nav>
@@ -558,7 +616,7 @@ const Users = () => {
           <div className="form-container">
             <div className="form-header">
               <h2>
-                <i className="fas fa-user-plus"></i> Add New User
+                <i className="fas fa-plus pe-1"></i> Add New User
               </h2>
               <button
                 className="btn-close"
@@ -590,6 +648,9 @@ const Users = () => {
                         placeholder="Enter full name"
                       />
                     </div>
+                    {errors.name && (
+                      <span className="error-message">{errors.name}</span>
+                    )}
                   </div>
                   <div className="col-4 d-flex flex-column form-group">
                     <label htmlFor="email" className="form-label">
@@ -609,6 +670,9 @@ const Users = () => {
                         autoComplete="off"
                       />
                     </div>
+                    {errors.email && (
+                      <span className="error-message">{errors.email}</span>
+                    )}
                   </div>
                   <div className="col-4 d-flex flex-column form-group">
                     <label htmlFor="pass" className="form-label">
@@ -628,9 +692,39 @@ const Users = () => {
                         autoComplete="off"
                       />
                     </div>
+                    {errors.password && (
+                      <span className="error-message">{errors.password}</span>
+                    )}
                   </div>
                 </div>
                 <div className="row">
+                  <div className="col-4 d-flex flex-column form-group">
+                    <label htmlFor="cnfpass" className="form-label">
+                      Confirm Password
+                    </label>
+                    <div className="position-relative w-100">
+                      <i className="fas fa-lock position-absolute input-icon"></i>
+                      <input
+                        type="password"
+                        className="form-control text-font ps-5"
+                        id="cnfpass"
+                        placeholder="Confirm your password"
+                        value={formData.confirmPassword}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            confirmPassword: e.target.value,
+                          })
+                        }
+                        autoComplete="off"
+                      />
+                    </div>
+                    {errors.confirmPassword && (
+                      <span className="error-message">
+                        {errors.confirmPassword}
+                      </span>
+                    )}
+                  </div>
                   <div className="col-4 d-flex flex-column form-group">
                     <label htmlFor="role" className="form-label">
                       Role
@@ -640,7 +734,6 @@ const Users = () => {
                       <select
                         className="form-control ps-5 text-font"
                         id="role"
-                        required
                         value={formData.role}
                         onChange={(e) =>
                           setFormData({ ...formData, role: e.target.value })
@@ -650,11 +743,14 @@ const Users = () => {
                           Select Role
                         </option>
                         <option value="admin">Admin</option>
-                        <option value="executive">Executive</option>
+                        {/* <option value="executive">Executive</option> */}
                         <option value="manager">Manager</option>
                       </select>
                       <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                     </div>
+                    {errors.role && (
+                      <span className="error-message">{errors.role}</span>
+                    )}
                   </div>
                   <div className="col-4 d-flex flex-column form-group">
                     <label htmlFor="department" className="form-label">
@@ -665,7 +761,6 @@ const Users = () => {
                       <select
                         className="form-control ps-5 text-font"
                         id="department"
-                        required
                         value={formData.department}
                         onChange={(e) =>
                           setFormData({
@@ -682,7 +777,12 @@ const Users = () => {
                       </select>
                       <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                     </div>
+                    {errors.department && (
+                      <span className="error-message">{errors.department}</span>
+                    )}
                   </div>
+                </div>
+                <div className="row">
                   <div className="col-4 d-flex flex-column form-group">
                     <label htmlFor="status" className="form-label">
                       Status
@@ -734,18 +834,15 @@ const Users = () => {
                       <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                     </div>
                   </div>
-                </div>
-                <div className="row">
                   <div className="col-4 d-flex flex-column form-group">
                     <label htmlFor="branch" className="form-label">
                       Branch
                     </label>
                     <div className="position-relative w-100">
                       <i className="fa-solid fa-sitemap position-absolute input-icon"></i>
-                      <select
+                      {/* <select
                         className="form-control ps-5 text-font"
                         id="branch"
-                        required
                         value={formData.branch}
                         onChange={(e) =>
                           setFormData({
@@ -763,10 +860,22 @@ const Users = () => {
                             {branch.label}
                           </option>
                         ))}
-                      </select>
+                      </select> */}
+
+                      <Select
+                        className="form-control ps-5 text-font"
+                        options={branchDropdownValues}
+                        isMulti
+                        id="branch"
+                        value={selectedOptions}
+                        onChange={setSelectedOptions}
+                      />
 
                       <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                     </div>
+                    {errors.branch && (
+                      <span className="error-message">{errors.branch}</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1478,7 +1587,6 @@ const Users = () => {
                               <select
                                 className="form-control ps-5 text-font"
                                 id="role"
-                                required
                                 value={userDetails.role}
                                 onChange={(e) =>
                                   setFormData({
@@ -1511,7 +1619,6 @@ const Users = () => {
                               <select
                                 className="form-control ps-5 text-font"
                                 id="department"
-                                required
                                 value={"HQ"}
                                 onChange={(e) =>
                                   setFormData({
@@ -1597,10 +1704,9 @@ const Users = () => {
                             </label>
                             <div className="position-relative w-100">
                               <i className="fa-solid fa-sitemap position-absolute input-icon"></i>
-                              <select
+                              {/* <select
                                 className="form-control ps-5 text-font"
                                 id="branch"
-                                required
                                 value={"Branch"}
                                 onChange={(e) =>
                                   setFormData({
@@ -1623,8 +1729,16 @@ const Users = () => {
                                     {val.label}
                                   </option>
                                 ))}
-                              </select>
-                              <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                              </select> */}
+                              {/* <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i> */}
+                              <Select
+                                className="form-control ps-5 text-font"
+                                options={branchDropdownValues}
+                                isMulti
+                                id="branch"
+                                value={userDetails.branch}
+                                onChange={setSelectedOptions}
+                              />
                             </div>
                           </div>
                         </div>

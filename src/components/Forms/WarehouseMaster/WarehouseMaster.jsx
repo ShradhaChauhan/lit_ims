@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { Modal } from "bootstrap";
 
 const WarehouseMaster = () => {
+  const [errors, setErrors] = useState({});
   const warehouseModalRef = useRef(null);
   const warehouseEditModalRef = useRef(null);
   const { isAddWarehouse, setIsAddWarehouse } = useContext(AppContext);
@@ -27,15 +28,7 @@ const WarehouseMaster = () => {
     code: "",
     status: "",
   });
-  const warehouses = [
-    {
-      id: 1,
-      trNo: "*********",
-      code: "22356",
-      name: "Jackson Wang",
-      status: "active",
-    },
-  ];
+  const warehouses = [];
 
   const handleWarehouseCheckboxChange = (warehouseId) => {
     setSelectedWarehouses((prevSelected) =>
@@ -58,21 +51,45 @@ const WarehouseMaster = () => {
 
   const handleAddWarehouse = (e) => {
     e.preventDefault();
-    const finalData = {
-      name: formData.name,
-      code: formData.code,
-      status: formData.status,
-    };
+    const newErrors = validateForm(formData);
+    setErrors(newErrors);
 
-    console.log("Submitting add warehouse form");
-    fetch("", {
-      method: "POST",
-      body: finalData,
-    }).then(function (response) {
-      console.log(response);
-      return response.json();
-    });
-    console.log("Form submitted. ", finalData);
+    if (Object.keys(newErrors).length === 0) {
+      e.preventDefault();
+      const finalData = {
+        name: formData.name,
+        code: formData.code,
+        status: formData.status,
+      };
+
+      console.log("Submitting add warehouse form");
+      fetch("", {
+        method: "POST",
+        body: finalData,
+      }).then(function (response) {
+        console.log(response);
+        return response.json();
+      });
+      console.log("Form submitted. ", finalData);
+    } else {
+      console.log("Form submission failed due to validation errors.");
+    }
+  };
+
+  const validateForm = (data) => {
+    const errors = {};
+
+    if (!data.name.trim()) {
+      errors.name = "Warehouse name is required";
+    }
+
+    if (!data.code) {
+      errors.code = "Code is required";
+    } else if (!/^\d+$/.test(data.code)) {
+      errors.code = "Code must only be in digits";
+    }
+
+    return errors;
   };
 
   const handleEditWarehouse = (e) => {
@@ -156,7 +173,7 @@ const WarehouseMaster = () => {
             className="btn btn-primary add-btn"
             onClick={handleSetIsAddWarehouse}
           >
-            <i className="fa-solid fa-user-plus"></i> Add New Warehouse
+            <i className="fa-solid fa-plus pe-1"></i> Add New Warehouse
           </button>
         </div>
       </nav>
@@ -226,13 +243,15 @@ const WarehouseMaster = () => {
                       className="form-control ps-5 text-font"
                       id="name"
                       placeholder="Enter warehouse name"
-                      required
                       value={formData.name}
                       onChange={(e) =>
                         setFormData({ ...formData, name: e.target.value })
                       }
                     />
                   </div>
+                  {errors.name && (
+                    <span className="error-message">{errors.name}</span>
+                  )}
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="code" className="form-label">
@@ -245,13 +264,15 @@ const WarehouseMaster = () => {
                       className="form-control ps-5 text-font"
                       id="code"
                       placeholder="Enter warehouse code"
-                      required
                       value={formData.code}
                       onChange={(e) =>
                         setFormData({ ...formData, code: e.target.value })
                       }
                     />
                   </div>
+                  {errors.code && (
+                    <span className="error-message">{errors.code}</span>
+                  )}
                 </div>
               </div>
               <div className="row form-style">
@@ -564,7 +585,6 @@ const WarehouseMaster = () => {
                               className="form-control ps-5 text-font"
                               id="name"
                               placeholder="Enter warehouse name"
-                              required
                               value={warehouseDetails.name}
                               onChange={(e) =>
                                 setFormData({
@@ -586,7 +606,6 @@ const WarehouseMaster = () => {
                               className="form-control ps-5 text-font"
                               id="code"
                               placeholder="Enter warehouse code"
-                              required
                               value={warehouseDetails.code}
                               onChange={(e) =>
                                 setFormData({
