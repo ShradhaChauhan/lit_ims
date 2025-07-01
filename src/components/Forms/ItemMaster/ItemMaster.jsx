@@ -13,6 +13,8 @@ const ItemMaster = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [types, setTypes] = useState([]);
+  const [groups, setGroups] = useState([]);
   
   // Pagination states
   const [pagination, setPagination] = useState({
@@ -39,6 +41,34 @@ const ItemMaster = () => {
   useEffect(() => {
     fetchItems();
   }, [pagination.currentPage, pagination.itemsPerPage]);
+
+  // Fetch types data
+  useEffect(() => {
+    fetchTypes();
+    fetchGroups();
+  }, []);
+
+  const fetchTypes = () => {
+    api.get("/api/type/all")
+      .then(response => {
+        console.log("Types fetched:", response.data);
+        setTypes(response.data.types || []);
+      })
+      .catch(error => {
+        console.error("Error fetching types:", error);
+      });
+  };
+
+  const fetchGroups = () => {
+    api.get("/api/group/all")
+      .then(response => {
+        console.log("Groups fetched:", response.data);
+        setGroups(response.data.groups || []);
+      })
+      .catch(error => {
+        console.error("Error fetching groups:", error);
+      });
+  };
 
   const fetchItems = () => {
     setLoading(true);
@@ -273,11 +303,19 @@ const ItemMaster = () => {
         <div className="filter-options">
           <select className="filter-select">
             <option value="">All Groups</option>
+            {groups.map(group => (
+              <option key={group.id} value={group.id}>
+                {group.name}
+              </option>
+            ))}
           </select>
           <select className="filter-select">
             <option value="">All Types</option>
-            <option value="vendor">Vendors Only</option>
-            <option value="customer">Customers Only</option>
+            {types.map(type => (
+              <option key={type.id} value={type.name}>
+                {type.name}
+              </option>
+            ))}
           </select>
           <select className="filter-select">
             <option value="">All Status</option>
@@ -391,9 +429,11 @@ const ItemMaster = () => {
                       <option value="" disabled hidden className="text-muted">
                         Select Type Name
                       </option>
-                      <option value="a">A Type</option>
-                      <option value="b">B Type</option>
-                      <option value="c">C Type</option>
+                      {types.map(type => (
+                        <option key={type.id} value={type.name}>
+                          {type.name}
+                        </option>
+                      ))}
                     </select>
                     <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                   </div>
@@ -436,9 +476,11 @@ const ItemMaster = () => {
                       <option value="" disabled hidden className="text-muted">
                         Select Group
                       </option>
-                      <option value="capacitor">Capacitor</option>
-                      <option value="irLed">IR LED</option>
-                      <option value="spring">Spring</option>
+                      {groups.map(group => (
+                        <option key={group.id} value={group.name}>
+                          {group.name}
+                        </option>
+                      ))}
                     </select>
                     <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                   </div>

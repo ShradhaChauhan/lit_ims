@@ -1,5 +1,6 @@
-import React, { useContext, useRef, useState } from "react";
+import React, { useContext, useRef, useState, useEffect } from "react";
 import { AppContext } from "../../../context/AppContext";
+import api from "../../../services/api";
 
 const BOM = () => {
   const { isAddBom, setIsAddBom } = useContext(AppContext);
@@ -10,27 +11,54 @@ const BOM = () => {
   const idRef = useRef(2);
   const [status, setStatus] = useState("active");
   const [isChecked, setIsChecked] = useState(true);
+  const [warehouses, setWarehouses] = useState([]);
+  const [items, setItems] = useState([]);
   const [formData, setFormData] = useState({
     name: "",
     code: "",
     status: "active",
-    items: [
-      {
-        item: "",
-        code: "",
-        uom: "",
-        quantity: "",
-        warehouse: "",
-        actions: {
-          view: false,
-          delete: false,
-        },
-      },
-    ],
+    items: [],
   });
   const [isAddBomPart, setIsAddBomPart] = useState([{ id: 1 }]);
+  
+  // Initialize formData.items with one empty item when component mounts
+  useEffect(() => {
+    if (formData.items.length === 0) {
+      setFormData(prev => ({
+        ...prev,
+        items: isAddBomPart.map(part => ({
+          id: part.id,
+          item: "",
+          code: "",
+          uom: "",
+          quantity: "",
+          warehouse: ""
+        }))
+      }));
+    }
+  }, []);
 
   const boms = [];
+
+  useEffect(() => {
+    // Fetch warehouses from API using axios
+    api.get("/api/warehouses")
+      .then(response => {
+        setWarehouses(response.data.warehouses);
+      })
+      .catch(error => {
+        console.error("Error fetching warehouses:", error);
+      });
+
+    // Fetch items from API
+    api.get("/api/items/all")
+      .then(response => {
+        setItems(response.data.items);
+      })
+      .catch(error => {
+        console.error("Error fetching items:", error);
+      });
+  }, []);
 
   const handleBomCheckboxChange = (bomId) => {
     setSelectedBoms((prevSelected) =>
@@ -57,29 +85,23 @@ const BOM = () => {
       name: formData.name,
       code: formData.code,
       status: formData.status,
-      items: [
-        {
-          item: formData.items.item,
-          code: formData.items.code,
-          uom: formData.items.uom,
-          quantity: formData.items.quantity,
-          warehouse: formData.items.warehouse,
-          actions: {
-            view: false,
-            delete: false,
-          },
-        },
-      ],
+      items: formData.items.map(item => ({
+        item: item.item,
+        code: item.code,
+        uom: item.uom,
+        quantity: item.quantity,
+        warehouse: item.warehouse
+      })),
     };
 
     console.log("Submitting add bom form");
-    fetch("", {
-      method: "POST",
-      body: finalData,
-    }).then(function (response) {
-      console.log(response);
-      return response.json();
-    });
+    api.post("/api/boms", finalData)
+      .then(response => {
+        console.log(response.data);
+      })
+      .catch(error => {
+        console.error("Error adding BOM:", error);
+      });
     console.log("Form submitted. ", finalData);
   };
 
@@ -89,21 +111,33 @@ const BOM = () => {
       name: "",
       code: "",
       status: "active",
-      items: [
-        {
-          item: "",
-          code: "",
-          uom: "",
-          quantity: "",
-          warehouse: "",
-          actions: {
-            view: false,
-            delete: false,
-          },
-        },
-      ],
+      items: isAddBomPart.map(part => ({
+        id: part.id,
+        item: "",
+        code: "",
+        uom: "",
+        quantity: "",
+        warehouse: ""
+      }))
     });
     setIsChecked(true);
+  };
+
+  // Handle delete item
+  const handleDeleteItem = (itemId) => {
+    // If it's the last item, don't delete it
+    if (isAddBomPart.length <= 1) {
+      return;
+    }
+    
+    // Remove the item from isAddBomPart
+    setIsAddBomPart(prevParts => prevParts.filter(part => part.id !== itemId));
+    
+    // Remove the corresponding item from formData.items
+    setFormData(prev => ({
+      ...prev,
+      items: prev.items.filter(item => item.id !== itemId)
+    }));
   };
 
   return (
@@ -266,132 +300,198 @@ const BOM = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {isAddBomPart.map((item) => (
-                      <tr key={item.id}>
-                        <td>
-                          <div className="field-wrapper">
-                            <div className="position-relative w-100">
-                              <i className="fas fa-cogs position-absolute input-icon"></i>
-                              <select
-                                className="form-control text-font w-100 ps-5"
-                                required
-                                value={formData.items.item}
-                                onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
-                                    pincode: e.target.value,
-                                  })
-                                }
-                              >
-                                <option value="">Select Part</option>
-                              </select>
+                    {isAddBomPart.map((bomPart, index) => {
+                      const currentItem = formData.items.find(item => item.id === bomPart.id) || {
+                        id: bomPart.id,
+                        item: "",
+                        code: "",
+                        uom: "",
+                        quantity: "",
+                        warehouse: ""
+                      };
+                      
+                      return (
+                        <tr key={bomPart.id}>
+                          <td>
+                            <div className="field-wrapper">
+                              <div className="position-relative w-100">
+                                <i className="fas fa-cogs position-absolute input-icon"></i>
+                                <select
+                                  className="form-control text-font w-100 ps-5"
+                                  required
+                                  value={currentItem.item}
+                                  onChange={(e) => {
+                                    const selectedItem = items.find(item => item.id === parseInt(e.target.value));
+                                    const updatedItems = [...formData.items];
+                                    const itemIndex = updatedItems.findIndex(item => item.id === bomPart.id);
+                                    
+                                    if (itemIndex !== -1) {
+                                      updatedItems[itemIndex] = {
+                                        ...updatedItems[itemIndex],
+                                        item: e.target.value,
+                                        code: selectedItem ? selectedItem.code : '',
+                                        uom: selectedItem ? selectedItem.uom : '',
+                                        quantity: selectedItem && selectedItem.stQty ? selectedItem.stQty.toString() : ''
+                                      };
+                                    } else {
+                                      updatedItems.push({
+                                        id: bomPart.id,
+                                        item: e.target.value,
+                                        code: selectedItem ? selectedItem.code : '',
+                                        uom: selectedItem ? selectedItem.uom : '',
+                                        quantity: selectedItem && selectedItem.stQty ? selectedItem.stQty.toString() : '',
+                                        warehouse: ""
+                                      });
+                                    }
+                                    
+                                    setFormData({
+                                      ...formData,
+                                      items: updatedItems
+                                    });
+                                  }}
+                                >
+                                  <option value="">Select Item</option>
+                                  {items.map(item => (
+                                    <option key={item.id} value={item.id}>
+                                      {item.name} ({item.code})
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
                             </div>
-                          </div>
-                        </td>
-                        <td>
-                          <div className="field-wrapper">
-                            <input
-                              type="text"
-                              className="form-control text-font w-100"
-                              readOnly
-                              required
-                              value={formData.items.code}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  code: e.target.value,
-                                })
-                              }
-                            />
-                          </div>
-                        </td>
-                        <td>
-                          <div className="field-wrapper">
-                            <input
-                              type="text"
-                              className="form-control text-font w-100"
-                              readOnly
-                              required
-                              value={formData.items.uom}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  uom: e.target.value,
-                                })
-                              }
-                            />
-                          </div>
-                        </td>
-                        <td>
-                          <div className="field-wrapper">
-                            <input
-                              type="number"
-                              className="form-control text-font w-100"
-                              min="0.01"
-                              step="0.01"
-                              required
-                              value={formData.items.quantity}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  quantity: e.target.value,
-                                })
-                              }
-                            />
-                          </div>
-                        </td>
-                        <td>
-                          <div className="">
-                            <div className="position-relative w-100">
-                              <i className="fas fa-warehouse position-absolute input-icon"></i>
-                              <select
-                                className="form-control text-font w-100 ps-5"
-                                id="warehouse"
-                                title="Select Warehouse"
+                          </td>
+                          <td>
+                            <div className="field-wrapper">
+                              <input
+                                type="text"
+                                className="form-control text-font w-100"
+                                readOnly
                                 required
-                                value={formData.items.warehouse}
-                                onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
-                                    warehouse: e.target.value,
-                                  })
-                                }
-                              >
-                                <option value="">Select Warehouse</option>
-                              </select>
+                                value={currentItem.code || ""}
+                              />
                             </div>
-                          </div>
-                        </td>
-                        <td className="actions">
-                          <div className="field-wrapper">
-                            <button
-                              type="button"
-                              className="btn-icon btn-primary ms-2"
-                              title="View Part Details"
-                            >
-                              <i className="fas fa-info-circle"></i>
-                            </button>
-                            <button
-                              type="button"
-                              className="btn-icon btn-danger ms-2"
-                              title="Remove Part"
-                            >
-                              <i className="fas fa-trash"></i>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                          </td>
+                          <td>
+                            <div className="field-wrapper">
+                              <input
+                                type="text"
+                                className="form-control text-font w-100"
+                                readOnly
+                                required
+                                value={currentItem.uom || ""}
+                              />
+                            </div>
+                          </td>
+                          <td>
+                            <div className="field-wrapper">
+                                                              <input
+                                  type="number"
+                                  className="form-control text-font w-100"
+                                  min="0.01"
+                                  step="0.01"
+                                  required
+                                  readOnly
+                                  value={currentItem.quantity || ""}
+                              />
+                            </div>
+                          </td>
+                          <td>
+                            <div className="">
+                              <div className="position-relative w-100">
+                                <i className="fas fa-warehouse position-absolute input-icon"></i>
+                                <select
+                                  className="form-control text-font w-100 ps-5"
+                                  id={`warehouse-${bomPart.id}`}
+                                  title="Select Warehouse"
+                                  required
+                                  value={currentItem.warehouse || ""}
+                                  onChange={(e) => {
+                                    const updatedItems = [...formData.items];
+                                    const itemIndex = updatedItems.findIndex(item => item.id === bomPart.id);
+                                    
+                                    if (itemIndex !== -1) {
+                                      updatedItems[itemIndex] = {
+                                        ...updatedItems[itemIndex],
+                                        warehouse: e.target.value
+                                      };
+                                    } else {
+                                      updatedItems.push({
+                                        id: bomPart.id,
+                                        item: "",
+                                        code: "",
+                                        uom: "",
+                                        quantity: "",
+                                        warehouse: e.target.value
+                                      });
+                                    }
+                                    
+                                    setFormData({
+                                      ...formData,
+                                      items: updatedItems
+                                    });
+                                  }}
+                                >
+                                  <option value="">Select Warehouse</option>
+                                  {warehouses.map(warehouse => (
+                                    <option key={warehouse.id} value={warehouse.id}>
+                                      {warehouse.name} ({warehouse.code})
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="actions">
+                            <div className="field-wrapper">
+                              <button
+                                type="button"
+                                className="btn-icon btn-primary ms-2"
+                                title="View Item Details"
+                              >
+                                <i className="fas fa-info-circle"></i>
+                              </button>
+                              <button
+                                type="button"
+                                className="btn-icon btn-danger ms-2"
+                                title="Remove Item"
+                                onClick={() => handleDeleteItem(bomPart.id)}
+                                disabled={isAddBomPart.length <= 1}
+                              >
+                                <i className="fas fa-trash"></i>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
                 <button
                   type="button"
                   className="btn btn-secondary text-font m-3"
                   onClick={() => {
+                    const newId = idRef.current++;
+                    // Add new part to isAddBomPart
                     setIsAddBomPart((prevParts) => [
                       ...prevParts,
-                      { id: idRef.current++ },
+                      { id: newId },
                     ]);
+                    
+                    // Add a new empty item to formData.items
+                    setFormData(prev => ({
+                      ...prev,
+                      items: [
+                        ...prev.items,
+                        {
+                          id: newId,
+                          item: "",
+                          code: "",
+                          uom: "",
+                          quantity: "",
+                          warehouse: ""
+                        }
+                      ]
+                    }));
                   }}
                 >
                   <i className="fas fa-plus me-2"></i>

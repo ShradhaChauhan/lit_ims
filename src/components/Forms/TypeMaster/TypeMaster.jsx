@@ -73,8 +73,22 @@ const TypeMaster = () => {
       // Refresh the types list
       fetchTypes();
     } catch (error) {
-      console.error("Error adding type:", error.response ? error.response.data : error.message);
-      alert("Failed to add type. Please try again.");
+      let errorMessage = "Failed to add type. Please try again.";
+
+    if (error.response) {
+      if (error.response.data.message) {
+        // For structured error from backend (with message field)
+        errorMessage = error.response.data.message;
+      } else if (typeof error.response.data === 'string') {
+        // For plain string error from backend
+        errorMessage = error.response.data;
+      }
+    } else {
+      errorMessage = error.message;
+    }
+
+    console.error("Error adding type:", errorMessage);
+    alert(errorMessage);
     }
   };
 
