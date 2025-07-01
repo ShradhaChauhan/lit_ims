@@ -25,9 +25,11 @@ const WarehouseMaster = () => {
     setLoading(true);
     api.get("/api/warehouses")
       .then(response => {
-        console.log("Warehouses fetched:", response.data);
-        if (response.data && response.data.warehouses) {
-          setWarehouses(response.data.warehouses);
+        console.log("Warehouses response:", response.data);
+        if (response.data && response.data.status) {
+          setWarehouses(response.data.data || []);
+        } else {
+          console.error("Error fetching warehouses:", response.data.message || "Unknown error");
         }
         setLoading(false);
       })
@@ -79,13 +81,17 @@ const WarehouseMaster = () => {
     console.log("Submitting add warehouse form");
     api.post("/api/warehouses/add", finalData)
       .then(response => {
-        console.log(response);
-        console.log("Form submitted. ", finalData);
-        // Reset form and close it
-        handleReset(e);
-        setIsAddWarehouse(false);
-        // Refresh warehouse list
-        fetchWarehouses();
+        console.log("Response received:", response.data);
+        if (response.data && response.data.status) {
+          alert("Warehouse added successfully:", response.data.data);
+          // Reset form and close it
+          handleReset(e);
+          setIsAddWarehouse(false);
+          // Refresh warehouse list
+          fetchWarehouses();
+        } else {
+          console.error("Error in response:", response.data.message || "Unknown error");
+        }
       })
       .catch(error => {
         console.error("Error adding warehouse:", error);
@@ -109,13 +115,18 @@ const WarehouseMaster = () => {
     
     api.delete(`/api/warehouses/delete/${warehouseId}`)
       .then(response => {
-        console.log("Warehouse deleted successfully:", response.data);
-        // Refresh the warehouses list
-        fetchWarehouses();
+        console.log("Delete warehouse response:", response.data);
+        if (response.data && response.data.status) {
+          console.log("Warehouse deleted successfully:", response.data.message);
+          // Refresh the warehouses list
+          fetchWarehouses();
+        } else {
+          console.error("Error in delete response:", response.data.message || "Unknown error");
+          alert(response.data.message || "Error deleting warehouse. Please try again.");
+        }
       })
       .catch(error => {
         console.error("Error deleting warehouse:", error);
-        // Handle error (show error message)
         alert("Error deleting warehouse. Please try again.");
       });
   };
@@ -137,14 +148,20 @@ const WarehouseMaster = () => {
     // Make API call to delete selected warehouses
     api.post("/api/warehouses/delete-multiple", selectedWarehouses)
       .then(response => {
-        console.log("Selected warehouses deleted successfully:", response.data);
-        // Clear selection state
-        setSelectedWarehouses([]);
-        setSelectAll(false);
-        // Refresh the warehouses list
-        fetchWarehouses();
-        // Show success message
-        alert(`Successfully deleted ${selectedWarehouses.length} warehouse(s).`);
+        console.log("Delete multiple response:", response.data);
+        if (response.data && response.data.status) {
+          console.log("Selected warehouses deleted successfully:", response.data.message);
+          // Clear selection state
+          setSelectedWarehouses([]);
+          setSelectAll(false);
+          // Refresh the warehouses list
+          fetchWarehouses();
+          // Show success message
+          alert(response.data.message || `Successfully deleted ${selectedWarehouses.length} warehouse(s).`);
+        } else {
+          console.error("Error in delete multiple response:", response.data.message || "Unknown error");
+          alert(response.data.message || "Error deleting selected warehouses. Please try again.");
+        }
       })
       .catch(error => {
         console.error("Error deleting selected warehouses:", error);

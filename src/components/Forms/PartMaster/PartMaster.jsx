@@ -29,7 +29,7 @@ const PartMaster = () => {
     api.get("/api/part/all")
       .then(response => {
         console.log("Parts loaded:", response.data);
-        setParts(response.data.parts || []);
+        setParts(response.data.data || []);
         setLoading(false);
       })
       .catch(error => {

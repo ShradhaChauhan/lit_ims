@@ -44,7 +44,11 @@ const BOM = () => {
     // Fetch warehouses from API using axios
     api.get("/api/warehouses")
       .then(response => {
-        setWarehouses(response.data.warehouses);
+        if (response.data.status && response.data.data) {
+          setWarehouses(response.data.data);
+        } else {
+          setWarehouses(response.data.warehouses || []);
+        }
       })
       .catch(error => {
         console.error("Error fetching warehouses:", error);
@@ -53,7 +57,11 @@ const BOM = () => {
     // Fetch items from API
     api.get("/api/items/all")
       .then(response => {
-        setItems(response.data.items);
+        if (response.data.status && response.data.data) {
+          setItems(response.data.data);
+        } else {
+          setItems(response.data.items || []);
+        }
       })
       .catch(error => {
         console.error("Error fetching items:", error);
@@ -85,19 +93,47 @@ const BOM = () => {
       name: formData.name,
       code: formData.code,
       status: formData.status,
-      items: formData.items.map(item => ({
-        item: item.item,
-        code: item.code,
-        uom: item.uom,
-        quantity: item.quantity,
-        warehouse: item.warehouse
-      })),
+      items: formData.items.map(item => {
+        const selectedItem = items.find(i => i.id === parseInt(item.item)) || {};
+        const selectedWarehouse = warehouses.find(w => w.id === parseInt(item.warehouse)) || {};
+        
+        return {
+          itemId: parseInt(item.item),
+          itemName: selectedItem.name || "",
+          itemCode: item.code,
+          uom: item.uom,
+          quantity: parseFloat(item.quantity),
+          warehouseId: parseInt(item.warehouse),
+          warehouseName: selectedWarehouse.name || ""
+        };
+      }),
     };
 
     console.log("Submitting add bom form");
-    api.post("/api/boms", finalData)
+    api.post("/api/bom/add", finalData)
       .then(response => {
         console.log(response.data);
+        // Reset form after successful submission
+        setFormData({
+          name: "",
+          code: "",
+          status: "active",
+          items: [
+            {
+              id: 1,
+              item: "",
+              code: "",
+              uom: "",
+              quantity: "",
+              warehouse: ""
+            }
+          ]
+        });
+        setIsAddBomPart([{ id: 1 }]);
+        idRef.current = 2;
+        setIsChecked(true);
+        setStatus("active");
+        setIsAddBom(false); // Close the form after successful submission
       })
       .catch(error => {
         console.error("Error adding BOM:", error);
@@ -384,14 +420,29 @@ const BOM = () => {
                           </td>
                           <td>
                             <div className="field-wrapper">
-                                                              <input
-                                  type="number"
-                                  className="form-control text-font w-100"
-                                  min="0.01"
-                                  step="0.01"
-                                  required
-                                  readOnly
-                                  value={currentItem.quantity || ""}
+                              <input
+                                type="number"
+                                className="form-control text-font w-100"
+                                min="0.01"
+                                step="0.01"
+                                required
+                                value={currentItem.quantity || ""}
+                                onChange={(e) => {
+                                  const updatedItems = [...formData.items];
+                                  const itemIndex = updatedItems.findIndex(item => item.id === bomPart.id);
+                                  
+                                  if (itemIndex !== -1) {
+                                    updatedItems[itemIndex] = {
+                                      ...updatedItems[itemIndex],
+                                      quantity: e.target.value
+                                    };
+                                  }
+                                  
+                                  setFormData({
+                                    ...formData,
+                                    items: updatedItems
+                                  });
+                                }}
                               />
                             </div>
                           </td>

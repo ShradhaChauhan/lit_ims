@@ -24,7 +24,7 @@ const TypeMaster = () => {
     try {
       setLoading(true);
       const response = await api.get('/api/type/all');
-      setTypes(response.data.types);
+      setTypes(response.data.data);
     } catch (error) {
       console.error("Error fetching types:", error);
     } finally {

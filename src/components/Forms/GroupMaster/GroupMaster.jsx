@@ -49,24 +49,16 @@ const GroupMaster = () => {
         },
       });
       
-      setGroups(response.data.groups || []);
+      // Updated to handle the new API response structure
+      const groupsData = response.data.data || [];
+      setGroups(groupsData);
       
-      // Update pagination if the API returns pagination info
-      // This assumes the API might return total count in the future
-      if (response.data.totalItems) {
-        setPagination(prev => ({
-          ...prev,
-          totalItems: response.data.totalItems,
-          totalPages: Math.ceil(response.data.totalItems / prev.itemsPerPage),
-        }));
-      } else {
-        // If API doesn't return total count, estimate based on current data
-        setPagination(prev => ({
-          ...prev,
-          totalItems: response.data.groups.length,
-          totalPages: Math.ceil(response.data.groups.length / prev.itemsPerPage),
-        }));
-      }
+      // Update pagination based on the available data
+      setPagination(prev => ({
+        ...prev,
+        totalItems: groupsData.length,
+        totalPages: Math.ceil(groupsData.length / prev.itemsPerPage),
+      }));
     } catch (err) {
       console.error("Error loading groups:", err);
       setDataError(err.response?.data?.message || "Error loading groups");

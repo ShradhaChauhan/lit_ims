@@ -41,7 +41,7 @@ const Navbar = () => {
 
   try {
     const response = await api.get("/api/branch/by-company"); // API call
-    const branchList = response.data;
+    const branchList = response.data.data; // Access the data array from the response
 
     const formattedBranches = branchList.map((branch) => ({
       label: `${branch.name} (${branch.code})`,

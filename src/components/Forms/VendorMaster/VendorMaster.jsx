@@ -34,7 +34,14 @@ const VendorMaster = () => {
     try {
       setLoading(true);
       const response = await api.get("/api/vendor-customer/all");
-      if (response.data && response.data.businessPartner) {
+      
+      // Handle new API response format
+      if (response.data && response.data.status === true && response.data.data) {
+        setVendors(response.data.data);
+        setTotalItems(response.data.data.length);
+      } 
+      // Handle old API response format for backward compatibility
+      else if (response.data && response.data.businessPartner) {
         setVendors(response.data.businessPartner);
         setTotalItems(response.data.businessPartner.length);
       }
@@ -84,8 +91,13 @@ const VendorMaster = () => {
     try {
       const response = await api.post("/api/vendor-customer/add", formData);
       console.log("Partner added successfully:", response.data);
-
-      alert("Partner added successfully!");
+      
+      // Check for the new response format
+      if (response.data && response.data.status === true) {
+        alert(response.data.message || "Partner added successfully!");
+      } else {
+        alert("Partner added successfully!");
+      }
 
       // Reset the form
       handleReset(e);
@@ -104,8 +116,14 @@ const VendorMaster = () => {
   const handleDeletePartner = async (id) => {
     if (window.confirm("Are you sure you want to delete this partner?")) {
       try {
-        await api.delete(`/api/vendor-customer/delete/${id}`);
-        alert("Partner deleted successfully!");
+        const response = await api.delete(`/api/vendor-customer/delete/${id}`);
+        
+        // Handle new API response format
+        if (response.data && response.data.status === true) {
+          alert(response.data.message || "Partner deleted successfully!");
+        } else {
+          alert("Partner deleted successfully!");
+        }
         
         // Refresh the vendor list
         fetchVendors();
@@ -130,9 +148,16 @@ const VendorMaster = () => {
         );
         
         // Wait for all delete operations to complete
-        await Promise.all(deletePromises);
+        const results = await Promise.all(deletePromises);
         
-        alert("Selected partners deleted successfully!");
+        // Check if any of the responses use the new format
+        const hasNewFormat = results.some(res => res.data && res.data.status === true);
+        
+        if (hasNewFormat) {
+          alert(`${selectedVendors.length} partners deleted successfully!`);
+        } else {
+          alert("Selected partners deleted successfully!");
+        }
         
         // Clear selection and refresh the vendor list
         setSelectedVendors([]);

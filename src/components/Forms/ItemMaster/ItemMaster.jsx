@@ -52,7 +52,7 @@ const ItemMaster = () => {
     api.get("/api/type/all")
       .then(response => {
         console.log("Types fetched:", response.data);
-        setTypes(response.data.types || []);
+        setTypes(response.data.data || []);
       })
       .catch(error => {
         console.error("Error fetching types:", error);
@@ -63,7 +63,7 @@ const ItemMaster = () => {
     api.get("/api/group/all")
       .then(response => {
         console.log("Groups fetched:", response.data);
-        setGroups(response.data.groups || []);
+        setGroups(response.data.data || []);
       })
       .catch(error => {
         console.error("Error fetching groups:", error);
@@ -83,19 +83,19 @@ const ItemMaster = () => {
       .then(response => {
         console.log("Items fetched:", response.data);
         
-        // Assuming the API returns data in this format:
-        // { items: [...], totalItems: number, totalPages: number }
-        // Adjust according to your actual API response
-        setItems(response.data.items || []);
+        // Handle the new API response structure:
+        // { status: boolean, message: string, data: [...items] }
+        setItems(response.data.data || []);
         
-        // Update pagination info if it's provided by the API
-        if (response.data.totalItems !== undefined) {
-          setPagination(prev => ({
-            ...prev,
-            totalItems: response.data.totalItems,
-            totalPages: response.data.totalPages || Math.ceil(response.data.totalItems / prev.itemsPerPage)
-          }));
-        }
+        // Since the new API doesn't include pagination info, we'll need to
+        // calculate it based on the data length or request it separately
+        // This is a basic implementation that might need adjustment
+        setPagination(prev => ({
+          ...prev,
+          totalItems: response.data.data ? response.data.data.length : 0,
+          // If you have total count info from the API, use that instead
+          totalPages: Math.ceil((response.data.data ? response.data.data.length : 0) / prev.itemsPerPage)
+        }));
         
         setLoading(false);
       })
@@ -188,17 +188,26 @@ const ItemMaster = () => {
     
     api.post("/api/items/add", finalData)
       .then(response => {
-        console.log("Item added successfully:", response.data);
-        // Reset form or show success message
-        handleReset(e);
-        // Optionally close the form
-        setIsAddItem(false);
-        // Refresh the items list
-        fetchItems();
+        console.log("Item added response:", response.data);
+        // Check for success status in the new API response structure
+        if (response.data.status) {
+          // Show success message
+          alert(response.data.message || "Item Added Successfully");
+          // Reset form
+          handleReset(e);
+          // Close the form
+          setIsAddItem(false);
+          // Refresh the items list
+          fetchItems();
+        } else {
+          // Show error message from API
+          alert(response.data.message || "Error adding item");
+        }
       })
       .catch(error => {
         console.error("Error adding item:", error);
-        // Handle error (show error message)
+        // Show generic error message
+        alert("Error adding item. Please try again.");
       });
   };
 
@@ -211,8 +220,14 @@ const ItemMaster = () => {
     api.delete(`/api/items/delete/${itemId}`)
       .then(response => {
         console.log("Item deleted successfully:", response.data);
-        // Refresh the items list
-        fetchItems();
+        // Check for success status in the new API response structure
+        if (response.data.status) {
+          // Refresh the items list
+          fetchItems();
+        } else {
+          // Handle API error response
+          alert(response.data.message || "Error deleting item");
+        }
         setDeleting(false);
       })
       .catch(error => {
@@ -244,11 +259,19 @@ const ItemMaster = () => {
     Promise.all(deletePromises)
       .then(responses => {
         console.log("Items deleted successfully:", responses);
-        // Refresh the items list
-        fetchItems();
-        // Clear selection
-        setSelectedItems([]);
-        setSelectAll(false);
+        // Check if all deletions were successful
+        const allSuccessful = responses.every(response => response.data.status);
+        
+        if (allSuccessful) {
+          // Refresh the items list
+          fetchItems();
+          // Clear selection
+          setSelectedItems([]);
+          setSelectAll(false);
+        } else {
+          // Some deletions failed
+          alert("Some items could not be deleted. Please try again.");
+        }
         setDeleting(false);
       })
       .catch(error => {

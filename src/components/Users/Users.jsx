@@ -73,9 +73,12 @@ const Users = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
+      console.log("Fetching users...");
       const response = await api.get("/api/users/all-staff");
-      if (response.data && response.data.users) {
-        const allUsers = response.data.users.map(user => ({
+      console.log("Users API response:", response.data);
+      
+      if (response.data && response.data.data) {
+        const allUsers = response.data.data.map(user => ({
           id: user.id,
           name: user.username,
           role: user.role,
@@ -89,6 +92,8 @@ const Users = () => {
           branchIds: user.branchIds
         }));
         
+        console.log("Processed users:", allUsers);
+        
         setTotalItems(allUsers.length);
         setTotalPages(Math.ceil(allUsers.length / itemsPerPage));
         
@@ -96,6 +101,9 @@ const Users = () => {
         const startIndex = (currentPage - 1) * itemsPerPage;
         const paginatedUsers = allUsers.slice(startIndex, startIndex + itemsPerPage);
         setUsers(paginatedUsers);
+        console.log("Updated users state with:", paginatedUsers);
+      } else {
+        console.warn("No users data found in the response:", response.data);
       }
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -331,12 +339,17 @@ const Users = () => {
     console.log("Submitting form");
     api.post("/api/users/create", finalData)
       .then((response) => {
-        console.log(response);
-        if (response.data && response.data.status === "success") {
+        console.log("Add user response:", response);
+        if (response.data && response.data.status === true) {
           alert(response.data.message); // Show success message
           handleReset(e); // Reset form after successful submission
           setIsAddUser(false); // Close the form
-          fetchUsers(); // Refresh the user list
+          
+          // Add a small delay before fetching users to ensure the server has processed the change
+          setTimeout(() => {
+            console.log("Refreshing users list after adding new user");
+            fetchUsers(); // Refresh the user list
+          }, 500);
         }
       })
       .catch((error) => {
@@ -524,7 +537,7 @@ const Users = () => {
     setDeleteLoading(true);
     try {
       const response = await api.delete(`/api/users/delete/${userId}`);
-      if (response.data && response.data.status === "success") {
+      if (response.data && response.data.status === true) {
         alert(response.data.message);
         fetchUsers(); // Refresh the user list
         // Remove from selected users if it was selected
@@ -563,7 +576,7 @@ const Users = () => {
       for (const userId of selectedUsers) {
         try {
           const response = await api.delete(`/api/users/delete/${userId}`);
-          if (response.data && response.data.status === "success") {
+          if (response.data && response.data.status === true) {
             successCount++;
           }
         } catch (error) {

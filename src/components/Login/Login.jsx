@@ -26,9 +26,9 @@ const LoginPage = () => {
 
       console.log("Verify Response:", response);
 
-      if (response.data && response.data.branches) {
-        setBranches(response.data.branches);
-        setResponseUsername(response.data.username);
+      if (response.data && response.data.data && response.data.data.branches) {
+        setBranches(response.data.data.branches);
+        setResponseUsername(response.data.data.username);
         setBranch(""); // Clear any previous branch selection
       } else {
         setError("No branches found for this user.");
