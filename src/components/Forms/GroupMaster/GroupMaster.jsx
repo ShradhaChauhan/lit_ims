@@ -1,10 +1,20 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { AppContext } from "../../../context/AppContext";
 import { Link } from "react-router-dom";
+import { Modal } from "bootstrap";
 
 const GroupMaster = () => {
   const { isAddGroup, setIsAddGroup } = useContext(AppContext);
-
+  const groupModalRef = useRef(null);
+  const groupEditModalRef = useRef(null);
+  const [isShowGroupDetails, setIsShowGroupDetails] = useState(false);
+  const [isEditGroupDetails, setIsEditGroupDetails] = useState(false);
+  const [groupDetails, setGroupDetails] = useState({
+    id: "",
+    trNo: "",
+    name: "",
+    status: "",
+  });
   const [selectedGroups, setSelectedGroups] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [status, setStatus] = useState("active");
@@ -13,7 +23,14 @@ const GroupMaster = () => {
     name: "",
     status: "active",
   });
-  const groups = [];
+  const groups = [
+    {
+      id: 1,
+      trNo: "*****",
+      name: "Lisa",
+      status: "Active",
+    },
+  ];
 
   const handleGroupCheckboxChange = (groupId) => {
     setSelectedGroups((prevSelected) =>
@@ -51,6 +68,49 @@ const GroupMaster = () => {
     });
     console.log("Form submitted. ", finalData);
   };
+
+  const handleEditGroup = (e) => {
+    e.preventDefault();
+    console.log("Group has been edited");
+  };
+
+  const handleViewDetails = (group, e) => {
+    e.preventDefault();
+    console.log(group);
+    setGroupDetails(group);
+    setIsShowGroupDetails(true);
+  };
+
+  const handleEditDetails = (group, e) => {
+    e.preventDefault();
+    console.log(group);
+    setGroupDetails(group);
+    setIsEditGroupDetails(true);
+  };
+
+  useEffect(() => {
+    if (isShowGroupDetails && groupModalRef.current) {
+      const bsModal = new Modal(groupModalRef.current, {
+        backdrop: "static",
+      });
+      bsModal.show();
+
+      // Optional: hide modal state when it's closed
+      groupModalRef.current.addEventListener("hidden.bs.modal", () =>
+        setIsShowGroupDetails(false)
+      );
+    } else if (isEditGroupDetails && groupEditModalRef.current) {
+      const bsModal = new Modal(groupEditModalRef.current, {
+        backdrop: "static",
+      });
+      bsModal.show();
+
+      // Hide modal state when it's closed
+      groupEditModalRef.current.addEventListener("hidden.bs.modal", () =>
+        setIsEditGroupDetails(false)
+      );
+    }
+  }, [isShowGroupDetails, isEditGroupDetails]);
 
   const handleReset = (e) => {
     e.preventDefault();
@@ -292,31 +352,43 @@ const GroupMaster = () => {
               ) : (
                 groups.map((group) => (
                   <tr key={group.id}>
-                    <td className="checkbox-cell">
+                    <td className="checkbox-cell ps-4">
                       <input
                         type="checkbox"
                         checked={selectedGroups.includes(group.id)}
                         onChange={() => handleGroupCheckboxChange(group.id)}
                       />
                     </td>
-                    <td>
+                    <td className="ps-4">
                       <div>
                         <span>{group.trNo}</span>
                       </div>
                     </td>
-                    <td>
+                    <td className="ps-4">
                       <div>
                         <span>{group.name}</span>
                       </div>
+                    </td>
+                    <td className="ps-4">
+                      <span
+                        className={`badge status ${group.status.toLowerCase()}`}
+                      >
+                        {group.status}
+                      </span>
                     </td>
                     <td className="actions">
                       <button
                         className="btn-icon btn-primary"
                         title="View Details"
+                        onClick={(e) => handleViewDetails(group, e)}
                       >
                         <i className="fas fa-eye"></i>
                       </button>
-                      <button className="btn-icon btn-success" title="Edit">
+                      <button
+                        className="btn-icon btn-success"
+                        title="Edit"
+                        onClick={(e) => handleEditDetails(group, e)}
+                      >
                         <i className="fas fa-edit"></i>
                       </button>
                       <button className="btn-icon btn-danger" title="Delete">
@@ -352,6 +424,198 @@ const GroupMaster = () => {
           </div>
         </div>
       </div>
+
+      {/* View Group Details Modal */}
+      {isShowGroupDetails && (
+        <div
+          className="modal fade"
+          ref={groupModalRef}
+          id="groupDetailModal"
+          tabIndex="-1"
+        >
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  View {groupDetails.name}'s Details
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body">
+                <p>
+                  <strong>TRNO:</strong> {groupDetails.trNo}
+                </p>
+                <p>
+                  <strong>Name:</strong> {groupDetails.name}
+                </p>
+                <p>
+                  <strong>Status:</strong> {groupDetails.status}
+                </p>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                  onClick={() => {
+                    document.activeElement?.blur();
+                  }}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Group Details Modal */}
+      {isEditGroupDetails && (
+        <div
+          className="modal fade"
+          ref={groupEditModalRef}
+          id="groupEditModal"
+          tabIndex="-1"
+        >
+          <div className="modal-dialog modal-lg">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Edit Group</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+              {/* Modal Body */}
+              <div className="modal-body">
+                <form
+                  autoComplete="off"
+                  className="padding-2"
+                  onSubmit={handleEditGroup}
+                >
+                  <div className="form-grid pt-0">
+                    <div className="row form-style">
+                      <div className="col-4 d-flex flex-column form-group">
+                        <label htmlFor="trNo" className="form-label">
+                          TRNO
+                        </label>
+                        <div className="position-relative w-100">
+                          <i className="fas fa-user position-absolute input-icon"></i>
+                          <input
+                            type="text"
+                            className="form-control ps-5 text-font input-centered"
+                            id="trNo"
+                            value={groupDetails.trNo}
+                            disabled
+                          />
+                        </div>
+                      </div>
+                      <div className="col-4 d-flex flex-column form-group">
+                        <label htmlFor="name" className="form-label">
+                          Name
+                        </label>
+                        <div className="position-relative w-100">
+                          <i className="fas fa-user position-absolute input-icon"></i>
+                          <input
+                            type="text"
+                            className="form-control ps-5 text-font"
+                            id="name"
+                            placeholder="Enter group name"
+                            required
+                            value={groupDetails.name}
+                            onChange={(e) =>
+                              setFormData({ ...formData, name: e.target.value })
+                            }
+                          />
+                        </div>
+                      </div>
+                      <div className="col-4 d-flex flex-column form-group">
+                        <label htmlFor="status" className="form-label">
+                          Status
+                        </label>
+                        <div className="position-relative w-100">
+                          <div className="form-check form-switch position-absolute input-icon mt-1 padding-left-2">
+                            <input
+                              className="form-check-input text-font switch-style"
+                              type="checkbox"
+                              role="switch"
+                              id="switchCheckChecked"
+                              checked={groupDetails == "active" ? true : false}
+                              onChange={(e) => {
+                                const newStatus = e.target.checked
+                                  ? "active"
+                                  : "inactive";
+                                setIsChecked(e.target.checked);
+                                setStatus(newStatus);
+                                setFormData({
+                                  ...formData,
+                                  status: newStatus,
+                                });
+                              }}
+                            />
+
+                            <label
+                              className="form-check-label"
+                              htmlFor="switchCheckChecked"
+                            ></label>
+                          </div>
+                          <select
+                            className="form-control text-font switch-padding"
+                            id="status"
+                            value={groupDetails.status}
+                            onChange={(e) => {
+                              const newStatus = e.target.value;
+                              setStatus(newStatus);
+                              setIsChecked(newStatus === "active");
+
+                              setFormData((prev) => ({
+                                ...prev,
+                                status: newStatus,
+                              }));
+                            }}
+                          >
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                          </select>
+                          <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              </div>
+              <div className="modal-footer">
+                <button
+                  className="btn btn-primary border border-0 text-8 px-3 fw-medium py-2 me-3 float-end"
+                  data-bs-dismiss="modal"
+                  onClick={(e) => {
+                    document.activeElement?.blur();
+                    handleEditGroup(e);
+                  }}
+                >
+                  <i className="fa-solid fa-floppy-disk me-1"></i> Save Changes
+                </button>
+                <button
+                  className="btn btn-secondary border border-0 bg-secondary text-8 px-3 fw-medium py-2 me-3 float-end"
+                  data-bs-dismiss="modal"
+                  onClick={() => {
+                    document.activeElement?.blur();
+                  }}
+                >
+                  <i className="fa-solid fa-x-mark me-1"></i> Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

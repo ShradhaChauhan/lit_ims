@@ -1027,8 +1027,8 @@ select:invalid {
 
 /*  Text Styles */
 .text-small-gray {
-    font-size: 0.8rem;
-    color: var(--text-light);
+    font-size: 0.8rem !important;
+    color: var(--text-light) !important;
 }
 
 .text-8 {
@@ -1036,7 +1036,7 @@ select:invalid {
 }
 
 .header-style {
-    font-size: 1.6rem;
-    color: var(--header-color);
-    font-weight: 600;
+    font-size: 1.6rem !important;
+    color: var(--header-color) !important;
+    font-weight: 600 !important;
 }

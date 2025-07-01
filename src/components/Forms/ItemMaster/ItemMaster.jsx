@@ -1,9 +1,15 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import ItemMasterModal from "../../Modals/ItemMasterModal";
 import { AppContext } from "../../../context/AppContext";
 import { Link } from "react-router-dom";
+import { Modal } from "bootstrap";
 
 const ItemMaster = () => {
+  const itemModalRef = useRef(null);
+  const itemEditModalRef = useRef(null);
+  const [isShowItemDetails, setIsShowItemDetails] = useState(false);
+  const [isEditItemDetails, setIsEditItemDetails] = useState(false);
+
   const [selectedItems, setSelectedItems] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const { isAddItem, setIsAddItem } = useContext(AppContext);
@@ -22,7 +28,36 @@ const ItemMaster = () => {
     life: "",
     status: "active",
   });
-  const items = [];
+
+  const [itemDetails, setItemDetails] = useState({
+    id: "",
+    name: "",
+    code: "",
+    uom: "",
+    type: "",
+    barcode: "",
+    group: "",
+    price: "",
+    stQty: "",
+    life: "",
+    status: "",
+  });
+
+  const items = [
+    {
+      id: 1,
+      name: "Annie",
+      code: "023546",
+      uom: "Kg",
+      type: "A Type",
+      barcode: "123654",
+      group: "Capacitor",
+      price: "500",
+      stQty: "1000",
+      life: "1 year",
+      status: "active",
+    },
+  ];
 
   const handleItemCheckboxChange = (itemId) => {
     setSelectedItems((prevSelected) =>
@@ -90,6 +125,49 @@ const ItemMaster = () => {
   const handleSetIsAddVendor = () => {
     setIsAddItem(true);
   };
+
+  const handleViewDetails = (item, e) => {
+    e.preventDefault();
+    console.log(item);
+    setItemDetails(item);
+    setIsShowItemDetails(true);
+  };
+
+  const handleEditDetails = (item, e) => {
+    e.preventDefault();
+    console.log(item);
+    setItemDetails(item);
+    setIsEditItemDetails(true);
+  };
+
+  const handleEditItem = (e) => {
+    e.preventDefault();
+    console.log("Item has been edited");
+  };
+
+  useEffect(() => {
+    if (isShowItemDetails && itemModalRef.current) {
+      const bsModal = new Modal(itemModalRef.current, {
+        backdrop: "static",
+      });
+      bsModal.show();
+
+      // Optional: hide modal state when it's closed
+      itemModalRef.current.addEventListener("hidden.bs.modal", () =>
+        setIsShowItemDetails(false)
+      );
+    } else if (isEditItemDetails && itemEditModalRef.current) {
+      const bsModal = new Modal(itemEditModalRef.current, {
+        backdrop: "static",
+      });
+      bsModal.show();
+
+      // Hide modal state when it's closed
+      itemEditModalRef.current.addEventListener("hidden.bs.modal", () =>
+        setIsEditItemDetails(false)
+      );
+    }
+  }, [isShowItemDetails, isEditItemDetails]);
 
   return (
     <div>
@@ -498,30 +576,50 @@ const ItemMaster = () => {
               ) : (
                 items.map((item) => (
                   <tr key={item.id}>
-                    <td className="checkbox-cell">
+                    <td className="checkbox-cell ps-4">
                       <input
                         type="checkbox"
                         checked={selectedItems.includes(item.id)}
                         onChange={() => handleItemCheckboxChange(item.id)}
                       />
                     </td>
-                    <td>
+                    <td className="ps-4">
                       <div>
                         <span>{item.name}</span>
                       </div>
                     </td>
-                    <td>
+                    <td className="ps-4">
                       <div>
                         <span>{item.code}</span>
                       </div>
                     </td>
-                    <td>
+                    <td className="ps-4">
                       <div>
                         <span>{item.uom}</span>
                       </div>
                     </td>
-                    <td>{item.price}</td>
-                    <td>
+                    <td className="ps-4">
+                      <div>
+                        <span>{item.type}</span>
+                      </div>
+                    </td>
+                    <td className="ps-4">
+                      <div>
+                        <span>{item.barcode}</span>
+                      </div>
+                    </td>
+                    <td className="ps-4">
+                      <div>
+                        <span>{item.group}</span>
+                      </div>
+                    </td>
+                    <td className="ps-4">{item.price}</td>
+                    <td className="ps-4">
+                      <div>
+                        <span>{item.life}</span>
+                      </div>
+                    </td>
+                    <td className="ps-4">
                       <span
                         className={`badge status ${item.status.toLowerCase()}`}
                       >
@@ -532,10 +630,15 @@ const ItemMaster = () => {
                       <button
                         className="btn-icon btn-primary"
                         title="View Details"
+                        onClick={(e) => handleViewDetails(item, e)}
                       >
                         <i className="fas fa-eye"></i>
                       </button>
-                      <button className="btn-icon btn-success" title="Edit">
+                      <button
+                        className="btn-icon btn-success"
+                        title="Edit"
+                        onClick={(e) => handleEditDetails(item, e)}
+                      >
                         <i className="fas fa-edit"></i>
                       </button>
                       <button className="btn-icon btn-danger" title="Delete">
@@ -571,6 +674,407 @@ const ItemMaster = () => {
           </div>
         </div>
       </div>
+      {/* View Item Details Modal */}
+      {isShowItemDetails && (
+        <div
+          className="modal fade"
+          ref={itemModalRef}
+          id="itemDetailModal"
+          tabIndex="-1"
+        >
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  View {itemDetails.name}'s Details
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body">
+                <p>
+                  <strong>Name:</strong> {itemDetails.name}
+                </p>
+                <p>
+                  <strong>Code:</strong> {itemDetails.code}
+                </p>
+                <p>
+                  <strong>UOM:</strong> {itemDetails.uom}
+                </p>
+                <p>
+                  <strong>Type:</strong> {itemDetails.type}
+                </p>
+                <p>
+                  <strong>Barcode:</strong> {itemDetails.barcode}
+                </p>
+                <p>
+                  <strong>Group:</strong> {itemDetails.group}
+                </p>
+                <p>
+                  <strong>ST Qty:</strong> {itemDetails.stQty}
+                </p>
+                <p>
+                  <strong>Life:</strong> {itemDetails.life}
+                </p>
+                <p>
+                  <strong>Status:</strong> {itemDetails.status}
+                </p>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                  onClick={() => {
+                    document.activeElement?.blur();
+                  }}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Item Details Modal */}
+      {isEditItemDetails && (
+        <div
+          className="modal fade"
+          ref={itemEditModalRef}
+          id="itemEditModal"
+          tabIndex="-1"
+        >
+          <div className="modal-dialog modal-lg">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Edit Item</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+              {/* Modal Body */}
+              <div className="modal-body">
+                <form
+                  autoComplete="off"
+                  className="padding-2"
+                  onSubmit={handleAddItem}
+                >
+                  <div className="form-grid pt-0">
+                    <div className="row form-style">
+                      <div className="col-4 d-flex flex-column form-group ps-2">
+                        <label htmlFor="name" className="form-label mb-0">
+                          Item Name
+                        </label>
+                        <div className="position-relative w-100">
+                          <i className="fas fa-box position-absolute input-icon"></i>
+                          <input
+                            type="text"
+                            className="form-control ps-5 text-font"
+                            id="name"
+                            placeholder="Enter item name"
+                            required
+                            value={itemDetails.name}
+                            onChange={(e) =>
+                              setFormData({ ...formData, name: e.target.value })
+                            }
+                          />
+                        </div>
+                      </div>
+                      <div className="col-4 d-flex flex-column form-group">
+                        <label htmlFor="code" className="form-label mb-0">
+                          Item Code
+                        </label>
+                        <div className="position-relative w-100">
+                          <i className="fas fa-qrcode position-absolute input-icon"></i>
+                          <input
+                            type="text"
+                            className="form-control ps-5 text-font"
+                            id="code"
+                            placeholder="Enter item code"
+                            required
+                            value={itemDetails.code}
+                            onChange={(e) =>
+                              setFormData({ ...formData, code: e.target.value })
+                            }
+                          />
+                        </div>
+                      </div>
+                      <div className="col-4 d-flex flex-column form-group">
+                        <label htmlFor="uom" className="form-label mb-0 ms-2">
+                          UOM
+                        </label>
+                        <div className="position-relative w-100">
+                          <i className="fas fa-ruler position-absolute input-icon"></i>
+                          <select
+                            className="form-control ps-5 ms-2 text-font"
+                            id="uom"
+                            placeholder="UOM"
+                            required
+                            value={itemDetails.uom}
+                            onChange={(e) =>
+                              setFormData({ ...formData, uom: e.target.value })
+                            }
+                          >
+                            <option
+                              value=""
+                              disabled
+                              hidden
+                              className="text-muted"
+                            >
+                              Select UOM
+                            </option>
+                            <option value="pcs">Pcs</option>
+                            <option value="Kg">Kg</option>
+                          </select>
+                          <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="row form-style">
+                      <div className="col-4 d-flex flex-column form-group ps-2">
+                        <label htmlFor="type" className="form-label mb-0">
+                          Type
+                        </label>
+                        <div className="position-relative w-100">
+                          <i className="fas fa-tags position-absolute input-icon"></i>
+                          <select
+                            className="form-control ps-5 text-font"
+                            id="type"
+                            placeholder="Type"
+                            required
+                            value={itemDetails.type}
+                            onChange={(e) =>
+                              setFormData({ ...formData, type: e.target.value })
+                            }
+                          >
+                            <option
+                              value=""
+                              disabled
+                              hidden
+                              className="text-muted"
+                            >
+                              Select Type Name
+                            </option>
+                            <option value="a">A Type</option>
+                            <option value="b">B Type</option>
+                            <option value="c">C Type</option>
+                          </select>
+                          <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                        </div>
+                      </div>
+                      <div className="col-4 d-flex flex-column form-group">
+                        <label htmlFor="barcode" className="form-label mb-0">
+                          Barcode
+                        </label>
+                        <div className="position-relative w-100">
+                          <i className="fas fa-qrcode position-absolute input-icon"></i>
+                          <input
+                            type="text"
+                            className="form-control ps-5 text-font"
+                            id="barcode"
+                            placeholder="Enter barcode"
+                            required
+                            value={itemDetails.barcode}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                barcode: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                      </div>
+                      <div className="col-4 d-flex flex-column form-group">
+                        <label htmlFor="group" className="form-label mb-0 ms-2">
+                          Group
+                        </label>
+                        <div className="position-relative w-100">
+                          <i className="fas fa-layer-group position-absolute input-icon"></i>
+                          <select
+                            className="form-control ps-5 ms-2 text-font"
+                            id="group"
+                            placeholder="Group"
+                            required
+                            value={itemDetails.group}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                group: e.target.value,
+                              })
+                            }
+                          >
+                            <option
+                              value=""
+                              disabled
+                              hidden
+                              className="text-muted"
+                            >
+                              Select Group
+                            </option>
+                            <option value="capacitor">Capacitor</option>
+                            <option value="irLed">IR LED</option>
+                            <option value="spring">Spring</option>
+                          </select>
+                          <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="row form-style">
+                      <div className="col-4 d-flex flex-column form-group">
+                        <label htmlFor="price" className="form-label mb-0">
+                          Price
+                        </label>
+                        <div className="position-relative w-100">
+                          <i className="fas fa-rupee-sign position-absolute input-icon"></i>
+                          <input
+                            type="text"
+                            className="form-control ps-5 text-font"
+                            id="price"
+                            placeholder="Enter price"
+                            required
+                            value={itemDetails.price}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                price: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                      </div>
+                      <div className="col-4 d-flex flex-column form-group">
+                        <label htmlFor="stQty" className="form-label mb-0">
+                          ST QTY
+                        </label>
+                        <div className="position-relative w-100">
+                          <i className="fas fa-cubes position-absolute input-icon"></i>
+                          <input
+                            type="text"
+                            className="form-control ps-5 text-font"
+                            id="stQty"
+                            placeholder="Enter ST QTY"
+                            required
+                            value={itemDetails.stQty}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                stQty: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                      </div>
+                      <div className="col-4 d-flex flex-column form-group">
+                        <label htmlFor="life" className="form-label mb-0  ms-2">
+                          Life (In Days)
+                        </label>
+                        <div className="position-relative w-100">
+                          <i className="fas fa-clock position-absolute input-icon"></i>
+                          <input
+                            type="text"
+                            className="form-control ps-5 text-font ms-2"
+                            id="life"
+                            placeholder="Enter life (in days)"
+                            required
+                            value={itemDetails.life}
+                            onChange={(e) =>
+                              setFormData({ ...formData, life: e.target.value })
+                            }
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="row form-style">
+                      <div className="col-4 d-flex flex-column form-group">
+                        <label htmlFor="status" className="form-label">
+                          Status
+                        </label>
+                        <div className="position-relative w-100">
+                          <div className="form-check form-switch position-absolute input-icon mt-1 padding-left-2">
+                            <input
+                              className="form-check-input text-font switch-style"
+                              type="checkbox"
+                              role="switch"
+                              id="switchCheckChecked"
+                              checked={
+                                itemDetails.status == "active" ? true : false
+                              }
+                              onChange={(e) => {
+                                const newStatus = e.target.checked
+                                  ? "active"
+                                  : "inactive";
+                                setIsChecked(e.target.checked);
+                                setStatus(newStatus);
+                                setFormData({
+                                  ...formData,
+                                  status: newStatus,
+                                });
+                              }}
+                            />
+
+                            <label
+                              className="form-check-label"
+                              htmlFor="switchCheckChecked"
+                            ></label>
+                          </div>
+                          <select
+                            className="form-control text-font switch-padding"
+                            id="status"
+                            value={status}
+                            onChange={(e) => {
+                              const newStatus = e.target.value;
+                              setStatus(newStatus);
+                              setIsChecked(newStatus === "active");
+
+                              setFormData((prev) => ({
+                                ...prev,
+                                status: newStatus,
+                              }));
+                            }}
+                          >
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                          </select>
+                          <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              </div>
+              <div className="modal-footer">
+                <button
+                  className="btn btn-primary border border-0 text-8 px-3 fw-medium py-2 me-3 float-end"
+                  data-bs-dismiss="modal"
+                  onClick={(e) => {
+                    document.activeElement?.blur();
+                    handleEditItem(e);
+                  }}
+                >
+                  <i className="fa-solid fa-floppy-disk me-1"></i> Save Changes
+                </button>
+                <button
+                  className="btn btn-secondary border border-0 bg-secondary text-8 px-3 fw-medium py-2 me-3 float-end"
+                  data-bs-dismiss="modal"
+                  onClick={() => {
+                    document.activeElement?.blur();
+                  }}
+                >
+                  <i className="fa-solid fa-x-mark me-1"></i> Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

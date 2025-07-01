@@ -1,10 +1,20 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { AppContext } from "../../../context/AppContext";
 import { Link } from "react-router-dom";
+import { Modal } from "bootstrap";
 
 const TypeMaster = () => {
   const { isAddType, setIsAddType } = useContext(AppContext);
-
+  const typeModalRef = useRef(null);
+  const typeEditModalRef = useRef(null);
+  const [isShowTypeDetails, setIsShowTypeDetails] = useState(false);
+  const [isEditTypeDetails, setIsEditTypeDetails] = useState(false);
+  const [typeDetails, setTypeDetails] = useState({
+    id: "",
+    trNo: "",
+    name: "",
+    status: "",
+  });
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [status, setStatus] = useState("active");
@@ -14,7 +24,14 @@ const TypeMaster = () => {
     status: "active",
   });
 
-  const types = [];
+  const types = [
+    {
+      id: 1,
+      trNo: "*****",
+      name: "Kim Jennie",
+      status: "Active",
+    },
+  ];
 
   const handleTypeCheckboxChange = (typeId) => {
     setSelectedTypes((prevSelected) =>
@@ -52,6 +69,49 @@ const TypeMaster = () => {
     });
     console.log("Form submitted. ", finalData);
   };
+
+  const handleEditType = (e) => {
+    e.preventDefault();
+    console.log("Type has been edited");
+  };
+
+  const handleViewDetails = (type, e) => {
+    e.preventDefault();
+    console.log(type);
+    setTypeDetails(type);
+    setIsShowTypeDetails(true);
+  };
+
+  const handleEditDetails = (type, e) => {
+    e.preventDefault();
+    console.log(type);
+    setTypeDetails(type);
+    setIsEditTypeDetails(true);
+  };
+
+  useEffect(() => {
+    if (isShowTypeDetails && typeModalRef.current) {
+      const bsModal = new Modal(typeModalRef.current, {
+        backdrop: "static",
+      });
+      bsModal.show();
+
+      // Optional: hide modal state when it's closed
+      typeModalRef.current.addEventListener("hidden.bs.modal", () =>
+        setIsShowTypeDetails(false)
+      );
+    } else if (isEditTypeDetails && typeEditModalRef.current) {
+      const bsModal = new Modal(typeEditModalRef.current, {
+        backdrop: "static",
+      });
+      bsModal.show();
+
+      // Hide modal state when it's closed
+      typeEditModalRef.current.addEventListener("hidden.bs.modal", () =>
+        setIsEditTypeDetails(false)
+      );
+    }
+  }, [isShowTypeDetails, isEditTypeDetails]);
 
   const handleReset = (e) => {
     e.preventDefault();
@@ -292,31 +352,43 @@ const TypeMaster = () => {
               ) : (
                 types.map((type) => (
                   <tr key={type.id}>
-                    <td className="checkbox-cell">
+                    <td className="checkbox-cell ps-4">
                       <input
                         type="checkbox"
                         checked={selectedTypes.includes(type.id)}
                         onChange={() => handleTypeCheckboxChange(type.id)}
                       />
                     </td>
-                    <td>
+                    <td className="ps-4">
                       <div>
                         <span>{type.trNo}</span>
                       </div>
                     </td>
-                    <td>
+                    <td className="ps-4">
                       <div>
                         <span>{type.name}</span>
                       </div>
+                    </td>
+                    <td className="ps-4">
+                      <span
+                        className={`badge status ${type.status.toLowerCase()}`}
+                      >
+                        {type.status}
+                      </span>
                     </td>
                     <td className="actions">
                       <button
                         className="btn-icon btn-primary"
                         title="View Details"
+                        onClick={(e) => handleViewDetails(type, e)}
                       >
                         <i className="fas fa-eye"></i>
                       </button>
-                      <button className="btn-icon btn-success" title="Edit">
+                      <button
+                        className="btn-icon btn-success"
+                        title="Edit"
+                        onClick={(e) => handleEditDetails(type, e)}
+                      >
                         <i className="fas fa-edit"></i>
                       </button>
                       <button className="btn-icon btn-danger" title="Delete">
@@ -352,6 +424,200 @@ const TypeMaster = () => {
           </div>
         </div>
       </div>
+
+      {/* View Type Details Modal */}
+      {isShowTypeDetails && (
+        <div
+          className="modal fade"
+          ref={typeModalRef}
+          id="typeDetailModal"
+          tabIndex="-1"
+        >
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  View {typeDetails.name}'s Details
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body">
+                <p>
+                  <strong>TRNO:</strong> {typeDetails.trNo}
+                </p>
+                <p>
+                  <strong>Name:</strong> {typeDetails.name}
+                </p>
+                <p>
+                  <strong>Status:</strong> {typeDetails.status}
+                </p>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                  onClick={() => {
+                    document.activeElement?.blur();
+                  }}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Type Details Modal */}
+      {isEditTypeDetails && (
+        <div
+          className="modal fade"
+          ref={typeEditModalRef}
+          id="typeEditModal"
+          tabIndex="-1"
+        >
+          <div className="modal-dialog modal-lg">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Edit Type</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+              {/* Modal Body */}
+              <div className="modal-body">
+                <form
+                  autoComplete="off"
+                  className="padding-2"
+                  onSubmit={handleEditType}
+                >
+                  <div className="form-grid pt-0">
+                    <div className="row form-style">
+                      <div className="col-4 d-flex flex-column form-group">
+                        <label htmlFor="trNo" className="form-label">
+                          TRNO
+                        </label>
+                        <div className="position-relative w-100">
+                          <i className="fas fa-hashtag position-absolute input-icon"></i>
+                          <input
+                            type="text"
+                            className="form-control ps-5 text-font input-centered"
+                            id="trNo"
+                            value={typeDetails.trNo}
+                            disabled
+                          />
+                        </div>
+                      </div>
+                      <div className="col-4 d-flex flex-column form-group">
+                        <label htmlFor="name" className="form-label">
+                          Name
+                        </label>
+                        <div className="position-relative w-100">
+                          <i className="fas fa-font position-absolute input-icon"></i>
+                          <input
+                            type="text"
+                            className="form-control ps-5 text-font"
+                            id="name"
+                            placeholder="Enter type name"
+                            required
+                            value={typeDetails.name}
+                            onChange={(e) =>
+                              setFormData({ ...formData, name: e.target.value })
+                            }
+                          />
+                        </div>
+                      </div>
+                      <div className="col-4 d-flex flex-column form-group">
+                        <label htmlFor="status" className="form-label">
+                          Status
+                        </label>
+                        <div className="position-relative w-100">
+                          <div className="form-check form-switch position-absolute input-icon mt-1 padding-left-2">
+                            <input
+                              className="form-check-input text-font switch-style"
+                              type="checkbox"
+                              role="switch"
+                              id="switchCheckChecked"
+                              checked={
+                                typeDetails.status == "active" ? true : false
+                              }
+                              onChange={(e) => {
+                                const newStatus = e.target.checked
+                                  ? "active"
+                                  : "inactive";
+                                setIsChecked(e.target.checked);
+                                setStatus(newStatus);
+                                setFormData({
+                                  ...formData,
+                                  status: newStatus,
+                                });
+                              }}
+                            />
+
+                            <label
+                              className="form-check-label"
+                              htmlFor="switchCheckChecked"
+                            ></label>
+                          </div>
+                          <select
+                            className="form-control text-font switch-padding"
+                            id="status"
+                            value={typeDetails.status}
+                            onChange={(e) => {
+                              const newStatus = e.target.value;
+                              setStatus(newStatus);
+                              setIsChecked(newStatus === "active");
+
+                              setFormData((prev) => ({
+                                ...prev,
+                                status: newStatus,
+                              }));
+                            }}
+                          >
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                          </select>
+                          <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              </div>
+              <div className="modal-footer">
+                <button
+                  className="btn btn-primary border border-0 text-8 px-3 fw-medium py-2 me-3 float-end"
+                  data-bs-dismiss="modal"
+                  onClick={(e) => {
+                    document.activeElement?.blur();
+                    handleEditType(e);
+                  }}
+                >
+                  <i className="fa-solid fa-floppy-disk me-1"></i> Save Changes
+                </button>
+                <button
+                  className="btn btn-secondary border border-0 bg-secondary text-8 px-3 fw-medium py-2 me-3 float-end"
+                  data-bs-dismiss="modal"
+                  onClick={() => {
+                    document.activeElement?.blur();
+                  }}
+                >
+                  <i className="fa-solid fa-x-mark me-1"></i> Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

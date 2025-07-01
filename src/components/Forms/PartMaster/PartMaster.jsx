@@ -1,10 +1,21 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { AppContext } from "../../../context/AppContext";
 import { Link } from "react-router-dom";
+import { Modal } from "bootstrap";
 
 const PartMaster = () => {
   const { isAddPart, setIsAddPart } = useContext(AppContext);
-
+  const partModalRef = useRef(null);
+  const partEditModalRef = useRef(null);
+  const [isShowPartDetails, setIsShowPartDetails] = useState(false);
+  const [isEditPartDetails, setIsEditPartDetails] = useState(false);
+  const [partDetails, setPartDetails] = useState({
+    id: "",
+    trNo: "",
+    name: "",
+    uom: "",
+    status: "",
+  });
   const [selectedParts, setSelectedParts] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [status, setStatus] = useState("active");
@@ -15,7 +26,16 @@ const PartMaster = () => {
     uom: "",
     status: "active",
   });
-  const parts = [];
+  const parts = [
+    {
+      id: 1,
+      trNo: "*****",
+      code: "856423",
+      name: "Jungkook",
+      uom: "Pcs",
+      status: "Active",
+    },
+  ];
 
   const handlePartCheckboxChange = (partId) => {
     setSelectedParts((prevSelected) =>
@@ -55,6 +75,49 @@ const PartMaster = () => {
     });
     console.log("Form submitted. ", finalData);
   };
+
+  const handleEditPart = (e) => {
+    e.preventDefault();
+    console.log("Part has been edited");
+  };
+
+  const handleViewDetails = (part, e) => {
+    e.preventDefault();
+    console.log(part);
+    setPartDetails(part);
+    setIsShowPartDetails(true);
+  };
+
+  const handleEditDetails = (part, e) => {
+    e.preventDefault();
+    console.log(part);
+    setPartDetails(part);
+    setIsEditPartDetails(true);
+  };
+
+  useEffect(() => {
+    if (isShowPartDetails && partModalRef.current) {
+      const bsModal = new Modal(partModalRef.current, {
+        backdrop: "static",
+      });
+      bsModal.show();
+
+      // Optional: hide modal state when it's closed
+      partModalRef.current.addEventListener("hidden.bs.modal", () =>
+        setIsShowPartDetails(false)
+      );
+    } else if (isEditPartDetails && partEditModalRef.current) {
+      const bsModal = new Modal(partEditModalRef.current, {
+        backdrop: "static",
+      });
+      bsModal.show();
+
+      // Hide modal state when it's closed
+      partEditModalRef.current.addEventListener("hidden.bs.modal", () =>
+        setIsEditPartDetails(false)
+      );
+    }
+  }, [isShowPartDetails, isEditPartDetails]);
 
   const handleReset = (e) => {
     e.preventDefault();
@@ -347,36 +410,48 @@ const PartMaster = () => {
               ) : (
                 parts.map((part) => (
                   <tr key={part.id}>
-                    <td className="checkbox-cell">
+                    <td className="checkbox-cell ps-4">
                       <input
                         type="checkbox"
                         checked={selectedParts.includes(part.id)}
                         onChange={() => handlePartCheckboxChange(part.id)}
                       />
                     </td>
-                    <td>
+                    <td className="ps-4">
                       <div>
                         <span>{part.trNo}</span>
                       </div>
                     </td>
-                    <td>
+                    <td className="ps-4">
                       <div>
                         <span>{part.name}</span>
                       </div>
                     </td>
-                    <td>
+                    <td className="ps-4">
                       <div>
-                        <span>{part.code}</span>
+                        <span>{part.uom}</span>
                       </div>
+                    </td>
+                    <td className="ps-4">
+                      <span
+                        className={`badge status ${part.status.toLowerCase()}`}
+                      >
+                        {part.status}
+                      </span>
                     </td>
                     <td className="actions">
                       <button
                         className="btn-icon btn-primary"
                         title="View Details"
+                        onClick={(e) => handleViewDetails(part, e)}
                       >
                         <i className="fas fa-eye"></i>
                       </button>
-                      <button className="btn-icon btn-success" title="Edit">
+                      <button
+                        className="btn-icon btn-success"
+                        title="Edit"
+                        onClick={(e) => handleEditDetails(part, e)}
+                      >
                         <i className="fas fa-edit"></i>
                       </button>
                       <button className="btn-icon btn-danger" title="Delete">
@@ -412,6 +487,242 @@ const PartMaster = () => {
           </div>
         </div>
       </div>
+
+      {/* View Part Details Modal */}
+      {isShowPartDetails && (
+        <div
+          className="modal fade"
+          ref={partModalRef}
+          id="partDetailModal"
+          tabIndex="-1"
+        >
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  View {partDetails.name}'s Details
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body">
+                <p>
+                  <strong>TRNO:</strong> {partDetails.trNo}
+                </p>
+                <p>
+                  <strong>Name:</strong> {partDetails.name}
+                </p>
+                <p>
+                  <strong>UOM:</strong> {partDetails.uom}
+                </p>
+                <p>
+                  <strong>Status:</strong> {partDetails.status}
+                </p>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                  onClick={() => {
+                    document.activeElement?.blur();
+                  }}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Part Details Modal */}
+      {isEditPartDetails && (
+        <div
+          className="modal fade"
+          ref={partEditModalRef}
+          id="partEditModal"
+          tabIndex="-1"
+        >
+          <div className="modal-dialog modal-lg">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Edit Part</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+              {/* Modal Body */}
+              <div className="modal-body">
+                <form
+                  autoComplete="off"
+                  className="padding-2"
+                  onSubmit={handleAddParts}
+                >
+                  <div className="form-grid pt-0">
+                    <div className="row form-style">
+                      <div className="col-4 d-flex flex-column form-group">
+                        <label htmlFor="name" className="form-label">
+                          Name
+                        </label>
+                        <div className="position-relative w-100">
+                          <i className="fas fa-font position-absolute input-icon"></i>
+                          <input
+                            type="text"
+                            className="form-control ps-5 text-font"
+                            id="name"
+                            placeholder="Enter part name"
+                            required
+                            value={partDetails.name}
+                            onChange={(e) =>
+                              setFormData({ ...formData, name: e.target.value })
+                            }
+                          />
+                        </div>
+                      </div>
+                      <div className="col-4 d-flex flex-column form-group">
+                        <label htmlFor="code" className="form-label">
+                          Code
+                        </label>
+                        <div className="position-relative w-100">
+                          <i className="fas fa-qrcode position-absolute input-icon"></i>
+                          <input
+                            type="text"
+                            className="form-control ps-5 text-font"
+                            id="code"
+                            placeholder="Enter part code"
+                            required
+                            value={partDetails.code}
+                            onChange={(e) =>
+                              setFormData({ ...formData, code: e.target.value })
+                            }
+                          />
+                        </div>
+                      </div>
+                      <div className="col-4 d-flex flex-column form-group">
+                        <label htmlFor="uom" className="form-label">
+                          UOM
+                        </label>
+                        <div className="position-relative w-100">
+                          <i className="fas fa-ruler position-absolute input-icon"></i>
+                          <select
+                            className="form-control ps-5 text-font"
+                            id="uom"
+                            required
+                            value={partDetails.uom}
+                            onChange={(e) =>
+                              setFormData({ ...formData, uom: e.target.value })
+                            }
+                          >
+                            <option
+                              value=""
+                              disabled
+                              hidden
+                              className="text-muted"
+                            >
+                              Select UOM
+                            </option>
+                            <option value="pcs">Pieces (PCS)</option>
+                            <option value="kg">Kilogram (KG)</option>
+                            <option value="gm">Gram (GM)</option>
+                            <option value="ltr">Litre (LTR)</option>
+                            <option value="mtr">Meter (MTR)</option>
+                            <option value="box">Box (BOX)</option>
+                          </select>
+                          <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="row form-style">
+                      <div className="col-4 d-flex flex-column form-group">
+                        <label htmlFor="status" className="form-label">
+                          Status
+                        </label>
+                        <div className="position-relative w-100">
+                          <div className="form-check form-switch position-absolute input-icon mt-1 padding-left-2">
+                            <input
+                              className="form-check-input text-font switch-style"
+                              type="checkbox"
+                              role="switch"
+                              id="switchCheckChecked"
+                              checked={
+                                partDetails.status == "active" ? true : false
+                              }
+                              onChange={(e) => {
+                                const newStatus = e.target.checked
+                                  ? "active"
+                                  : "inactive";
+                                setIsChecked(e.target.checked);
+                                setStatus(newStatus);
+                                setFormData({
+                                  ...formData,
+                                  status: newStatus,
+                                });
+                              }}
+                            />
+
+                            <label
+                              className="form-check-label"
+                              htmlFor="switchCheckChecked"
+                            ></label>
+                          </div>
+                          <select
+                            className="form-control text-font switch-padding"
+                            id="status"
+                            value={partDetails.status}
+                            onChange={(e) => {
+                              const newStatus = e.target.value;
+                              setStatus(newStatus);
+                              setIsChecked(newStatus === "active");
+
+                              setFormData((prev) => ({
+                                ...prev,
+                                status: newStatus,
+                              }));
+                            }}
+                          >
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                          </select>
+                          <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              </div>
+              <div className="modal-footer">
+                <button
+                  className="btn btn-primary border border-0 text-8 px-3 fw-medium py-2 me-3 float-end"
+                  data-bs-dismiss="modal"
+                  onClick={(e) => {
+                    document.activeElement?.blur();
+                    handleEditPart(e);
+                  }}
+                >
+                  <i className="fa-solid fa-floppy-disk me-1"></i> Save Changes
+                </button>
+                <button
+                  className="btn btn-secondary border border-0 bg-secondary text-8 px-3 fw-medium py-2 me-3 float-end"
+                  data-bs-dismiss="modal"
+                  onClick={() => {
+                    document.activeElement?.blur();
+                  }}
+                >
+                  <i className="fa-solid fa-x-mark me-1"></i> Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

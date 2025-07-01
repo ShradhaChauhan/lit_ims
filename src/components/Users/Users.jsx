@@ -1312,6 +1312,7 @@ const Users = () => {
           </div>
         </div>
       </div>
+
       {/* View User Details Modal */}
       {isShowUserDetails && (
         <div
@@ -1618,7 +1619,7 @@ const Users = () => {
                                 </option>
 
                                 {branchDropdownValues.map((val) => (
-                                  <option key={val.value} value={val.value}>
+                                  <option key={val.label} value={val.value}>
                                     {val.label}
                                   </option>
                                 ))}
@@ -1629,7 +1630,7 @@ const Users = () => {
                         </div>
                       </div>
 
-                      <div className="permissions-section">
+                      <div className="">
                         <p className="text-heading">Module Permissions</p>
                         <div className="row">
                           <div className="table-list-container">

@@ -1,10 +1,23 @@
-import React, { useContext, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { AppContext } from "../../../context/AppContext";
 import { Link } from "react-router-dom";
+import { Modal } from "bootstrap";
 
 const BOM = () => {
   const { isAddBom, setIsAddBom } = useContext(AppContext);
-
+  const bomModalRef = useRef(null);
+  const bomEditModalRef = useRef(null);
+  const [isShowBomDetails, setIsShowBomDetails] = useState(false);
+  const [isEditBomDetails, setIsEditBomDetails] = useState(false);
+  const [bomDetails, setBomDetails] = useState({
+    id: "",
+    code: "",
+    name: "",
+    itemsCount: "",
+    totalQuantity: "",
+    totalValue: "",
+    status: "",
+  });
   const [selectedBoms, setSelectedBoms] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [isReset, setIsReset] = useState(false);
@@ -31,7 +44,17 @@ const BOM = () => {
   });
   const [isAddBomPart, setIsAddBomPart] = useState([{ id: 1 }]);
 
-  const boms = [];
+  const boms = [
+    {
+      id: 1,
+      code: "100101",
+      name: "Jack",
+      itemsCount: "500",
+      totalQuantity: "500",
+      totalValue: "500",
+      status: "Active",
+    },
+  ];
 
   const handleBomCheckboxChange = (bomId) => {
     setSelectedBoms((prevSelected) =>
@@ -83,6 +106,49 @@ const BOM = () => {
     });
     console.log("Form submitted. ", finalData);
   };
+
+  const handleEditBom = (e) => {
+    e.preventDefault();
+    console.log("BOM has been edited");
+  };
+
+  const handleViewDetails = (bom, e) => {
+    e.preventDefault();
+    console.log(bom);
+    setBOMDetails(group);
+    setIsShowBomDetails(true);
+  };
+
+  const handleEditDetails = (group, e) => {
+    e.preventDefault();
+    console.log(group);
+    setBomDetails(group);
+    setIsEditBomDetails(true);
+  };
+
+  useEffect(() => {
+    if (isShowBomDetails && groupModalRef.current) {
+      const bsModal = new Modal(groupModalRef.current, {
+        backdrop: "static",
+      });
+      bsModal.show();
+
+      // Optional: hide modal state when it's closed
+      groupModalRef.current.addEventListener("hidden.bs.modal", () =>
+        setIsShowBomDetails(false)
+      );
+    } else if (isEditBomDetails && bomEditModalRef.current) {
+      const bsModal = new Modal(bomEditModalRef.current, {
+        backdrop: "static",
+      });
+      bsModal.show();
+
+      // Hide modal state when it's closed
+      bomEditModalRef.current.addEventListener("hidden.bs.modal", () =>
+        setIsEditBomDetails(false)
+      );
+    }
+  }, [isShowBomDetails, isEditBomDetails]);
 
   const handleReset = (e) => {
     e.preventDefault();

@@ -1,8 +1,11 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { AppContext } from "../../../context/AppContext";
 import { Link } from "react-router-dom";
+import { Modal } from "bootstrap";
 
 const WarehouseMaster = () => {
+  const warehouseModalRef = useRef(null);
+  const warehouseEditModalRef = useRef(null);
   const { isAddWarehouse, setIsAddWarehouse } = useContext(AppContext);
 
   const [selectedWarehouses, setSelectedWarehouses] = useState([]);
@@ -10,11 +13,29 @@ const WarehouseMaster = () => {
   const [status, setStatus] = useState("active");
   const [isChecked, setIsChecked] = useState(true);
   const [formData, setFormData] = useState({
+    trno: "",
     name: "",
     code: "",
     status: "active",
   });
-  const warehouses = [];
+  const [isShowWarehouseDetails, setIsShowWarehouseDetails] = useState(false);
+  const [isEditWarehouseDetails, setIsEditWarehouseDetails] = useState(false);
+  const [warehouseDetails, setWarehouseDetails] = useState({
+    id: "",
+    trno: "",
+    name: "",
+    code: "",
+    status: "",
+  });
+  const warehouses = [
+    {
+      id: 1,
+      trNo: "*********",
+      code: "22356",
+      name: "Jackson Wang",
+      status: "active",
+    },
+  ];
 
   const handleWarehouseCheckboxChange = (warehouseId) => {
     setSelectedWarehouses((prevSelected) =>
@@ -54,6 +75,25 @@ const WarehouseMaster = () => {
     console.log("Form submitted. ", finalData);
   };
 
+  const handleEditWarehouse = (e) => {
+    e.preventDefault();
+    console.log("Warehouse has been edited");
+  };
+
+  const handleViewDetails = (warehouse, e) => {
+    e.preventDefault();
+    console.log(warehouse);
+    setWarehouseDetails(warehouse);
+    setIsShowWarehouseDetails(true);
+  };
+
+  const handleEditDetails = (warehouse, e) => {
+    e.preventDefault();
+    console.log(warehouse);
+    setWarehouseDetails(warehouse);
+    setIsEditWarehouseDetails(true);
+  };
+
   const handleReset = (e) => {
     e.preventDefault();
     setFormData({
@@ -68,6 +108,30 @@ const WarehouseMaster = () => {
   const handleSetIsAddWarehouse = () => {
     setIsAddWarehouse(true);
   };
+
+  useEffect(() => {
+    if (isShowWarehouseDetails && warehouseModalRef.current) {
+      const bsModal = new Modal(warehouseModalRef.current, {
+        backdrop: "static",
+      });
+      bsModal.show();
+
+      // Optional: hide modal state when it's closed
+      warehouseModalRef.current.addEventListener("hidden.bs.modal", () =>
+        setIsShowWarehouseDetails(false)
+      );
+    } else if (isEditWarehouseDetails && warehouseEditModalRef.current) {
+      const bsModal = new Modal(warehouseEditModalRef.current, {
+        backdrop: "static",
+      });
+      bsModal.show();
+
+      // Hide modal state when it's closed
+      warehouseEditModalRef.current.addEventListener("hidden.bs.modal", () =>
+        setIsEditWarehouseDetails(false)
+      );
+    }
+  }, [isShowWarehouseDetails, isEditWarehouseDetails]);
 
   return (
     <div>
@@ -318,7 +382,7 @@ const WarehouseMaster = () => {
               ) : (
                 warehouses.map((warehouse) => (
                   <tr key={warehouse.id}>
-                    <td className="checkbox-cell">
+                    <td className="checkbox-cell ps-4">
                       <input
                         type="checkbox"
                         checked={selectedWarehouses.includes(warehouse.id)}
@@ -327,29 +391,39 @@ const WarehouseMaster = () => {
                         }
                       />
                     </td>
-                    <td>
+                    <td className="ps-4">
                       <div>
                         <span>{warehouse.trNo}</span>
                       </div>
                     </td>
-                    <td>
+                    <td className="ps-4">
+                      <div>
+                        <span>{warehouse.code}</span>
+                      </div>
+                    </td>
+                    <td className="ps-4">
                       <div>
                         <span>{warehouse.name}</span>
                       </div>
                     </td>
-                    <td>
+                    <td className="ps-4">
                       <div>
-                        <span>{warehouse.warehouse}</span>
+                        <span>{warehouse.status}</span>
                       </div>
                     </td>
                     <td className="actions">
                       <button
                         className="btn-icon btn-primary"
                         title="View Details"
+                        onClick={(e) => handleViewDetails(warehouse, e)}
                       >
                         <i className="fas fa-eye"></i>
                       </button>
-                      <button className="btn-icon btn-success" title="Edit">
+                      <button
+                        className="btn-icon btn-success"
+                        title="Edit"
+                        onClick={(e) => handleEditDetails(warehouse, e)}
+                      >
                         <i className="fas fa-edit"></i>
                       </button>
                       <button className="btn-icon btn-danger" title="Delete">
@@ -385,6 +459,231 @@ const WarehouseMaster = () => {
           </div>
         </div>
       </div>
+      {/* View User Details Modal */}
+      {isShowWarehouseDetails && (
+        <div
+          className="modal fade"
+          ref={warehouseModalRef}
+          id="userDetailModal"
+          tabIndex="-1"
+        >
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  View {warehouseDetails.name}'s Details
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body">
+                <p>
+                  <strong>Name:</strong> {warehouseDetails.name}
+                </p>
+                <p>
+                  <strong>Code:</strong> {warehouseDetails.code}
+                </p>
+                <p>
+                  <strong>Status:</strong> {warehouseDetails.status}
+                </p>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                  onClick={() => {
+                    document.activeElement?.blur();
+                  }}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Warehouse Details Modal */}
+      {isEditWarehouseDetails && (
+        <div
+          className="modal fade"
+          ref={warehouseEditModalRef}
+          id="warehouseEditModal"
+          tabIndex="-1"
+        >
+          <div className="modal-dialog modal-lg">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Edit Warehouse</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+              {/* Modal Body */}
+              <div className="modal-body">
+                <div className="table-form-container mx-2">
+                  {/* Form Fields */}
+                  <form
+                    autoComplete="off"
+                    className="padding-2"
+                    onSubmit={handleEditWarehouse}
+                  >
+                    <div className="form-grid pt-0">
+                      <div className="row form-style">
+                        <div className="col-4 d-flex flex-column form-group">
+                          <label htmlFor="trNo" className="form-label">
+                            TRNO
+                          </label>
+                          <div className="position-relative w-100">
+                            <i className="fas fa-hashtag position-absolute input-icon"></i>
+                            <input
+                              type="text"
+                              className="form-control ps-5 text-font input-centered"
+                              id="trNo"
+                              value={warehouseDetails.trno}
+                              disabled
+                            />
+                          </div>
+                        </div>
+                        <div className="col-4 d-flex flex-column form-group">
+                          <label htmlFor="name" className="form-label">
+                            Name
+                          </label>
+                          <div className="position-relative w-100">
+                            <i className="fas fa-font position-absolute input-icon"></i>
+                            <input
+                              type="text"
+                              className="form-control ps-5 text-font"
+                              id="name"
+                              placeholder="Enter warehouse name"
+                              required
+                              value={warehouseDetails.name}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  name: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                        </div>
+                        <div className="col-4 d-flex flex-column form-group">
+                          <label htmlFor="code" className="form-label">
+                            Code
+                          </label>
+                          <div className="position-relative w-100">
+                            <i className="fas fa-qrcode position-absolute input-icon"></i>
+                            <input
+                              type="text"
+                              className="form-control ps-5 text-font"
+                              id="code"
+                              placeholder="Enter warehouse code"
+                              required
+                              value={warehouseDetails.code}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  code: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="row form-style">
+                        <div className="col-4 d-flex flex-column form-group">
+                          <label htmlFor="status" className="form-label">
+                            Status
+                          </label>
+                          <div className="position-relative w-100">
+                            <div className="form-check form-switch position-absolute input-icon mt-1 padding-left-2">
+                              <input
+                                className="form-check-input text-font switch-style"
+                                type="checkbox"
+                                role="switch"
+                                id="switchCheckChecked"
+                                checked={
+                                  warehouseDetails.status == "active"
+                                    ? true
+                                    : false
+                                }
+                                onChange={(e) => {
+                                  const newStatus = e.target.checked
+                                    ? "active"
+                                    : "inactive";
+                                  setIsChecked(e.target.checked);
+                                  setStatus(newStatus);
+                                  setFormData({
+                                    ...formData,
+                                    status: newStatus,
+                                  });
+                                }}
+                              />
+
+                              <label
+                                className="form-check-label"
+                                htmlFor="switchCheckChecked"
+                              ></label>
+                            </div>
+                            <select
+                              className="form-control text-font switch-padding"
+                              id="status"
+                              value={status}
+                              onChange={(e) => {
+                                const newStatus = e.target.value;
+                                setStatus(newStatus);
+                                setIsChecked(newStatus === "active");
+
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  status: newStatus,
+                                }));
+                              }}
+                            >
+                              <option value="active">Active</option>
+                              <option value="inactive">Inactive</option>
+                            </select>
+                            <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button
+                  className="btn btn-primary border border-0 text-8 px-3 fw-medium py-2 me-3 float-end"
+                  data-bs-dismiss="modal"
+                  onClick={(e) => {
+                    document.activeElement?.blur();
+                    handleEditWarehouse(e);
+                  }}
+                >
+                  <i className="fa-solid fa-floppy-disk me-1"></i> Save Changes
+                </button>
+                <button
+                  className="btn btn-secondary border border-0 bg-secondary text-8 px-3 fw-medium py-2 me-3 float-end"
+                  data-bs-dismiss="modal"
+                  onClick={() => {
+                    document.activeElement?.blur();
+                  }}
+                >
+                  <i className="fa-solid fa-x-mark me-1"></i> Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

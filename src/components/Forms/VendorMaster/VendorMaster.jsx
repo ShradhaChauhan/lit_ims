@@ -1,10 +1,15 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useRef, useEffect } from "react";
+import { Modal } from "bootstrap";
 import "./VendorMaster.css";
 import { AppContext } from "../../../context/AppContext";
 import { Link } from "react-router-dom";
 
 const VendorMaster = () => {
+  const partnerModalRef = useRef(null);
+  const partnerEditModalRef = useRef(null);
   const { isAddVendor, setIsAddVendor } = useContext(AppContext);
+  const [isShowPartnerDetails, setIsShowPartnerDetails] = useState(false);
+  const [isEditPartnerDetails, setIsEditPartnerDetails] = useState(false);
   const [selectedVendors, setSelectedVendors] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [status, setStatus] = useState("active");
@@ -21,7 +26,8 @@ const VendorMaster = () => {
     status: "active",
   });
 
-  const initialFormState = {
+  const [partnerDetails, setPartnerDetails] = useState({
+    id: "",
     type: "",
     name: "",
     mobile: "",
@@ -31,7 +37,7 @@ const VendorMaster = () => {
     pincode: "",
     address: "",
     status: "",
-  };
+  });
 
   const handleAddPartner = (e) => {
     e.preventDefault();
@@ -56,6 +62,11 @@ const VendorMaster = () => {
       return response.json();
     });
     console.log("Form submitted. ", finalData);
+  };
+
+  const handleEditPartner = (e) => {
+    e.preventDefault();
+    console.log("Partner has been edited");
   };
 
   const handleReset = (e) => {
@@ -123,6 +134,44 @@ const VendorMaster = () => {
     e.preventDefault();
     setIsAddVendor(true);
   };
+
+  const handleViewDetails = (partner, e) => {
+    e.preventDefault();
+    console.log(partner);
+    setPartnerDetails(partner);
+    setIsShowPartnerDetails(true);
+  };
+
+  const handleEditDetails = (partner, e) => {
+    e.preventDefault();
+    console.log(partner);
+    setPartnerDetails(partner);
+    setIsEditPartnerDetails(true);
+  };
+
+  useEffect(() => {
+    if (isShowPartnerDetails && partnerModalRef.current) {
+      const bsModal = new Modal(partnerModalRef.current, {
+        backdrop: "static",
+      });
+      bsModal.show();
+
+      // Optional: hide modal state when it's closed
+      partnerModalRef.current.addEventListener("hidden.bs.modal", () =>
+        setIsShowPartnerDetails(false)
+      );
+    } else if (isEditPartnerDetails && partnerEditModalRef.current) {
+      const bsModal = new Modal(partnerEditModalRef.current, {
+        backdrop: "static",
+      });
+      bsModal.show();
+
+      // Hide modal state when it's closed
+      partnerEditModalRef.current.addEventListener("hidden.bs.modal", () =>
+        setIsEditPartnerDetails(false)
+      );
+    }
+  }, [isShowPartnerDetails, isEditPartnerDetails]);
 
   return (
     <div>
@@ -518,10 +567,15 @@ const VendorMaster = () => {
                     <button
                       className="btn-icon btn-primary"
                       title="View Details"
+                      onClick={(e) => handleViewDetails(vendor, e)}
                     >
                       <i className="fas fa-eye"></i>
                     </button>
-                    <button className="btn-icon btn-success" title="Edit">
+                    <button
+                      className="btn-icon btn-success"
+                      title="Edit"
+                      onClick={(e) => handleEditDetails(vendor, e)}
+                    >
                       <i className="fas fa-edit"></i>
                     </button>
                     <button className="btn-icon btn-danger" title="Delete">
@@ -556,6 +610,379 @@ const VendorMaster = () => {
           </div>
         </div>
       </div>
+
+      {/* View Partner Details Modal */}
+      {isShowPartnerDetails && (
+        <div
+          className="modal fade"
+          ref={partnerModalRef}
+          id="userDetailModal"
+          tabIndex="-1"
+        >
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  View {partnerDetails.name}'s Details
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body">
+                <p>
+                  <strong>Name:</strong> {partnerDetails.name}
+                </p>
+                <p>
+                  <strong>Email:</strong> {partnerDetails.email}
+                </p>
+                <p>
+                  <strong>Type:</strong> {partnerDetails.type}
+                </p>
+                <p>
+                  <strong>Mobile:</strong> {partnerDetails.mobile}
+                </p>
+                <p>
+                  <strong>City:</strong> {partnerDetails.city}
+                </p>
+                <p>
+                  <strong>State:</strong> {partnerDetails.state}
+                </p>
+                <p>
+                  <strong>Pincode:</strong> {partnerDetails.pincode}
+                </p>
+                <p>
+                  <strong>Address:</strong> {partnerDetails.address}
+                </p>
+                <p>
+                  <strong>Status:</strong> {partnerDetails.status}
+                </p>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                  onClick={() => {
+                    document.activeElement?.blur();
+                  }}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Partner Details Modal */}
+      {isEditPartnerDetails && (
+        <div
+          className="modal fade"
+          ref={partnerEditModalRef}
+          id="userEditModal"
+          tabIndex="-1"
+        >
+          <div className="modal-dialog modal-lg">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Edit Partner</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+              {/* Modal Body */}
+              <div className="modal-body">
+                <div className="table-form-container mx-2">
+                  {/* Form Fields */}
+                  <form
+                    autoComplete="off"
+                    className="padding-2"
+                    onSubmit={handleAddPartner}
+                  >
+                    <div className="form-grid pt-0">
+                      <div className="row form-style">
+                        <div className="col-4 d-flex flex-column form-group">
+                          <label htmlFor="type" className="form-label ms-2">
+                            Type
+                          </label>
+                          <div className="position-relative w-100">
+                            <i className="fas fa-user-tag position-absolute input-icon"></i>
+                            <select
+                              className="form-control ps-5 ms-2 text-font"
+                              id="type"
+                              required
+                              value={partnerDetails.type}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  type: e.target.value,
+                                })
+                              }
+                            >
+                              <option
+                                value=""
+                                disabled
+                                hidden
+                                className="text-muted"
+                              >
+                                Select Type
+                              </option>
+                              <option value="vendor">Vendor</option>
+                              <option value="customer">Customer</option>
+                            </select>
+                            <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                          </div>
+                        </div>
+                        <div className="col-4 d-flex flex-column form-group">
+                          <label htmlFor="name" className="form-label  ms-2">
+                            Name
+                          </label>
+                          <div className="position-relative w-100 ms-2">
+                            <i className="fas fa-user position-absolute ps-2 input-icon"></i>
+                            <input
+                              type="text"
+                              className="form-control ps-5 text-font"
+                              id="name"
+                              placeholder="Enter full name"
+                              required
+                              value={partnerDetails.name}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  name: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                        </div>
+                        <div className="col-4 d-flex flex-column form-group">
+                          <label htmlFor="mobile" className="form-label  ms-2">
+                            Mobile
+                          </label>
+                          <div className="position-relative w-100">
+                            <i className="fas fa-phone position-absolute ps-2 input-icon"></i>
+                            <input
+                              type="tel"
+                              className="form-control ps-5 ms-2 text-font"
+                              id="mobile"
+                              placeholder="Enter mobile number"
+                              required
+                              value={partnerDetails.mobile}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  mobile: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="row form-style">
+                        <div className="col-4 d-flex flex-column form-group">
+                          <label htmlFor="email" className="form-label  ms-2">
+                            Email
+                          </label>
+                          <div className="position-relative w-100">
+                            <i className="fa-solid fa-envelope ps-2 position-absolute input-icon"></i>
+                            <input
+                              type="email"
+                              className="form-control ps-5 ms-2 text-font"
+                              id="email"
+                              placeholder="Enter email address"
+                              required
+                              value={partnerDetails.email}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  email: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                        </div>
+                        <div className="col-4 d-flex flex-column form-group">
+                          <label htmlFor="city" className="form-label  ms-2">
+                            City
+                          </label>
+                          <div className="position-relative w-100">
+                            <i className="fas fa-city position-absolute ps-2 input-icon"></i>
+                            <input
+                              type="text"
+                              className="form-control ps-5 ms-2 text-font"
+                              id="city"
+                              placeholder="Enter city"
+                              required
+                              value={partnerDetails.city}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  city: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                        </div>
+                        <div className="col-4 d-flex flex-column form-group">
+                          <label htmlFor="state" className="form-label  ms-2">
+                            State
+                          </label>
+                          <div className="position-relative w-100">
+                            <i className="fa-solid fa-location-crosshairs ps-2 position-absolute input-icon"></i>
+                            <input
+                              type="text"
+                              className="form-control ps-5 ms-2 text-font"
+                              id="state"
+                              placeholder="Enter state"
+                              required
+                              value={partnerDetails.state}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  state: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="row form-style">
+                        <div className="col-4 d-flex flex-column form-group">
+                          <label htmlFor="pincode" className="form-label  ms-2">
+                            Pincode
+                          </label>
+                          <div className="position-relative w-100">
+                            <i className="fa-solid fa-map-pin ps-2 position-absolute input-icon"></i>
+                            <input
+                              type="text"
+                              className="form-control ps-5 ms-2 text-font"
+                              id="pincode"
+                              placeholder="Enter pincode"
+                              required
+                              value={partnerDetails.pincode}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  pincode: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                        </div>
+                        <div className="col-4 d-flex flex-column form-group">
+                          <label htmlFor="address" className="form-label  ms-2">
+                            Address
+                          </label>
+                          <div className="position-relative w-100">
+                            <i className="fas fa-map-marker-alt ps-2 position-absolute input-icon"></i>
+                            <textarea
+                              type="text"
+                              className="form-control pt-3 ps-5 ms-2 text-font"
+                              id="address"
+                              placeholder="Enter complete address"
+                              required
+                              value={partnerDetails.address}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  address: e.target.value,
+                                })
+                              }
+                            ></textarea>
+                          </div>
+                        </div>
+                        <div className="col-4 d-flex flex-column form-group">
+                          <label htmlFor="status" className="form-label ms-2">
+                            Status
+                          </label>
+                          <div className="position-relative w-100 ms-2">
+                            <div className="form-check form-switch position-absolute input-icon mt-1 padding-left-2">
+                              <input
+                                className="form-check-input text-font switch-style"
+                                type="checkbox"
+                                role="switch"
+                                id="switchCheckChecked"
+                                checked={
+                                  partnerDetails.status == "active"
+                                    ? true
+                                    : false
+                                }
+                                onChange={(e) => {
+                                  const newStatus = e.target.checked
+                                    ? "active"
+                                    : "inactive";
+                                  setIsChecked(e.target.checked);
+                                  setStatus(newStatus);
+                                  setFormData({
+                                    ...formData,
+                                    status: newStatus,
+                                  });
+                                }}
+                              />
+
+                              <label
+                                className="form-check-label"
+                                htmlFor="switchCheckChecked"
+                              ></label>
+                            </div>
+                            <select
+                              className="form-control text-font switch-padding"
+                              id="status"
+                              value={partnerDetails.status}
+                              onChange={(e) => {
+                                const newStatus = e.target.value;
+                                setStatus(newStatus);
+                                setIsChecked(newStatus === "active");
+
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  status: newStatus,
+                                }));
+                              }}
+                            >
+                              <option value="active">Active</option>
+                              <option value="inactive">Inactive</option>
+                            </select>
+                            <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button
+                  className="btn btn-primary border border-0 text-8 px-3 fw-medium py-2 me-3 float-end"
+                  data-bs-dismiss="modal"
+                  onClick={(e) => {
+                    document.activeElement?.blur();
+                    handleEditUser(e);
+                  }}
+                >
+                  <i className="fa-solid fa-floppy-disk me-1"></i> Save Changes
+                </button>
+                <button
+                  className="btn btn-secondary border border-0 bg-secondary text-8 px-3 fw-medium py-2 me-3 float-end"
+                  data-bs-dismiss="modal"
+                  onClick={() => {
+                    document.activeElement?.blur();
+                  }}
+                >
+                  <i className="fa-solid fa-x-mark me-1"></i> Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
