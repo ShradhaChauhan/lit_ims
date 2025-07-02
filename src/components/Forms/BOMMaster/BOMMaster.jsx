@@ -572,9 +572,9 @@ const BOM = () => {
                 <th>
                   Code <i className="fas fa-sort color-gray ms-2"></i>
                 </th>
-                <th>Items Count</th>
+                {/* <th>Items Count</th>
                 <th>Total Quantity</th>
-                <th>Total Value</th>
+                <th>Total Value</th> */}
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -616,7 +616,7 @@ const BOM = () => {
                         <span>{bom.code}</span>
                       </div>
                     </td>
-                    <td>
+                    {/* <td>
                       <div>
                         <span>{bom.uom}</span>
                       </div>
@@ -630,7 +630,7 @@ const BOM = () => {
                       <div>
                         <span>{bom.warehouse}</span>
                       </div>
-                    </td>
+                    </td> */}
                     <td className="actions">
                       <button
                         className="btn-icon btn-primary"

@@ -2,7 +2,7 @@ import React, { useContext, useState } from "react";
 import "./Login.css";
 import ims_logo from "../../assets/images/ims_logo.png";
 import lit_logo from "../../assets/images/lit_logo.png";
-import leftImg from "../../assets/images/leftImg2.png";
+import leftImg from "../../assets/images/img1.jpg";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { AppContext } from "../../context/AppContext";
@@ -191,9 +191,15 @@ const LoginPage = () => {
         {/* Right Panel */}
         <div className="col-md-6 d-none d-md-flex flex-column align-items-center justify-content-center text-white p-5 bg-blue">
           <div className="mb-4">
-            <img src={ims_logo} width={110} height={110} alt="IMS logo" />
+            <img
+              src={ims_logo}
+              width={110}
+              height={110}
+              alt="IMS logo"
+              className="logo-style"
+            />
           </div>
-          <div className="text-center">
+          <div className="text-center mt-5">
             <h4 className="fw-bold mb-3">
               Effortlessly manage your inventory and reports.
             </h4>
@@ -203,7 +209,7 @@ const LoginPage = () => {
             <img
               src={leftImg}
               alt="IMS Visual"
-              className="img-fluid shadow left-image-border"
+              className="img-fluid shadow left-image-border mt-5"
               width={430}
             />
           </div>
