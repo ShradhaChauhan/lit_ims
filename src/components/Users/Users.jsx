@@ -1,7 +1,7 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect, useRef } from "react";
 import "./Users.css";
 import { AppContext } from "../../context/AppContext";
-import { useRef, useEffect } from "react";
+import api from "../../services/api";
 import { Modal } from "bootstrap";
 import Select from "react-select";
 
@@ -24,6 +24,47 @@ const Users = () => {
     branchDropdownValues,
     setBranchDropdownValues,
   } = useContext(AppContext);
+  
+  // Add validateForm function to validate user form data
+  const validateForm = (data) => {
+    const errors = {};
+    
+    if (!data.name || data.name.trim() === "") {
+      errors.name = "Full name is required";
+    }
+    
+    if (!data.email || data.email.trim() === "") {
+      errors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(data.email)) {
+      errors.email = "Email is invalid";
+    }
+    
+    if (!data.password || data.password.trim() === "") {
+      errors.password = "Password is required";
+    } else if (data.password.length < 6) {
+      errors.password = "Password must be at least 6 characters";
+    }
+    
+    if (data.password !== data.confirmPassword) {
+      errors.confirmPassword = "Passwords do not match";
+    }
+    
+    if (!data.role || data.role.trim() === "") {
+      errors.role = "Role is required";
+    }
+    
+    if (!data.department || data.department.trim() === "") {
+      errors.department = "Department is required";
+    }
+    
+    // Check if branch is selected - using selectedOptions from state
+    if (!selectedOptions || selectedOptions.length === 0) {
+      errors.branch = "At least one branch must be selected";
+    }
+    
+    return errors;
+  };
+
   const [accessModules, setAccessModules] = useState([]);
   const [isChecked, setIsChecked] = useState(true);
   const [status, setStatus] = useState("active");
@@ -74,27 +115,111 @@ const Users = () => {
   const [reportEditPermissions, setReportEditPermissions] = useState({});
   const [adminViewPermissions, setAdminViewPermissions] = useState({});
   const [adminEditPermissions, setAdminEditPermissions] = useState({});
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
-  const users = [
-    {
-      id: 1,
-      name: "John Smith",
-      role: "Admin",
-      lastLogin: "2024-02-20 10:30 AM",
-      email: "john@example.com",
-      img: "https://ui-avatars.com/api/?name=John+Smith&size=32&background=2563eb&color=fff",
-      status: "Active",
-    },
-    {
-      id: 2,
-      name: "Mike Johnson",
-      role: "Manager",
-      lastLogin: "2024-06-12 08:52 AM",
-      email: "mike@example.com",
-      img: "https://ui-avatars.com/api/?name=Mike+Johnson&size=32&background=2563eb&color=fff",
-      status: "Inactive",
-    },
-  ];
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+
+  // Fetch users from API
+  useEffect(() => {
+    fetchUsers();
+  }, [currentPage, itemsPerPage]);
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      console.log("Fetching users...");
+      const response = await api.get("/api/users/all-staff");
+      console.log("Users API response:", response.data);
+
+      if (response.data && response.data.data) {
+        const allUsers = response.data.data.map((user) => ({
+          id: user.id,
+          name: user.username,
+          role: user.role,
+          time: formatDateTime(user.lastLoginDateTime),
+          email: user.email,
+          img: `https://ui-avatars.com/api/?name=${user.username.replace(
+            / /g,
+            "+"
+          )}&size=32&background=2563eb&color=fff`,
+          status: user.status,
+          department: user.department,
+          lastLoginIp: user.lastLoginIp,
+          companyId: user.companyId,
+          branchIds: user.branchIds,
+        }));
+
+        console.log("Processed users:", allUsers);
+
+        setTotalItems(allUsers.length);
+        setTotalPages(Math.ceil(allUsers.length / itemsPerPage));
+
+        // Apply pagination to the users
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const paginatedUsers = allUsers.slice(
+          startIndex,
+          startIndex + itemsPerPage
+        );
+        setUsers(paginatedUsers);
+        console.log("Updated users state with:", paginatedUsers);
+      } else {
+        console.warn("No users data found in the response:", response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDateTime = (dateTimeString) => {
+    if (!dateTimeString) return "Never";
+    try {
+      const date = new Date(dateTimeString);
+      const day = date.getDate().toString().padStart(2, "0");
+      const month = (date.getMonth() + 1).toString().padStart(2, "0");
+      const year = date.getFullYear();
+
+      // Format time with AM/PM
+      let hours = date.getHours();
+      const minutes = date.getMinutes().toString().padStart(2, "0");
+      const ampm = hours >= 12 ? "PM" : "AM";
+      hours = hours % 12;
+      hours = hours ? hours : 12; // the hour '0' should be '12'
+      const formattedHours = hours.toString().padStart(2, "0");
+
+      return `${day}/${month}/${year} ${formattedHours}:${minutes} ${ampm}`;
+    } catch (error) {
+      return "Invalid Date";
+    }
+  };
+
+  // Handle page change
+  const handlePageChange = (pageNumber) => {
+    if (pageNumber < 1 || pageNumber > totalPages) return;
+    setCurrentPage(pageNumber);
+  };
+
+  // Handle items per page change
+  const handleItemsPerPageChange = (e) => {
+    const newItemsPerPage = parseInt(e.target.value, 10);
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1); // Reset to first page when changing items per page
+  };
+
+  // Calculate displayed item range
+  const getItemRange = () => {
+    const start = (currentPage - 1) * itemsPerPage + 1;
+    const end = Math.min(start + itemsPerPage - 1, totalItems);
+    return `${start}-${end}`;
+  };
+
   const masters = [
     {
       id: 1,
@@ -265,8 +390,12 @@ const Users = () => {
 
   const handleAddUser = (e) => {
     e.preventDefault();
+    console.log("Form data before validation:", formData);
+    console.log("Selected branches:", selectedOptions);
+    
     const newErrors = validateForm(formData);
     setErrors(newErrors);
+    console.log("Validation errors:", newErrors);
 
     if (Object.keys(newErrors).length === 0) {
       const finalData = {
@@ -274,29 +403,47 @@ const Users = () => {
         email: formData.email,
         password: formData.password,
         role: formData.role.toUpperCase(),
-        branch: formData.branch,
+        branchIds: selectedOptions.map(option => option.value), // Get branch IDs from selectedOptions
         department: formData.department,
         status: formData.status,
         permissions: collectPermissions(),
       };
 
-      console.log("Submitting form");
-      fetch("", {
-        method: "POST",
-        body: finalData,
-      }).then(function (response) {
-        console.log(response);
-        return response.json();
-      });
-      console.log("Form submitted. ", finalData);
-    } else {
-      console.log("Form submission failed due to validation errors.");
-    }
-  };
+      console.log("Submitting form with data:", finalData);
+      api
+        .post("/api/users/create", finalData)
+        .then((response) => {
+          console.log("Add user response:", response);
+          if (response.data && response.data.status === true) {
+            alert(response.data.message); // Show success message
+            handleReset(e); // Reset form after successful submission
+            setIsAddUser(false); // Close the form
 
-  const handleEditUser = (e) => {
-    e.preventDefault();
-    console.log("User has been edited");
+            // Add a small delay before fetching users to ensure the server has processed the change
+            setTimeout(() => {
+              console.log("Refreshing users list after adding new user");
+              fetchUsers(); // Refresh the user list
+            }, 500);
+          } else {
+            // Server returned a response but with status false
+            console.error("Server returned error:", response.data);
+            alert(response.data.message || "Failed to create user. Please check the form and try again.");
+          }
+        })
+        .catch((error) => {
+          console.error("Error submitting form:", error);
+          console.error("Error response:", error.response);
+          if (
+            error.response &&
+            error.response.data &&
+            error.response.data.message
+          ) {
+            alert(error.response.data.message); // Show error message
+          } else {
+            alert("An error occurred. Please try again later.");
+          }
+        });
+    }
   };
 
   const handleMasterViewAllChange = (e) => {
@@ -434,29 +581,52 @@ const Users = () => {
 
   const handleReset = (e) => {
     e.preventDefault();
+    console.log("Resetting form");
+    
+    // Reset form data
     setFormData({
       name: "",
       email: "",
       password: "",
+      confirmPassword: "", // Added this field which was missing
       role: "",
       department: "",
       status: "active",
       branch: "",
     });
+    
+    // Reset all state variables
     setStatus("active");
     setIsChecked(true);
-    setStatus("active");
     setAccessModules([]);
+    
+    // Reset all permissions
     setMasterViewPermissions({});
+    setMasterEditPermissions({});
     setTransactionViewPermissions({});
     setTransactionEditPermissions({});
     setReportViewPermissions({});
     setReportEditPermissions({});
     setAdminViewPermissions({});
     setAdminEditPermissions({});
+    
+    // Reset permission checkboxes
     setIsAllMastersViewChecked(false);
-    setMasterEditPermissions({});
     setIsAllMastersEditChecked(false);
+    setIsAllTransactionsViewChecked(false);
+    setIsAllTransactionsEditChecked(false);
+    setIsAllReportsViewChecked(false);
+    setIsAllReportsEditChecked(false);
+    setIsAllAdministrationsViewChecked(false);
+    setIsAllAdministrationsEditChecked(false);
+    
+    // Reset branch selection
+    setSelectedOptions([]);
+    
+    // Reset validation errors
+    setErrors({});
+    
+    console.log("Form reset complete");
   };
 
   const handleViewDetails = (user, e) => {
@@ -466,93 +636,242 @@ const Users = () => {
     setIsShowUserDetails(true);
   };
 
+  // Handle edit user details
   const handleEditDetails = (user, e) => {
     e.preventDefault();
-    console.log(user);
+    console.log("Editing user:", user);
     setUserDetails(user);
+    
+    // Set selected branch options
+    if (user.branchIds && Array.isArray(user.branchIds)) {
+      const selectedBranches = branchDropdownValues.filter(branch => 
+        user.branchIds.includes(branch.value)
+      );
+      setSelectedOptions(selectedBranches);
+    } else {
+      setSelectedOptions([]);
+    }
+    
+    // Set permissions based on user data
+    if (user.permissions && Array.isArray(user.permissions)) {
+      // Reset all permissions first
+      setMasterViewPermissions({});
+      setMasterEditPermissions({});
+      setTransactionViewPermissions({});
+      setTransactionEditPermissions({});
+      setReportViewPermissions({});
+      setReportEditPermissions({});
+      setAdminViewPermissions({});
+      setAdminEditPermissions({});
+      
+      // Set permissions based on user data
+      user.permissions.forEach(permission => {
+        const { pageName, canView, canEdit } = permission;
+        
+        // Find the corresponding module type
+        let moduleType = null;
+        let moduleCategory = null;
+        
+        [...masters, ...transactions, ...reports, ...administrations].forEach(module => {
+          if (module.name === pageName) {
+            moduleType = module.type;
+            if (masters.some(m => m.type === module.type)) {
+              moduleCategory = 'master';
+            } else if (transactions.some(t => t.type === module.type)) {
+              moduleCategory = 'transaction';
+            } else if (reports.some(r => r.type === module.type)) {
+              moduleCategory = 'report';
+            } else if (administrations.some(a => a.type === module.type)) {
+              moduleCategory = 'admin';
+            }
+          }
+        });
+        
+        if (moduleType && moduleCategory) {
+          if (canView) {
+            if (moduleCategory === 'master') {
+              setMasterViewPermissions(prev => ({ ...prev, [moduleType]: true }));
+            } else if (moduleCategory === 'transaction') {
+              setTransactionViewPermissions(prev => ({ ...prev, [moduleType]: true }));
+            } else if (moduleCategory === 'report') {
+              setReportViewPermissions(prev => ({ ...prev, [moduleType]: true }));
+            } else if (moduleCategory === 'admin') {
+              setAdminViewPermissions(prev => ({ ...prev, [moduleType]: true }));
+            }
+          }
+          
+          if (canEdit) {
+            if (moduleCategory === 'master') {
+              setMasterEditPermissions(prev => ({ ...prev, [moduleType]: true }));
+            } else if (moduleCategory === 'transaction') {
+              setTransactionEditPermissions(prev => ({ ...prev, [moduleType]: true }));
+            } else if (moduleCategory === 'report') {
+              setReportEditPermissions(prev => ({ ...prev, [moduleType]: true }));
+            } else if (moduleCategory === 'admin') {
+              setAdminEditPermissions(prev => ({ ...prev, [moduleType]: true }));
+            }
+          }
+        }
+      });
+      
+      // Check if all masters/transactions/reports/admin permissions are set
+      const allMastersView = masters.every(m => masterViewPermissions[m.type]);
+      const allMastersEdit = masters.every(m => masterEditPermissions[m.type]);
+      const allTransactionsView = transactions.every(t => transactionViewPermissions[t.type]);
+      const allTransactionsEdit = transactions.every(t => transactionEditPermissions[t.type]);
+      const allReportsView = reports.every(r => reportViewPermissions[r.type]);
+      const allReportsEdit = reports.every(r => reportEditPermissions[r.type]);
+      const allAdminsView = administrations.every(a => adminViewPermissions[a.type]);
+      const allAdminsEdit = administrations.every(a => adminEditPermissions[a.type]);
+      
+      setIsAllMastersViewChecked(allMastersView);
+      setIsAllMastersEditChecked(allMastersEdit);
+      setIsAllTransactionsViewChecked(allTransactionsView);
+      setIsAllTransactionsEditChecked(allTransactionsEdit);
+      setIsAllReportsViewChecked(allReportsView);
+      setIsAllReportsEditChecked(allReportsEdit);
+      setIsAllAdministrationsViewChecked(allAdminsView);
+      setIsAllAdministrationsEditChecked(allAdminsEdit);
+    }
+    
     setIsEditUserDetails(true);
+  };
+
+  // Handle delete user
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm("Are you sure you want to delete this user?")) {
+      return;
+    }
+
+    setDeleteLoading(true);
+    try {
+      const response = await api.delete(`/api/users/delete/${userId}`);
+      if (response.data && response.data.status === true) {
+        alert(response.data.message);
+        fetchUsers(); // Refresh the user list
+        // Remove from selected users if it was selected
+        if (selectedUsers.includes(userId)) {
+          setSelectedUsers(selectedUsers.filter((id) => id !== userId));
+        }
+      }
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      if (
+        error.response &&
+        error.response.data &&
+        error.response.data.message
+      ) {
+        alert(error.response.data.message);
+      } else {
+        alert("An error occurred while deleting the user.");
+      }
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  // Add handleEditUser function to handle editing users
+  const handleEditUser = async (e) => {
+    e.preventDefault();
+    
+    // Collect permissions for the edit
+    const permissions = collectPermissions();
+    
+    const updatedUser = {
+      username: userDetails.name,
+      email: userDetails.email,
+      role: userDetails.role.toUpperCase(),
+      department: userDetails.department,
+      status: userDetails.status.toLowerCase(),
+      branchIds: selectedOptions.map(option => option.value),
+      permissions: permissions
+    };
+    
+    try {
+      const response = await api.put(`/api/users/update/${userDetails.id}`, updatedUser);
+      if (response.data && response.data.status === true) {
+        alert(response.data.message); // Show success message
+        setIsEditUserDetails(false); // Close the edit modal
+        
+        // Add a small delay before fetching users to ensure the server has processed the change
+        setTimeout(() => {
+          console.log("Refreshing users list after updating user");
+          fetchUsers(); // Refresh the user list
+        }, 500);
+      }
+    } catch (error) {
+      console.error("Error updating user:", error);
+      if (error.response && error.response.data && error.response.data.message) {
+        alert(error.response.data.message); // Show error message
+      } else {
+        alert("An error occurred while updating the user. Please try again later.");
+      }
+    }
+  };
+
+  // Handle bulk delete
+  const handleBulkDelete = async () => {
+    if (selectedUsers.length === 0) {
+      alert("Please select users to delete");
+      return;
+    }
+
+    if (
+      !window.confirm(
+        `Are you sure you want to delete ${selectedUsers.length} selected users?`
+      )
+    ) {
+      return;
+    }
+
+    setDeleteLoading(true);
+    let successCount = 0;
+    let errorCount = 0;
+
+    try {
+      for (const userId of selectedUsers) {
+        try {
+          const response = await api.delete(`/api/users/delete/${userId}`);
+          if (response.data && response.data.status === true) {
+            successCount++;
+          }
+        } catch (error) {
+          errorCount++;
+          console.error(`Error deleting user ${userId}:`, error);
+        }
+      }
+
+      alert(
+        `${successCount} users deleted successfully. ${errorCount} deletions failed.`
+      );
+      fetchUsers(); // Refresh the user list
+      setSelectedUsers([]); // Clear selection
+      setSelectAll(false);
+    } catch (error) {
+      console.error("Error in bulk delete:", error);
+    } finally {
+      setDeleteLoading(false);
+    }
   };
 
   const handleLoadBranchDropdownValues = async (e) => {
     e.preventDefault();
 
     try {
-      const response = await api.get("/api/branch/by-company"); // Replace with your actual API endpoint
-      const branchList = response.data;
+      const response = await api.get("/api/branch/by-company"); // API call
+      const branchList = response.data.data;
+
       const formattedBranches = branchList.map((branch) => ({
         label: `${branch.name} (${branch.code})`,
         value: branch.id,
       }));
-      setBranchDropdownValues(formattedBranches); // Update dropdown with branch list
-      setIsAddUser(true);
+
+      setBranchDropdownValues(formattedBranches); // ✅ Set dropdown values
+      setIsAddUser(true); // ✅ Open the Add User form/modal
     } catch (error) {
       console.error("Failed to load branch dropdown values:", error);
       alert("Failed to load branches. Please try again.");
     }
-  };
-
-  useEffect(() => {
-    if (isShowUserDetails && userModalRef.current) {
-      const bsModal = new Modal(userModalRef.current, {
-        backdrop: "static",
-      });
-      bsModal.show();
-
-      // Optional: hide modal state when it's closed
-      userModalRef.current.addEventListener("hidden.bs.modal", () =>
-        setIsShowUserDetails(false)
-      );
-    } else if (isEditUserDetails && userEditModalRef.current) {
-      const bsModal = new Modal(userEditModalRef.current, {
-        backdrop: "static",
-      });
-      bsModal.show();
-
-      // Hide modal state when it's closed
-      userEditModalRef.current.addEventListener("hidden.bs.modal", () =>
-        setIsEditUserDetails(false)
-      );
-    }
-  }, [isShowUserDetails, isEditUserDetails]);
-
-  const validateForm = (data) => {
-    const errors = {};
-
-    if (!data.name.trim()) {
-      errors.name = "Full name is required";
-    } else if (data.name.length < 4) {
-      errors.name = "Full name must be at least 4 characters long";
-    }
-
-    if (!data.email.trim()) {
-      errors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(data.email)) {
-      errors.email = "Email is invalid";
-    }
-
-    if (!data.password) {
-      errors.password = "Password is required";
-    } else if (data.password.length < 8) {
-      errors.password = "Password must be at least 8 characters long";
-    }
-
-    if (data.confirmPassword !== data.password) {
-      errors.confirmPassword = "Passwords do not match";
-    }
-
-    if (!data.role) {
-      errors.role = "Role is required";
-    }
-
-    if (!data.department) {
-      errors.department = "Department is required";
-    }
-
-    if (!data.branch) {
-      errors.branch = "Branch is required";
-    }
-
-    return errors;
   };
 
   return (
@@ -840,35 +1159,17 @@ const Users = () => {
                     </label>
                     <div className="position-relative w-100">
                       <i className="fa-solid fa-sitemap position-absolute input-icon"></i>
-                      {/* <select
-                        className="form-control ps-5 text-font"
-                        id="branch"
-                        value={formData.branch}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            branch: e.target.value,
-                          })
-                        }
-                      >
-                        <option value="" disabled hidden className="text-muted">
-                          Select Branch
-                        </option>
-
-                        {branchDropdownValues.map((branch) => (
-                          <option key={branch.value} value={branch.value}>
-                            {branch.label}
-                          </option>
-                        ))}
-                      </select> */}
-
                       <Select
                         className="form-control ps-5 text-font"
                         options={branchDropdownValues}
                         isMulti
                         id="branch"
                         value={selectedOptions}
-                        onChange={setSelectedOptions}
+                        onChange={(options) => {
+                          console.log("Branch selection changed:", options);
+                          setSelectedOptions(options || []);
+                        }}
+                        placeholder="Select branches..."
                       />
 
                       <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
@@ -1317,9 +1618,20 @@ const Users = () => {
                 <i className="fas fa-envelope"></i>
                 Email Selected
               </button>
-              <button className="btn-action btn-danger">
-                <i className="fas fa-trash"></i>
-                Delete Selected
+              <button
+                className="btn-action btn-danger"
+                onClick={handleBulkDelete}
+                disabled={selectedUsers.length === 0 || deleteLoading}
+              >
+                {deleteLoading ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin"></i> Deleting...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-trash"></i> Delete Selected
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -1345,73 +1657,133 @@ const Users = () => {
               </tr>
             </thead>
             <tbody>
-              {users.map((user) => (
-                <tr key={user.id}>
-                  <td className="checkbox-cell">
-                    <input
-                      type="checkbox"
-                      checked={selectedUsers.includes(user.id)}
-                      onChange={() => handleUserCheckboxChange(user.id)}
-                    />
-                  </td>
-                  <td>
-                    <div className="user-info">
-                      <img src={user.img} alt={user.name} />
-                      <span>{user.name}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <span className={`badge ${user.role.toLowerCase()}`}>
-                      {user.role}
-                    </span>
-                  </td>
-                  <td>{user.email}</td>
-                  <td>{user.time}</td>
-                  <td>
-                    <span
-                      className={`badge status ${user.status.toLowerCase()}`}
-                    >
-                      {user.status}
-                    </span>
-                  </td>
-                  <td className="actions">
-                    <button
-                      className="btn-icon btn-primary"
-                      title="View Details"
-                      onClick={(e) => handleViewDetails(user, e)}
-                    >
-                      <i className="fas fa-eye"></i>
-                    </button>
-                    <button
-                      className="btn-icon btn-success"
-                      title="Edit"
-                      onClick={(e) => handleEditDetails(user, e)}
-                    >
-                      <i className="fas fa-edit"></i>
-                    </button>
-                    <button className="btn-icon btn-danger" title="Delete">
-                      <i className="fas fa-trash"></i>
-                    </button>
+              {loading ? (
+                <tr>
+                  <td colSpan="7" className="text-center">
+                    Loading users...
                   </td>
                 </tr>
-              ))}
+              ) : users.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="text-center">
+                    No users found
+                  </td>
+                </tr>
+              ) : (
+                users.map((user) => (
+                  <tr key={user.id}>
+                    <td className="checkbox-cell">
+                      <input
+                        type="checkbox"
+                        checked={selectedUsers.includes(user.id)}
+                        onChange={() => handleUserCheckboxChange(user.id)}
+                      />
+                    </td>
+                    <td>
+                      <div className="user-info">
+                        <img src={user.img} alt={user.name} />
+                        <span>{user.name}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <span className={`badge ${user.role.toLowerCase()}`}>
+                        {user.role}
+                      </span>
+                    </td>
+                    <td>{user.email}</td>
+                    <td>{user.time}</td>
+                    <td>
+                      <span
+                        className={`badge status ${user.status.toLowerCase()}`}
+                      >
+                        {user.status}
+                      </span>
+                    </td>
+                    <td className="actions">
+                      <button
+                        className="btn-icon btn-primary"
+                        title="View Details"
+                        onClick={(e) => handleViewDetails(user, e)}
+                      >
+                        <i className="fas fa-eye"></i>
+                      </button>
+                      <button 
+                        className="btn-icon btn-success" 
+                        title="Edit"
+                        onClick={(e) => handleEditDetails(user, e)}
+                      >
+                        <i className="fas fa-edit"></i>
+                      </button>
+                      <button
+                        className="btn-icon btn-danger"
+                        title="Delete"
+                        onClick={() => handleDeleteUser(user.id)}
+                        disabled={deleteLoading}
+                      >
+                        <i
+                          className={
+                            deleteLoading
+                              ? "fas fa-spinner fa-spin"
+                              : "fas fa-trash"
+                          }
+                        ></i>
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
 
           {/* Pagination */}
           <div className="pagination-container">
-            <div className="pagination-info">Showing 1-2 of 25 entries</div>
+            <div className="pagination-info">
+              Showing {getItemRange()} of {totalItems} entries
+            </div>
             <div className="pagination">
-              <button className="btn-page" disabled>
+              <button
+                className="btn-page"
+                disabled={currentPage === 1}
+                onClick={() => handlePageChange(currentPage - 1)}
+              >
                 <i className="fas fa-chevron-left"></i>
               </button>
-              <button className="btn-page active">1</button>
-              <button className="btn-page" disabled>
+              {/* Generate page buttons */}
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                // Show pages around current page
+                let pageNum;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+
+                return (
+                  <button
+                    key={pageNum}
+                    className={`btn-page ${
+                      currentPage === pageNum ? "active" : ""
+                    }`}
+                    onClick={() => handlePageChange(pageNum)}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+              <button
+                className="btn-page"
+                disabled={currentPage === totalPages}
+                onClick={() => handlePageChange(currentPage + 1)}
+              >
                 <i className="fas fa-chevron-right"></i>
               </button>
             </div>
             <div className="items-per-page">
-              <select>
+              <select value={itemsPerPage} onChange={handleItemsPerPageChange}>
                 <option value="10">10 per page</option>
                 <option value="25">25 per page</option>
                 <option value="50">50 per page</option>
@@ -1704,40 +2076,17 @@ const Users = () => {
                             </label>
                             <div className="position-relative w-100">
                               <i className="fa-solid fa-sitemap position-absolute input-icon"></i>
-                              {/* <select
-                                className="form-control ps-5 text-font"
-                                id="branch"
-                                value={"Branch"}
-                                onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
-                                    branch: e.target.value,
-                                  })
-                                }
-                              >
-                                <option
-                                  value=""
-                                  disabled
-                                  hidden
-                                  className="text-muted"
-                                >
-                                  Select Branch
-                                </option>
-
-                                {branchDropdownValues.map((val) => (
-                                  <option key={val.label} value={val.value}>
-                                    {val.label}
-                                  </option>
-                                ))}
-                              </select> */}
-                              {/* <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i> */}
                               <Select
                                 className="form-control ps-5 text-font"
                                 options={branchDropdownValues}
                                 isMulti
                                 id="branch"
-                                value={userDetails.branch}
-                                onChange={setSelectedOptions}
+                                value={selectedOptions}
+                                onChange={(options) => {
+                                  console.log("Branch selection changed:", options);
+                                  setSelectedOptions(options || []);
+                                }}
+                                placeholder="Select branches..."
                               />
                             </div>
                           </div>

@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import ItemMasterModal from "../../Modals/ItemMasterModal";
 import { AppContext } from "../../../context/AppContext";
+import api from "../../../services/api";
 import { Link } from "react-router-dom";
 import { Modal } from "bootstrap";
 
@@ -10,6 +11,7 @@ const ItemMaster = () => {
   const itemEditModalRef = useRef(null);
   const [isShowItemDetails, setIsShowItemDetails] = useState(false);
   const [isEditItemDetails, setIsEditItemDetails] = useState(false);
+  const [itemDetails, setItemDetails] = useState({});
 
   const [selectedItems, setSelectedItems] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
@@ -17,6 +19,20 @@ const ItemMaster = () => {
   const [isReset, setIsReset] = useState(false);
   const [status, setStatus] = useState("active");
   const [isChecked, setIsChecked] = useState(true);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [types, setTypes] = useState([]);
+  const [groups, setGroups] = useState([]);
+  
+  // Pagination states
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    itemsPerPage: 10,
+  });
+  
   const [formData, setFormData] = useState({
     name: "",
     code: "",
@@ -30,21 +46,137 @@ const ItemMaster = () => {
     status: "active",
   });
 
-  const [itemDetails, setItemDetails] = useState({
-    id: "",
-    name: "",
-    code: "",
-    uom: "",
-    type: "",
-    barcode: "",
-    group: "",
-    price: "",
-    stQty: "",
-    life: "",
-    status: "",
-  });
+  // Fetch items data
+  useEffect(() => {
+    fetchItems();
+  }, [pagination.currentPage, pagination.itemsPerPage]);
 
-  const items = [];
+  // Fetch types data
+  useEffect(() => {
+    fetchTypes();
+    fetchGroups();
+  }, []);
+
+  const fetchTypes = () => {
+    api.get("/api/type/all")
+      .then(response => {
+        console.log("Types fetched:", response.data);
+        setTypes(response.data.data || []);
+      })
+      .catch(error => {
+        console.error("Error fetching types:", error);
+      });
+  };
+
+  const fetchGroups = () => {
+    api.get("/api/group/all")
+      .then(response => {
+        console.log("Groups fetched:", response.data);
+        setGroups(response.data.data || []);
+      })
+      .catch(error => {
+        console.error("Error fetching groups:", error);
+      });
+  };
+
+  const fetchItems = () => {
+    setLoading(true);
+    
+    // Add pagination parameters to the API call
+    api.get("/api/items/all", {
+      params: {
+        page: pagination.currentPage,
+        limit: pagination.itemsPerPage
+      }
+    })
+      .then(response => {
+        console.log("Items fetched:", response.data);
+        
+        if (response.data.status && response.data.data) {
+          setItems(response.data.data);
+          
+          // Update pagination if total count is provided
+          if (response.data.totalItems !== undefined) {
+            setPagination(prev => ({
+              ...prev,
+              totalItems: response.data.totalItems,
+              totalPages: Math.ceil(response.data.totalItems / prev.itemsPerPage)
+            }));
+          } else {
+            // Fallback if API doesn't provide pagination info
+            setPagination(prev => ({
+              ...prev,
+              totalItems: response.data.data.length,
+              totalPages: Math.ceil(response.data.data.length / prev.itemsPerPage)
+            }));
+          }
+        } else {
+          setItems([]);
+          setPagination(prev => ({
+            ...prev,
+            totalItems: 0,
+            totalPages: 1
+          }));
+        }
+        
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error("Error fetching items:", error);
+        setLoading(false);
+        setItems([]);
+        setPagination(prev => ({
+          ...prev,
+          totalItems: 0,
+          totalPages: 1
+        }));
+      });
+  };
+
+  const handlePageChange = (newPage) => {
+    if (newPage < 1 || newPage > pagination.totalPages || newPage === pagination.currentPage) {
+      return;
+    }
+    
+    setPagination(prev => ({
+      ...prev,
+      currentPage: newPage
+    }));
+    
+    // fetchItems will be called by the useEffect that depends on currentPage
+  };
+
+  const handleItemsPerPageChange = (e) => {
+    const newItemsPerPage = parseInt(e.target.value);
+    
+    setPagination(prev => ({
+      ...prev,
+      itemsPerPage: newItemsPerPage,
+      currentPage: 1 // Reset to first page when changing items per page
+    }));
+    
+    // fetchItems will be called by the useEffect that depends on itemsPerPage
+  };
+
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const totalPages = pagination.totalPages;
+    const currentPage = pagination.currentPage;
+    
+    if (totalPages <= 5) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    
+    if (currentPage <= 3) {
+      return [1, 2, 3, 4, 5, '...', totalPages];
+    }
+    
+    if (currentPage >= totalPages - 2) {
+      return [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    }
+    
+    return [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
+  };
 
   const handleItemCheckboxChange = (itemId) => {
     setSelectedItems((prevSelected) =>
@@ -84,24 +216,37 @@ const ItemMaster = () => {
         status: formData.status,
       };
 
-      console.log("Submitting add item form");
-      fetch("", {
-        method: "POST",
-        body: finalData,
-      }).then(function (response) {
-        console.log(response);
-        return response.json();
+    console.log("Submitting add item form");
+    
+    api.post("/api/items/add", finalData)
+      .then(response => {
+        console.log("Item added response:", response.data);
+        // Check for success status in the new API response structure
+        if (response.data.status) {
+          // Show success message
+          alert(response.data.message || "Item Added Successfully");
+          // Reset form
+          handleReset(e);
+          // Close the form
+          setIsAddItem(false);
+          // Refresh the items list
+          fetchItems();
+        } else {
+          // Show error message from API
+          alert(response.data.message || "Error adding item");
+        }
+      })
+      .catch(error => {
+        console.error("Error adding item:", error);
+        // Show generic error message
+        alert("Error adding item. Please try again.");
       });
-      console.log("Form submitted. ", finalData);
-    } else {
-      console.log("Form submission failed due to validation errors.");
     }
   };
-
   const validateForm = (data) => {
     const errors = {};
 
-    if (!data.name.trim()) {
+    if (!data.name?.trim()) {
       errors.name = "Item name is required";
     }
 
@@ -149,6 +294,76 @@ const ItemMaster = () => {
 
     return errors;
   };
+  const handleDeleteItem = (itemId) => {
+    if (!window.confirm("Are you sure you want to delete this item?")) {
+      return;
+    }
+    
+    setDeleting(true);
+    api.delete(`/api/items/delete/${itemId}`)
+      .then(response => {
+        console.log("Item deleted successfully:", response.data);
+        // Check for success status in the new API response structure
+        if (response.data.status) {
+          // Refresh the items list
+          fetchItems();
+        } else {
+          // Handle API error response
+          alert(response.data.message || "Error deleting item");
+        }
+        setDeleting(false);
+      })
+      .catch(error => {
+        console.error("Error deleting item:", error);
+        setDeleting(false);
+        // Handle error (show error message)
+        alert("Error deleting item. Please try again.");
+      });
+  };
+
+  const handleDeleteSelected = () => {
+    if (selectedItems.length === 0) {
+      alert("Please select at least one item to delete.");
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to delete ${selectedItems.length} selected item(s)?`)) {
+      return;
+    }
+    
+    setDeleting(true);
+    
+    // Create an array of promises for each delete operation
+    const deletePromises = selectedItems.map(itemId => 
+      api.delete(`/api/items/delete/${itemId}`)
+    );
+    
+    // Execute all delete operations
+    Promise.all(deletePromises)
+      .then(responses => {
+        console.log("Items deleted successfully:", responses);
+        // Check if all deletions were successful
+        const allSuccessful = responses.every(response => response.data.status);
+        
+        if (allSuccessful) {
+          // Refresh the items list
+          fetchItems();
+          // Clear selection
+          setSelectedItems([]);
+          setSelectAll(false);
+        } else {
+          // Some deletions failed
+          alert("Some items could not be deleted. Please try again.");
+        }
+        setDeleting(false);
+      })
+      .catch(error => {
+        console.error("Error deleting items:", error);
+        setDeleting(false);
+        // Handle error (show error message)
+        alert("Error deleting items. Please try again.");
+      });
+  };
 
   const handleReset = (e) => {
     e.preventDefault();
@@ -166,6 +381,18 @@ const ItemMaster = () => {
     });
     setIsChecked(true);
     setStatus("active");
+  };
+
+  // Calculate the display range for the pagination info
+  const getDisplayRange = () => {
+    const start = (pagination.currentPage - 1) * pagination.itemsPerPage + 1;
+    const end = Math.min(start + items.length - 1, pagination.totalItems);
+    
+    if (items.length === 0) {
+      return "0";
+    }
+    
+    return `${start}-${end}`;
   };
 
   const handleSetIsAddVendor = () => {
@@ -188,7 +415,48 @@ const ItemMaster = () => {
 
   const handleEditItem = (e) => {
     e.preventDefault();
-    console.log("Item has been edited");
+    
+    // Validate the form data
+    const newErrors = validateForm(itemDetails);
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length === 0) {
+      const finalData = {
+        id: itemDetails.id,
+        name: itemDetails.name,
+        code: itemDetails.code,
+        uom: itemDetails.uom,
+        type: itemDetails.type,
+        barcode: itemDetails.barcode,
+        group: itemDetails.groupName,
+        price: itemDetails.price,
+        stQty: itemDetails.stQty,
+        life: itemDetails.life,
+        status: itemDetails.status,
+      };
+
+      api.put(`/api/items/update/${itemDetails.id}`, finalData)
+        .then(response => {
+          console.log("Item updated response:", response.data);
+          // Check for success status in the API response structure
+          if (response.data.status) {
+            // Show success message
+            alert(response.data.message || "Item Updated Successfully");
+            // Close the modal
+            setIsEditItemDetails(false);
+            // Refresh the items list
+            fetchItems();
+          } else {
+            // Show error message from API
+            alert(response.data.message || "Error updating item");
+          }
+        })
+        .catch(error => {
+          console.error("Error updating item:", error);
+          // Show generic error message
+          alert("Error updating item. Please try again.");
+        });
+    }
   };
 
   useEffect(() => {
@@ -256,11 +524,19 @@ const ItemMaster = () => {
         <div className="filter-options">
           <select className="filter-select">
             <option value="">All Groups</option>
+            {groups.map(group => (
+              <option key={group.id} value={group.id}>
+                {group.name}
+              </option>
+            ))}
           </select>
           <select className="filter-select">
             <option value="">All Types</option>
-            <option value="vendor">Vendors Only</option>
-            <option value="customer">Customers Only</option>
+            {types.map(type => (
+              <option key={type.id} value={type.name}>
+                {type.name}
+              </option>
+            ))}
           </select>
           <select className="filter-select">
             <option value="">All Status</option>
@@ -379,9 +655,11 @@ const ItemMaster = () => {
                       <option value="" disabled hidden className="text-muted">
                         Select Type Name
                       </option>
-                      <option value="a">A Type</option>
-                      <option value="b">B Type</option>
-                      <option value="c">C Type</option>
+                      {types.map(type => (
+                        <option key={type.id} value={type.name}>
+                          {type.name}
+                        </option>
+                      ))}
                     </select>
                     <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                   </div>
@@ -411,14 +689,14 @@ const ItemMaster = () => {
                   )}
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="group" className="form-label mb-0 ms-2">
+                  <label htmlFor="groupName" className="form-label mb-0 ms-2">
                     Group
                   </label>
                   <div className="position-relative w-100">
                     <i className="fas fa-layer-group position-absolute input-icon"></i>
                     <select
                       className="form-control ps-5 ms-2 text-font"
-                      id="group"
+                      id="groupName"
                       placeholder="Group"
                       value={formData.group}
                       onChange={(e) =>
@@ -428,9 +706,11 @@ const ItemMaster = () => {
                       <option value="" disabled hidden className="text-muted">
                         Select Group
                       </option>
-                      <option value="capacitor">Capacitor</option>
-                      <option value="irLed">IR LED</option>
-                      <option value="spring">Spring</option>
+                      {groups.map(group => (
+                        <option key={group.id} value={group.name}>
+                          {group.name}
+                        </option>
+                      ))}
                     </select>
                     <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                   </div>
@@ -560,13 +840,14 @@ const ItemMaster = () => {
             </div>
             <div className="form-actions">
               <button
-                className="btn btn-primary border border-0 text-8 px-3 fw-medium py-2 me-3 float-end"
-                onClick={handleAddItem}
+                className="btn btn-primary border border-0 add-btn me-3 float-end"
+                type="submit"
               >
                 <i className="fa-solid fa-floppy-disk me-1"></i> Save Changes
               </button>
               <button
                 className="btn btn-secondary border border-0 text-8 px-3 fw-medium py-2 bg-secondary me-3 float-end"
+                type="button"
                 onClick={handleReset}
               >
                 <i className="fa-solid fa-arrows-rotate me-1"></i> Reset
@@ -596,9 +877,22 @@ const ItemMaster = () => {
                 <i className="fas fa-file-export"></i>
                 Export Selected
               </button>
-              <button className="btn-action btn-danger">
-                <i className="fas fa-trash"></i>
-                Delete Selected
+              <button 
+                className="btn-action btn-danger"
+                onClick={handleDeleteSelected}
+                disabled={selectedItems.length === 0 || deleting}
+              >
+                {deleting ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin"></i>
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-trash"></i>
+                    Delete Selected
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -606,7 +900,12 @@ const ItemMaster = () => {
             <thead>
               <tr>
                 <th className="checkbox-cell">
-                  <input type="checkbox" id="select-all" />
+                  <input 
+                    type="checkbox" 
+                    id="select-all-header"
+                    checked={selectAll}
+                    onChange={handleSelectAllChange}
+                  />
                 </th>
                 <th>
                   Name <i className="fas fa-sort color-gray ms-2"></i>
@@ -625,7 +924,15 @@ const ItemMaster = () => {
               </tr>
             </thead>
             <tbody>
-              {items.length === 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan="12" className="text-center">
+                    <div className="my-3">
+                      <i className="fas fa-spinner fa-spin me-2"></i> Loading items...
+                    </div>
+                  </td>
+                </tr>
+              ) : items.length === 0 ? (
                 <tr className="no-data-row">
                   <td colSpan="12" className="no-data-cell">
                     <div className="no-data-content">
@@ -674,10 +981,10 @@ const ItemMaster = () => {
                     </td>
                     <td className="ps-4">
                       <div>
-                        <span>{item.group}</span>
+                        <span>{item.groupName}</span>
                       </div>
                     </td>
-                    <td className="ps-4">{item.price}</td>
+                    <td className="ps-4">{item.stQty}</td>
                     <td className="ps-4">
                       <div>
                         <span>{item.life}</span>
@@ -685,9 +992,9 @@ const ItemMaster = () => {
                     </td>
                     <td className="ps-4">
                       <span
-                        className={`badge status ${item.status.toLowerCase()}`}
+                        className={`badge status ${item.status?.toLowerCase()}`}
                       >
-                        {item.status}
+                        {item.status || "-"}
                       </span>
                     </td>
                     <td className="actions">
@@ -705,8 +1012,17 @@ const ItemMaster = () => {
                       >
                         <i className="fas fa-edit"></i>
                       </button>
-                      <button className="btn-icon btn-danger" title="Delete">
-                        <i className="fas fa-trash"></i>
+                      <button 
+                        className="btn-icon btn-danger" 
+                        title="Delete"
+                        onClick={() => handleDeleteItem(item.id)}
+                        disabled={deleting}
+                      >
+                        {deleting ? (
+                          <i className="fas fa-spinner fa-spin"></i>
+                        ) : (
+                          <i className="fas fa-trash"></i>
+                        )}
                       </button>
                     </td>
                   </tr>
@@ -717,18 +1033,47 @@ const ItemMaster = () => {
 
           {/* Pagination */}
           <div className="pagination-container">
-            <div className="pagination-info">Showing 1-2 of 25 entries</div>
+            <div className="pagination-info">
+              Showing {getDisplayRange()} of {pagination.totalItems} entries
+            </div>
             <div className="pagination">
-              <button className="btn-page" disabled>
+              <button 
+                className="btn-page" 
+                disabled={pagination.currentPage === 1 || loading}
+                onClick={() => handlePageChange(pagination.currentPage - 1)}
+              >
                 <i className="fas fa-chevron-left"></i>
               </button>
-              <button className="btn-page active">1</button>
-              <button className="btn-page" disabled>
+              
+              {getPageNumbers().map((page, index) => (
+                page === "..." ? (
+                  <span key={`ellipsis-${index}`} className="pagination-ellipsis">...</span>
+                ) : (
+                  <button 
+                    key={page} 
+                    className={`btn-page ${pagination.currentPage === page ? 'active' : ''}`}
+                    onClick={() => handlePageChange(page)}
+                    disabled={loading}
+                  >
+                    {page}
+                  </button>
+                )
+              ))}
+              
+              <button 
+                className="btn-page" 
+                disabled={pagination.currentPage === pagination.totalPages || loading}
+                onClick={() => handlePageChange(pagination.currentPage + 1)}
+              >
                 <i className="fas fa-chevron-right"></i>
               </button>
             </div>
             <div className="items-per-page">
-              <select>
+              <select 
+                value={pagination.itemsPerPage}
+                onChange={handleItemsPerPageChange}
+                disabled={loading}
+              >
                 <option value="10">10 per page</option>
                 <option value="25">25 per page</option>
                 <option value="50">50 per page</option>
@@ -747,60 +1092,13 @@ const ItemMaster = () => {
           tabIndex="-1"
         >
           <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
-                  View {itemDetails.name}'s Details
-                </h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  data-bs-dismiss="modal"
-                  aria-label="Close"
-                ></button>
-              </div>
-              <div className="modal-body">
-                <p>
-                  <strong>Name:</strong> {itemDetails.name}
-                </p>
-                <p>
-                  <strong>Code:</strong> {itemDetails.code}
-                </p>
-                <p>
-                  <strong>UOM:</strong> {itemDetails.uom}
-                </p>
-                <p>
-                  <strong>Type:</strong> {itemDetails.type}
-                </p>
-                <p>
-                  <strong>Barcode:</strong> {itemDetails.barcode}
-                </p>
-                <p>
-                  <strong>Group:</strong> {itemDetails.group}
-                </p>
-                <p>
-                  <strong>ST Qty:</strong> {itemDetails.stQty}
-                </p>
-                <p>
-                  <strong>Life:</strong> {itemDetails.life}
-                </p>
-                <p>
-                  <strong>Status:</strong> {itemDetails.status}
-                </p>
-              </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  data-bs-dismiss="modal"
-                  onClick={() => {
-                    document.activeElement?.blur();
-                  }}
-                >
-                  Close
-                </button>
-              </div>
-            </div>
+            <ItemMasterModal 
+              item={itemDetails}
+              onClose={() => {
+                document.activeElement?.blur();
+                setIsShowItemDetails(false);
+              }}
+            />
           </div>
         </div>
       )}
@@ -846,7 +1144,7 @@ const ItemMaster = () => {
                             placeholder="Enter item name"
                             value={itemDetails.name}
                             onChange={(e) =>
-                              setFormData({ ...formData, name: e.target.value })
+                              setItemDetails({ ...itemDetails, name: e.target.value })
                             }
                           />
                         </div>
@@ -864,7 +1162,7 @@ const ItemMaster = () => {
                             placeholder="Enter item code"
                             value={itemDetails.code}
                             onChange={(e) =>
-                              setFormData({ ...formData, code: e.target.value })
+                              setItemDetails({ ...itemDetails, code: e.target.value })
                             }
                           />
                         </div>
@@ -881,7 +1179,7 @@ const ItemMaster = () => {
                             placeholder="UOM"
                             value={itemDetails.uom}
                             onChange={(e) =>
-                              setFormData({ ...formData, uom: e.target.value })
+                              setItemDetails({ ...itemDetails, uom: e.target.value })
                             }
                           >
                             <option
@@ -912,7 +1210,7 @@ const ItemMaster = () => {
                             placeholder="Type"
                             value={itemDetails.type}
                             onChange={(e) =>
-                              setFormData({ ...formData, type: e.target.value })
+                              setItemDetails({ ...itemDetails, type: e.target.value })
                             }
                           >
                             <option
@@ -943,10 +1241,7 @@ const ItemMaster = () => {
                             placeholder="Enter barcode"
                             value={itemDetails.barcode}
                             onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                barcode: e.target.value,
-                              })
+                              setItemDetails({ ...itemDetails, barcode: e.target.value })
                             }
                           />
                         </div>
@@ -963,10 +1258,7 @@ const ItemMaster = () => {
                             placeholder="Group"
                             value={itemDetails.group}
                             onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                group: e.target.value,
-                              })
+                              setItemDetails({ ...itemDetails, group: e.target.value })
                             }
                           >
                             <option
@@ -999,10 +1291,7 @@ const ItemMaster = () => {
                             placeholder="Enter price"
                             value={itemDetails.price}
                             onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                price: e.target.value,
-                              })
+                              setItemDetails({ ...itemDetails, price: e.target.value })
                             }
                           />
                         </div>
@@ -1020,10 +1309,7 @@ const ItemMaster = () => {
                             placeholder="Enter ST QTY"
                             value={itemDetails.stQty}
                             onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                stQty: e.target.value,
-                              })
+                              setItemDetails({ ...itemDetails, stQty: e.target.value })
                             }
                           />
                         </div>
@@ -1041,7 +1327,7 @@ const ItemMaster = () => {
                             placeholder="Enter life (in days)"
                             value={itemDetails.life}
                             onChange={(e) =>
-                              setFormData({ ...formData, life: e.target.value })
+                              setItemDetails({ ...itemDetails, life: e.target.value })
                             }
                           />
                         </div>
@@ -1068,8 +1354,8 @@ const ItemMaster = () => {
                                   : "inactive";
                                 setIsChecked(e.target.checked);
                                 setStatus(newStatus);
-                                setFormData({
-                                  ...formData,
+                                setItemDetails({
+                                  ...itemDetails,
                                   status: newStatus,
                                 });
                               }}
@@ -1089,7 +1375,7 @@ const ItemMaster = () => {
                               setStatus(newStatus);
                               setIsChecked(newStatus === "active");
 
-                              setFormData((prev) => ({
+                              setItemDetails((prev) => ({
                                 ...prev,
                                 status: newStatus,
                               }));

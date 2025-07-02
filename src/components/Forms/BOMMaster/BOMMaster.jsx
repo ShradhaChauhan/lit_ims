@@ -1,9 +1,10 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { AppContext } from "../../../context/AppContext";
+import api from "../../../services/api";
 import { Link } from "react-router-dom";
 import { Modal } from "bootstrap";
 
-const BOM = () => {
+const BOMMaster = () => {
   const [errors, setErrors] = useState({});
   const { isAddBom, setIsAddBom } = useContext(AppContext);
   const bomModalRef = useRef(null);
@@ -25,27 +26,62 @@ const BOM = () => {
   const idRef = useRef(2);
   const [status, setStatus] = useState("active");
   const [isChecked, setIsChecked] = useState(true);
+  const [warehouses, setWarehouses] = useState([]);
+  const [items, setItems] = useState([]);
   const [formData, setFormData] = useState({
     name: "",
     code: "",
     status: "active",
-    items: [
-      {
-        item: "",
-        code: "",
-        uom: "",
-        quantity: "",
-        warehouse: "",
-        actions: {
-          view: false,
-          delete: false,
-        },
-      },
-    ],
+    items: [],
   });
   const [isAddBomPart, setIsAddBomPart] = useState([{ id: 1 }]);
+  
+  // Initialize formData.items with one empty item when component mounts
+  useEffect(() => {
+    if (formData.items.length === 0) {
+      setFormData(prev => ({
+        ...prev,
+        items: isAddBomPart.map(part => ({
+          id: part.id,
+          item: "",
+          code: "",
+          uom: "",
+          quantity: "",
+          warehouse: ""
+        }))
+      }));
+    }
+  }, []);
 
   const boms = [];
+
+  useEffect(() => {
+    // Fetch warehouses from API using axios
+    api.get("/api/warehouses")
+      .then(response => {
+        if (response.data.status && response.data.data) {
+          setWarehouses(response.data.data);
+        } else {
+          setWarehouses(response.data.warehouses || []);
+        }
+      })
+      .catch(error => {
+        console.error("Error fetching warehouses:", error);
+      });
+
+    // Fetch items from API
+    api.get("/api/items/all")
+      .then(response => {
+        if (response.data.status && response.data.data) {
+          setItems(response.data.data);
+        } else {
+          setItems(response.data.items || []);
+        }
+      })
+      .catch(error => {
+        console.error("Error fetching items:", error);
+      });
+  }, []);
 
   const handleBomCheckboxChange = (bomId) => {
     setSelectedBoms((prevSelected) =>
@@ -66,45 +102,76 @@ const BOM = () => {
     }
   };
 
+  const handleDeleteItem = (itemId) => {
+    // Remove the item from isAddBomPart
+    setIsAddBomPart(prevParts => prevParts.filter(part => part.id !== itemId));
+    
+    // Remove the item from formData.items
+    setFormData(prev => ({
+      ...prev,
+      items: prev.items.filter(item => item.id !== itemId)
+    }));
+  };
+
   const handleAddBoms = (e) => {
     e.preventDefault();
     const newErrors = validateForm(formData);
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      e.preventDefault();
       const finalData = {
         name: formData.name,
         code: formData.code,
         status: formData.status,
-        items: [
-          {
-            item: formData.items.item,
-            code: formData.items.code,
-            uom: formData.items.uom,
-            quantity: formData.items.quantity,
-            warehouse: formData.items.warehouse,
-            actions: {
-              view: false,
-              delete: false,
-            },
-          },
-        ],
+        items: formData.items.map(item => {
+          const selectedItem = items.find(i => i.id === parseInt(item.item)) || {};
+          const selectedWarehouse = warehouses.find(w => w.id === parseInt(item.warehouse)) || {};
+          
+          return {
+            itemId: parseInt(item.item) || 0,
+            itemName: selectedItem.name || "",
+            itemCode: item.code || "",
+            uom: item.uom || "",
+            quantity: parseFloat(item.quantity) || 0,
+            warehouseId: parseInt(item.warehouse) || 0,
+            warehouseName: selectedWarehouse.name || ""
+          };
+        })
       };
 
       console.log("Submitting add bom form");
-      fetch("", {
-        method: "POST",
-        body: finalData,
-      }).then(function (response) {
-        console.log(response);
-        return response.json();
-      });
-      console.log("Form submitted. ", finalData);
-    } else {
-      console.log("Form submission failed due to validation errors.");
+      api.post("/api/bom/add", finalData)
+        .then(response => {
+          console.log(response.data);
+          // Reset form after successful submission
+          setFormData({
+            name: "",
+            code: "",
+            status: "active",
+            items: [
+              {
+                id: 1,
+                item: "",
+                code: "",
+                uom: "",
+                quantity: "",
+                warehouse: ""
+              }
+            ]
+          });
+          setIsAddBomPart([{ id: 1 }]);
+          idRef.current = 2;
+          setIsChecked(true);
+          setStatus("active");
+          setIsAddBom(false); // Close the form after successful submission
+        })
+        .catch(error => {
+          console.error("Error adding BOM:", error);
+        });
+      console.log("Form submitted.", finalData);
     }
   };
+     
 
   const validateForm = (data) => {
     const errors = {};
@@ -130,26 +197,26 @@ const BOM = () => {
   const handleViewDetails = (bom, e) => {
     e.preventDefault();
     console.log(bom);
-    setBOMDetails(group);
+    setBomDetails(bom);
     setIsShowBomDetails(true);
   };
 
-  const handleEditDetails = (group, e) => {
+  const handleEditDetails = (bom, e) => {
     e.preventDefault();
-    console.log(group);
-    setBomDetails(group);
+    console.log(bom);
+    setBomDetails(bom);
     setIsEditBomDetails(true);
   };
 
   useEffect(() => {
-    if (isShowBomDetails && groupModalRef.current) {
-      const bsModal = new Modal(groupModalRef.current, {
+    if (isShowBomDetails && bomModalRef.current) {
+      const bsModal = new Modal(bomModalRef.current, {
         backdrop: "static",
       });
       bsModal.show();
 
       // Optional: hide modal state when it's closed
-      groupModalRef.current.addEventListener("hidden.bs.modal", () =>
+      bomModalRef.current.addEventListener("hidden.bs.modal", () =>
         setIsShowBomDetails(false)
       );
     } else if (isEditBomDetails && bomEditModalRef.current) {
@@ -171,24 +238,18 @@ const BOM = () => {
       name: "",
       code: "",
       status: "active",
-      items: [
-        {
-          item: "",
-          code: "",
-          uom: "",
-          quantity: "",
-          warehouse: "",
-          actions: {
-            view: false,
-            delete: false,
-          },
-        },
-      ],
+      items: isAddBomPart.map(part => ({
+        id: part.id,
+        item: "",
+        code: "",
+        uom: "",
+        quantity: "",
+        warehouse: ""
+      }))
     });
     setIsChecked(true);
     setStatus("active");
   };
-
   const handleSetIsAddBOM = () => {
     setIsAddBom(true);
   };
@@ -382,134 +443,213 @@ const BOM = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {isAddBomPart.map((item) => (
-                      <tr key={item.id}>
-                        <td>
-                          <div className="field-wrapper">
-                            <div className="position-relative w-100">
-                              <i className="fas fa-cogs position-absolute input-icon"></i>
-                              <select
-                                className="form-control text-font w-100 ps-5"
-                                value={formData.items.item}
-                                id="item"
-                                onChange={(e) =>
+                    {isAddBomPart.map((bomPart, index) => {
+                      const currentItem = formData.items.find(item => item.id === bomPart.id) || {
+                        id: bomPart.id,
+                        item: "",
+                        code: "",
+                        uom: "",
+                        quantity: "",
+                        warehouse: ""
+                      };
+                      
+                      return (
+                        <tr key={bomPart.id}>
+                          <td>
+                            <div className="field-wrapper">
+                              <div className="position-relative w-100">
+                                <i className="fas fa-cogs position-absolute input-icon"></i>
+                                <select
+                                  className="form-control text-font w-100 ps-5"
+                                  required
+                                  value={currentItem.item}
+                                  onChange={(e) => {
+                                    const selectedItem = items.find(item => item.id === parseInt(e.target.value));
+                                    const updatedItems = [...formData.items];
+                                    const itemIndex = updatedItems.findIndex(item => item.id === bomPart.id);
+                                    
+                                    if (itemIndex !== -1) {
+                                      updatedItems[itemIndex] = {
+                                        ...updatedItems[itemIndex],
+                                        item: e.target.value,
+                                        code: selectedItem ? selectedItem.code : '',
+                                        uom: selectedItem ? selectedItem.uom : '',
+                                        quantity: selectedItem && selectedItem.stQty ? selectedItem.stQty.toString() : ''
+                                      };
+                                    } else {
+                                      updatedItems.push({
+                                        id: bomPart.id,
+                                        item: e.target.value,
+                                        code: selectedItem ? selectedItem.code : '',
+                                        uom: selectedItem ? selectedItem.uom : '',
+                                        quantity: selectedItem && selectedItem.stQty ? selectedItem.stQty.toString() : '',
+                                        warehouse: ""
+                                      });
+                                    }
+                                    
+                                    setFormData({
+                                      ...formData,
+                                      items: updatedItems
+                                    });
+                                  }}
+                                >
+                                  <option value="">Select Item</option>
+                                  {items.map(item => (
+                                    <option key={item.id} value={item.id}>
+                                      {item.name} ({item.code})
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <div className="field-wrapper">
+                              <input
+                                type="text"
+                                className="form-control text-font w-100"
+                                readOnly
+                                required
+                                value={currentItem.code || ""}
+                              />
+                            </div>
+                          </td>
+                          <td>
+                            <div className="field-wrapper">
+                              <input
+                                type="text"
+                                className="form-control text-font w-100"
+                                readOnly
+                                required
+                                value={currentItem.uom || ""}
+                              />
+                            </div>
+                          </td>
+                          <td>
+                            <div className="field-wrapper">
+                              <input
+                                type="number"
+                                className="form-control text-font w-100"
+                                min="0.01"
+                                step="0.01"
+                                required
+                                value={currentItem.quantity || ""}
+                                onChange={(e) => {
+                                  const updatedItems = [...formData.items];
+                                  const itemIndex = updatedItems.findIndex(item => item.id === bomPart.id);
+                                  
+                                  if (itemIndex !== -1) {
+                                    updatedItems[itemIndex] = {
+                                      ...updatedItems[itemIndex],
+                                      quantity: e.target.value
+                                    };
+                                  }
+                                  
                                   setFormData({
                                     ...formData,
-                                    pincode: e.target.value,
-                                  })
-                                }
-                              >
-                                <option value="">Select Item</option>
-                              </select>
+                                    items: updatedItems
+                                  });
+                                }}
+                              />
                             </div>
-                          </div>
-                        </td>
-                        <td>
-                          <div className="field-wrapper">
-                            <input
-                              type="text"
-                              id="code"
-                              className="form-control text-font w-100"
-                              readOnly
-                              disabled
-                              value={formData.items.code}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  code: e.target.value,
-                                })
-                              }
-                            />
-                          </div>
-                        </td>
-                        <td>
-                          <div className="field-wrapper">
-                            <input
-                              type="text"
-                              id="uom"
-                              className="form-control text-font w-100"
-                              readOnly
-                              disabled
-                              value={formData.items.uom}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  uom: e.target.value,
-                                })
-                              }
-                            />
-                          </div>
-                        </td>
-                        <td>
-                          <div className="field-wrapper">
-                            <input
-                              type="number"
-                              id="quantity"
-                              className="form-control text-font w-100"
-                              min="0.01"
-                              step="0.01"
-                              disabled
-                              value={formData.items.quantity}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  quantity: e.target.value,
-                                })
-                              }
-                            />
-                          </div>
-                        </td>
-                        <td>
-                          <div className="">
-                            <div className="position-relative w-100">
-                              <i className="fas fa-warehouse position-absolute input-icon"></i>
-                              <select
-                                className="form-control text-font w-100 ps-5"
-                                id="warehouse"
-                                title="Select Warehouse"
-                                value={formData.items.warehouse}
-                                onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
-                                    warehouse: e.target.value,
-                                  })
-                                }
-                              >
-                                <option value="">Select Warehouse</option>
-                              </select>
+                          </td>
+                          <td>
+                            <div className="">
+                              <div className="position-relative w-100">
+                                <i className="fas fa-warehouse position-absolute input-icon"></i>
+                                <select
+                                  className="form-control text-font w-100 ps-5"
+                                  id={`warehouse-${bomPart.id}`}
+                                  title="Select Warehouse"
+                                  required
+                                  value={currentItem.warehouse || ""}
+                                  onChange={(e) => {
+                                    const updatedItems = [...formData.items];
+                                    const itemIndex = updatedItems.findIndex(item => item.id === bomPart.id);
+                                    
+                                    if (itemIndex !== -1) {
+                                      updatedItems[itemIndex] = {
+                                        ...updatedItems[itemIndex],
+                                        warehouse: e.target.value
+                                      };
+                                    } else {
+                                      updatedItems.push({
+                                        id: bomPart.id,
+                                        item: "",
+                                        code: "",
+                                        uom: "",
+                                        quantity: "",
+                                        warehouse: e.target.value
+                                      });
+                                    }
+                                    
+                                    setFormData({
+                                      ...formData,
+                                      items: updatedItems
+                                    });
+                                  }}
+                                >
+                                  <option value="">Select Warehouse</option>
+                                  {warehouses.map(warehouse => (
+                                    <option key={warehouse.id} value={warehouse.id}>
+                                      {warehouse.name} ({warehouse.code})
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
                             </div>
-                          </div>
-                        </td>
-                        <td className="actions">
-                          <div className="field-wrapper">
-                            <button
-                              type="button"
-                              className="btn-icon btn-primary ms-2"
-                              title="View Part Details"
-                            >
-                              <i className="fas fa-info-circle"></i>
-                            </button>
-                            <button
-                              type="button"
-                              className="btn-icon btn-danger ms-2"
-                              title="Remove Part"
-                            >
-                              <i className="fas fa-trash"></i>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                          </td>
+                          <td className="actions">
+                            <div className="field-wrapper">
+                              <button
+                                type="button"
+                                className="btn-icon btn-primary ms-2"
+                                title="View Item Details"
+                              >
+                                <i className="fas fa-info-circle"></i>
+                              </button>
+                              <button
+                                type="button"
+                                className="btn-icon btn-danger ms-2"
+                                title="Remove Item"
+                                onClick={() => handleDeleteItem(bomPart.id)}
+                                disabled={isAddBomPart.length <= 1}
+                              >
+                                <i className="fas fa-trash"></i>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
                 <button
                   type="button"
                   className="btn btn-secondary text-font m-3"
                   onClick={() => {
+                    const newId = idRef.current++;
+                    // Add new part to isAddBomPart
                     setIsAddBomPart((prevParts) => [
                       ...prevParts,
-                      { id: idRef.current++ },
+                      { id: newId },
                     ]);
+                    
+                    // Add a new empty item to formData.items
+                    setFormData(prev => ({
+                      ...prev,
+                      items: [
+                        ...prev.items,
+                        {
+                          id: newId,
+                          item: "",
+                          code: "",
+                          uom: "",
+                          quantity: "",
+                          warehouse: ""
+                        }
+                      ]
+                    }));
                   }}
                 >
                   <i className="fas fa-plus me-2"></i>
@@ -572,9 +712,6 @@ const BOM = () => {
                 <th>
                   Code <i className="fas fa-sort color-gray ms-2"></i>
                 </th>
-                {/* <th>Items Count</th>
-                <th>Total Quantity</th>
-                <th>Total Value</th> */}
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -616,29 +753,21 @@ const BOM = () => {
                         <span>{bom.code}</span>
                       </div>
                     </td>
-                    {/* <td>
-                      <div>
-                        <span>{bom.uom}</span>
-                      </div>
-                    </td>
                     <td>
-                      <div>
-                        <span>{bom.qty}</span>
-                      </div>
+                      <span className={`status-badge ${bom.status}`}>
+                        {bom.status}
+                      </span>
                     </td>
-                    <td>
-                      <div>
-                        <span>{bom.warehouse}</span>
-                      </div>
-                    </td> */}
                     <td className="actions">
                       <button
                         className="btn-icon btn-primary"
                         title="View Details"
+                        onClick={(e) => handleViewDetails(bom, e)}
                       >
                         <i className="fas fa-eye"></i>
                       </button>
-                      <button className="btn-icon btn-success" title="Edit">
+                      <button className="btn-icon btn-success" title="Edit"
+                        onClick={(e) => handleEditDetails(bom, e)}>
                         <i className="fas fa-edit"></i>
                       </button>
                       <button className="btn-icon btn-danger" title="Delete">
@@ -674,8 +803,149 @@ const BOM = () => {
           </div>
         </div>
       </div>
+
+      {/* BOM View Modal */}
+      <div
+        className="modal fade"
+        id="bomViewModal"
+        tabIndex="-1"
+        aria-labelledby="bomViewModalLabel"
+        aria-hidden="true"
+        ref={bomModalRef}
+      >
+        <div className="modal-dialog modal-lg">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title" id="bomViewModalLabel">
+                BOM Details
+              </h5>
+              <button
+                type="button"
+                className="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div className="modal-body">
+              {bomDetails && (
+                <div className="bom-details">
+                  <div className="row mb-3">
+                    <div className="col-6">
+                      <p><strong>Name:</strong> {bomDetails.name}</p>
+                    </div>
+                    <div className="col-6">
+                      <p><strong>Code:</strong> {bomDetails.code}</p>
+                    </div>
+                  </div>
+                  <div className="row mb-3">
+                    <div className="col-6">
+                      <p><strong>Status:</strong> {bomDetails.status}</p>
+                    </div>
+                    <div className="col-6">
+                      <p><strong>Items Count:</strong> {bomDetails.itemsCount || 0}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* BOM Edit Modal */}
+      <div
+        className="modal fade"
+        id="bomEditModal"
+        tabIndex="-1"
+        aria-labelledby="bomEditModalLabel"
+        aria-hidden="true"
+        ref={bomEditModalRef}
+      >
+        <div className="modal-dialog modal-lg">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title" id="bomEditModalLabel">
+                Edit BOM
+              </h5>
+              <button
+                type="button"
+                className="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div className="modal-body">
+              <form onSubmit={handleEditBom}>
+                {bomDetails && (
+                  <div className="row">
+                    <div className="col-6 mb-3">
+                      <label htmlFor="editBomName" className="form-label">Name</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="editBomName"
+                        value={bomDetails.name}
+                        onChange={(e) =>
+                          setBomDetails({ ...bomDetails, name: e.target.value })
+                        }
+                      />
+                    </div>
+                    <div className="col-6 mb-3">
+                      <label htmlFor="editBomCode" className="form-label">Code</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="editBomCode"
+                        value={bomDetails.code}
+                        onChange={(e) =>
+                          setBomDetails({ ...bomDetails, code: e.target.value })
+                        }
+                      />
+                    </div>
+                    <div className="col-12 mb-3">
+                      <label htmlFor="editBomStatus" className="form-label">Status</label>
+                      <select
+                        className="form-control"
+                        id="editBomStatus"
+                        value={bomDetails.status}
+                        onChange={(e) =>
+                          setBomDetails({ ...bomDetails, status: e.target.value })
+                        }
+                      >
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    data-bs-dismiss="modal"
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-primary">
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
 
-export default BOM;
+export default BOMMaster;

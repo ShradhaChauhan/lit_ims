@@ -38,10 +38,11 @@ const Navbar = () => {
 
   const handleLoadBranchDropdownValues = async (e) => {
     e.preventDefault();
+    
 
-    try {
-      const response = await api.get("/api/branch/by-company"); // API call
-      const branchList = response.data;
+  try {
+    const response = await api.get("/api/branch/by-company"); // API call
+    const branchList = response.data.data; 
 
       const formattedBranches = branchList.map((branch) => ({
         label: `${branch.name} (${branch.code})`,
