@@ -13,6 +13,13 @@ const ItemMaster = () => {
   const [isEditItemDetails, setIsEditItemDetails] = useState(false);
   const [itemDetails, setItemDetails] = useState({});
 
+  // Search and filter states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedGroup, setSelectedGroup] = useState("");
+  const [selectedType, setSelectedType] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("");
+  const [filteredItems, setFilteredItems] = useState([]);
+
   const [selectedItems, setSelectedItems] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const { isAddItem, setIsAddItem } = useContext(AppContext);
@@ -39,7 +46,7 @@ const ItemMaster = () => {
     uom: "",
     type: "",
     barcode: "",
-    group: "",
+    groupName: "",
     price: "",
     stQty: "",
     life: "",
@@ -47,14 +54,106 @@ const ItemMaster = () => {
   });
 
   // Fetch items data
+  const fetchItems = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/api/items/all");
+      
+      if (response.data.status && response.data.data) {
+        const allItems = response.data.data;
+        setItems(allItems);
+        filterItems(allItems); // Apply filters to all items
+      } else {
+        setItems([]);
+        setFilteredItems([]);
+      }
+    } catch (error) {
+      console.error("Error fetching items:", error);
+      setItems([]);
+      setFilteredItems([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Filter items based on search and filter criteria
+  const filterItems = (itemsToFilter = items) => {
+    let result = [...itemsToFilter];
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const searchLower = searchQuery.toLowerCase();
+      result = result.filter(item => 
+        item.name?.toLowerCase().includes(searchLower) ||
+        item.code?.toLowerCase().includes(searchLower) ||
+        item.barcode?.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Apply group filter
+    if (selectedGroup) {
+      result = result.filter(item => item.groupName === selectedGroup);
+    }
+
+    // Apply type filter
+    if (selectedType) {
+      result = result.filter(item => item.type === selectedType);
+    }
+
+    // Apply status filter
+    if (selectedStatus) {
+      result = result.filter(item => item.status === selectedStatus);
+    }
+
+    // Update filtered items and pagination
+    setFilteredItems(result);
+    setPagination(prev => ({
+      ...prev,
+      totalItems: result.length,
+      totalPages: Math.ceil(result.length / prev.itemsPerPage),
+      currentPage: 1 // Reset to first page when filters change
+    }));
+  };
+
+  // Effect for initial data fetch
   useEffect(() => {
     fetchItems();
-  }, [pagination.currentPage, pagination.itemsPerPage]);
+    fetchTypes();
+    fetchGroups();
+  }, []);
+
+  // Effect for filtering when search or filter criteria change
+  useEffect(() => {
+    filterItems();
+  }, [searchQuery, selectedGroup, selectedType, selectedStatus]);
+
+  // Get paginated items
+  const getPaginatedItems = () => {
+    const start = (pagination.currentPage - 1) * pagination.itemsPerPage;
+    const end = start + pagination.itemsPerPage;
+    return filteredItems.slice(start, end);
+  };
+
+  // Search and filter handlers
+  const handleSearch = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleGroupFilter = (e) => {
+    setSelectedGroup(e.target.value);
+  };
+
+  const handleTypeFilter = (e) => {
+    setSelectedType(e.target.value);
+  };
+
+  const handleStatusFilter = (e) => {
+    setSelectedStatus(e.target.value);
+  };
 
   // Fetch types data
   useEffect(() => {
     fetchTypes();
-    fetchGroups();
   }, []);
 
   const fetchTypes = () => {
@@ -76,60 +175,6 @@ const ItemMaster = () => {
       })
       .catch(error => {
         console.error("Error fetching groups:", error);
-      });
-  };
-
-  const fetchItems = () => {
-    setLoading(true);
-    
-    // Add pagination parameters to the API call
-    api.get("/api/items/all", {
-      params: {
-        page: pagination.currentPage,
-        limit: pagination.itemsPerPage
-      }
-    })
-      .then(response => {
-        console.log("Items fetched:", response.data);
-        
-        if (response.data.status && response.data.data) {
-          setItems(response.data.data);
-          
-          // Update pagination if total count is provided
-          if (response.data.totalItems !== undefined) {
-            setPagination(prev => ({
-              ...prev,
-              totalItems: response.data.totalItems,
-              totalPages: Math.ceil(response.data.totalItems / prev.itemsPerPage)
-            }));
-          } else {
-            // Fallback if API doesn't provide pagination info
-            setPagination(prev => ({
-              ...prev,
-              totalItems: response.data.data.length,
-              totalPages: Math.ceil(response.data.data.length / prev.itemsPerPage)
-            }));
-          }
-        } else {
-          setItems([]);
-          setPagination(prev => ({
-            ...prev,
-            totalItems: 0,
-            totalPages: 1
-          }));
-        }
-        
-        setLoading(false);
-      })
-      .catch(error => {
-        console.error("Error fetching items:", error);
-        setLoading(false);
-        setItems([]);
-        setPagination(prev => ({
-          ...prev,
-          totalItems: 0,
-          totalPages: 1
-        }));
       });
   };
 
@@ -209,7 +254,7 @@ const ItemMaster = () => {
         uom: formData.uom,
         type: formData.type,
         barcode: formData.barcode,
-        group: formData.group,
+        groupName: formData.groupName,
         price: formData.price,
         stQty: formData.stQty,
         life: formData.life,
@@ -270,8 +315,8 @@ const ItemMaster = () => {
       errors.barcode = "Barcode must only be in digits";
     }
 
-    if (!data.group) {
-      errors.group = "Group is required";
+    if (!data.groupName) {
+      errors.groupName = "Group is required";
     }
 
     if (!data.price) {
@@ -422,17 +467,16 @@ const ItemMaster = () => {
 
     if (Object.keys(newErrors).length === 0) {
       const finalData = {
-        id: itemDetails.id,
         name: itemDetails.name,
         code: itemDetails.code,
         uom: itemDetails.uom,
         type: itemDetails.type,
-        barcode: itemDetails.barcode,
-        group: itemDetails.groupName,
-        price: itemDetails.price,
-        stQty: itemDetails.stQty,
-        life: itemDetails.life,
-        status: itemDetails.status,
+        barcode: itemDetails.barcode || null,
+        groupName: itemDetails.groupName,
+        status: itemDetails.status || "active",
+        price: itemDetails.price || null,
+        stQty: parseInt(itemDetails.stQty) || 0,
+        life: parseInt(itemDetails.life) || 0
       };
 
       api.put(`/api/items/update/${itemDetails.id}`, finalData)
@@ -444,6 +488,8 @@ const ItemMaster = () => {
             alert(response.data.message || "Item Updated Successfully");
             // Close the modal
             setIsEditItemDetails(false);
+            // Reset item details
+            setItemDetails({});
             // Refresh the items list
             fetchItems();
           } else {
@@ -460,27 +506,48 @@ const ItemMaster = () => {
   };
 
   useEffect(() => {
+    let bsModal = null;
+    
     if (isShowItemDetails && itemModalRef.current) {
-      const bsModal = new Modal(itemModalRef.current, {
+      bsModal = new Modal(itemModalRef.current, {
         backdrop: "static",
       });
       bsModal.show();
 
-      // Optional: hide modal state when it's closed
-      itemModalRef.current.addEventListener("hidden.bs.modal", () =>
-        setIsShowItemDetails(false)
-      );
+      // Cleanup function for view modal
+      const handleHidden = () => {
+        setIsShowItemDetails(false);
+        setItemDetails({});
+        // Remove the event listener
+        itemModalRef.current?.removeEventListener("hidden.bs.modal", handleHidden);
+      };
+
+      // Add event listener for modal hidden event
+      itemModalRef.current.addEventListener("hidden.bs.modal", handleHidden);
     } else if (isEditItemDetails && itemEditModalRef.current) {
-      const bsModal = new Modal(itemEditModalRef.current, {
+      bsModal = new Modal(itemEditModalRef.current, {
         backdrop: "static",
       });
       bsModal.show();
 
-      // Hide modal state when it's closed
-      itemEditModalRef.current.addEventListener("hidden.bs.modal", () =>
-        setIsEditItemDetails(false)
-      );
+      // Cleanup function for edit modal
+      const handleHidden = () => {
+        setIsEditItemDetails(false);
+        setItemDetails({});
+        // Remove the event listener
+        itemEditModalRef.current?.removeEventListener("hidden.bs.modal", handleHidden);
+      };
+
+      // Add event listener for modal hidden event
+      itemEditModalRef.current.addEventListener("hidden.bs.modal", handleHidden);
     }
+
+    // Cleanup function
+    return () => {
+      if (bsModal) {
+        bsModal.dispose();
+      }
+    };
   }, [isShowItemDetails, isEditItemDetails]);
 
   return (
@@ -519,18 +586,28 @@ const ItemMaster = () => {
             type="text"
             className="form-control vendor-search-bar"
             placeholder="Search by items..."
+            value={searchQuery}
+            onChange={handleSearch}
           />
         </div>
         <div className="filter-options">
-          <select className="filter-select">
+          <select 
+            className="filter-select"
+            value={selectedGroup}
+            onChange={handleGroupFilter}
+          >
             <option value="">All Groups</option>
             {groups.map(group => (
-              <option key={group.id} value={group.id}>
+              <option key={group.id} value={group.name}>
                 {group.name}
               </option>
             ))}
           </select>
-          <select className="filter-select">
+          <select 
+            className="filter-select"
+            value={selectedType}
+            onChange={handleTypeFilter}
+          >
             <option value="">All Types</option>
             {types.map(type => (
               <option key={type.id} value={type.name}>
@@ -538,7 +615,11 @@ const ItemMaster = () => {
               </option>
             ))}
           </select>
-          <select className="filter-select">
+          <select 
+            className="filter-select"
+            value={selectedStatus}
+            onChange={handleStatusFilter}
+          >
             <option value="">All Status</option>
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
@@ -698,9 +779,9 @@ const ItemMaster = () => {
                       className="form-control ps-5 ms-2 text-font"
                       id="groupName"
                       placeholder="Group"
-                      value={formData.group}
+                      value={formData.groupName}
                       onChange={(e) =>
-                        setFormData({ ...formData, group: e.target.value })
+                        setFormData({ ...formData, groupName: e.target.value })
                       }
                     >
                       <option value="" disabled hidden className="text-muted">
@@ -714,8 +795,8 @@ const ItemMaster = () => {
                     </select>
                     <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                   </div>
-                  {errors.group && (
-                    <span className="error-message">{errors.group}</span>
+                  {errors.groupName && (
+                    <span className="error-message">{errors.groupName}</span>
                   )}
                 </div>
               </div>
@@ -932,20 +1013,22 @@ const ItemMaster = () => {
                     </div>
                   </td>
                 </tr>
-              ) : items.length === 0 ? (
+              ) : getPaginatedItems().length === 0 ? (
                 <tr className="no-data-row">
                   <td colSpan="12" className="no-data-cell">
                     <div className="no-data-content">
                       <i className="fas fa-box-open no-data-icon"></i>
                       <p className="no-data-text">No items found</p>
                       <p className="no-data-subtext">
-                        Click the "Add New" button to create your first item
+                        {items.length === 0 ? 
+                          "Click the \"Add New\" button to create your first item" :
+                          "No items match your search criteria"}
                       </p>
                     </div>
                   </td>
                 </tr>
               ) : (
-                items.map((item) => (
+                getPaginatedItems().map((item) => (
                   <tr key={item.id}>
                     <td className="checkbox-cell ps-4">
                       <input
@@ -1034,7 +1117,7 @@ const ItemMaster = () => {
           {/* Pagination */}
           <div className="pagination-container">
             <div className="pagination-info">
-              Showing {getDisplayRange()} of {pagination.totalItems} entries
+              Showing {getDisplayRange()} of {filteredItems.length} entries
             </div>
             <div className="pagination">
               <button 

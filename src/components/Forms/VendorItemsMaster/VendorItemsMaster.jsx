@@ -2,9 +2,10 @@ import React, { useContext, useEffect, useRef, useState } from "react";
 import { AppContext } from "../../../context/AppContext";
 import { Link } from "react-router-dom";
 import { Modal } from "bootstrap";
+import api from "../../../services/api";
 
 const VendorItemsMaster = () => {
-  const vendorItems = [];
+  const [vendorItems, setVendorItems] = useState([]);
   const [errors, setErrors] = useState({});
   const { isAddVendorItem, setIsAddVendorItem } = useContext(AppContext);
   const [selectAll, setSelectAll] = useState(false);
@@ -14,6 +15,9 @@ const VendorItemsMaster = () => {
   const [isShowVendorItemDetails, setIsShowVendorItemDetails] = useState(false);
   const [isEditVendorItemDetails, setIsEditVendorItemDetails] = useState(false);
   const [isChecked, setIsChecked] = useState(true);
+  const [status, setStatus] = useState("active");
+  const [vendors, setVendors] = useState([]);
+  const [items, setItems] = useState([]);
   const [vendorItemDetails, setVendorItemDetails] = useState({
     id: "",
     vendor: "",
@@ -31,6 +35,130 @@ const VendorItemsMaster = () => {
     price: "",
     status: "active",
   });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredVendorItems, setFilteredVendorItems] = useState([]);
+  const [selectedVendorFilter, setSelectedVendorFilter] = useState("");
+  const [selectedItemFilter, setSelectedItemFilter] = useState("");
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState("");
+
+  // Initialize modals
+  useEffect(() => {
+    let viewModal = null;
+    let editModal = null;
+
+    // Only initialize modals if the refs are available and modals are meant to be shown
+    if (isShowVendorItemDetails && vendorItemModalRef.current) {
+      viewModal = new Modal(vendorItemModalRef.current);
+      viewModal.show();
+    }
+    
+    if (isEditVendorItemDetails && vendorItemEditModalRef.current) {
+      editModal = new Modal(vendorItemEditModalRef.current);
+      editModal.show();
+    }
+
+    // Cleanup function
+    return () => {
+      if (viewModal) {
+        viewModal.hide();
+        viewModal.dispose();
+      }
+      if (editModal) {
+        editModal.hide();
+        editModal.dispose();
+      }
+    };
+  }, [isShowVendorItemDetails, isEditVendorItemDetails]);
+
+  // Add modal hide event listeners
+  useEffect(() => {
+    const handleViewModalHide = () => {
+      setIsShowVendorItemDetails(false);
+    };
+
+    const handleEditModalHide = () => {
+      cleanupModalState();
+    };
+
+    const viewModalElement = vendorItemModalRef.current;
+    const editModalElement = vendorItemEditModalRef.current;
+
+    if (viewModalElement) {
+      viewModalElement.addEventListener('hidden.bs.modal', handleViewModalHide);
+    }
+    if (editModalElement) {
+      editModalElement.addEventListener('hidden.bs.modal', handleEditModalHide);
+    }
+
+    return () => {
+      if (viewModalElement) {
+        viewModalElement.removeEventListener('hidden.bs.modal', handleViewModalHide);
+      }
+      if (editModalElement) {
+        editModalElement.removeEventListener('hidden.bs.modal', handleEditModalHide);
+      }
+    };
+  }, []);
+
+  // Fetch vendors, items, and vendor items when component mounts
+  useEffect(() => {
+    fetchVendors();
+    fetchItems();
+    fetchVendorItems();
+  }, []);
+
+  // Function to fetch vendor items from API
+  const fetchVendorItems = () => {
+    api.get("/api/vendor-item/all")
+      .then(response => {
+        if (response.data && response.data.status) {
+          setVendorItems(response.data.data || []);
+        } else {
+          console.error("Error fetching vendor items:", response.data?.message || "Unknown error");
+        }
+      })
+      .catch(error => {
+        console.error("Error fetching vendor items:", error);
+      });
+  };
+
+  // Function to fetch vendors from API
+  const fetchVendors = () => {
+    api.get("/api/vendor-customer/vendors")
+      .then(response => {
+        if (response.data && response.data.status) {
+          console.log("Fetched vendors:", response.data.data);
+          const vendorData = response.data.data || [];
+          // Verify vendor data has required fields
+          const validVendors = vendorData.filter(v => v.code && v.name);
+          if (validVendors.length !== vendorData.length) {
+            console.warn("Some vendors are missing required fields:", 
+              vendorData.filter(v => !v.code || !v.name));
+          }
+          setVendors(validVendors);
+        } else {
+          console.error("Error fetching vendors:", response.data?.message || "Unknown error");
+        }
+      })
+      .catch(error => {
+        console.error("Error fetching vendors:", error);
+      });
+  };
+
+  // Function to fetch items from API
+  const fetchItems = () => {
+    api.get("/api/items/all")
+      .then(response => {
+        if (response.data && response.data.status) {
+          setItems(response.data.data || []);
+        } else {
+          console.error("Error fetching items:", response.data?.message || "Unknown error");
+        }
+      })
+      .catch(error => {
+        console.error("Error fetching items:", error);
+      });
+  };
 
   const handleVendorItemCheckboxChange = (assignmentId) => {
     setSelectedVendorItems((prevSelected) =>
@@ -42,15 +170,48 @@ const VendorItemsMaster = () => {
 
   const handleViewDetails = (assignment, e) => {
     e.preventDefault();
-    console.log(assignment);
-    setVendorItemDetails(assignment);
+    setVendorItemDetails({
+      id: assignment.id,
+      vendor: assignment.vendorName,
+      item: assignment.itemName,
+      leadTime: assignment.days,
+      minOrderQty: assignment.quantity,
+      price: assignment.price,
+      status: assignment.status
+    });
     setIsShowVendorItemDetails(true);
   };
 
   const handleEditDetails = (assignment, e) => {
     e.preventDefault();
-    console.log(assignment);
-    setVendorItemDetails(assignment);
+    console.log("Opening edit modal for assignment:", assignment);
+    
+    // Find the matching vendor and item
+    const selectedVendor = vendors.find(v => v.name.trim() === assignment.vendorName.trim());
+    const selectedItem = items.find(i => i.name.trim() === assignment.itemName.trim());
+    
+    if (!selectedVendor || !selectedItem) {
+      console.error("Could not find matching vendor or item");
+      return;
+    }
+
+    // Normalize the status value
+    const normalizedStatus = assignment.status.toLowerCase() === 'active' ? 'Active' : 'Inactive';
+    
+    const details = {
+      id: assignment.id,
+      vendor: selectedVendor.name,
+      item: selectedItem.name,
+      leadTime: assignment.days,
+      minOrderQty: assignment.quantity,
+      price: assignment.price,
+      status: normalizedStatus
+    };
+
+    console.log("Setting vendor item details:", details);
+    setVendorItemDetails(details);
+    setIsChecked(normalizedStatus === 'Active');
+    setStatus(normalizedStatus);
     setIsEditVendorItemDetails(true);
   };
 
@@ -60,25 +221,47 @@ const VendorItemsMaster = () => {
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      e.preventDefault();
+      // Find selected vendor and item objects to get their codes
+      const selectedVendor = vendors.find(v => v.id.toString() === formData.vendor.toString());
+      const selectedItem = items.find(i => i.id.toString() === formData.item.toString());
+      
+      if (!selectedVendor || !selectedItem) {
+        alert("Please select both vendor and item");
+        return;
+      }
+
       const finalData = {
-        vendor: formData.vendor,
-        item: formData.item,
-        leadTime: formData.leadTime,
-        minOrderQty: formData.minOrderQty,
-        price: formData.price,
-        status: formData.status,
+        vendorCode: selectedVendor.code,
+        vendorName: selectedVendor.name,
+        itemCode: selectedItem.code,
+        itemName: selectedItem.name,
+        days: formData.leadTime || 0,
+        quantity: formData.minOrderQty || 0,
+        price: formData.price || 0,
+        status: formData.status === "active" ? "Active" : "Inactive"
       };
 
-      console.log("Submitting add assignment form");
-      fetch("", {
-        method: "POST",
-        body: finalData,
-      }).then(function (response) {
-        console.log(response);
-        return response.json();
-      });
-      console.log("Form submitted. ", finalData);
+      console.log("Submitting vendor-item assignment:", finalData);
+      
+      api.post("/api/vendor-item/save", finalData)
+        .then(response => {
+          console.log("Response:", response.data);
+          if (response.data && response.data.status) {
+            alert(response.data.message || "Vendor-Item assignment added successfully!");
+            // Reset form
+            handleReset(e);
+            // Close the form
+            setIsAddVendorItem(false);
+            // Refresh the vendor-items list
+            fetchVendorItems();
+          } else {
+            alert(response.data?.message || "Error adding vendor-item assignment");
+          }
+        })
+        .catch(error => {
+          console.error("Error adding vendor-item assignment:", error);
+          alert("Error adding vendor-item assignment. Please try again.");
+        });
     } else {
       console.log("Form submission failed due to validation errors.");
     }
@@ -116,7 +299,90 @@ const VendorItemsMaster = () => {
 
   const handleEditVendorItem = (e) => {
     e.preventDefault();
-    console.log("Vendor Item has been edited");
+    const newErrors = validateForm(vendorItemDetails);
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length === 0) {
+      const selectedVendor = vendors.find(v => v.name.trim() === vendorItemDetails.vendor.trim());
+      const selectedItem = items.find(i => i.name.trim() === vendorItemDetails.item.trim());
+      
+      if (!selectedVendor || !selectedItem) {
+        alert("Please select both vendor and item");
+        return;
+      }
+
+      const finalData = {
+        id: parseInt(vendorItemDetails.id),
+        vendorCode: selectedVendor.code,
+        vendorName: selectedVendor.name,
+        itemCode: selectedItem.code,
+        itemName: selectedItem.name,
+        days: parseInt(vendorItemDetails.leadTime) || 0,
+        quantity: parseInt(vendorItemDetails.minOrderQty) || 0,
+        price: parseFloat(vendorItemDetails.price) || 0,
+        status: vendorItemDetails.status.toLowerCase()
+      };
+
+      console.log("Updating vendor item with data:", finalData);
+
+      api.put("/api/vendor-item/update/" + vendorItemDetails.id, finalData)
+        .then(response => {
+          if (response.data && response.data.status) {
+            // Close the modal using Bootstrap's Modal instance
+            const modalElement = vendorItemEditModalRef.current;
+            const modalInstance = Modal.getInstance(modalElement);
+            if (modalInstance) {
+              modalInstance.hide();
+            }
+
+            // Reset states
+            setIsEditVendorItemDetails(false);
+            setVendorItemDetails({
+              id: "",
+              vendor: "",
+              item: "",
+              leadTime: "",
+              minOrderQty: "",
+              price: "",
+              status: "active"
+            });
+            setSelectedVendorItems([]); // Clear any selections
+            setSelectAll(false); // Reset select all checkbox
+
+            // Refresh the list
+            fetchVendorItems();
+            
+            alert(response.data.message || "Vendor-Item assignment updated successfully!");
+          } else {
+            alert(response.data?.message || "Error updating vendor-item assignment");
+          }
+        })
+        .catch(error => {
+          console.error("Error updating vendor-item assignment:", error);
+          console.error("Error details:", {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+            finalData: finalData
+          });
+          alert(`Error updating vendor-item assignment: ${error.response?.data?.message || error.message}`);
+        });
+    }
+  };
+
+  // Add cleanup function for modal state
+  const cleanupModalState = () => {
+    setVendorItemDetails({
+      id: "",
+      vendor: "",
+      item: "",
+      leadTime: "",
+      minOrderQty: "",
+      price: "",
+      status: "active"
+    });
+    setErrors({});
+    setIsEditVendorItemDetails(false);
   };
 
   const handleSelectAllChange = (e) => {
@@ -142,6 +408,120 @@ const VendorItemsMaster = () => {
     });
     setIsChecked(true);
     setStatus("active");
+  };
+
+  // Function to delete a single vendor item
+  const handleDeleteVendorItem = (id) => {
+    if (window.confirm("Are you sure you want to delete this vendor-item assignment?")) {
+      api.delete(`/api/vendor-item/delete/${id}`)
+        .then(response => {
+          if (response.data && response.data.status) {
+            alert(response.data.message || "Vendor-Item assignment deleted successfully!");
+            fetchVendorItems(); // Refresh the list
+          } else {
+            alert(response.data?.message || "Error deleting vendor-item assignment");
+          }
+        })
+        .catch(error => {
+          console.error("Error deleting vendor-item assignment:", error);
+          alert("Error deleting vendor-item assignment. Please try again.");
+        });
+    }
+  };
+
+  // Function to delete multiple vendor items
+  const handleDeleteSelectedVendorItems = () => {
+    if (selectedVendorItems.length === 0) {
+      alert("Please select at least one vendor-item assignment to delete.");
+      return;
+    }
+
+    if (window.confirm(`Are you sure you want to delete ${selectedVendorItems.length} vendor-item assignment(s)?`)) {
+      // Delete items one by one
+      const deletePromises = selectedVendorItems.map(id => 
+        api.delete(`/api/vendor-item/delete/${id}`)
+      );
+
+      Promise.all(deletePromises)
+        .then(() => {
+          alert("Selected vendor-item assignments deleted successfully!");
+          setSelectedVendorItems([]);
+          setSelectAll(false);
+          fetchVendorItems(); // Refresh the list
+        })
+        .catch(error => {
+          console.error("Error deleting vendor-item assignments:", error);
+          alert("Error deleting some vendor-item assignments. Please try again.");
+          fetchVendorItems(); // Refresh to see what was deleted
+        });
+    }
+  };
+
+  // Update filtered items whenever search or filters change
+  useEffect(() => {
+    let filtered = [...vendorItems];
+
+    // Apply search
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(item => 
+        item.vendorName.toLowerCase().includes(query) ||
+        item.itemName.toLowerCase().includes(query) ||
+        item.days.toString().includes(query) ||
+        item.quantity.toString().includes(query) ||
+        item.price.toString().includes(query)
+      );
+    }
+
+    // Apply vendor filter
+    if (selectedVendorFilter) {
+      filtered = filtered.filter(item => item.vendorName === selectedVendorFilter);
+    }
+
+    // Apply item filter
+    if (selectedItemFilter) {
+      filtered = filtered.filter(item => item.itemName === selectedItemFilter);
+    }
+
+    // Apply status filter
+    if (selectedStatusFilter) {
+      filtered = filtered.filter(item => 
+        item.status.toLowerCase() === selectedStatusFilter.toLowerCase()
+      );
+    }
+
+    setFilteredVendorItems(filtered);
+  }, [vendorItems, searchQuery, selectedVendorFilter, selectedItemFilter, selectedStatusFilter]);
+
+  // Get unique vendor names for filter dropdown
+  const uniqueVendors = [...new Set(vendorItems.map(item => item.vendorName))];
+  // Get unique item names for filter dropdown
+  const uniqueItems = [...new Set(vendorItems.map(item => item.itemName))];
+
+  // Handle search input change
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  // Handle filter changes
+  const handleVendorFilterChange = (e) => {
+    setSelectedVendorFilter(e.target.value);
+  };
+
+  const handleItemFilterChange = (e) => {
+    setSelectedItemFilter(e.target.value);
+  };
+
+  const handleStatusFilterChange = (e) => {
+    setSelectedStatusFilter(e.target.value);
+  };
+
+  // Reset all filters
+  const resetFilters = () => {
+    setSearchQuery("");
+    setSelectedVendorFilter("");
+    setSelectedItemFilter("");
+    setSelectedStatusFilter("");
   };
 
   return (
@@ -180,24 +560,52 @@ const VendorItemsMaster = () => {
             type="text"
             className="form-control vendor-search-bar"
             placeholder="Search assignments..."
+            value={searchQuery}
+            onChange={handleSearchChange}
           />
         </div>
         <div className="filter-options">
-          <select className="filter-select">
+          <select 
+            className="filter-select"
+            value={selectedVendorFilter}
+            onChange={handleVendorFilterChange}
+          >
             <option value="">All Vendors</option>
+            {uniqueVendors.map(vendor => (
+              <option key={vendor} value={vendor}>{vendor}</option>
+            ))}
           </select>
         </div>
         <div className="filter-options">
-          <select className="filter-select">
+          <select 
+            className="filter-select"
+            value={selectedItemFilter}
+            onChange={handleItemFilterChange}
+          >
             <option value="">All Items</option>
+            {uniqueItems.map(item => (
+              <option key={item} value={item}>{item}</option>
+            ))}
           </select>
         </div>
         <div className="filter-options">
-          <select className="filter-select">
+          <select 
+            className="filter-select"
+            value={selectedStatusFilter}
+            onChange={handleStatusFilterChange}
+          >
             <option value="">All Status</option>
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
           </select>
+        </div>
+        <div className="filter-options">
+          <button 
+            className="btn btn-secondary"
+            onClick={resetFilters}
+          >
+            <i className="fas fa-undo-alt me-1"></i>Reset Filters
+          </button>
         </div>
       </div>
 
@@ -239,6 +647,11 @@ const VendorItemsMaster = () => {
                       <option value="" disabled hidden className="text-muted">
                         Select Vendor
                       </option>
+                      {vendors.map((vendor) => (
+                        <option key={vendor.id} value={vendor.id}>
+                          {vendor.name}
+                        </option>
+                      ))}
                     </select>
                     <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                   </div>
@@ -254,7 +667,7 @@ const VendorItemsMaster = () => {
                     <i className="fas fa-box position-absolute input-icon"></i>
                     <select
                       className="form-control ps-5 ms-2 text-font"
-                      id="vendor"
+                      id="item"
                       value={formData.item}
                       onChange={(e) =>
                         setFormData({ ...formData, item: e.target.value })
@@ -263,6 +676,11 @@ const VendorItemsMaster = () => {
                       <option value="" disabled hidden className="text-muted">
                         Select Item
                       </option>
+                      {items.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.name}
+                        </option>
+                      ))}
                     </select>
                     <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                   </div>
@@ -435,7 +853,10 @@ const VendorItemsMaster = () => {
                 <i className="fas fa-file-export"></i>
                 Export Selected
               </button>
-              <button className="btn-action btn-danger">
+              <button 
+                className="btn-action btn-danger"
+                onClick={handleDeleteSelectedVendorItems}
+              >
                 <i className="fas fa-trash"></i>
                 Delete Selected
               </button>
@@ -461,27 +882,30 @@ const VendorItemsMaster = () => {
               </tr>
             </thead>
             <tbody>
-              {vendorItems.length === 0 ? (
+              {filteredVendorItems.length === 0 ? (
                 <tr className="no-data-row">
                   <td colSpan="8" className="no-data-cell">
                     <div className="no-data-content">
                       <i className="fas fa-box-open no-data-icon"></i>
                       <p className="no-data-text">
-                        No vendor-item assignments found
+                        {vendorItems.length === 0 
+                          ? "No vendor-item assignments found" 
+                          : "No matching assignments found"}
                       </p>
                       <p className="no-data-subtext">
-                        Click the "Add New Assignment" button to create your
-                        first assignment
+                        {vendorItems.length === 0 
+                          ? "Click the \"Add New Assignment\" button to create your first assignment"
+                          : "Try adjusting your search or filters"}
                       </p>
                     </div>
                   </td>
                 </tr>
               ) : (
-                vendorItems.map((assignment) => (
+                filteredVendorItems.map((assignment) => (
                   <tr key={assignment.id}>
                     <td className="checkbox-cell ps-4">
                       <input
-                        assignment="checkbox"
+                        type="checkbox"
                         checked={selectedVendorItems.includes(assignment.id)}
                         onChange={() =>
                           handleVendorItemCheckboxChange(assignment.id)
@@ -490,12 +914,27 @@ const VendorItemsMaster = () => {
                     </td>
                     <td className="ps-4">
                       <div>
-                        <span>{assignment.trNo}</span>
+                        <span>{assignment.vendorName}</span>
                       </div>
                     </td>
                     <td className="ps-4">
                       <div>
-                        <span>{assignment.name}</span>
+                        <span>{assignment.itemName}</span>
+                      </div>
+                    </td>
+                    <td className="ps-4">
+                      <div>
+                        <span>{assignment.days} days</span>
+                      </div>
+                    </td>
+                    <td className="ps-4">
+                      <div>
+                        <span>{assignment.quantity}</span>
+                      </div>
+                    </td>
+                    <td className="ps-4">
+                      <div>
+                        <span>₹{assignment.price}</span>
                       </div>
                     </td>
                     <td className="ps-4">
@@ -520,7 +959,11 @@ const VendorItemsMaster = () => {
                       >
                         <i className="fas fa-edit"></i>
                       </button>
-                      <button className="btn-icon btn-danger" title="Delete">
+                      <button 
+                        className="btn-icon btn-danger" 
+                        title="Delete"
+                        onClick={() => handleDeleteVendorItem(assignment.id)}
+                      >
                         <i className="fas fa-trash"></i>
                       </button>
                     </td>
@@ -555,316 +998,289 @@ const VendorItemsMaster = () => {
       </div>
 
       {/* View Type Details Modal */}
-      {isShowVendorItemDetails && (
-        <div
-          className="modal fade"
-          ref={vendorItemModalRef}
-          id="vendorItemDetailModal"
-          tabIndex="-1"
-        >
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">View Assignment Details</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  data-bs-dismiss="modal"
-                  aria-label="Close"
-                ></button>
-              </div>
+      <div
+        className="modal fade"
+        ref={vendorItemModalRef}
+        id="vendorItemDetailModal"
+        tabIndex="-1"
+        aria-labelledby="vendorItemDetailModalLabel"
+        aria-hidden="true"
+      >
+        <div className="modal-dialog">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title" id="vendorItemDetailModalLabel">View Assignment Details</h5>
+              <button
+                type="button"
+                className="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div className="modal-body">
+              <p>
+                <strong>Vendor:</strong> {vendorItemDetails.vendor}
+              </p>
+              <p>
+                <strong>Item:</strong> {vendorItemDetails.item}
+              </p>
+              <p>
+                <strong>Lead Time (Days):</strong>{" "}
+                {vendorItemDetails.leadTime}
+              </p>
+              <p>
+                <strong>Min Order Qty:</strong>{" "}
+                {vendorItemDetails.minOrderQty}
+              </p>
+              <p>
+                <strong>Price:</strong> ₹{vendorItemDetails.price}
+              </p>
+              <p>
+                <strong>Status:</strong>{" "}
+                <span className={`badge status ${vendorItemDetails.status.toLowerCase()}`}>
+                  {vendorItemDetails.status}
+                </span>
+              </p>
+            </div>
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Edit Vendor Item Details Modal */}
+      <div
+        className="modal fade"
+        ref={vendorItemEditModalRef}
+        id="vendorItemEditModal"
+        tabIndex="-1"
+        aria-labelledby="vendorItemEditModalLabel"
+        aria-hidden="true"
+      >
+        <div className="modal-dialog modal-lg">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title" id="vendorItemEditModalLabel">Edit Assignment</h5>
+              <button
+                type="button"
+                className="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <form onSubmit={handleEditVendorItem}>
               <div className="modal-body">
-                <p>
-                  <strong>Vendor:</strong> {vendorItemDetails.vendor}
-                </p>
-                <p>
-                  <strong>Item:</strong> {vendorItemDetails.item}
-                </p>
-                <p>
-                  <strong>Lead Time (Days):</strong>{" "}
-                  {vendorItemDetails.leadTime}
-                </p>
-                <p>
-                  <strong>Min Order Qty:</strong>{" "}
-                  {vendorItemDetails.minOrderQty}
-                </p>
-                <p>
-                  <strong>Price:</strong> {vendorItemDetails.price}
-                </p>
-                <p>
-                  <strong>Status:</strong> {vendorItemDetails.status}
-                </p>
+                <div className="form-grid border-bottom pt-0">
+                  <div className="row form-style">
+                    <div className="col-3 d-flex flex-column form-group">
+                      <label htmlFor="vendor" className="form-label ms-2">
+                        Vendor
+                      </label>
+                      <div className="position-relative w-100">
+                        <i className="fas fa-user-tag position-absolute input-icon"></i>
+                        <select
+                          className="form-control ps-5 ms-2 text-font"
+                          id="vendor"
+                          value={vendorItemDetails.vendor || ""}
+                          onChange={(e) => {
+                            const selectedVendor = vendors.find(v => v.name === e.target.value);
+                            setVendorItemDetails({
+                              ...vendorItemDetails,
+                              vendor: e.target.value,
+                              vendorCode: selectedVendor?.code || ""
+                            });
+                          }}
+                        >
+                          <option value="" disabled>Select Vendor</option>
+                          {vendors.map((vendor) => (
+                            <option key={vendor.id} value={vendor.name}>
+                              {vendor.name}
+                            </option>
+                          ))}
+                        </select>
+                        <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                      </div>
+                      {errors.vendor && (
+                        <span className="error-message ms-2">
+                          {errors.vendor}
+                        </span>
+                      )}
+                    </div>
+                    <div className="col-3 d-flex flex-column form-group">
+                      <label htmlFor="item" className="form-label ms-2">
+                        Item
+                      </label>
+                      <div className="position-relative w-100">
+                        <i className="fas fa-box position-absolute input-icon"></i>
+                        <select
+                          className="form-control ps-5 ms-2 text-font"
+                          id="item"
+                          value={vendorItemDetails.item || ""}
+                          onChange={(e) => {
+                            const selectedItem = items.find(i => i.name === e.target.value);
+                            setVendorItemDetails({
+                              ...vendorItemDetails,
+                              item: e.target.value,
+                              itemCode: selectedItem?.code || ""
+                            });
+                          }}
+                        >
+                          <option value="" disabled>Select Item</option>
+                          {items.map((item) => (
+                            <option key={item.id} value={item.name}>
+                              {item.name}
+                            </option>
+                          ))}
+                        </select>
+                        <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                      </div>
+                      {errors.item && (
+                        <span className="error-message ms-2">
+                          {errors.item}
+                        </span>
+                      )}
+                    </div>
+                    <div className="col-3 d-flex flex-column form-group">
+                      <label htmlFor="leadTime" className="form-label">
+                        Lead Time (Days)
+                      </label>
+                      <div className="position-relative w-100">
+                        <i className="fas fa-hashtag position-absolute input-icon"></i>
+                        <input
+                          type="text"
+                          className="form-control ps-5 text-font"
+                          id="leadTime"
+                          placeholder="Enter lead time"
+                          value={vendorItemDetails.leadTime}
+                          onChange={(e) =>
+                            setVendorItemDetails({
+                              ...vendorItemDetails,
+                              leadTime: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+                    <div className="col-3 d-flex flex-column form-group">
+                      <label htmlFor="minOrderQty" className="form-label">
+                        Min Order Qty
+                      </label>
+                      <div className="position-relative w-100">
+                        <i className="fas fa-hashtag position-absolute input-icon"></i>
+                        <input
+                          type="text"
+                          className="form-control ps-5 text-font"
+                          id="minOrderQty"
+                          placeholder="Enter minimum order quantity"
+                          value={vendorItemDetails.minOrderQty}
+                          onChange={(e) =>
+                            setVendorItemDetails({
+                              ...vendorItemDetails,
+                              minOrderQty: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="row form-style">
+                    <div className="col-3 d-flex flex-column form-group">
+                      <label htmlFor="price" className="form-label">
+                        Price
+                      </label>
+                      <div className="position-relative w-100">
+                        <i className="fas fa-hashtag position-absolute input-icon"></i>
+                        <input
+                          type="text"
+                          className="form-control ps-5 text-font"
+                          id="price"
+                          placeholder="Enter price"
+                          value={vendorItemDetails.price}
+                          onChange={(e) =>
+                            setVendorItemDetails({
+                              ...vendorItemDetails,
+                              price: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+                    <div className="col-3 d-flex flex-column form-group">
+                      <label htmlFor="status" className="form-label">
+                        Status
+                      </label>
+                      <div className="position-relative w-100">
+                        <div className="form-check form-switch position-absolute input-icon mt-1 padding-left-2">
+                          <input
+                            className="form-check-input text-font switch-style"
+                            type="checkbox"
+                            role="switch"
+                            id="switchCheckChecked"
+                            checked={vendorItemDetails.status === 'Active'}
+                            onChange={(e) => {
+                              const newStatus = e.target.checked ? 'Active' : 'Inactive';
+                              setVendorItemDetails({
+                                ...vendorItemDetails,
+                                status: newStatus
+                              });
+                              setIsChecked(e.target.checked);
+                              setStatus(newStatus);
+                            }}
+                          />
+                          <label
+                            className="form-check-label"
+                            htmlFor="switchCheckChecked"
+                          ></label>
+                        </div>
+                        <select
+                          className="form-control text-font switch-padding"
+                          id="status"
+                          value={vendorItemDetails.status}
+                          onChange={(e) => {
+                            const newStatus = e.target.value;
+                            setVendorItemDetails({
+                              ...vendorItemDetails,
+                              status: newStatus
+                            });
+                            setIsChecked(newStatus === 'Active');
+                            setStatus(newStatus);
+                          }}
+                        >
+                          <option value="Active">Active</option>
+                          <option value="Inactive">Inactive</option>
+                        </select>
+                        <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
               <div className="modal-footer">
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                >
+                  Save Changes
+                </button>
                 <button
                   type="button"
                   className="btn btn-secondary"
                   data-bs-dismiss="modal"
-                  onClick={() => {
-                    document.activeElement?.blur();
-                  }}
                 >
                   Close
                 </button>
               </div>
-            </div>
+            </form>
           </div>
         </div>
-      )}
-
-      {/* Edit Vendor Item Details Modal */}
-      {isEditVendorItemDetails && (
-        <div
-          className="modal fade"
-          ref={vendorItemEditModalRef}
-          id="vendorItemEditModal"
-          tabIndex="-1"
-        >
-          <div className="modal-dialog modal-lg">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Edit Assignment</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  data-bs-dismiss="modal"
-                  aria-label="Close"
-                ></button>
-              </div>
-              {/* Modal Body */}
-              <div className="modal-body">
-                <form
-                  autoComplete="off"
-                  className="padding-2"
-                  onSubmit={handleEditVendorItem}
-                >
-                  <div className="form-grid border-bottom pt-0">
-                    <div className="row form-style">
-                      <div className="col-3 d-flex flex-column form-group">
-                        <label htmlFor="vendor" className="form-label ms-2">
-                          Vendor
-                        </label>
-                        <div className="position-relative w-100">
-                          <i className="fas fa-user-tag position-absolute input-icon"></i>
-                          <select
-                            className="form-control ps-5 ms-2 text-font"
-                            id="vendor"
-                            value={vendorItemDetails.vendor}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                vendor: e.target.value,
-                              })
-                            }
-                          >
-                            <option
-                              value=""
-                              disabled
-                              hidden
-                              className="text-muted"
-                            >
-                              Select Vendor
-                            </option>
-                          </select>
-                          <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
-                        </div>
-                        {errors.vendor && (
-                          <span className="error-message ms-2">
-                            {errors.vendor}
-                          </span>
-                        )}
-                      </div>
-                      <div className="col-3 d-flex flex-column form-group">
-                        <label htmlFor="item" className="form-label ms-2">
-                          Item
-                        </label>
-                        <div className="position-relative w-100">
-                          <i className="fas fa-user-tag position-absolute input-icon"></i>
-                          <select
-                            className="form-control ps-5 ms-2 text-font"
-                            id="vendor"
-                            value={vendorItemDetails.item}
-                            onChange={(e) =>
-                              setFormData({ ...formData, item: e.target.value })
-                            }
-                          >
-                            <option
-                              value=""
-                              disabled
-                              hidden
-                              className="text-muted"
-                            >
-                              Select Item
-                            </option>
-                          </select>
-                          <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
-                        </div>
-                        {errors.item && (
-                          <span className="error-message ms-2">
-                            {errors.item}
-                          </span>
-                        )}
-                      </div>
-                      <div className="col-3 d-flex flex-column form-group">
-                        <label htmlFor="leadTime" className="form-label">
-                          Lead Time (Days)
-                        </label>
-                        <div className="position-relative w-100">
-                          <i className="fas fa-hashtag position-absolute input-icon"></i>
-                          <input
-                            type="text"
-                            className="form-control ps-5 text-font"
-                            id="leadTime"
-                            placeholder="Enter lead time"
-                            value={vendorItemDetails.leadTime}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                leadTime: e.target.value,
-                              })
-                            }
-                          />
-                        </div>
-                      </div>
-                      <div className="col-3 d-flex flex-column form-group">
-                        <label htmlFor="minOrderQty" className="form-label">
-                          Min Order Qty
-                        </label>
-                        <div className="position-relative w-100">
-                          <i className="fas fa-hashtag position-absolute input-icon"></i>
-                          <input
-                            type="text"
-                            className="form-control ps-5 text-font"
-                            id="minOrderQty"
-                            placeholder="Enter lead time"
-                            value={vendorItemDetails.minOrderQty}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                minOrderQty: e.target.value,
-                              })
-                            }
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="row form-style">
-                      <div className="col-3 d-flex flex-column form-group">
-                        <label htmlFor="price" className="form-label">
-                          price
-                        </label>
-                        <div className="position-relative w-100">
-                          <i className="fas fa-hashtag position-absolute input-icon"></i>
-                          <input
-                            type="text"
-                            className="form-control ps-5 text-font"
-                            id="price"
-                            placeholder="Enter price"
-                            value={vendorItemDetails.price}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                price: e.target.value,
-                              })
-                            }
-                          />
-                        </div>
-                      </div>
-                      <div className="col-3 d-flex flex-column form-group">
-                        <label htmlFor="status" className="form-label">
-                          Status
-                        </label>
-                        <div className="position-relative w-100">
-                          <div className="form-check form-switch position-absolute input-icon mt-1 padding-left-2">
-                            <input
-                              className="form-check-input text-font switch-style"
-                              type="checkbox"
-                              role="switch"
-                              id="switchCheckChecked"
-                              checked={isChecked}
-                              onChange={(e) => {
-                                const newStatus = e.target.checked
-                                  ? "active"
-                                  : "inactive";
-                                setIsChecked(e.target.checked);
-                                setStatus(newStatus);
-                                setFormData({
-                                  ...formData,
-                                  status: newStatus,
-                                });
-                              }}
-                            />
-
-                            <label
-                              className="form-check-label"
-                              htmlFor="switchCheckChecked"
-                            ></label>
-                          </div>
-                          <select
-                            className="form-control text-font switch-padding"
-                            id="status"
-                            value={status}
-                            onChange={(e) => {
-                              const newStatus = e.target.value;
-                              setStatus(newStatus);
-                              setIsChecked(newStatus === "active");
-
-                              setFormData((prev) => ({
-                                ...prev,
-                                status: newStatus,
-                              }));
-                            }}
-                          >
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                          </select>
-                          <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="form-actions">
-                    <button
-                      className="btn btn-primary border border-0 text-8 px-3 fw-medium py-2 me-3 float-end"
-                      onClick={handleAddVendorItem}
-                    >
-                      <i className="fa-solid fa-floppy-disk me-1"></i> Save
-                      Changes
-                    </button>
-                    <button
-                      className="btn btn-secondary border border-0 text-8 px-3 fw-medium py-2 bg-secondary me-3 float-end"
-                      onClick={handleReset}
-                    >
-                      <i className="fa-solid fa-arrows-rotate me-1"></i> Reset
-                    </button>
-                  </div>
-                </form>
-              </div>
-              <div className="modal-footer">
-                <button
-                  className="btn btn-primary border border-0 text-8 px-3 fw-medium py-2 me-3 float-end"
-                  data-bs-dismiss="modal"
-                  onClick={(e) => {
-                    document.activeElement?.blur();
-                    handleEditType(e);
-                  }}
-                >
-                  <i className="fa-solid fa-floppy-disk me-1"></i> Save Changes
-                </button>
-                <button
-                  className="btn btn-secondary border border-0 bg-secondary text-8 px-3 fw-medium py-2 me-3 float-end"
-                  data-bs-dismiss="modal"
-                  onClick={() => {
-                    document.activeElement?.blur();
-                  }}
-                >
-                  <i className="fa-solid fa-x-mark me-1"></i> Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 };

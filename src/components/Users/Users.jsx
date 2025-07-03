@@ -26,7 +26,7 @@ const Users = () => {
   } = useContext(AppContext);
   
   // Add validateForm function to validate user form data
-  const validateForm = (data) => {
+  const validateForm = (data, isUpdate = false) => {
     const errors = {};
     
     if (!data.name || data.name.trim() === "") {
@@ -39,14 +39,19 @@ const Users = () => {
       errors.email = "Email is invalid";
     }
     
-    if (!data.password || data.password.trim() === "") {
-      errors.password = "Password is required";
-    } else if (data.password.length < 6) {
-      errors.password = "Password must be at least 6 characters";
-    }
-    
-    if (data.password !== data.confirmPassword) {
-      errors.confirmPassword = "Passwords do not match";
+    // Skip password validation for updates if password field is empty
+    if (isUpdate && (!data.password || data.password.trim() === "")) {
+      // Skip password validation for updates
+    } else {
+      if (!data.password || data.password.trim() === "") {
+        errors.password = "Password is required";
+      } else if (data.password.length < 6) {
+        errors.password = "Password must be at least 6 characters";
+      }
+      
+      if (data.password !== data.confirmPassword) {
+        errors.confirmPassword = "Passwords do not match";
+      }
     }
     
     if (!data.role || data.role.trim() === "") {
@@ -125,10 +130,142 @@ const Users = () => {
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
+  const [userModal, setUserModal] = useState(null);
+  const [editModal, setEditModal] = useState(null);
+
   // Fetch users from API
   useEffect(() => {
     fetchUsers();
   }, [currentPage, itemsPerPage]);
+
+  // Dedicated useEffect for handling userDetailModal
+  useEffect(() => {
+    let modal = null;
+    
+    if (isShowUserDetails && userDetails && Object.keys(userDetails).length > 0) {
+      console.log("User detail modal should show with data:", userDetails.name);
+      
+      // Ensure any previous modal instance is disposed
+      if (userModal) {
+        userModal.dispose();
+      }
+      
+      // Clean up any existing modal artifacts
+      cleanupModalArtifacts();
+      
+      const modalElement = document.getElementById('userDetailModal');
+      if (modalElement) {
+        modal = new Modal(modalElement, {
+          keyboard: true,
+          backdrop: true
+        });
+        
+        // Add event listeners
+        modalElement.addEventListener('hidden.bs.modal', () => {
+          console.log('Modal was hidden, cleaning up state');
+          cleanupModalArtifacts();
+          setIsShowUserDetails(false);
+          setUserDetails({});
+        });
+        
+        // Show the modal
+        modal.show();
+        
+        // Store modal reference
+        setUserModal(modal);
+      }
+    }
+    
+    // Clean up function
+    return () => {
+      if (modal) {
+        modal.dispose();
+        cleanupModalArtifacts();
+      }
+    };
+  }, [isShowUserDetails, userDetails.id]); // Only re-run if these values change
+
+  // Update useEffect for edit modal
+  useEffect(() => {
+    let modal = null;
+    
+    if (isEditUserDetails) {
+      console.log("Edit modal should show");
+      const modalElement = document.getElementById('userEditModal');
+      
+      if (modalElement) {
+        // Dispose any existing modal instance first
+        if (editModal) {
+          editModal.dispose();
+        }
+        
+        // Clean up any existing modal artifacts
+        cleanupModalArtifacts();
+        
+        // Create new modal
+        modal = new Modal(modalElement, {
+          backdrop: 'static',
+          keyboard: false
+        });
+        
+        // Add event listener for when modal is hidden
+        modalElement.addEventListener('hidden.bs.modal', () => {
+          console.log('Edit modal was hidden, cleaning up');
+          cleanupModalArtifacts();
+          setIsEditUserDetails(false);
+        });
+        
+        // Show the modal
+        modal.show();
+        
+        // Store modal reference
+        setEditModal(modal);
+      }
+    }
+    
+    // Cleanup function
+    return () => {
+      if (modal) {
+        modal.dispose();
+        cleanupModalArtifacts();
+      }
+    };
+  }, [isEditUserDetails]);
+
+  useEffect(() => {
+    // Check master permissions
+    const allMastersView = masters.every(m => masterViewPermissions[m.type]);
+    const allMastersEdit = masters.every(m => masterEditPermissions[m.type]);
+    setIsAllMastersViewChecked(allMastersView);
+    setIsAllMastersEditChecked(allMastersEdit);
+
+    // Check transaction permissions
+    const allTransactionsView = transactions.every(t => transactionViewPermissions[t.type]);
+    const allTransactionsEdit = transactions.every(t => transactionEditPermissions[t.type]);
+    setIsAllTransactionsViewChecked(allTransactionsView);
+    setIsAllTransactionsEditChecked(allTransactionsEdit);
+
+    // Check report permissions
+    const allReportsView = reports.every(r => reportViewPermissions[r.type]);
+    const allReportsEdit = reports.every(r => reportEditPermissions[r.type]);
+    setIsAllReportsViewChecked(allReportsView);
+    setIsAllReportsEditChecked(allReportsEdit);
+
+    // Check administration permissions
+    const allAdminsView = administrations.every(a => adminViewPermissions[a.type]);
+    const allAdminsEdit = administrations.every(a => adminEditPermissions[a.type]);
+    setIsAllAdministrationsViewChecked(allAdminsView);
+    setIsAllAdministrationsEditChecked(allAdminsEdit);
+  }, [
+    masterViewPermissions,
+    masterEditPermissions,
+    transactionViewPermissions,
+    transactionEditPermissions,
+    reportViewPermissions,
+    reportEditPermissions,
+    adminViewPermissions,
+    adminEditPermissions
+  ]);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -153,6 +290,7 @@ const Users = () => {
           lastLoginIp: user.lastLoginIp,
           companyId: user.companyId,
           branchIds: user.branchIds,
+          permissions: user.permissions || [] // Ensure permissions are included
         }));
 
         console.log("Processed users:", allUsers);
@@ -449,7 +587,6 @@ const Users = () => {
   const handleMasterViewAllChange = (e) => {
     const checked = e.target.checked;
     setIsAllMastersViewChecked(checked);
-
     const updatedPermissions = {};
     masters.forEach((item) => {
       updatedPermissions[item.type] = checked;
@@ -460,7 +597,6 @@ const Users = () => {
   const handleMasterEditAllChange = (e) => {
     const checked = e.target.checked;
     setIsAllMastersEditChecked(checked);
-
     const updatedPermissions = {};
     masters.forEach((item) => {
       updatedPermissions[item.type] = checked;
@@ -469,87 +605,87 @@ const Users = () => {
   };
 
   const handleSingleMasterViewChange = (type) => {
-    setMasterViewPermissions((prev) => {
-      const updated = { ...prev, [type]: !prev[type] };
-      const allChecked = masters.every((item) => updated[item.type]);
-      setIsAllMastersViewChecked(allChecked);
-      return updated;
-    });
+    console.log(`Changing master view permission for ${type} to ${!masterViewPermissions[type]}`);
+    const updatedPermissions = {
+      ...masterViewPermissions,
+      [type]: !masterViewPermissions[type]
+    };
+    setMasterViewPermissions(updatedPermissions);
+    // Check if all masters are now checked
+    const allChecked = masters.every((item) => updatedPermissions[item.type]);
+    setIsAllMastersViewChecked(allChecked);
   };
 
   const handleSingleMasterEditChange = (type) => {
-    setMasterEditPermissions((prev) => {
-      const updated = { ...prev, [type]: !prev[type] };
-      const allChecked = masters.every((item) => updated[item.type]);
-      setIsAllMastersEditChecked(allChecked);
-      return updated;
-    });
+    console.log(`Changing master edit permission for ${type} to ${!masterEditPermissions[type]}`);
+    const updatedPermissions = {
+      ...masterEditPermissions,
+      [type]: !masterEditPermissions[type]
+    };
+    setMasterEditPermissions(updatedPermissions);
+    // Check if all masters are now checked
+    const allChecked = masters.every((item) => updatedPermissions[item.type]);
+    setIsAllMastersEditChecked(allChecked);
   };
 
   const handleTransactionViewAllChange = (e) => {
     const checked = e.target.checked;
     setIsAllTransactionsViewChecked(checked);
-
-    const updatedTransViewPermissions = {};
+    const updatedPermissions = {};
     transactions.forEach((item) => {
-      updatedTransViewPermissions[item.type] = checked;
+      updatedPermissions[item.type] = checked;
     });
-    setTransactionViewPermissions(updatedTransViewPermissions);
+    setTransactionViewPermissions(updatedPermissions);
   };
 
   const handleTransactionEditAllChange = (e) => {
     const checked = e.target.checked;
     setIsAllTransactionsEditChecked(checked);
-
-    const updatedTransEditPermissions = {};
+    const updatedPermissions = {};
     transactions.forEach((item) => {
-      updatedTransEditPermissions[item.type] = checked;
+      updatedPermissions[item.type] = checked;
     });
-    setTransactionEditPermissions(updatedTransEditPermissions);
+    setTransactionEditPermissions(updatedPermissions);
   };
 
   const handleReportViewAllChange = (e) => {
     const checked = e.target.checked;
     setIsAllReportsViewChecked(checked);
-
-    const updatedReportViewPermissions = {};
+    const updatedPermissions = {};
     reports.forEach((item) => {
-      updatedReportViewPermissions[item.type] = checked;
+      updatedPermissions[item.type] = checked;
     });
-    setReportViewPermissions(updatedReportViewPermissions);
+    setReportViewPermissions(updatedPermissions);
   };
 
   const handleReportEditAllChange = (e) => {
     const checked = e.target.checked;
     setIsAllReportsEditChecked(checked);
-
-    const updatedReportEditPermissions = {};
+    const updatedPermissions = {};
     reports.forEach((item) => {
-      updatedReportEditPermissions[item.type] = checked;
+      updatedPermissions[item.type] = checked;
     });
-    setReportEditPermissions(updatedReportEditPermissions);
+    setReportEditPermissions(updatedPermissions);
   };
 
   const handleAdministrationViewAllChange = (e) => {
     const checked = e.target.checked;
     setIsAllAdministrationsViewChecked(checked);
-
-    const updatedAdminViewPermissions = {};
+    const updatedPermissions = {};
     administrations.forEach((item) => {
-      updatedAdminViewPermissions[item.type] = checked;
+      updatedPermissions[item.type] = checked;
     });
-    setAdminViewPermissions(updatedAdminViewPermissions);
+    setAdminViewPermissions(updatedPermissions);
   };
 
   const handleAdministrationEditAllChange = (e) => {
     const checked = e.target.checked;
     setIsAllAdministrationsEditChecked(checked);
-
-    const updatedAdminEditPermissions = {};
+    const updatedPermissions = {};
     administrations.forEach((item) => {
-      updatedAdminEditPermissions[item.type] = checked;
+      updatedPermissions[item.type] = checked;
     });
-    setAdminEditPermissions(updatedAdminEditPermissions);
+    setAdminEditPermissions(updatedPermissions);
   };
 
   const handleUserCheckboxChange = (userId) => {
@@ -629,112 +765,300 @@ const Users = () => {
     console.log("Form reset complete");
   };
 
-  const handleViewDetails = (user, e) => {
+  const handleViewDetails = async (user, e) => {
     e.preventDefault();
-    console.log(user);
-    setUserDetails(user);
-    setIsShowUserDetails(true);
+    try {
+      console.log("Fetching details for user:", user.id);
+      
+      // First reset any existing user details
+      setUserDetails({});
+      
+      const response = await api.get(`/api/users/${user.id}`);
+      console.log("User details response:", response.data);
+      
+      if (response.data && response.data.status === true) {
+        const userData = response.data.data;
+        
+        // Make a clean permissions array by filtering out duplicates if needed
+        const uniquePermissions = userData.permissions ? 
+          [...new Map(userData.permissions.map(p => [p.pageName, p])).values()] : 
+          [];
+          
+        console.log("Unique permissions:", uniquePermissions);
+        
+        // Set user details with clean data
+        setUserDetails({
+          ...userData,
+          id: user.id,
+          name: userData.username,
+          role: userData.role,
+          email: userData.email,
+          status: userData.status,
+          department: userData.department,
+          permissions: uniquePermissions
+        });
+        
+        // Now set flag to show modal
+        setIsShowUserDetails(true);
+        
+        // Initialize the modal after a short delay
+        setTimeout(() => {
+          const modalElement = document.getElementById('userDetailModal');
+          if (modalElement) {
+            const modal = new Modal(modalElement, {
+              keyboard: true,
+              backdrop: true
+            });
+            setUserModal(modal);
+            modal.show();
+          }
+        }, 100);
+      }
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+      alert("Failed to fetch user details. Please try again.");
+    }
+  };
+
+  // Add cleanup for modal
+  const handleCloseModal = () => {
+    console.log("Closing user details modal");
+    if (userModal) {
+      userModal.hide();
+      cleanupModalArtifacts();
+    }
+    
+    // Add a small delay before resetting states to allow animation to complete
+    setTimeout(() => {
+      setIsShowUserDetails(false);
+      setUserDetails({});
+    }, 300);
   };
 
   // Handle edit user details
-  const handleEditDetails = (user, e) => {
+  const handleEditDetails = async (user, e) => {
     e.preventDefault();
-    console.log("Editing user:", user);
-    setUserDetails(user);
+    console.log("Edit details for user:", user); // Log the user object
     
-    // Set selected branch options
-    if (user.branchIds && Array.isArray(user.branchIds)) {
-      const selectedBranches = branchDropdownValues.filter(branch => 
-        user.branchIds.includes(branch.value)
-      );
-      setSelectedOptions(selectedBranches);
-    } else {
-      setSelectedOptions([]);
-    }
-    
-    // Set permissions based on user data
-    if (user.permissions && Array.isArray(user.permissions)) {
-      // Reset all permissions first
-      setMasterViewPermissions({});
-      setMasterEditPermissions({});
-      setTransactionViewPermissions({});
-      setTransactionEditPermissions({});
-      setReportViewPermissions({});
-      setReportEditPermissions({});
-      setAdminViewPermissions({});
-      setAdminEditPermissions({});
+    try {
+      // First load branch data
+      const branchResponse = await api.get("/api/branch/by-company");
+      if (branchResponse.data && branchResponse.data.status === true) {
+        const branchList = branchResponse.data.data;
+        const formattedBranches = branchList.map((branch) => ({
+          label: `${branch.name} (${branch.code})`,
+          value: branch.id,
+        }));
+        setBranchDropdownValues(formattedBranches);
+      }
+
+      // Then fetch user details
+      console.log("Fetching user details for ID:", user.id); // Log the user ID
+      const response = await api.get(`/api/users/${user.id}`);
+      console.log("User details response:", response.data); // Log the full response
       
-      // Set permissions based on user data
-      user.permissions.forEach(permission => {
-        const { pageName, canView, canEdit } = permission;
+      if (response.data && response.data.status === true) {
+        const userData = response.data.data;
+        console.log("User data received:", userData); // Log the user data
         
-        // Find the corresponding module type
-        let moduleType = null;
-        let moduleCategory = null;
+        // Set initial status state based on user data
+        setIsChecked(userData.status.toUpperCase() === "ACTIVE");
+        setStatus(userData.status.toUpperCase());
         
-        [...masters, ...transactions, ...reports, ...administrations].forEach(module => {
-          if (module.name === pageName) {
-            moduleType = module.type;
-            if (masters.some(m => m.type === module.type)) {
-              moduleCategory = 'master';
-            } else if (transactions.some(t => t.type === module.type)) {
-              moduleCategory = 'transaction';
-            } else if (reports.some(r => r.type === module.type)) {
-              moduleCategory = 'report';
-            } else if (administrations.some(a => a.type === module.type)) {
-              moduleCategory = 'admin';
-            }
-          }
+        // Set user details with all necessary fields
+        const updatedUserDetails = {
+          ...userData,
+          id: user.id, // Make sure to set the user ID correctly
+          name: userData.username,
+          role: userData.role,
+          email: userData.email,
+          status: userData.status.toUpperCase(),
+          department: userData.department,
+          password: "", // Clear password field for security
+          confirmPassword: "" // Clear confirm password field
+        };
+        
+        console.log("Setting user details to:", updatedUserDetails); // Log the updated user details
+        setUserDetails(updatedUserDetails);
+        
+        // Also update formData state to match
+        setFormData({
+          name: userData.username,
+          email: userData.email,
+          password: "",
+          confirmPassword: "",
+          role: userData.role,
+          department: userData.department,
+          status: userData.status.toUpperCase(),
+          branch: ""
         });
         
-        if (moduleType && moduleCategory) {
-          if (canView) {
-            if (moduleCategory === 'master') {
-              setMasterViewPermissions(prev => ({ ...prev, [moduleType]: true }));
-            } else if (moduleCategory === 'transaction') {
-              setTransactionViewPermissions(prev => ({ ...prev, [moduleType]: true }));
-            } else if (moduleCategory === 'report') {
-              setReportViewPermissions(prev => ({ ...prev, [moduleType]: true }));
-            } else if (moduleCategory === 'admin') {
-              setAdminViewPermissions(prev => ({ ...prev, [moduleType]: true }));
-            }
-          }
-          
-          if (canEdit) {
-            if (moduleCategory === 'master') {
-              setMasterEditPermissions(prev => ({ ...prev, [moduleType]: true }));
-            } else if (moduleCategory === 'transaction') {
-              setTransactionEditPermissions(prev => ({ ...prev, [moduleType]: true }));
-            } else if (moduleCategory === 'report') {
-              setReportEditPermissions(prev => ({ ...prev, [moduleType]: true }));
-            } else if (moduleCategory === 'admin') {
-              setAdminEditPermissions(prev => ({ ...prev, [moduleType]: true }));
-            }
-          }
+        // Set selected branch options from the branches array in response
+        if (userData.branches && Array.isArray(userData.branches)) {
+          const selectedBranches = userData.branches.map(branch => ({
+            label: `${branch.name} (${branch.code})`,
+            value: branch.id
+          }));
+          setSelectedOptions(selectedBranches);
+        } else {
+          setSelectedOptions([]);
         }
-      });
-      
-      // Check if all masters/transactions/reports/admin permissions are set
-      const allMastersView = masters.every(m => masterViewPermissions[m.type]);
-      const allMastersEdit = masters.every(m => masterEditPermissions[m.type]);
-      const allTransactionsView = transactions.every(t => transactionViewPermissions[t.type]);
-      const allTransactionsEdit = transactions.every(t => transactionEditPermissions[t.type]);
-      const allReportsView = reports.every(r => reportViewPermissions[r.type]);
-      const allReportsEdit = reports.every(r => reportEditPermissions[r.type]);
-      const allAdminsView = administrations.every(a => adminViewPermissions[a.type]);
-      const allAdminsEdit = administrations.every(a => adminEditPermissions[a.type]);
-      
-      setIsAllMastersViewChecked(allMastersView);
-      setIsAllMastersEditChecked(allMastersEdit);
-      setIsAllTransactionsViewChecked(allTransactionsView);
-      setIsAllTransactionsEditChecked(allTransactionsEdit);
-      setIsAllReportsViewChecked(allReportsView);
-      setIsAllReportsEditChecked(allReportsEdit);
-      setIsAllAdministrationsViewChecked(allAdminsView);
-      setIsAllAdministrationsEditChecked(allAdminsEdit);
+
+        // Set permissions based on user data
+        if (userData.permissions && Array.isArray(userData.permissions)) {
+          console.log("Setting permissions from:", userData.permissions);
+          
+          // Reset all permissions first
+          const newMasterViewPermissions = {};
+          const newMasterEditPermissions = {};
+          const newTransactionViewPermissions = {};
+          const newTransactionEditPermissions = {};
+          const newReportViewPermissions = {};
+          const newReportEditPermissions = {};
+          const newAdminViewPermissions = {};
+          const newAdminEditPermissions = {};
+          
+          // Create a mapping of permission names to modules for more accurate matching
+          const permissionMapping = {};
+          
+          // Map exact permission names to modules
+          masters.forEach(master => {
+            const exactName = master.name;
+            const withoutMaster = master.name.replace(" Master", "");
+            permissionMapping[exactName] = { type: master.type, category: 'master' };
+            permissionMapping[withoutMaster] = { type: master.type, category: 'master' };
+          });
+          
+          transactions.forEach(transaction => {
+            permissionMapping[transaction.name] = { type: transaction.type, category: 'transaction' };
+          });
+          
+          reports.forEach(report => {
+            permissionMapping[report.name] = { type: report.type, category: 'report' };
+          });
+          
+          administrations.forEach(admin => {
+            permissionMapping[admin.name] = { type: admin.type, category: 'admin' };
+          });
+          
+          console.log("Permission mapping:", permissionMapping);
+          
+          // Set permissions based on user data
+          userData.permissions.forEach(permission => {
+            const { pageName, canView, canEdit } = permission;
+            console.log(`Processing permission: ${pageName}, canView: ${canView}, canEdit: ${canEdit}`);
+            
+            // Find exact match first
+            let moduleInfo = permissionMapping[pageName];
+            
+            // If no exact match, try without "Master" suffix
+            if (!moduleInfo && pageName.includes("Master")) {
+              moduleInfo = permissionMapping[pageName.replace(" Master", "")];
+            }
+            
+            // If still no match, try a more fuzzy match as last resort
+            if (!moduleInfo) {
+              const possibleKeys = Object.keys(permissionMapping);
+              for (const key of possibleKeys) {
+                // Check for significant overlap (more than 50% match)
+                if (
+                  (pageName.includes(key) && key.length > 3) || 
+                  (key.includes(pageName) && pageName.length > 3)
+                ) {
+                  moduleInfo = permissionMapping[key];
+                  console.log(`Fuzzy match found: ${pageName} -> ${key}`);
+                  break;
+                }
+              }
+            }
+            
+            if (moduleInfo) {
+              const { type: moduleType, category: moduleCategory } = moduleInfo;
+              console.log(`Found match for ${pageName}: type=${moduleType}, category=${moduleCategory}`);
+              
+              if (canView) {
+                if (moduleCategory === 'master') {
+                  newMasterViewPermissions[moduleType] = true;
+                } else if (moduleCategory === 'transaction') {
+                  newTransactionViewPermissions[moduleType] = true;
+                } else if (moduleCategory === 'report') {
+                  newReportViewPermissions[moduleType] = true;
+                } else if (moduleCategory === 'admin') {
+                  newAdminViewPermissions[moduleType] = true;
+                }
+              }
+              
+              if (canEdit) {
+                if (moduleCategory === 'master') {
+                  newMasterEditPermissions[moduleType] = true;
+                } else if (moduleCategory === 'transaction') {
+                  newTransactionEditPermissions[moduleType] = true;
+                } else if (moduleCategory === 'report') {
+                  newReportEditPermissions[moduleType] = true;
+                } else if (moduleCategory === 'admin') {
+                  newAdminEditPermissions[moduleType] = true;
+                }
+              }
+            } else {
+              console.warn(`No module match found for permission: ${pageName}`);
+            }
+          });
+          
+          console.log("Setting master view permissions:", newMasterViewPermissions);
+          console.log("Setting master edit permissions:", newMasterEditPermissions);
+          
+          // Set all permissions at once
+          setMasterViewPermissions(newMasterViewPermissions);
+          setMasterEditPermissions(newMasterEditPermissions);
+          setTransactionViewPermissions(newTransactionViewPermissions);
+          setTransactionEditPermissions(newTransactionEditPermissions);
+          setReportViewPermissions(newReportViewPermissions);
+          setReportEditPermissions(newReportEditPermissions);
+          setAdminViewPermissions(newAdminViewPermissions);
+          setAdminEditPermissions(newAdminEditPermissions);
+          
+          // Update the "all checked" states after setting permissions
+          setTimeout(() => {
+            const allMastersView = masters.every(m => newMasterViewPermissions[m.type]);
+            const allMastersEdit = masters.every(m => newMasterEditPermissions[m.type]);
+            const allTransactionsView = transactions.every(t => newTransactionViewPermissions[t.type]);
+            const allTransactionsEdit = transactions.every(t => newTransactionEditPermissions[t.type]);
+            const allReportsView = reports.every(r => newReportViewPermissions[r.type]);
+            const allReportsEdit = reports.every(r => newReportEditPermissions[r.type]);
+            const allAdminsView = administrations.every(a => newAdminViewPermissions[a.type]);
+            const allAdminsEdit = administrations.every(a => newAdminEditPermissions[a.type]);
+            
+            setIsAllMastersViewChecked(allMastersView);
+            setIsAllMastersEditChecked(allMastersEdit);
+            setIsAllTransactionsViewChecked(allTransactionsView);
+            setIsAllTransactionsEditChecked(allTransactionsEdit);
+            setIsAllReportsViewChecked(allReportsView);
+            setIsAllReportsEditChecked(allReportsEdit);
+            setIsAllAdministrationsViewChecked(allAdminsView);
+            setIsAllAdministrationsEditChecked(allAdminsEdit);
+            
+            console.log("All masters view checked:", allMastersView);
+            console.log("All masters edit checked:", allMastersEdit);
+          }, 100);
+        }
+        
+        // Set edit modal to true and initialize modal
+        setIsEditUserDetails(true);
+        
+        // Initialize modal after a short delay to ensure DOM is ready
+        setTimeout(() => {
+          const modalElement = document.getElementById('userEditModal');
+          if (modalElement) {
+            const modal = new Modal(modalElement);
+            setEditModal(modal);
+            modal.show();
+          }
+        }, 200);
+      }
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+      alert("Failed to fetch user details. Please try again.");
     }
-    
-    setIsEditUserDetails(true);
   };
 
   // Handle delete user
@@ -767,45 +1091,6 @@ const Users = () => {
       }
     } finally {
       setDeleteLoading(false);
-    }
-  };
-
-  // Add handleEditUser function to handle editing users
-  const handleEditUser = async (e) => {
-    e.preventDefault();
-    
-    // Collect permissions for the edit
-    const permissions = collectPermissions();
-    
-    const updatedUser = {
-      username: userDetails.name,
-      email: userDetails.email,
-      role: userDetails.role.toUpperCase(),
-      department: userDetails.department,
-      status: userDetails.status.toLowerCase(),
-      branchIds: selectedOptions.map(option => option.value),
-      permissions: permissions
-    };
-    
-    try {
-      const response = await api.put(`/api/users/update/${userDetails.id}`, updatedUser);
-      if (response.data && response.data.status === true) {
-        alert(response.data.message); // Show success message
-        setIsEditUserDetails(false); // Close the edit modal
-        
-        // Add a small delay before fetching users to ensure the server has processed the change
-        setTimeout(() => {
-          console.log("Refreshing users list after updating user");
-          fetchUsers(); // Refresh the user list
-        }, 500);
-      }
-    } catch (error) {
-      console.error("Error updating user:", error);
-      if (error.response && error.response.data && error.response.data.message) {
-        alert(error.response.data.message); // Show error message
-      } else {
-        alert("An error occurred while updating the user. Please try again later.");
-      }
     }
   };
 
@@ -873,6 +1158,221 @@ const Users = () => {
       alert("Failed to load branches. Please try again.");
     }
   };
+
+  // Add handleCloseEditModal function
+  const handleCloseEditModal = () => {
+    console.log("Closing edit modal");
+    // First hide the modal using Bootstrap's API
+    if (editModal) {
+      editModal.hide();
+      cleanupModalArtifacts();
+    }
+    
+    // Add a small delay before resetting states to allow animation to complete
+    setTimeout(() => {
+      setIsEditUserDetails(false);
+      setUserDetails({});
+      setSelectedOptions([]);
+      setErrors({});
+    }, 300);
+  };
+
+  // Update handleEditUser function to match the required API structure
+  const handleEditUser = async (e) => {
+    e.preventDefault();
+    console.log("handleEditUser called"); // Debug log
+    console.log("Current masterViewPermissions:", masterViewPermissions);
+    console.log("Current masterEditPermissions:", masterEditPermissions);
+    console.log("Current transactionViewPermissions:", transactionViewPermissions);
+    console.log("Current transactionEditPermissions:", transactionEditPermissions);
+    console.log("Current reportViewPermissions:", reportViewPermissions);
+    console.log("Current reportEditPermissions:", reportEditPermissions);
+    console.log("Current adminViewPermissions:", adminViewPermissions);
+    console.log("Current adminEditPermissions:", adminEditPermissions);
+    
+    // Validate form data with isUpdate=true to skip password validation if empty
+    const validationErrors = validateForm({
+      ...userDetails,
+      branch: selectedOptions
+    }, true);
+    
+    console.log("Validation errors:", validationErrors); // Debug log
+    setErrors(validationErrors);
+    
+    if (Object.keys(validationErrors).length > 0) {
+      console.log("Form has validation errors"); // Debug log
+      return;
+    }
+    
+    // Format permissions according to the required structure
+    const formattedPermissions = [];
+    
+    // Add master permissions with the original names from API
+    masters.forEach(master => {
+      // Use the exact name as in the server's expected format
+      formattedPermissions.push({
+        pageName: master.name, // Keep the original name with "Master" suffix
+        canView: !!masterViewPermissions[master.type],
+        canEdit: !!masterEditPermissions[master.type]
+      });
+    });
+    
+    // Add transaction permissions
+    transactions.forEach(transaction => {
+      formattedPermissions.push({
+        pageName: transaction.name,
+        canView: !!transactionViewPermissions[transaction.type],
+        canEdit: !!transactionEditPermissions[transaction.type]
+      });
+    });
+    
+    // Add report permissions
+    reports.forEach(report => {
+      formattedPermissions.push({
+        pageName: report.name,
+        canView: !!reportViewPermissions[report.type],
+        canEdit: !!reportEditPermissions[report.type]
+      });
+    });
+    
+    // Add administration permissions
+    administrations.forEach(admin => {
+      formattedPermissions.push({
+        pageName: admin.name,
+        canView: !!adminViewPermissions[admin.type],
+        canEdit: !!adminEditPermissions[admin.type]
+      });
+    });
+
+    console.log("Formatted permissions:", formattedPermissions); // Debug log
+
+    // Prepare the update payload according to the API format
+    const updatedUser = {
+      id: userDetails.id, // Explicitly include the user ID in the payload
+      username: userDetails.name,
+      email: userDetails.email,
+      role: userDetails.role.toUpperCase(), // Ensure role is uppercase
+      department: userDetails.department,
+      status: userDetails.status.toUpperCase(), // Ensure status is uppercase
+      branchIds: selectedOptions.map(option => option.value),
+      permissions: formattedPermissions
+    };
+
+    // Only include password if it was changed
+    if (userDetails.password && userDetails.password.trim() !== "") {
+      updatedUser.password = userDetails.password;
+    }
+
+    console.log("Current user details:", userDetails); // Debug log
+    console.log("Updating user with data:", updatedUser); // Debug log
+    console.log("User ID being updated:", userDetails.id); // Debug log
+    
+    try {
+      // Make sure we have a valid user ID
+      if (!userDetails.id) {
+        alert("Error: Missing user ID for update");
+        return;
+      }
+      
+      // Try multiple API endpoint formats to ensure one works
+      let response;
+      let endpoint = `/api/users/update/${userDetails.id}`;
+      console.log("Trying API endpoint:", endpoint); // Debug log
+      
+      try {
+        response = await api({
+          method: 'put',
+          url: endpoint,
+          data: updatedUser,
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+      } catch (err) {
+        console.log("First endpoint failed, trying alternate endpoint");
+        
+        // Try alternate endpoint format
+        endpoint = `/api/users/${userDetails.id}`;
+        console.log("Trying alternate API endpoint:", endpoint); // Debug log
+        
+        response = await api({
+          method: 'put',
+          url: endpoint,
+          data: updatedUser,
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+      }
+      
+      console.log("Update response:", response); // Debug log
+      
+      if (response.data && response.data.status === true) {
+        // First properly hide the modal using Bootstrap's API
+        if (editModal) {
+          editModal.hide();
+        }
+        
+        // Clean up any modal artifacts
+        cleanupModalArtifacts();
+        
+        // Reset modal state
+        setIsEditUserDetails(false);
+        
+        // Reset form states
+        setUserDetails({});
+        setSelectedOptions([]);
+        setErrors({});
+        
+        // Refresh user list
+        await fetchUsers();
+        
+        // Show success message after all UI updates
+        setTimeout(() => {
+          alert(response.data.message);
+        }, 100);
+      } else {
+        console.error("API returned success=false:", response.data);
+        alert(response.data.message || "Update failed. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error updating user:", error);
+      console.error("Error response:", error.response); // Debug log
+      
+      // More detailed error logging
+      if (error.response) {
+        console.error("Error status:", error.response.status);
+        console.error("Error headers:", error.response.headers);
+        console.error("Error data:", error.response.data);
+      }
+      
+      if (error.response?.data?.message) {
+        alert(error.response.data.message);
+      } else {
+        alert("An error occurred while updating the user. Please try again later.");
+      }
+    }
+  };
+
+  // Global function to clean up modal artifacts
+  const cleanupModalArtifacts = () => {
+    console.log("Cleaning up modal artifacts");
+    document.body.classList.remove('modal-open');
+    document.body.style.paddingRight = '';
+    document.body.style.overflow = '';
+    const backdrops = document.getElementsByClassName('modal-backdrop');
+    while(backdrops.length > 0) {
+      backdrops[0].remove();
+    }
+  };
+
+  // Add useEffect for component mount/unmount to ensure modals are cleaned up
+  useEffect(() => {
+    // On component unmount, clean up any modal artifacts
+    return () => {
+      cleanupModalArtifacts();
+    };
+  }, []);
 
   return (
     <div>
@@ -1489,7 +1989,9 @@ const Users = () => {
                       <tbody>
                         {administrations.map((administration) => (
                           <tr key={administration.type}>
-                            <td className="user-info">{administration.name}</td>
+                            <td className="user-info">
+                              {administration.name}
+                            </td>
                             <td className="icon-align">
                               <div className="permission-controls">
                                 <label
@@ -1796,54 +2298,117 @@ const Users = () => {
 
       {/* View User Details Modal */}
       {isShowUserDetails && (
-        <div
-          className="modal fade"
-          ref={userModalRef}
-          id="userDetailModal"
-          tabIndex="-1"
-        >
-          <div className="modal-dialog">
+        <div className="modal fade" id="userDetailModal" tabIndex="-1">
+          <div className="modal-dialog modal-lg">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">
-                  View {userDetails.name}'s Details
+                  <i className="fas fa-user-circle me-2"></i>
+                  User Details
                 </h5>
                 <button
                   type="button"
                   className="btn-close"
-                  data-bs-dismiss="modal"
+                  onClick={handleCloseModal}
                   aria-label="Close"
                 ></button>
               </div>
               <div className="modal-body">
-                <p>
-                  <strong>Name:</strong> {userDetails.name}
-                </p>
-                <p>
-                  <strong>Email:</strong> {userDetails.email}
-                </p>
-                <p>
-                  <strong>Role:</strong> {userDetails.role}
-                </p>
-                <p>
-                  <strong>Status:</strong> {userDetails.status}
-                </p>
-                <p>
-                  <strong>Last Login:</strong> {userDetails.lastLogin}
-                </p>
-                <p>
-                  <strong>Permissions:</strong> {}
-                </p>
+                {/* Basic Information */}
+                <div className="user-details-grid">
+                  <div className="detail-item">
+                    <strong>Full Name</strong>
+                    <span>{userDetails.username}</span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Email Address</strong>
+                    <span>{userDetails.email}</span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Role</strong>
+                    <span className={`badge ${userDetails.role?.toLowerCase()}`}>
+                      {userDetails.role}
+                    </span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Department</strong>
+                    <span className="text-capitalize">{userDetails.department}</span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Status</strong>
+                    <span className={`badge status ${userDetails.status?.toLowerCase()}`}>
+                      {userDetails.status}
+                    </span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Company</strong>
+                    <span>{userDetails.companyName}</span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Last Login Time</strong>
+                    <span>{formatDateTime(userDetails.lastLoginDateTime) || 'Never'}</span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Last Login IP</strong>
+                    <span>{userDetails.lastLoginIp || 'N/A'}</span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Assigned Branches</strong>
+                    <span>{userDetails.branches?.map(branch => `${branch.name} (${branch.code})`).join(", ") || 'None assigned'}</span>
+                  </div>
+                </div>
+
+                {/* Permissions Table */}
+                <div className="permissions-section">
+                  <h6 className="px-3 pt-3 mb-3">
+                    <i className="fas fa-lock me-2"></i>
+                    Module Permissions
+                  </h6>
+                  <div className="table-responsive">
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          <th style={{width: '60%'}}>Module Name</th>
+                          <th style={{width: '20%'}} className="text-center">View</th>
+                          <th style={{width: '20%'}} className="text-center">Edit</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {userDetails.permissions && userDetails.permissions.length > 0 ? (
+                          // Only render unique permissions by pageName
+                          [...new Map(userDetails.permissions.map(p => [p.pageName, p])).values()].map((permission, index) => {
+                            console.log(`Rendering permission: ${permission.pageName}, view: ${permission.canView}, edit: ${permission.canEdit}`);
+                            return (
+                              <tr key={index}>
+                                <td className="align-middle">
+                                  <span className="fw-medium">{permission.pageName}</span>
+                                </td>
+                                <td className="text-center align-middle">
+                                  <i className={`fas ${permission.canView ? 'fa-check text-success' : 'fa-times text-danger'}`}></i>
+                                </td>
+                                <td className="text-center align-middle">
+                                  <i className={`fas ${permission.canEdit ? 'fa-check text-success' : 'fa-times text-danger'}`}></i>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        ) : (
+                          <tr>
+                            <td colSpan="3" className="text-center">No permissions found</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
               <div className="modal-footer">
                 <button
                   type="button"
                   className="btn btn-secondary"
-                  data-bs-dismiss="modal"
-                  onClick={() => {
-                    document.activeElement?.blur();
-                  }}
+                  onClick={handleCloseModal}
                 >
+                  <i className="fas fa-times me-2"></i>
                   Close
                 </button>
               </div>
@@ -1856,22 +2421,27 @@ const Users = () => {
       {isEditUserDetails && (
         <div
           className="modal fade"
-          ref={userEditModalRef}
           id="userEditModal"
           tabIndex="-1"
+          aria-labelledby="editUserModalLabel"
+          aria-hidden="true"
+          data-bs-backdrop="static"
+          data-bs-keyboard="false"
         >
           <div className="modal-dialog modal-lg">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Edit User</h5>
+                <h5 className="modal-title" id="editUserModalLabel">
+                  <i className="fas fa-user-edit me-2"></i>
+                  Edit User
+                </h5>
                 <button
                   type="button"
                   className="btn-close"
-                  data-bs-dismiss="modal"
+                  onClick={handleCloseEditModal}
                   aria-label="Close"
                 ></button>
               </div>
-              {/* Modal Body */}
               <div className="modal-body">
                 <div className="table-form-container">
                   <div className="form-container">
@@ -1895,8 +2465,8 @@ const Users = () => {
                                 id="userId"
                                 value={userDetails.name}
                                 onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
+                                  setUserDetails({
+                                    ...userDetails,
                                     name: e.target.value,
                                   })
                                 }
@@ -1917,8 +2487,8 @@ const Users = () => {
                                 placeholder="Enter email address"
                                 value={userDetails.email}
                                 onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
+                                  setUserDetails({
+                                    ...userDetails,
                                     email: e.target.value,
                                   })
                                 }
@@ -1936,20 +2506,48 @@ const Users = () => {
                                 type="password"
                                 className="form-control text-font ps-5"
                                 id="pass"
-                                placeholder="Enter your password"
-                                value={"*****"}
+                                placeholder="Enter new password (optional)"
+                                value={userDetails.password || ""}
                                 onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
+                                  setUserDetails({
+                                    ...userDetails,
                                     password: e.target.value,
                                   })
                                 }
                                 autoComplete="off"
                               />
                             </div>
+                            {errors.password && (
+                              <span className="error-message">{errors.password}</span>
+                            )}
                           </div>
                         </div>
                         <div className="row">
+                          <div className="col-4 d-flex flex-column form-group">
+                            <label htmlFor="cnfpass" className="form-label">
+                              Confirm Password
+                            </label>
+                            <div className="position-relative w-100">
+                              <i className="fas fa-lock position-absolute input-icon"></i>
+                              <input
+                                type="password"
+                                className="form-control text-font ps-5"
+                                id="cnfpass"
+                                placeholder="Confirm new password (optional)"
+                                value={userDetails.confirmPassword || ""}
+                                onChange={(e) =>
+                                  setUserDetails({
+                                    ...userDetails,
+                                    confirmPassword: e.target.value,
+                                  })
+                                }
+                                autoComplete="off"
+                              />
+                            </div>
+                            {errors.confirmPassword && (
+                              <span className="error-message">{errors.confirmPassword}</span>
+                            )}
+                          </div>
                           <div className="col-4 d-flex flex-column form-group">
                             <label htmlFor="role" className="form-label">
                               Role
@@ -1961,8 +2559,8 @@ const Users = () => {
                                 id="role"
                                 value={userDetails.role}
                                 onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
+                                  setUserDetails({
+                                    ...userDetails,
                                     role: e.target.value,
                                   })
                                 }
@@ -1975,9 +2573,9 @@ const Users = () => {
                                 >
                                   Select Role
                                 </option>
-                                <option value="admin">Admin</option>
-                                <option value="executive">Executive</option>
-                                <option value="manager">Manager</option>
+                                <option value="ADMIN">Admin</option>
+                                <option value="MANAGER">Manager</option>
+                                <option value="USER">User</option>
                               </select>
                               <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                             </div>
@@ -1991,10 +2589,10 @@ const Users = () => {
                               <select
                                 className="form-control ps-5 text-font"
                                 id="department"
-                                value={"HQ"}
+                                value={userDetails.department}
                                 onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
+                                  setUserDetails({
+                                    ...userDetails,
                                     department: e.target.value,
                                   })
                                 }
@@ -2007,12 +2605,17 @@ const Users = () => {
                                 >
                                   Select Department
                                 </option>
-                                <option value="production">Production</option>
-                                <option value="store">Store</option>
+                                <option value="Sales">Sales</option>
+                                <option value="Production">Production</option>
+                                <option value="Store">Store</option>
+                                <option value="Quality">Quality</option>
+                                <option value="IT">IT</option>
                               </select>
                               <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                             </div>
                           </div>
+                        </div>
+                        <div className="row">
                           <div className="col-4 d-flex flex-column form-group">
                             <label htmlFor="status" className="form-label">
                               Status
@@ -2024,24 +2627,17 @@ const Users = () => {
                                   type="checkbox"
                                   role="switch"
                                   id="switchCheckChecked"
-                                  checked={
-                                    userDetails.status === "Active"
-                                      ? true
-                                      : false
-                                  }
+                                  checked={isChecked}
                                   onChange={(e) => {
-                                    const newStatus = e.target.checked
-                                      ? "active"
-                                      : "inactive";
+                                    const newStatus = e.target.checked ? "ACTIVE" : "INACTIVE";
                                     setIsChecked(e.target.checked);
                                     setStatus(newStatus);
-                                    setFormData({
-                                      ...formData,
-                                      status: newStatus,
-                                    });
+                                    setUserDetails(prev => ({
+                                      ...prev,
+                                      status: newStatus
+                                    }));
                                   }}
                                 />
-
                                 <label
                                   className="form-check-label"
                                   htmlFor="switchCheckChecked"
@@ -2054,22 +2650,19 @@ const Users = () => {
                                 onChange={(e) => {
                                   const newStatus = e.target.value;
                                   setStatus(newStatus);
-                                  setIsChecked(newStatus === "active");
-
-                                  setFormData((prev) => ({
+                                  setIsChecked(newStatus === "ACTIVE");
+                                  setUserDetails(prev => ({
                                     ...prev,
-                                    status: newStatus,
+                                    status: newStatus
                                   }));
                                 }}
                               >
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
+                                <option value="ACTIVE">Active</option>
+                                <option value="INACTIVE">Inactive</option>
                               </select>
                               <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                             </div>
                           </div>
-                        </div>
-                        <div className="row">
                           <div className="col-4 d-flex flex-column form-group">
                             <label htmlFor="branch" className="form-label">
                               Branch
@@ -2537,30 +3130,24 @@ const Users = () => {
                           </div>
                         </div>
                       </div>
+                      <div className="modal-footer">
+                        <button
+                          type="submit"
+                          className="btn btn-primary border border-0 text-8 px-3 fw-medium py-2 me-3"
+                        >
+                          <i className="fa-solid fa-floppy-disk me-1"></i> Save Changes
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-secondary border border-0 bg-secondary text-8 px-3 fw-medium py-2 me-3"
+                          onClick={handleCloseEditModal}
+                        >
+                          <i className="fa-solid fa-times me-1"></i> Close
+                        </button>
+                      </div>
                     </form>
                   </div>
                 </div>
-              </div>
-              <div className="modal-footer">
-                <button
-                  className="btn btn-primary border border-0 text-8 px-3 fw-medium py-2 me-3 float-end"
-                  data-bs-dismiss="modal"
-                  onClick={(e) => {
-                    document.activeElement?.blur();
-                    handleEditUser(e);
-                  }}
-                >
-                  <i className="fa-solid fa-floppy-disk me-1"></i> Save Changes
-                </button>
-                <button
-                  className="btn btn-secondary border border-0 bg-secondary text-8 px-3 fw-medium py-2 me-3 float-end"
-                  data-bs-dismiss="modal"
-                  onClick={() => {
-                    document.activeElement?.blur();
-                  }}
-                >
-                  <i className="fa-solid fa-x-mark me-1"></i> Close
-                </button>
               </div>
             </div>
           </div>
@@ -2571,3 +3158,4 @@ const Users = () => {
 };
 
 export default Users;
+

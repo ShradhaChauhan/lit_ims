@@ -13,7 +13,7 @@ const TypeMaster = () => {
   const [isEditTypeDetails, setIsEditTypeDetails] = useState(false);
   const [typeDetails, setTypeDetails] = useState({
     id: "",
-    trNo: "",
+    trno: "",
     name: "",
     status: "",
   });
@@ -119,23 +119,72 @@ const TypeMaster = () => {
     }
   };
 
-  const handleEditType = (e) => {
+  const handleEditType = async (e) => {
     e.preventDefault();
-    console.log("Type has been edited");
+    
+    // Validate the form data
+    const newErrors = validateForm({
+      name: typeDetails.name,
+      status: typeDetails.status
+    });
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length === 0) {
+      try {
+        const updateData = {
+          name: typeDetails.name,
+          status: typeDetails.status
+        };
+
+        const response = await api.put(`/api/type/update/${typeDetails.id}`, updateData);
+        console.log("Type updated successfully:", response.data);
+        
+        // Close the modal
+        setIsEditTypeDetails(false);
+        
+        // Refresh the types list
+        fetchTypes();
+      } catch (error) {
+        let errorMessage = "Failed to update type. Please try again.";
+
+        if (error.response) {
+          if (error.response.data.message) {
+            errorMessage = error.response.data.message;
+          } else if (typeof error.response.data === 'string') {
+            errorMessage = error.response.data;
+          }
+        } else {
+          errorMessage = error.message;
+        }
+
+        console.error("Error updating type:", errorMessage);
+        alert(errorMessage);
+      }
+    }
   };
 
-  const handleViewDetails = (type, e) => {
+  const handleViewDetails = async (type, e) => {
     e.preventDefault();
-    console.log(type);
-    setTypeDetails(type);
-    setIsShowTypeDetails(true);
+    try {
+      const response = await api.get(`/api/type/${type.id}`);
+      setTypeDetails(response.data.data);
+      setIsShowTypeDetails(true);
+    } catch (error) {
+      console.error("Error fetching type details:", error);
+      alert("Failed to fetch type details. Please try again.");
+    }
   };
 
-  const handleEditDetails = (type, e) => {
+  const handleEditDetails = async (type, e) => {
     e.preventDefault();
-    console.log(type);
-    setTypeDetails(type);
-    setIsEditTypeDetails(true);
+    try {
+      const response = await api.get(`/api/type/${type.id}`);
+      setTypeDetails(response.data.data);
+      setIsEditTypeDetails(true);
+    } catch (error) {
+      console.error("Error fetching type details:", error);
+      alert("Failed to fetch type details. Please try again.");
+    }
   };
 
   useEffect(() => {
@@ -220,15 +269,40 @@ const TypeMaster = () => {
 
   // Filter types based on search term and status filter
   const filteredTypes = types.filter(type => {
-    const matchesSearch = searchTerm === "" || 
-      type.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      type.trno.toLowerCase().includes(searchTerm.toLowerCase());
+    // Search term filter
+    const searchFields = [
+      type.trno?.toLowerCase() || '',
+      type.name?.toLowerCase() || '',
+      type.status?.toLowerCase() || ''
+    ];
     
-    const matchesStatus = statusFilter === "" || 
-      type.status.toLowerCase() === statusFilter.toLowerCase();
-    
+    const searchTermLower = searchTerm.toLowerCase();
+    const matchesSearch = searchTerm === '' || searchFields.some(field => field.includes(searchTermLower));
+
+    // Status filter
+    const matchesStatus = !statusFilter || type.status?.toLowerCase() === statusFilter.toLowerCase();
+
     return matchesSearch && matchesStatus;
   });
+
+  // Sort types by trno
+  const sortedFilteredTypes = [...filteredTypes].sort((a, b) => {
+    return (a.trno || '').localeCompare(b.trno || '');
+  });
+
+  // Update search input handler
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
+    // Reset to first page when searching
+    // If you have pagination, you might want to reset the current page here
+  };
+
+  // Update status filter handler
+  const handleStatusFilter = (e) => {
+    setStatusFilter(e.target.value);
+    // Reset to first page when filtering
+    // If you have pagination, you might want to reset the current page here
+  };
 
   return (
     <div>
@@ -265,16 +339,16 @@ const TypeMaster = () => {
           <input
             type="text"
             className="form-control vendor-search-bar"
-            placeholder="Search by types..."
+            placeholder="Search by TRNO, name or status..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={handleSearch}
           />
         </div>
         <div className="filter-options">
           <select 
             className="filter-select"
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={handleStatusFilter}
           >
             <option value="">All Status</option>
             <option value="active">Active</option>
@@ -468,21 +542,26 @@ const TypeMaster = () => {
                     </div>
                   </td>
                 </tr>
-              ) : filteredTypes.length === 0 ? (
+              ) : sortedFilteredTypes.length === 0 ? (
                 <tr className="no-data-row">
                   <td colSpan="5" className="no-data-cell">
                     <div className="no-data-content">
                       <i className="fas fa-tags no-data-icon"></i>
                       <p className="no-data-text">No types found</p>
-                      <p className="no-data-subtext">
-                        Click the "Add New Type" button to create your first
-                        type
-                      </p>
+                      {searchTerm || statusFilter ? (
+                        <p className="no-data-subtext">
+                          Try adjusting your search or filter criteria
+                        </p>
+                      ) : (
+                        <p className="no-data-subtext">
+                          Click the "Add New Type" button to create your first type
+                        </p>
+                      )}
                     </div>
                   </td>
                 </tr>
               ) : (
-                filteredTypes.map((type) => (
+                sortedFilteredTypes.map((type) => (
                   <tr key={type.id}>
                     <td className="checkbox-cell ps-4">
                       <input
@@ -545,7 +624,12 @@ const TypeMaster = () => {
           {/* Pagination */}
           <div className="pagination-container">
             <div className="pagination-info">
-              Showing 1-{filteredTypes.length} of {types.length} entries
+              Showing 1-{sortedFilteredTypes.length} of {types.length} entries
+              {(searchTerm || statusFilter) && (
+                <span className="ms-2">
+                  (filtered from {types.length} total entries)
+                </span>
+              )}
             </div>
             <div className="pagination">
               <button className="btn-page" disabled>
@@ -591,7 +675,7 @@ const TypeMaster = () => {
               </div>
               <div className="modal-body">
                 <p>
-                  <strong>TRNO:</strong> {typeDetails.trNo}
+                  <strong>TRNO:</strong> {typeDetails.trno}
                 </p>
                 <p>
                   <strong>Name:</strong> {typeDetails.name}
@@ -655,7 +739,7 @@ const TypeMaster = () => {
                             type="text"
                             className="form-control ps-5 text-font input-centered"
                             id="trNo"
-                            value={typeDetails.trNo}
+                            value={typeDetails.trno}
                             disabled
                           />
                         </div>
@@ -673,7 +757,7 @@ const TypeMaster = () => {
                             placeholder="Enter type name"
                             value={typeDetails.name}
                             onChange={(e) =>
-                              setFormData({ ...formData, name: e.target.value })
+                              setTypeDetails({ ...typeDetails, name: e.target.value })
                             }
                           />
                         </div>
@@ -689,17 +773,13 @@ const TypeMaster = () => {
                               type="checkbox"
                               role="switch"
                               id="switchCheckChecked"
-                              checked={
-                                typeDetails.status == "active" ? true : false
-                              }
+                              checked={typeDetails.status === "active"}
                               onChange={(e) => {
                                 const newStatus = e.target.checked
                                   ? "active"
                                   : "inactive";
-                                setIsChecked(e.target.checked);
-                                setStatus(newStatus);
-                                setFormData({
-                                  ...formData,
+                                setTypeDetails({
+                                  ...typeDetails,
                                   status: newStatus,
                                 });
                               }}
@@ -716,13 +796,10 @@ const TypeMaster = () => {
                             value={typeDetails.status}
                             onChange={(e) => {
                               const newStatus = e.target.value;
-                              setStatus(newStatus);
-                              setIsChecked(newStatus === "active");
-
-                              setFormData((prev) => ({
-                                ...prev,
+                              setTypeDetails({
+                                ...typeDetails,
                                 status: newStatus,
-                              }));
+                              });
                             }}
                           >
                             <option value="active">Active</option>

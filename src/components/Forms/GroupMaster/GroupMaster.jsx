@@ -46,6 +46,9 @@ const GroupMaster = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
 
+  // Edit switch state
+  const [editSwitchChecked, setEditSwitchChecked] = useState(true);
+
   // Load groups data
   const loadGroups = async () => {
     setDataLoading(true);
@@ -198,23 +201,63 @@ const GroupMaster = () => {
     return errors;
   };
 
-  const handleEditGroup = (e) => {
+  const handleEditGroup = async (e) => {
     e.preventDefault();
-    console.log("Group has been edited");
+    setLoading(true);
+    setError(null);
+
+    const finalData = {
+      name: groupDetails.name,
+      status: groupDetails.status
+    };
+
+    try {
+      const response = await api.put(`/api/group/update/${groupDetails.id}`, finalData);
+      console.log("Group updated successfully:", response.data);
+      
+      // Close the bootstrap modal properly
+      if (groupEditModalRef.current) {
+        const bsModal = Modal.getInstance(groupEditModalRef.current);
+        bsModal?.hide();
+      }
+      
+      // Reset states
+      setIsEditGroupDetails(false);
+      setError(null);
+      
+      // Reload the groups data to show updated information
+      loadGroups();
+    } catch (err) {
+      console.error("Error updating group:", err);
+      setError(err.response?.data?.message || "Error updating group");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleViewDetails = (group, e) => {
+  const handleViewDetails = async (group, e) => {
     e.preventDefault();
-    console.log(group);
-    setGroupDetails(group);
-    setIsShowGroupDetails(true);
+    try {
+      const response = await api.get(`/api/group/${group.id}`);
+      setGroupDetails(response.data.data);
+      setIsShowGroupDetails(true);
+    } catch (err) {
+      console.error("Error fetching group details:", err);
+      setDataError(err.response?.data?.message || "Error fetching group details");
+    }
   };
 
-  const handleEditDetails = (group, e) => {
+  const handleEditDetails = async (group, e) => {
     e.preventDefault();
-    console.log(group);
-    setGroupDetails(group);
-    setIsEditGroupDetails(true);
+    try {
+      const response = await api.get(`/api/group/${group.id}`);
+      setGroupDetails(response.data.data);
+      setEditSwitchChecked(response.data.data.status.toLowerCase() === "active");
+      setIsEditGroupDetails(true);
+    } catch (err) {
+      console.error("Error fetching group details:", err);
+      setDataError(err.response?.data?.message || "Error fetching group details");
+    }
   };
 
   useEffect(() => {
@@ -678,7 +721,7 @@ const GroupMaster = () => {
               </div>
               <div className="modal-body">
                 <p>
-                  <strong>TRNO:</strong> {groupDetails.trNo}
+                  <strong>TRNO:</strong> {groupDetails.trno}
                 </p>
                 <p>
                   <strong>Name:</strong> {groupDetails.name}
@@ -719,7 +762,14 @@ const GroupMaster = () => {
                 <button
                   type="button"
                   className="btn-close"
-                  data-bs-dismiss="modal"
+                  onClick={() => {
+                    if (groupEditModalRef.current) {
+                      const bsModal = Modal.getInstance(groupEditModalRef.current);
+                      bsModal?.hide();
+                    }
+                    setIsEditGroupDetails(false);
+                    setError(null);
+                  }}
                   aria-label="Close"
                 ></button>
               </div>
@@ -742,7 +792,7 @@ const GroupMaster = () => {
                             type="text"
                             className="form-control ps-5 text-font input-centered"
                             id="trNo"
-                            value={groupDetails.trNo}
+                            value={groupDetails.trno}
                             disabled
                           />
                         </div>
@@ -760,7 +810,10 @@ const GroupMaster = () => {
                             placeholder="Enter group name"
                             value={groupDetails.name}
                             onChange={(e) =>
-                              setFormData({ ...formData, name: e.target.value })
+                              setGroupDetails({
+                                ...groupDetails,
+                                name: e.target.value
+                              })
                             }
                           />
                         </div>
@@ -775,24 +828,20 @@ const GroupMaster = () => {
                               className="form-check-input text-font switch-style"
                               type="checkbox"
                               role="switch"
-                              id="switchCheckChecked"
-                              checked={groupDetails == "active" ? true : false}
+                              id="editSwitchCheckChecked"
+                              checked={editSwitchChecked}
                               onChange={(e) => {
-                                const newStatus = e.target.checked
-                                  ? "active"
-                                  : "inactive";
-                                setIsChecked(e.target.checked);
-                                setStatus(newStatus);
-                                setFormData({
-                                  ...formData,
-                                  status: newStatus,
+                                const newStatus = e.target.checked ? "active" : "inactive";
+                                setEditSwitchChecked(e.target.checked);
+                                setGroupDetails({
+                                  ...groupDetails,
+                                  status: newStatus
                                 });
                               }}
                             />
-
                             <label
                               className="form-check-label"
-                              htmlFor="switchCheckChecked"
+                              htmlFor="editSwitchCheckChecked"
                             ></label>
                           </div>
                           <select
@@ -801,13 +850,11 @@ const GroupMaster = () => {
                             value={groupDetails.status}
                             onChange={(e) => {
                               const newStatus = e.target.value;
-                              setStatus(newStatus);
-                              setIsChecked(newStatus === "active");
-
-                              setFormData((prev) => ({
-                                ...prev,
-                                status: newStatus,
-                              }));
+                              setEditSwitchChecked(newStatus === "active");
+                              setGroupDetails({
+                                ...groupDetails,
+                                status: newStatus
+                              });
                             }}
                           >
                             <option value="active">Active</option>
@@ -821,24 +868,40 @@ const GroupMaster = () => {
                 </form>
               </div>
               <div className="modal-footer">
+                {error && (
+                  <div className="alert alert-danger w-100" role="alert">
+                    {error}
+                  </div>
+                )}
                 <button
                   className="btn btn-primary border border-0 text-8 px-3 fw-medium py-2 me-3 float-end"
-                  data-bs-dismiss="modal"
                   onClick={(e) => {
-                    document.activeElement?.blur();
                     handleEditGroup(e);
                   }}
+                  disabled={loading}
                 >
-                  <i className="fa-solid fa-floppy-disk me-1"></i> Save Changes
+                  {loading ? (
+                    <span>
+                      <i className="fa-solid fa-spinner fa-spin me-1"></i> Saving...
+                    </span>
+                  ) : (
+                    <span>
+                      <i className="fa-solid fa-floppy-disk me-1"></i> Save Changes
+                    </span>
+                  )}
                 </button>
                 <button
                   className="btn btn-secondary border border-0 bg-secondary text-8 px-3 fw-medium py-2 me-3 float-end"
-                  data-bs-dismiss="modal"
                   onClick={() => {
-                    document.activeElement?.blur();
+                    if (groupEditModalRef.current) {
+                      const bsModal = Modal.getInstance(groupEditModalRef.current);
+                      bsModal?.hide();
+                    }
+                    setIsEditGroupDetails(false);
+                    setError(null);
                   }}
                 >
-                  <i className="fa-solid fa-x-mark me-1"></i> Close
+                  <i className="fa-solid fa-x me-1"></i> Close
                 </button>
               </div>
             </div>

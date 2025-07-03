@@ -1054,3 +1054,22 @@ select:invalid {
     margin-top: -5px;
     margin-bottom: 10px;
 }
+
+/* Status Badge Styles */
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.status-badge.active {
+    background-color: var(--lightGreen);
+    color: var(--green);
+}
+
+.status-badge.inactive {
+    background-color: var(--lightRed);
+    color: var(--red);
+}

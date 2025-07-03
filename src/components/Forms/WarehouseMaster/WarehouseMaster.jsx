@@ -31,10 +31,38 @@ const WarehouseMaster = () => {
   });
   const [warehouses, setWarehouses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [editErrors, setEditErrors] = useState({});
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [filteredWarehouses, setFilteredWarehouses] = useState([]);
   
   useEffect(() => {
     fetchWarehouses();
   }, []);
+  
+  useEffect(() => {
+    let result = [...warehouses];
+    
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(warehouse => 
+        warehouse.name.toLowerCase().includes(query) ||
+        warehouse.code.toLowerCase().includes(query) ||
+        warehouse.trno.toLowerCase().includes(query)
+      );
+    }
+    
+    // Apply status filter
+    if (statusFilter) {
+      result = result.filter(warehouse => 
+        warehouse.status.toLowerCase() === statusFilter.toLowerCase()
+      );
+    }
+    
+    setFilteredWarehouses(result);
+  }, [warehouses, searchQuery, statusFilter]);
   
   const fetchWarehouses = () => {
     setLoading(true);
@@ -91,46 +119,95 @@ const WarehouseMaster = () => {
 
   const handleViewDetails = (warehouse, e) => {
     e.preventDefault();
-    setWarehouseDetails({
-      id: warehouse.id,
-      trno: warehouse.trno,
-      name: warehouse.name,
-      code: warehouse.code,
-      status: warehouse.status
-    });
-    setIsShowWarehouseDetails(true);
     
-    // Initialize and show modal
-    const warehouseModal = new Modal(warehouseModalRef.current);
-    warehouseModal.show();
+    // Fetch detailed warehouse information
+    api.get(`/api/warehouses/${warehouse.id}`)
+      .then(response => {
+        if (response.data && response.data.status) {
+          setWarehouseDetails({
+            id: response.data.data.id,
+            trno: response.data.data.trno,
+            name: response.data.data.name,
+            code: response.data.data.code,
+            status: response.data.data.status
+          });
+          setIsShowWarehouseDetails(true);
+          
+          // Initialize and show modal after a short delay to ensure DOM is updated
+          setTimeout(() => {
+            const modalElement = document.getElementById('warehouseDetailModal');
+            if (modalElement) {
+              const modal = new Modal(modalElement);
+              modal.show();
+            }
+          }, 100);
+        } else {
+          console.error("Error fetching warehouse details:", response.data.message || "Unknown error");
+          alert("Error fetching warehouse details. Please try again.");
+        }
+      })
+      .catch(error => {
+        console.error("Error fetching warehouse details:", error);
+        alert("Error fetching warehouse details. Please try again.");
+      });
   };
 
   const handleEditDetails = (warehouse, e) => {
     e.preventDefault();
-    setWarehouseDetails({
-      id: warehouse.id,
-      trno: warehouse.trno,
-      name: warehouse.name,
-      code: warehouse.code,
-      status: warehouse.status
-    });
-    setIsEditWarehouseDetails(true);
-    setStatus(warehouse.status.toLowerCase());
-    setIsChecked(warehouse.status.toLowerCase() === "active");
     
-    // Initialize and show modal
-    const warehouseEditModal = new Modal(warehouseEditModalRef.current);
-    warehouseEditModal.show();
+    // Prevent double-clicking
+    if (isProcessing) return;
+    setIsProcessing(true);
+    
+    api.get(`/api/warehouses/${warehouse.id}`)
+      .then(response => {
+        if (response.data && response.data.status) {
+          const warehouseData = response.data.data;
+          setWarehouseDetails({
+            id: warehouseData.id,
+            trno: warehouseData.trno,
+            name: warehouseData.name,
+            code: warehouseData.code,
+            status: warehouseData.status
+          });
+          setIsEditWarehouseDetails(true);
+          // Set status state to match warehouse status
+          const currentStatus = warehouseData.status.toLowerCase();
+          setStatus(currentStatus);
+          setIsChecked(currentStatus === "active");
+          
+          setTimeout(() => {
+            const modalElement = document.getElementById('warehouseEditModal');
+            if (modalElement) {
+              const modal = new Modal(modalElement);
+              modal.show();
+            }
+            setIsProcessing(false);
+          }, 100);
+        } else {
+          console.error("Error fetching warehouse details:", response.data.message || "Unknown error");
+          alert("Error fetching warehouse details. Please try again.");
+          setIsProcessing(false);
+        }
+      })
+      .catch(error => {
+        console.error("Error fetching warehouse details:", error);
+        alert("Error fetching warehouse details. Please try again.");
+        setIsProcessing(false);
+      });
   };
 
   const handleEditWarehouse = (e) => {
     e.preventDefault();
     
+    // Clear previous errors
+    setEditErrors({});
+    
     const updatedData = {
       id: warehouseDetails.id,
       name: warehouseDetails.name,
       code: warehouseDetails.code,
-      status: status
+      status: warehouseDetails.status
     };
     
     api.put(`/api/warehouses/update/${warehouseDetails.id}`, updatedData)
@@ -148,16 +225,32 @@ const WarehouseMaster = () => {
               modalInstance.hide();
             }
           }
-          // Reset state
+          // Reset states
           setIsEditWarehouseDetails(false);
+          setIsProcessing(false);
+          setEditErrors({});
         } else {
           console.error("Error in update response:", response.data.message || "Unknown error");
-          alert(response.data.message || "Error updating warehouse. Please try again.");
+          // Handle validation errors from backend
+          if (response.data.errors) {
+            setEditErrors(response.data.errors);
+          } else {
+            alert(response.data.message || "Error updating warehouse. Please try again.");
+          }
         }
       })
       .catch(error => {
         console.error("Error updating warehouse:", error);
-        alert("Error updating warehouse. Please try again.");
+        if (error.response && error.response.data) {
+          // Handle validation errors from backend
+          if (error.response.data.errors) {
+            setEditErrors(error.response.data.errors);
+          } else {
+            alert(error.response.data.message || "Error updating warehouse. Please try again.");
+          }
+        } else {
+          alert("Error updating warehouse. Please try again.");
+        }
       });
   };
 
@@ -313,11 +406,17 @@ const WarehouseMaster = () => {
           <input
             type="text"
             className="form-control vendor-search-bar"
-            placeholder="Search by warehouses..."
+            placeholder="Search by TRNO, name or code..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
         <div className="filter-options">
-          <select className="filter-select">
+          <select 
+            className="filter-select"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
             <option value="">All Status</option>
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
@@ -528,21 +627,26 @@ const WarehouseMaster = () => {
                     </div>
                   </td>
                 </tr>
-              ) : warehouses.length === 0 ? (
+              ) : filteredWarehouses.length === 0 ? (
                 <tr className="no-data-row">
                   <td colSpan="6" className="no-data-cell">
                     <div className="no-data-content">
                       <i className="fas fa-warehouse no-data-icon"></i>
-                      <p className="no-data-text">No warehouses found</p>
+                      <p className="no-data-text">
+                        {warehouses.length === 0 
+                          ? "No warehouses found" 
+                          : "No matching warehouses found"}
+                      </p>
                       <p className="no-data-subtext">
-                        Click the "Add New Warehouse" button to create your
-                        first warehouse
+                        {warehouses.length === 0 
+                          ? "Click the \"Add New Warehouse\" button to create your first warehouse"
+                          : "Try adjusting your search or filter criteria"}
                       </p>
                     </div>
                   </td>
                 </tr>
               ) : (
-                warehouses.map((warehouse) => (
+                filteredWarehouses.map((warehouse) => (
                   <tr key={warehouse.id}>
                     <td className="checkbox-cell ps-4">
                       <input
@@ -570,7 +674,7 @@ const WarehouseMaster = () => {
                     </td>
                     <td className="ps-4">
                       <div>
-                        <span className={`status-badge ${warehouse.status.toLowerCase()}`}>
+                        <span className={`badge status ${warehouse.status.toLowerCase()}`}>
                           {warehouse.status.charAt(0).toUpperCase() + warehouse.status.slice(1).toLowerCase()}
                         </span>
                       </div>
@@ -607,8 +711,8 @@ const WarehouseMaster = () => {
           {/* Pagination */}
           <div className="pagination-container">
             <div className="pagination-info">
-            Showing {warehouses.length > 0 ? 1 : 0}-{warehouses.length} of {warehouses.length} entries
-          </div>
+              Showing {filteredWarehouses.length > 0 ? 1 : 0}-{filteredWarehouses.length} of {warehouses.length} entries
+            </div>
             <div className="pagination">
               <button className="btn-page" disabled>
                 <i className="fas fa-chevron-left"></i>
@@ -629,18 +733,19 @@ const WarehouseMaster = () => {
           </div>
         </div>
       </div>
-      {/* View User Details Modal */}
+      {/* View Warehouse Details Modal */}
       {isShowWarehouseDetails && (
         <div
           className="modal fade"
-          ref={warehouseModalRef}
-          id="userDetailModal"
+          id="warehouseDetailModal"
           tabIndex="-1"
+          aria-labelledby="warehouseDetailModalLabel"
+          aria-hidden="true"
         >
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">
+                <h5 className="modal-title" id="warehouseDetailModalLabel">
                   View {warehouseDetails.name}'s Details
                 </h5>
                 <button
@@ -651,6 +756,9 @@ const WarehouseMaster = () => {
                 ></button>
               </div>
               <div className="modal-body">
+                <p>
+                  <strong>TRNO:</strong> {warehouseDetails.trno}
+                </p>
                 <p>
                   <strong>Name:</strong> {warehouseDetails.name}
                 </p>
@@ -682,19 +790,26 @@ const WarehouseMaster = () => {
       {isEditWarehouseDetails && (
         <div
           className="modal fade"
-          ref={warehouseEditModalRef}
           id="warehouseEditModal"
           tabIndex="-1"
+          aria-labelledby="warehouseEditModalLabel"
+          aria-hidden="true"
         >
           <div className="modal-dialog modal-lg">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Edit Warehouse</h5>
+                <h5 className="modal-title" id="warehouseEditModalLabel">
+                  Edit Warehouse
+                </h5>
                 <button
                   type="button"
                   className="btn-close"
                   data-bs-dismiss="modal"
                   aria-label="Close"
+                  onClick={() => {
+                    setIsProcessing(false);
+                    setIsEditWarehouseDetails(false);
+                  }}
                 ></button>
               </div>
               {/* Modal Body */}
@@ -731,7 +846,7 @@ const WarehouseMaster = () => {
                             <i className="fas fa-font position-absolute input-icon"></i>
                             <input
                               type="text"
-                              className="form-control ps-5 text-font"
+                              className={`form-control ps-5 text-font ${editErrors.name ? 'is-invalid' : ''}`}
                               id="name"
                               placeholder="Enter warehouse name"
                               value={warehouseDetails.name}
@@ -743,6 +858,9 @@ const WarehouseMaster = () => {
                               }
                             />
                           </div>
+                          {editErrors.name && (
+                            <span className="error-message">{editErrors.name}</span>
+                          )}
                         </div>
                         <div className="col-4 d-flex flex-column form-group">
                           <label htmlFor="code" className="form-label">
@@ -752,7 +870,7 @@ const WarehouseMaster = () => {
                             <i className="fas fa-qrcode position-absolute input-icon"></i>
                             <input
                               type="text"
-                              className="form-control ps-5 text-font"
+                              className={`form-control ps-5 text-font ${editErrors.code ? 'is-invalid' : ''}`}
                               id="code"
                               placeholder="Enter warehouse code"
                               value={warehouseDetails.code}
@@ -764,6 +882,9 @@ const WarehouseMaster = () => {
                               }
                             />
                           </div>
+                          {editErrors.code && (
+                            <span className="error-message">{editErrors.code}</span>
+                          )}
                         </div>
                       </div>
                       <div className="row form-style">
@@ -777,42 +898,34 @@ const WarehouseMaster = () => {
                                 className="form-check-input text-font switch-style"
                                 type="checkbox"
                                 role="switch"
-                                id="switchCheckChecked"
-                                checked={
-                                  warehouseDetails.status == "active"
-                                    ? true
-                                    : false
-                                }
+                                id="editStatusSwitch"
+                                checked={isChecked}
                                 onChange={(e) => {
-                                  const newStatus = e.target.checked
-                                    ? "active"
-                                    : "inactive";
+                                  const newStatus = e.target.checked ? "active" : "inactive";
                                   setIsChecked(e.target.checked);
                                   setStatus(newStatus);
-                                  setFormData({
-                                    ...formData,
-                                    status: newStatus,
-                                  });
+                                  setWarehouseDetails(prev => ({
+                                    ...prev,
+                                    status: newStatus
+                                  }));
                                 }}
                               />
-
                               <label
                                 className="form-check-label"
-                                htmlFor="switchCheckChecked"
+                                htmlFor="editStatusSwitch"
                               ></label>
                             </div>
                             <select
                               className="form-control text-font switch-padding"
-                              id="status"
+                              id="editStatus"
                               value={status}
                               onChange={(e) => {
                                 const newStatus = e.target.value;
                                 setStatus(newStatus);
                                 setIsChecked(newStatus === "active");
-
-                                setFormData((prev) => ({
+                                setWarehouseDetails(prev => ({
                                   ...prev,
-                                  status: newStatus,
+                                  status: newStatus
                                 }));
                               }}
                             >

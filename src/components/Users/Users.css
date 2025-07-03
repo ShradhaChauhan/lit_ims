@@ -1,0 +1,166 @@
+/* User Details Modal Styling */
+.modal-content {
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+  border-radius: 8px 8px 0 0;
+  padding: 1rem 1.5rem;
+}
+
+.modal-header .modal-title {
+  color: #2563eb;
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+
+.modal-body {
+  padding: 1.5rem;
+  max-height: calc(100vh - 210px);
+  overflow-y: auto;
+}
+
+.user-details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.detail-item {
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  transition: all 0.3s ease;
+}
+
+.detail-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transform: translateY(-1px);
+}
+
+.detail-item strong {
+  color: #2563eb;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+}
+
+.detail-item span {
+  display: block;
+  word-break: break-word;
+}
+
+.permissions-section {
+  background-color: #fff;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin: 0 -0.5rem;
+}
+
+.permissions-section .table-responsive {
+  margin: 0;
+  padding: 0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.permissions-section .table {
+  margin-bottom: 0;
+  width: 100%;
+  font-size: 0.9rem;
+}
+
+.permissions-section .table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  color: #4b5563;
+  padding: 0.75rem 1rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.permissions-section .table td {
+  vertical-align: middle;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.permissions-section .table tr:last-child td {
+  border-bottom: none;
+}
+
+.permissions-section .table i.fa-check {
+  color: #22c55e;
+  font-size: 1rem;
+}
+
+.permissions-section .table i.fa-times {
+  color: #ef4444;
+  font-size: 1rem;
+}
+
+.modal-footer {
+  background-color: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+  border-radius: 0 0 8px 8px;
+  padding: 1rem 1.5rem;
+}
+
+.modal-footer .btn-secondary {
+  background-color: #e5e7eb;
+  color: #4b5563;
+  border: none;
+  padding: 0.5rem 1.25rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.modal-footer .btn-secondary:hover {
+  background-color: #d1d5db;
+  color: #1f2937;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+  .user-details-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .modal-dialog.modal-lg {
+    max-width: 95%;
+    margin: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .user-details-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .modal-body {
+    padding: 1rem;
+  }
+  
+  .permissions-section .table {
+    font-size: 0.8rem;
+  }
+  
+  .permissions-section .table th,
+  .permissions-section .table td {
+    padding: 0.5rem;
+  }
+}
+
+.modal-dialog.modal-lg {
+  max-width: 1000px;
+  margin: 1.75rem auto;
+}
