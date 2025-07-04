@@ -2,12 +2,18 @@ import { Modal } from "bootstrap";
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import api from "../../../services/api";
 
 const MaterialIncoming = () => {
   const [errors, setErrors] = useState({});
   const receiptModalRef = useRef(null);
   const [mode, setMode] = useState("");
-  const [vendorList, setVendorList] = useState([]);
+  const [itemQuantity, setItemQuantity] = useState("");
+  const [vcode, setVcode] = useState("");
+  const [vendor, setVendor] = useState("");
+  const [vendors, setVendors] = useState([]);
+  const [vendorItem, setVendorItem] = useState("");
+  const [vendorItems, setVendorItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isShowReceiptDetails, setIsShowReceiptDetails] = useState(false);
   // receiptList is used to store the concatenated formData and show it in the table and to save the material receipt entry in database.
@@ -16,13 +22,18 @@ const MaterialIncoming = () => {
   const [formData, setFormData] = useState({
     mode: "",
     vendor: "",
+    vendorName: "",
+
     code: "",
     item: "",
     barcode: "",
     quantity: "",
+    itemCode: "",
+    itemName: "",
+    batchno: "",
   });
 
-  const handleReset = () => {
+  const handleReset = (e) => {
     e.preventDefault();
     setFormData({
       mode: "",
@@ -33,6 +44,7 @@ const MaterialIncoming = () => {
       quantity: "",
     });
     setMode("");
+    setVendor("");
   };
 
   const handleViewDetails = (receipt, e) => {
@@ -43,6 +55,7 @@ const MaterialIncoming = () => {
   };
 
   useEffect(() => {
+    getVendorsList(); // Fetch vendor data.
     if (isShowReceiptDetails && receiptModalRef.current) {
       const bsModal = new Modal(receiptModalRef.current, {
         backdrop: "static",
@@ -56,6 +69,10 @@ const MaterialIncoming = () => {
     }
   }, [isShowReceiptDetails]);
 
+  useEffect(() => {
+    getVendorsList();
+  }, []);
+
   const validateForm = (data) => {
     const errors = {};
 
@@ -67,39 +84,41 @@ const MaterialIncoming = () => {
       errors.vendor = "Please select vendor name";
     }
 
-    if (!data.item) {
-      errors.item = "Please select an item";
-    }
+    // if (!data.item) {
+    //   errors.item = "Please select an item";
+    // }
 
     return errors;
   };
 
-  const handleAddReceiptItem = (e) => {
+  const handleAddReceiptItem = async (e) => {
     e.preventDefault();
     const newErrors = validateForm(formData);
     setErrors(newErrors);
+    console.log(formData);
+    console.log(formData.code);
+    console.log(formData.itemCode);
+    try {
+      if (Object.keys(newErrors).length === 0) {
+        console.log("Sending request to generate batch no");
+        const response = await api.post(
+          `/api/receipt/generate-batch?vendorCode=${formData.code}&itemCode=${formData.itemCode}`
+        ); // API to generate batch no
+        console.log(response.data);
+        setFormData({ ...formData, batchno: response.data });
+        const newItem = {
+          itemName: formData.itemName,
+          itemCode: formData.itemCode,
+          quantity: formData.quantity,
+          batchno: response.data,
+        };
 
-    if (Object.keys(newErrors).length === 0) {
-      const newItem = {
-        id: Date.now(), // unique id for key prop
-        name: formData.item, // assuming item name is stored here
-        code: formData.code || "AUTO", // fallback if code not set
-        quantity: formData.quantity || 1, // default quantity
-        batchno: "N/A", // if not present, fallback
-      };
-
-      setReceiptList((prevList) => [...prevList, newItem]);
-
-      // Optional: reset item-specific fields after adding
-      setFormData((prevData) => ({
-        ...prevData,
-        item: "",
-        code: "",
-        quantity: "",
-      }));
-      console.log(receiptList);
-      console.log(Array.isArray(receiptList));
-      toast.success("Item added to receipt!");
+        setReceiptList((prev) => [...prev, newItem]);
+        toast.success("Item added successfully");
+      }
+    } catch (error) {
+      toast.error("Error in generating batch number.");
+      console.error("Error generating batch number:", error);
     }
   };
 
@@ -107,29 +126,50 @@ const MaterialIncoming = () => {
     e.preventDefault();
     // Logic to save receipt items on click of "Save Receipt" button here.
     try {
-      console.log("Submitting receipt data:", receiptList);
-      const response = await api.post("/api/", receiptList); //Add the API for saving receipt.
-      console.log("Material receipt entry added successfully:", response.data);
+      console.log("Going to save receipt");
+      console.log(receiptList);
+      const payload = {
+        mode: mode,
+        vendor: formData.vendorName,
+        vendorCode: formData.code,
+        items: receiptList,
+      };
 
-      // Reset form after successful submission
+      console.log("Submitting receipt data:", payload);
+      const response = await api.post("/api/receipt/save", payload); //Add the API for saving receipt.
+      console.log(
+        "Material receipt entry added successfully:" + response.data.data
+      );
+      toast.success("Material receipt added successfully");
       handleReset(e);
     } catch (error) {
-      let errorMessage =
-        "Failed to add material receipt entry. Please try again.";
+      toast.error("Error: Unable to save material receipt.");
+      console.error("Error saving material receipt:", error);
+    }
+  };
 
-      if (error.response) {
-        if (error.response.data.message) {
-          // For structured error from backend (with message field)
-          errorMessage = error.response.data.message;
-        } else if (typeof error.response.data === "string") {
-          // For plain string error from backend
-          errorMessage = error.response.data;
-        }
-      } else {
-        errorMessage = error.message;
-      }
-      console.error("Error adding type:", errorMessage);
-      toast.error(errorMessage);
+  const getVendorsList = async (e) => {
+    try {
+      // console.log("Sending request to get vendors list");
+      const response = await api.get("/api/vendor-customer/vendors"); // API to get vendors list
+      setVendors(response.data.data);
+      setVendor(""); // Clear any previous branch selection
+      setVcode(response.data.data.code);
+    } catch (error) {
+      toast.error("Error: Unable to fetch vendors list.");
+      console.error("Error fetching vendors list:", error);
+    }
+  };
+
+  const getVendorItems = async (code) => {
+    try {
+      console.log("Code: " + code);
+      const response = await api.get(`/api/vendor-item/items/${code}`); // API to get vendors items list
+      setVendorItems(response.data.data);
+      console.log(response.data.data);
+    } catch (error) {
+      toast.error("Error: Unable to fetch vendors list.");
+      console.error("Error fetching vendors list:", error);
     }
   };
 
@@ -212,23 +252,35 @@ const MaterialIncoming = () => {
                   <select
                     className="form-control ps-5 ms-1 text-font"
                     id="vendorName"
-                    value={formData.vendor}
+                    value={vendor}
                     onChange={(e) => {
-                      setFormData({ ...formData, vendor: e.target.value });
+                      const selectedId = parseInt(e.target.value); // dropdown value is string, convert to number
+                      const selectedVendor = vendors.find(
+                        (v) => v.id === selectedId
+                      );
+
+                      if (selectedVendor) {
+                        setVendor(selectedId); // vendor state for dropdown
+                        setFormData((prev) => ({
+                          ...prev,
+                          vendor: selectedId, // Save vendor id (or name if preferred)
+                          vendorName: selectedVendor.name,
+                          code: selectedVendor.code || "", // Auto-fill vendor code
+                        }));
+                        getVendorItems(selectedVendor.code);
+                      }
                     }}
                   >
                     <option value="" disabled hidden className="text-muted">
                       Select Vendor
                     </option>
-                    <option value="abc">Abc</option>
-                    <option value="xyz">Xyz</option>
-                    <option value="def">def</option>
-                    {/* {vendorList.map((vendor) => {
-                      <option value={vendor.name} key={vendor.id}>
-                        {vendor.name}
-                      </option>;
-                    })} */}
+                    {vendors.map((v) => (
+                      <option value={v.id} key={v.id}>
+                        {v.name}
+                      </option>
+                    ))}
                   </select>
+
                   <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                 </div>
                 {errors.vendor && (
@@ -264,23 +316,43 @@ const MaterialIncoming = () => {
                   <select
                     className="form-control ps-5 ms-1 text-font"
                     id="item"
-                    value={formData.item}
-                    onChange={(e) =>
-                      setFormData({ ...formData, item: e.target.value })
-                    }
+                    value={vendorItem}
+                    onChange={(e) => {
+                      {
+                        // setFormData({ ...formData, item: e.target.value });
+                        // console.log(e);
+                        const selectedId = parseInt(e.target.value); // dropdown value is string, convert to number
+                        const selectedItem = vendorItems.find(
+                          (v) => v.id === selectedId
+                        );
+
+                        if (selectedItem) {
+                          setVendorItem(selectedId); // vendor state for dropdown
+                          setFormData((prev) => ({
+                            ...prev,
+                            vendorItem: selectedId, // Save vendor id (or name if preferred)
+                            quantity: selectedItem.quantity || "", // Auto-fill vendor code
+                            itemCode: selectedItem.itemCode,
+                            itemName: selectedItem.itemName,
+                          }));
+                        }
+                      }
+                    }}
                   >
                     <option value="" disabled hidden className="text-muted">
                       Select Item
                     </option>
-                    <option value="xyz">XYZ</option>
-                    <option value="zzz">ZZZ</option>
-                    <option value="ooo">OOO</option>
+                    {vendorItems.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.itemName}
+                      </option>
+                    ))}
                   </select>
                   <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                 </div>
-                {errors.item && (
+                {/* {errors.item && (
                   <span className="error-message">{errors.item}</span>
-                )}
+                )} */}
               </div>
             </div>
           ) : mode == "scan" ? (
@@ -370,9 +442,9 @@ const MaterialIncoming = () => {
                         </tr>
                       ) : (
                         receiptList.map((receipt) => (
-                          <tr key={receipt.id}>
-                            <td className="ps-4">{receipt.name}</td>
-                            <td className="ps-4">{receipt.code}</td>
+                          <tr key={receipt.itemName}>
+                            <td className="ps-4">{receipt.itemName}</td>
+                            <td className="ps-4">{receipt.itemCode}</td>
                             <td className="ps-4">{receipt.quantity}</td>
                             <td className="ps-4">{receipt.batchno}</td>
                             <td className="actions ps-3">
@@ -400,7 +472,7 @@ const MaterialIncoming = () => {
               <div className="form-actions">
                 <button
                   className="btn btn-primary border border-0 text-8 px-3 fw-medium py-2 me-3 float-end"
-                  onSubmit={handleSaveReceiptItem}
+                  onClick={handleSaveReceiptItem}
                 >
                   <i className="fa-solid fa-floppy-disk me-1"></i> Save Receipt
                 </button>
