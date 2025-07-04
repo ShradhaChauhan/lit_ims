@@ -16,6 +16,10 @@ import TypeMaster from "./components/Forms/TypeMaster/TypeMaster";
 import GroupMaster from "./components/Forms/GroupMaster/GroupMaster";
 import PartMaster from "./components/Forms/PartMaster/PartMaster";
 import VendorItemsMaster from "./components/Forms/VendorItemsMaster/VendorItemsMaster";
+import MaterialIncoming from "./components/Forms/MaterialIncoming/MaterialIncoming";
+import IncomingQC from "./components/Forms/IncomingQC/IncomingQC";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   const { rightSideComponent, setRightSideComponent, isAuthenticated } =
@@ -25,6 +29,15 @@ function App() {
 
   return (
     <>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        pauseOnHover
+        draggable
+      />
       {isLoginPage ? (
         // Show only login component on the login route
         <Routes>
@@ -54,13 +67,18 @@ function App() {
                   path="/vendor-items-master"
                   element={<VendorItemsMaster />}
                 />
+                <Route
+                  path="/material-incoming"
+                  element={<MaterialIncoming />}
+                />
+                <Route path="/incoming-qc" element={<IncomingQC />} />
               </Routes>
             </div>
           </div>
         </div>
       )}
     </>
-  );
+  )
 }
 
 export default App;

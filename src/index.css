@@ -275,6 +275,10 @@
     margin-left: 1rem;
 }
 
+.margin-top-2 {
+    margin-top: 2rem;
+}
+ 
 .content-area {
     flex-grow: 1;
     background-color: #f8f9fc;

@@ -23,6 +23,7 @@ import RequisitionReceipt from "../Forms/RequisitionReceipt/RequisitionReceipt";
 import ProductionReceipt from "../Forms/ProductionReceipt/ProductionReceipt";
 import WIPReturn from "../Forms/WIPReturn/WIPReturn";
 import ActivityLogs from "../ActivityLogs/ActivityLogs";
+import MaterialIncoming from "../Forms/MaterialIncoming/MaterialIncoming";
 
 const SideBar = () => {
   const {
@@ -111,60 +112,53 @@ const SideBar = () => {
       path: "Transactions",
       submenu: [
         {
-          label: "Incoming",
-          compName: "Incoming",
-          newPath: "incoming",
-          path: "Transactions / Incoming",
-          icon: "fas fa-arrow-down",
+          label: "Store Material Inward",
+          compName: "MaterialIncoming",
+          newPath: "material-incoming",
+          path: "Transactions / Material Incoming",
+          icon: "fas fa-truck-ramp-box",
         },
         {
-          label: "Incoming Reprint",
-          compName: "IncomingReprint",
-          newPath: "incoming-reprint",
-          path: "Transactions / Incoming Reprint",
-          icon: "fas fa-print",
-        },
-        {
-          label: "IQC",
-          compName: "IQC",
-          newPath: "iqc",
-          path: "Transactions / IQC",
+          label: "Incoming QC",
+          compName: "IncomingQC",
+          newPath: "incoming-qc",
+          path: "Transactions / Incoming QC",
           icon: "fas fa-clipboard-check",
         },
         {
-          label: "Requisition",
-          compName: "Requisition",
-          newPath: "requisition",
-          path: "Transactions / Requisition",
-          icon: "fas fa-clipboard-list",
+          label: "Material Issue Request",
+          compName: "MaterialIssueRequest",
+          newPath: "material-issue-request",
+          path: "Transactions / Material Issue Request",
+          icon: "fas fa-file-invoice",
         },
         {
-          label: "Issue Production",
-          compName: "IssueProduction",
-          newPath: "issue-production",
-          path: "Transactions / Issue Production",
-          icon: "fas fa-cogs",
+          label: "Issue to Production",
+          compName: "IssuetoProduction",
+          newPath: "issue-to-production",
+          path: "Transactions / Issue to Production",
+          icon: "fas fa-dolly",
         },
         {
-          label: "Requisition Receipt",
-          compName: "RequisitionReceipt",
-          newPath: "requisition-recepit",
-          path: "Transactions / Requisition Receipt",
-          icon: "fas fa-clipboard",
+          label: "Production Floor Receipt",
+          compName: "ProductionFloorReceipt",
+          newPath: "production-floor-receipt",
+          path: "Transactions /Production Floor Receipt",
+          icon: "fas fa-circle-check",
         },
         {
-          label: "Production Receipt",
-          compName: "ProductionReceipt",
-          newPath: "production-receipt",
-          path: "Transactions / Production Receipt",
-          icon: "fas fa-cog",
+          label: "Production Material Usage",
+          compName: "ProductionMaterialUsage",
+          newPath: "production-material-usage",
+          path: "Transactions / Production Material Usage",
+          icon: "fas fa-industry",
         },
         {
           label: "WIP Return",
           compName: "WIPReturn",
           newPath: "wip-return",
           path: "Transactions / WIP Return",
-          icon: "fas fa-undo",
+          icon: "fas fa-arrow-rotate-left",
         },
       ],
     },
@@ -197,6 +191,30 @@ const SideBar = () => {
     setIsActiveMenu((prev) => (prev === label ? null : label));
   };
 
+  // const handleRightSideComponentName = (name) => {
+  //   // Master Submenu component list
+  //   name === "VendorMaster" && setRightSideComponent(<VendorMaster />);
+  //   name === "ItemMaster" && setRightSideComponent(<ItemMaster />);
+  //   name === "WarehouseMaster" && setRightSideComponent(<WarehouseMaster />);
+  //   name === "BOMMaster" && setRightSideComponent(<BOMMaster />);
+  //   name === "TypeMaster" && setRightSideComponent(<TypeMaster />);
+  //   name === "GroupMaster" && setRightSideComponent(<GroupMaster />);
+  //   name === "PartMaster" && setRightSideComponent(<PartMaster />);
+
+  //   // Transaction Submenu component list
+  //   name === "Incoming" && setRightSideComponent(<Incoming />);
+  //   name === "IncomingReprint" && setRightSideComponent(<IncomingReprint />);
+  //   name === "IQC" && setRightSideComponent(<IQC />);
+  //   name === "Requisition" && setRightSideComponent(<Requisition />);
+  //   name === "IssueProduction" && setRightSideComponent(<IssueProduction />);
+  //   name === "RequisitionReceipt" &&
+  //     setRightSideComponent(<RequisitionReceipt />);
+  //   name === "ProductionReceipt" &&
+  //     setRightSideComponent(<ProductionReceipt />);
+  //   name === "WIPReturn" && setRightSideComponent(<WIPReturn />);
+  //   name === "Activity Logs" && setRightSideComponent(<ActivityLogs />);
+  // };
+
   const handleRightSideComponentName = (name) => {
     // Master Submenu component list
     name === "VendorMaster" && setRightSideComponent(<VendorMaster />);
@@ -208,8 +226,8 @@ const SideBar = () => {
     name === "PartMaster" && setRightSideComponent(<PartMaster />);
 
     // Transaction Submenu component list
-    name === "Incoming" && setRightSideComponent(<Incoming />);
-    name === "IncomingReprint" && setRightSideComponent(<IncomingReprint />);
+    name === "MaterialIncoming" && setRightSideComponent(<MaterialIncoming />);
+    name === "IncomingQC" && setRightSideComponent(<IncomingQC />);
     name === "IQC" && setRightSideComponent(<IQC />);
     name === "Requisition" && setRightSideComponent(<Requisition />);
     name === "IssueProduction" && setRightSideComponent(<IssueProduction />);
