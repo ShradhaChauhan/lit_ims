@@ -2,9 +2,6 @@ import './App.css'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Login from './components/Login/Login'
 import { Routes, Route } from "react-router-dom";
-<<<<<<< Updated upstream
-import Dashboard from './components/Dashboard/Dashboard';
-=======
 import Dashboard from "./components/Dashboard/Dashboard";
 import ItemMaster from "./components/Forms/ItemMaster/ItemMaster";
 import VendorMaster from "./components/Forms/VendorMaster/VendorMaster";
@@ -23,14 +20,11 @@ import MaterialIncoming from "./components/Forms/MaterialIncoming/MaterialIncomi
 import IncomingQC from "./components/Forms/IncomingQC/IncomingQC";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
->>>>>>> Stashed changes
 
 function App() {
 
   return (
     <>
-<<<<<<< Updated upstream
-=======
       <ToastContainer
         position="top-right"
         autoClose={3000}
@@ -42,13 +36,10 @@ function App() {
       />
       {isLoginPage ? (
         // Show only login component on the login route
->>>>>>> Stashed changes
         <Routes>
           <Route exact path='/' element={ <Login /> } />
           <Route exact path='/dashboard' element={ <Dashboard /> } />
         </Routes>
-<<<<<<< Updated upstream
-=======
       ) : (
         <div className="container-fluid min-vh-100 d-flex flex-1 p-0 app-container">
           {/* Sidebar */}
@@ -83,7 +74,6 @@ function App() {
           </div>
         </div>
       )}
->>>>>>> Stashed changes
     </>
   )
 }

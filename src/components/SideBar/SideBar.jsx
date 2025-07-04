@@ -38,140 +38,6 @@ const SideBar = () => {
     setIsActiveMenu((prev) => (prev === menuItem ? null : menuItem));
   };
 
-  // const menuItems = [
-  //   {
-  //     icon: "fas fa-database",
-  //     label: "Masters",
-  //     path: "Masters",
-  //     submenu: [
-  //       {
-  //         label: "Business Partner",
-  //         compName: "VendorMaster",
-  //         newPath: "business-partner",
-  //         path: "Masters / Business Partner",
-  //         icon: "fas fa-user-group",
-  //       },
-  //       {
-  //         label: "Vendor Items Master",
-  //         compName: "VendorItemsMaster",
-  //         newPath: "vendor-items-master",
-  //         path: "Masters / Vendor Items Master",
-  //         icon: "fas fa-box-open",
-  //       },
-  //       {
-  //         label: "Item Master",
-  //         compName: "ItemMaster",
-  //         newPath: "item-master",
-  //         path: "Masters / Item Master",
-  //         icon: "fas fa-box",
-  //       },
-  //       {
-  //         label: "Warehouse Master",
-  //         compName: "WarehouseMaster",
-  //         newPath: "warehouse-master",
-  //         path: "Masters / Warehouse Master",
-  //         icon: "fas fa-warehouse",
-  //       },
-  //       {
-  //         label: "BOM Master",
-  //         compName: "BOMMaster",
-  //         newPath: "bom-master",
-  //         path: "Masters / BOM Master",
-  //         icon: "fas fa-cubes",
-  //       },
-  //       {
-  //         label: "Type Master",
-  //         compName: "TypeMaster",
-  //         newPath: "type-master",
-  //         path: "Masters / Type Master",
-  //         icon: "fas fa-list-alt",
-  //       },
-  //       {
-  //         label: "Group Master",
-  //         compName: "GroupMaster",
-  //         newPath: "group-master",
-  //         path: "Masters / Group Master",
-  //         icon: "fas fa-layer-group",
-  //       },
-  //       {
-  //         label: "Part Master",
-  //         compName: "PartMaster",
-  //         newPath: "part-master",
-  //         path: "Masters / Part Master",
-  //         icon: "fas fa-cog",
-  //       },
-  //     ],
-  //   },
-  //   {
-  //     icon: "fas fa-sync-alt",
-  //     label: "Transactions",
-  //     path: "Transactions",
-  //     submenu: [
-  //       {
-  //         label: "Incoming",
-  //         compName: "Incoming",
-  //         newPath: "incoming",
-  //         path: "Transactions / Incoming",
-  //         icon: "fas fa-arrow-down",
-  //       },
-  //       {
-  //         label: "Incoming Reprint",
-  //         compName: "IncomingReprint",
-  //         newPath: "incoming-reprint",
-  //         path: "Transactions / Incoming Reprint",
-  //         icon: "fas fa-print",
-  //       },
-  //       {
-  //         label: "IQC",
-  //         compName: "IQC",
-  //         newPath: "iqc",
-  //         path: "Transactions / IQC",
-  //         icon: "fas fa-clipboard-check",
-  //       },
-  //       {
-  //         label: "Requisition",
-  //         compName: "Requisition",
-  //         newPath: "requisition",
-  //         path: "Transactions / Requisition",
-  //         icon: "fas fa-clipboard-list",
-  //       },
-  //       {
-  //         label: "Issue Production",
-  //         compName: "IssueProduction",
-  //         newPath: "issue-production",
-  //         path: "Transactions / Issue Production",
-  //         icon: "fas fa-cogs",
-  //       },
-  //       {
-  //         label: "Requisition Receipt",
-  //         compName: "RequisitionReceipt",
-  //         newPath: "requisition-recepit",
-  //         path: "Transactions / Requisition Receipt",
-  //         icon: "fas fa-clipboard",
-  //       },
-  //       {
-  //         label: "Production Receipt",
-  //         compName: "ProductionReceipt",
-  //         newPath: "production-receipt",
-  //         path: "Transactions / Production Receipt",
-  //         icon: "fas fa-cog",
-  //       },
-  //       {
-  //         label: "WIP Return",
-  //         compName: "WIPReturn",
-  //         newPath: "wip-return",
-  //         path: "Transactions / WIP Return",
-  //         icon: "fas fa-undo",
-  //       },
-  //     ],
-  //   },
-  //   {
-  //     icon: "fas fa-chart-pie",
-  //     path: "Reports",
-  //     label: "Reports",
-  //   },
-  // ];
-
   const menuItems = [
     {
       icon: "fas fa-database",
@@ -228,48 +94,6 @@ const SideBar = () => {
       path: "Transactions",
       submenu: [
         {
-<<<<<<< Updated upstream
-          label: "Incoming",
-          compName: "Incoming",
-          path: "Transactions / Incoming",
-          icon: "fas fa-arrow-down",
-        },
-        {
-          label: "Incoming Reprint",
-          compName: "IncomingReprint",
-          path: "Transactions / Incoming Reprint",
-          icon: "fas fa-print",
-        },
-        {
-          label: "IQC",
-          compName: "IQC",
-          path: "Transactions / IQC",
-          icon: "fas fa-clipboard-check",
-        },
-        {
-          label: "Requisition",
-          compName: "Requisition",
-          path: "Transactions / Requisition",
-          icon: "fas fa-clipboard-list",
-        },
-        {
-          label: "Issue Production",
-          compName: "IssueProduction",
-          path: "Transactions / Issue Production",
-          icon: "fas fa-cogs",
-        },
-        {
-          label: "Requisition Receipt",
-          compName: "RequisitionReceipt",
-          path: "Transactions / Requisition Receipt",
-          icon: "fas fa-clipboard",
-        },
-        {
-          label: "Production Receipt",
-          compName: "ProductionReceipt",
-          path: "Transactions / Production Receipt",
-          icon: "fas fa-cog",
-=======
           label: "Store Material Inward",
           compName: "MaterialIncoming",
           newPath: "material-incoming",
@@ -310,7 +134,6 @@ const SideBar = () => {
           newPath: "production-material-usage",
           path: "Transactions / Production Material Usage",
           icon: "fas fa-industry",
->>>>>>> Stashed changes
         },
         {
           label: "WIP Return",
