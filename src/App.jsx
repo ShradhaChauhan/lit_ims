@@ -2,16 +2,88 @@ import './App.css'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Login from './components/Login/Login'
 import { Routes, Route } from "react-router-dom";
+<<<<<<< Updated upstream
 import Dashboard from './components/Dashboard/Dashboard';
+=======
+import Dashboard from "./components/Dashboard/Dashboard";
+import ItemMaster from "./components/Forms/ItemMaster/ItemMaster";
+import VendorMaster from "./components/Forms/VendorMaster/VendorMaster";
+import { useContext } from "react";
+import { AppContext } from "./context/AppContext";
+import SideBar from "./components/SideBar/SideBar";
+// import Navbar from "./components/Navbar/Navbar";
+import { useLocation } from "react-router-dom";
+import WarehouseMaster from "./components/Forms/WarehouseMaster/WarehouseMaster";
+import BOMMaster from "./components/Forms/BOMMaster/BOMMaster";
+import TypeMaster from "./components/Forms/TypeMaster/TypeMaster";
+import GroupMaster from "./components/Forms/GroupMaster/GroupMaster";
+import PartMaster from "./components/Forms/PartMaster/PartMaster";
+import VendorItemsMaster from "./components/Forms/VendorItemsMaster/VendorItemsMaster";
+import MaterialIncoming from "./components/Forms/MaterialIncoming/MaterialIncoming";
+import IncomingQC from "./components/Forms/IncomingQC/IncomingQC";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+>>>>>>> Stashed changes
 
 function App() {
 
   return (
     <>
+<<<<<<< Updated upstream
+=======
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        pauseOnHover
+        draggable
+      />
+      {isLoginPage ? (
+        // Show only login component on the login route
+>>>>>>> Stashed changes
         <Routes>
           <Route exact path='/' element={ <Login /> } />
           <Route exact path='/dashboard' element={ <Dashboard /> } />
         </Routes>
+<<<<<<< Updated upstream
+=======
+      ) : (
+        <div className="container-fluid min-vh-100 d-flex flex-1 p-0 app-container">
+          {/* Sidebar */}
+          <div className="d-flex flex-column">
+            <SideBar />
+          </div>
+
+          {/* Right Side Content */}
+          <div className="w-100 d-flex flex-column content-area">
+            {/* Content Area */}
+            <div className="right-side-div bg-light flex-grow-1 overflow-auto">
+              <Routes>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/business-partner" element={<VendorMaster />} />
+                <Route path="/item-master" element={<ItemMaster />} />
+                <Route path="/warehouse-master" element={<WarehouseMaster />} />
+                <Route path="/bom-master" element={<BOMMaster />} />
+                <Route path="/type-master" element={<TypeMaster />} />
+                <Route path="/group-master" element={<GroupMaster />} />
+                <Route path="/part-master" element={<PartMaster />} />
+                <Route
+                  path="/vendor-items-master"
+                  element={<VendorItemsMaster />}
+                />
+                <Route
+                  path="/material-incoming"
+                  element={<MaterialIncoming />}
+                />
+                <Route path="/incoming-qc" element={<IncomingQC />} />
+              </Routes>
+            </div>
+          </div>
+        </div>
+      )}
+>>>>>>> Stashed changes
     </>
   )
 }
