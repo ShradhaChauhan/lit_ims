@@ -547,7 +547,7 @@ const Users = () => {
     setErrors(newErrors);
     console.log("Validation errors:", newErrors);
 
-    if (newErrors) {
+    if (Object.keys(newErrors).length !== 0) {
       toast.error(
         "All fields are required. Please complete the form before submission"
       );
@@ -570,7 +570,7 @@ const Users = () => {
         .then((response) => {
           console.log("Add user response:", response);
           if (response.data && response.data.status === true) {
-            toast.error(response.data.message);
+            toast.success(response.data.message);
             // alert(response.data.message); // Show success message
             handleReset(e); // Reset form after successful submission
             setIsAddUser(false); // Close the form
@@ -1246,8 +1246,9 @@ const Users = () => {
   };
 
   // Add handleCloseEditModal function
-  const handleCloseEditModal = () => {
+  const handleCloseEditModal = (e) => {
     console.log("Closing edit modal");
+    handleReset(e);
     // First hide the modal using Bootstrap's API
     if (editModal) {
       editModal.hide();
@@ -1383,9 +1384,10 @@ const Users = () => {
             "Content-Type": "application/json",
           },
         });
+        handleReset(e);
       } catch (err) {
         console.log("First endpoint failed, trying alternate endpoint");
-
+        handleReset(e);
         // Try alternate endpoint format
         endpoint = `/api/users/${userDetails.id}`;
         console.log("Trying alternate API endpoint:", endpoint); // Debug log

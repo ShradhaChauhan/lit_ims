@@ -110,10 +110,24 @@ const MaterialIncoming = () => {
           itemName: formData.itemName,
           itemCode: formData.itemCode,
           quantity: formData.quantity,
-          batchno: response.data,
+          batchNo: response.data,
         };
 
         setReceiptList((prev) => [...prev, newItem]);
+        // Remove from dropdown AFTER adding
+        setVendorItems((prev) =>
+          prev.filter((item) => item.id !== formData.vendorItem)
+        );
+        // Clear selected item
+        setVendorItem("");
+        // Update formData with cleared values or next default
+        setFormData((prev) => ({
+          ...prev,
+          itemCode: "",
+          itemName: "",
+          quantity: "",
+          batchno: response.data,
+        }));
         toast.success("Item added successfully");
       }
     } catch (error) {
@@ -335,6 +349,10 @@ const MaterialIncoming = () => {
                             itemCode: selectedItem.itemCode,
                             itemName: selectedItem.itemName,
                           }));
+                          // setVendorItems(
+                          //   vendorItems.filter((item) => item.id !== selectedId)
+                          // );
+                          // console.log(vendorItems);
                         }
                       }
                     }}
@@ -400,7 +418,8 @@ const MaterialIncoming = () => {
               </div>
               <div className="col-3 d-flex flex-column form-group">
                 <button
-                  className="btn btn-primary text-8 px-3 fw-medium mx-2 margin-top-2"
+                  className="btn btn-primary text-8 px-3 fw-medium mx-2"
+                  style={{ marginTop: "2rem" }}
                   onClick={handleAddReceiptItem}
                 >
                   <i className="fa-solid fa-add me-1"></i> Add Item
@@ -446,7 +465,7 @@ const MaterialIncoming = () => {
                             <td className="ps-4">{receipt.itemName}</td>
                             <td className="ps-4">{receipt.itemCode}</td>
                             <td className="ps-4">{receipt.quantity}</td>
-                            <td className="ps-4">{receipt.batchno}</td>
+                            <td className="ps-4">{receipt.batchNo}</td>
                             <td className="actions ps-3">
                               <button
                                 className="btn-icon btn-primary"
