@@ -51,7 +51,7 @@ const VendorItemsMaster = () => {
       viewModal = new Modal(vendorItemModalRef.current);
       viewModal.show();
     }
-    
+
     if (isEditVendorItemDetails && vendorItemEditModalRef.current) {
       editModal = new Modal(vendorItemEditModalRef.current);
       editModal.show();
@@ -84,18 +84,24 @@ const VendorItemsMaster = () => {
     const editModalElement = vendorItemEditModalRef.current;
 
     if (viewModalElement) {
-      viewModalElement.addEventListener('hidden.bs.modal', handleViewModalHide);
+      viewModalElement.addEventListener("hidden.bs.modal", handleViewModalHide);
     }
     if (editModalElement) {
-      editModalElement.addEventListener('hidden.bs.modal', handleEditModalHide);
+      editModalElement.addEventListener("hidden.bs.modal", handleEditModalHide);
     }
 
     return () => {
       if (viewModalElement) {
-        viewModalElement.removeEventListener('hidden.bs.modal', handleViewModalHide);
+        viewModalElement.removeEventListener(
+          "hidden.bs.modal",
+          handleViewModalHide
+        );
       }
       if (editModalElement) {
-        editModalElement.removeEventListener('hidden.bs.modal', handleEditModalHide);
+        editModalElement.removeEventListener(
+          "hidden.bs.modal",
+          handleEditModalHide
+        );
       }
     };
   }, []);
@@ -109,53 +115,67 @@ const VendorItemsMaster = () => {
 
   // Function to fetch vendor items from API
   const fetchVendorItems = () => {
-    api.get("/api/vendor-item/all")
-      .then(response => {
+    api
+      .get("/api/vendor-item/all")
+      .then((response) => {
         if (response.data && response.data.status) {
           setVendorItems(response.data.data || []);
         } else {
-          console.error("Error fetching vendor items:", response.data?.message || "Unknown error");
+          console.error(
+            "Error fetching vendor items:",
+            response.data?.message || "Unknown error"
+          );
         }
       })
-      .catch(error => {
+      .catch((error) => {
         console.error("Error fetching vendor items:", error);
       });
   };
 
   // Function to fetch vendors from API
   const fetchVendors = () => {
-    api.get("/api/vendor-customer/vendors")
-      .then(response => {
+    api
+      .get("/api/vendor-customer/vendors")
+      .then((response) => {
         if (response.data && response.data.status) {
           console.log("Fetched vendors:", response.data.data);
           const vendorData = response.data.data || [];
           // Verify vendor data has required fields
-          const validVendors = vendorData.filter(v => v.code && v.name);
+          const validVendors = vendorData.filter((v) => v.code && v.name);
           if (validVendors.length !== vendorData.length) {
-            console.warn("Some vendors are missing required fields:", 
-              vendorData.filter(v => !v.code || !v.name));
+            console.warn(
+              "Some vendors are missing required fields:",
+              vendorData.filter((v) => !v.code || !v.name)
+            );
           }
           setVendors(validVendors);
         } else {
-          console.error("Error fetching vendors:", response.data?.message || "Unknown error");
+          console.error(
+            "Error fetching vendors:",
+            response.data?.message || "Unknown error"
+          );
         }
       })
-      .catch(error => {
+      .catch((error) => {
         console.error("Error fetching vendors:", error);
       });
   };
 
   // Function to fetch items from API
   const fetchItems = () => {
-    api.get("/api/items/all")
-      .then(response => {
+    api
+      .get("/api/items/all")
+      .then((response) => {
         if (response.data && response.data.status) {
           setItems(response.data.data || []);
         } else {
-          console.error("Error fetching items:", response.data?.message || "Unknown error");
+          console.error(
+            "Error fetching items:",
+            response.data?.message || "Unknown error"
+          );
         }
       })
-      .catch(error => {
+      .catch((error) => {
         console.error("Error fetching items:", error);
       });
   };
@@ -177,7 +197,7 @@ const VendorItemsMaster = () => {
       leadTime: assignment.days,
       minOrderQty: assignment.quantity,
       price: assignment.price,
-      status: assignment.status
+      status: assignment.status,
     });
     setIsShowVendorItemDetails(true);
   };
@@ -185,19 +205,24 @@ const VendorItemsMaster = () => {
   const handleEditDetails = (assignment, e) => {
     e.preventDefault();
     console.log("Opening edit modal for assignment:", assignment);
-    
+
     // Find the matching vendor and item
-    const selectedVendor = vendors.find(v => v.name.trim() === assignment.vendorName.trim());
-    const selectedItem = items.find(i => i.name.trim() === assignment.itemName.trim());
-    
+    const selectedVendor = vendors.find(
+      (v) => v.name.trim() === assignment.vendorName.trim()
+    );
+    const selectedItem = items.find(
+      (i) => i.name.trim() === assignment.itemName.trim()
+    );
+
     if (!selectedVendor || !selectedItem) {
       console.error("Could not find matching vendor or item");
       return;
     }
 
     // Normalize the status value
-    const normalizedStatus = assignment.status.toLowerCase() === 'active' ? 'Active' : 'Inactive';
-    
+    const normalizedStatus =
+      assignment.status.toLowerCase() === "active" ? "Active" : "Inactive";
+
     const details = {
       id: assignment.id,
       vendor: selectedVendor.name,
@@ -205,12 +230,12 @@ const VendorItemsMaster = () => {
       leadTime: assignment.days,
       minOrderQty: assignment.quantity,
       price: assignment.price,
-      status: normalizedStatus
+      status: normalizedStatus,
     };
 
     console.log("Setting vendor item details:", details);
     setVendorItemDetails(details);
-    setIsChecked(normalizedStatus === 'Active');
+    setIsChecked(normalizedStatus === "Active");
     setStatus(normalizedStatus);
     setIsEditVendorItemDetails(true);
   };
@@ -222,9 +247,13 @@ const VendorItemsMaster = () => {
 
     if (Object.keys(newErrors).length === 0) {
       // Find selected vendor and item objects to get their codes
-      const selectedVendor = vendors.find(v => v.id.toString() === formData.vendor.toString());
-      const selectedItem = items.find(i => i.id.toString() === formData.item.toString());
-      
+      const selectedVendor = vendors.find(
+        (v) => v.id.toString() === formData.vendor.toString()
+      );
+      const selectedItem = items.find(
+        (i) => i.id.toString() === formData.item.toString()
+      );
+
       if (!selectedVendor || !selectedItem) {
         alert("Please select both vendor and item");
         return;
@@ -238,16 +267,20 @@ const VendorItemsMaster = () => {
         days: formData.leadTime || 0,
         quantity: formData.minOrderQty || 0,
         price: formData.price || 0,
-        status: formData.status === "active" ? "Active" : "Inactive"
+        status: formData.status === "active" ? "Active" : "Inactive",
       };
 
       console.log("Submitting vendor-item assignment:", finalData);
-      
-      api.post("/api/vendor-item/save", finalData)
-        .then(response => {
+
+      api
+        .post("/api/vendor-item/save", finalData)
+        .then((response) => {
           console.log("Response:", response.data);
           if (response.data && response.data.status) {
-            alert(response.data.message || "Vendor-Item assignment added successfully!");
+            alert(
+              response.data.message ||
+                "Vendor-Item assignment added successfully!"
+            );
             // Reset form
             handleReset(e);
             // Close the form
@@ -255,10 +288,12 @@ const VendorItemsMaster = () => {
             // Refresh the vendor-items list
             fetchVendorItems();
           } else {
-            alert(response.data?.message || "Error adding vendor-item assignment");
+            alert(
+              response.data?.message || "Error adding vendor-item assignment"
+            );
           }
         })
-        .catch(error => {
+        .catch((error) => {
           console.error("Error adding vendor-item assignment:", error);
           alert("Error adding vendor-item assignment. Please try again.");
         });
@@ -303,9 +338,13 @@ const VendorItemsMaster = () => {
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      const selectedVendor = vendors.find(v => v.name.trim() === vendorItemDetails.vendor.trim());
-      const selectedItem = items.find(i => i.name.trim() === vendorItemDetails.item.trim());
-      
+      const selectedVendor = vendors.find(
+        (v) => v.name.trim() === vendorItemDetails.vendor.trim()
+      );
+      const selectedItem = items.find(
+        (i) => i.name.trim() === vendorItemDetails.item.trim()
+      );
+
       if (!selectedVendor || !selectedItem) {
         alert("Please select both vendor and item");
         return;
@@ -320,13 +359,14 @@ const VendorItemsMaster = () => {
         days: parseInt(vendorItemDetails.leadTime) || 0,
         quantity: parseInt(vendorItemDetails.minOrderQty) || 0,
         price: parseFloat(vendorItemDetails.price) || 0,
-        status: vendorItemDetails.status.toLowerCase()
+        status: vendorItemDetails.status.toLowerCase(),
       };
 
       console.log("Updating vendor item with data:", finalData);
 
-      api.put("/api/vendor-item/update/" + vendorItemDetails.id, finalData)
-        .then(response => {
+      api
+        .put("/api/vendor-item/update/" + vendorItemDetails.id, finalData)
+        .then((response) => {
           if (response.data && response.data.status) {
             // Close the modal using Bootstrap's Modal instance
             const modalElement = vendorItemEditModalRef.current;
@@ -344,28 +384,37 @@ const VendorItemsMaster = () => {
               leadTime: "",
               minOrderQty: "",
               price: "",
-              status: "active"
+              status: "active",
             });
             setSelectedVendorItems([]); // Clear any selections
             setSelectAll(false); // Reset select all checkbox
 
             // Refresh the list
             fetchVendorItems();
-            
-            alert(response.data.message || "Vendor-Item assignment updated successfully!");
+
+            alert(
+              response.data.message ||
+                "Vendor-Item assignment updated successfully!"
+            );
           } else {
-            alert(response.data?.message || "Error updating vendor-item assignment");
+            alert(
+              response.data?.message || "Error updating vendor-item assignment"
+            );
           }
         })
-        .catch(error => {
+        .catch((error) => {
           console.error("Error updating vendor-item assignment:", error);
           console.error("Error details:", {
             message: error.message,
             response: error.response?.data,
             status: error.response?.status,
-            finalData: finalData
+            finalData: finalData,
           });
-          alert(`Error updating vendor-item assignment: ${error.response?.data?.message || error.message}`);
+          alert(
+            `Error updating vendor-item assignment: ${
+              error.response?.data?.message || error.message
+            }`
+          );
         });
     }
   };
@@ -379,7 +428,7 @@ const VendorItemsMaster = () => {
       leadTime: "",
       minOrderQty: "",
       price: "",
-      status: "active"
+      status: "active",
     });
     setErrors({});
     setIsEditVendorItemDetails(false);
@@ -412,17 +461,27 @@ const VendorItemsMaster = () => {
 
   // Function to delete a single vendor item
   const handleDeleteVendorItem = (id) => {
-    if (window.confirm("Are you sure you want to delete this vendor-item assignment?")) {
-      api.delete(`/api/vendor-item/delete/${id}`)
-        .then(response => {
+    if (
+      window.confirm(
+        "Are you sure you want to delete this vendor-item assignment?"
+      )
+    ) {
+      api
+        .delete(`/api/vendor-item/delete/${id}`)
+        .then((response) => {
           if (response.data && response.data.status) {
-            alert(response.data.message || "Vendor-Item assignment deleted successfully!");
+            alert(
+              response.data.message ||
+                "Vendor-Item assignment deleted successfully!"
+            );
             fetchVendorItems(); // Refresh the list
           } else {
-            alert(response.data?.message || "Error deleting vendor-item assignment");
+            alert(
+              response.data?.message || "Error deleting vendor-item assignment"
+            );
           }
         })
-        .catch(error => {
+        .catch((error) => {
           console.error("Error deleting vendor-item assignment:", error);
           alert("Error deleting vendor-item assignment. Please try again.");
         });
@@ -436,9 +495,13 @@ const VendorItemsMaster = () => {
       return;
     }
 
-    if (window.confirm(`Are you sure you want to delete ${selectedVendorItems.length} vendor-item assignment(s)?`)) {
+    if (
+      window.confirm(
+        `Are you sure you want to delete ${selectedVendorItems.length} vendor-item assignment(s)?`
+      )
+    ) {
       // Delete items one by one
-      const deletePromises = selectedVendorItems.map(id => 
+      const deletePromises = selectedVendorItems.map((id) =>
         api.delete(`/api/vendor-item/delete/${id}`)
       );
 
@@ -449,9 +512,11 @@ const VendorItemsMaster = () => {
           setSelectAll(false);
           fetchVendorItems(); // Refresh the list
         })
-        .catch(error => {
+        .catch((error) => {
           console.error("Error deleting vendor-item assignments:", error);
-          alert("Error deleting some vendor-item assignments. Please try again.");
+          alert(
+            "Error deleting some vendor-item assignments. Please try again."
+          );
           fetchVendorItems(); // Refresh to see what was deleted
         });
     }
@@ -464,39 +529,53 @@ const VendorItemsMaster = () => {
     // Apply search
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter(item => 
-        item.vendorName.toLowerCase().includes(query) ||
-        item.itemName.toLowerCase().includes(query) ||
-        item.days.toString().includes(query) ||
-        item.quantity.toString().includes(query) ||
-        item.price.toString().includes(query)
+      filtered = filtered.filter(
+        (item) =>
+          item.vendorName.toLowerCase().includes(query) ||
+          item.itemName.toLowerCase().includes(query) ||
+          item.days.toString().includes(query) ||
+          item.quantity.toString().includes(query) ||
+          item.price.toString().includes(query)
       );
     }
 
     // Apply vendor filter
     if (selectedVendorFilter) {
-      filtered = filtered.filter(item => item.vendorName === selectedVendorFilter);
+      filtered = filtered.filter(
+        (item) => item.vendorName === selectedVendorFilter
+      );
     }
 
     // Apply item filter
     if (selectedItemFilter) {
-      filtered = filtered.filter(item => item.itemName === selectedItemFilter);
+      filtered = filtered.filter(
+        (item) => item.itemName === selectedItemFilter
+      );
     }
 
     // Apply status filter
     if (selectedStatusFilter) {
-      filtered = filtered.filter(item => 
-        item.status.toLowerCase() === selectedStatusFilter.toLowerCase()
+      filtered = filtered.filter(
+        (item) =>
+          item.status.toLowerCase() === selectedStatusFilter.toLowerCase()
       );
     }
 
     setFilteredVendorItems(filtered);
-  }, [vendorItems, searchQuery, selectedVendorFilter, selectedItemFilter, selectedStatusFilter]);
+  }, [
+    vendorItems,
+    searchQuery,
+    selectedVendorFilter,
+    selectedItemFilter,
+    selectedStatusFilter,
+  ]);
 
   // Get unique vendor names for filter dropdown
-  const uniqueVendors = [...new Set(vendorItems.map(item => item.vendorName))];
+  const uniqueVendors = [
+    ...new Set(vendorItems.map((item) => item.vendorName)),
+  ];
   // Get unique item names for filter dropdown
-  const uniqueItems = [...new Set(vendorItems.map(item => item.itemName))];
+  const uniqueItems = [...new Set(vendorItems.map((item) => item.itemName))];
 
   // Handle search input change
   const handleSearchChange = (e) => {
@@ -565,31 +644,35 @@ const VendorItemsMaster = () => {
           />
         </div>
         <div className="filter-options">
-          <select 
+          <select
             className="filter-select"
             value={selectedVendorFilter}
             onChange={handleVendorFilterChange}
           >
             <option value="">All Vendors</option>
-            {uniqueVendors.map(vendor => (
-              <option key={vendor} value={vendor}>{vendor}</option>
+            {uniqueVendors.map((vendor) => (
+              <option key={vendor} value={vendor}>
+                {vendor}
+              </option>
             ))}
           </select>
         </div>
         <div className="filter-options">
-          <select 
+          <select
             className="filter-select"
             value={selectedItemFilter}
             onChange={handleItemFilterChange}
           >
             <option value="">All Items</option>
-            {uniqueItems.map(item => (
-              <option key={item} value={item}>{item}</option>
+            {uniqueItems.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
             ))}
           </select>
         </div>
         <div className="filter-options">
-          <select 
+          <select
             className="filter-select"
             value={selectedStatusFilter}
             onChange={handleStatusFilterChange}
@@ -600,12 +683,16 @@ const VendorItemsMaster = () => {
           </select>
         </div>
         <div className="filter-options">
-          <button 
+          <button className="filter-select" onClick={resetFilters}>
+            <i className="fas fa-filter me-2"></i>
+            Reset Filters
+          </button>
+          {/* <button 
             className="btn btn-secondary"
             onClick={resetFilters}
           >
             <i className="fas fa-undo-alt me-1"></i>Reset Filters
-          </button>
+          </button> */}
         </div>
       </div>
 
@@ -853,7 +940,7 @@ const VendorItemsMaster = () => {
                 <i className="fas fa-file-export"></i>
                 Export Selected
               </button>
-              <button 
+              <button
                 className="btn-action btn-danger"
                 onClick={handleDeleteSelectedVendorItems}
               >
@@ -888,13 +975,13 @@ const VendorItemsMaster = () => {
                     <div className="no-data-content">
                       <i className="fas fa-box-open no-data-icon"></i>
                       <p className="no-data-text">
-                        {vendorItems.length === 0 
-                          ? "No vendor-item assignments found" 
+                        {vendorItems.length === 0
+                          ? "No vendor-item assignments found"
                           : "No matching assignments found"}
                       </p>
                       <p className="no-data-subtext">
-                        {vendorItems.length === 0 
-                          ? "Click the \"Add New Assignment\" button to create your first assignment"
+                        {vendorItems.length === 0
+                          ? 'Click the "Add New Assignment" button to create your first assignment'
                           : "Try adjusting your search or filters"}
                       </p>
                     </div>
@@ -959,8 +1046,8 @@ const VendorItemsMaster = () => {
                       >
                         <i className="fas fa-edit"></i>
                       </button>
-                      <button 
-                        className="btn-icon btn-danger" 
+                      <button
+                        className="btn-icon btn-danger"
                         title="Delete"
                         onClick={() => handleDeleteVendorItem(assignment.id)}
                       >
@@ -1009,7 +1096,10 @@ const VendorItemsMaster = () => {
         <div className="modal-dialog">
           <div className="modal-content">
             <div className="modal-header">
-              <h5 className="modal-title" id="vendorItemDetailModalLabel">View Assignment Details</h5>
+              <h5 className="modal-title" id="vendorItemDetailModalLabel">
+                <i className="fas fa-circle-info me-2"></i>
+                View Assignment Details
+              </h5>
               <button
                 type="button"
                 className="btn-close"
@@ -1018,34 +1108,46 @@ const VendorItemsMaster = () => {
               ></button>
             </div>
             <div className="modal-body">
-              <p>
-                <strong>Vendor:</strong> {vendorItemDetails.vendor}
-              </p>
-              <p>
-                <strong>Item:</strong> {vendorItemDetails.item}
-              </p>
-              <p>
-                <strong>Lead Time (Days):</strong>{" "}
-                {vendorItemDetails.leadTime}
-              </p>
-              <p>
-                <strong>Min Order Qty:</strong>{" "}
-                {vendorItemDetails.minOrderQty}
-              </p>
-              <p>
-                <strong>Price:</strong> ₹{vendorItemDetails.price}
-              </p>
-              <p>
-                <strong>Status:</strong>{" "}
-                <span className={`badge status ${vendorItemDetails.status.toLowerCase()}`}>
-                  {vendorItemDetails.status}
-                </span>
-              </p>
+              <div className="user-details-grid">
+                <div className="detail-item">
+                  <strong>Vendor:</strong>
+                  <span>{vendorItemDetails.vendor}</span>
+                </div>
+
+                <div className="detail-items">
+                  <strong>Item:</strong>
+                  <span>{vendorItemDetails.item}</span>
+                </div>
+
+                <div className="detail-items">
+                  <strong>Lead Time (Days):</strong>
+                  <span>{vendorItemDetails.leadTime}</span>
+                </div>
+
+                <div className="detail-items">
+                  <strong>Min Order Qty:</strong>
+                  <span>{vendorItemDetails.minOrderQty}</span>
+                </div>
+
+                <div className="detail-items">
+                  <strong>Price:</strong>
+                  <span>{vendorItemDetails.price}</span>
+                </div>
+
+                <div className="detail-items">
+                  <strong>Status:</strong>
+                  <span
+                    className={`badge status ${vendorItemDetails.status.toLowerCase()} w-25`}
+                  >
+                    {vendorItemDetails.status}
+                  </span>
+                </div>
+              </div>
             </div>
             <div className="modal-footer">
               <button
                 type="button"
-                className="btn btn-secondary"
+                className="btn btn-secondary add-btn"
                 data-bs-dismiss="modal"
               >
                 Close
@@ -1067,7 +1169,10 @@ const VendorItemsMaster = () => {
         <div className="modal-dialog modal-lg">
           <div className="modal-content">
             <div className="modal-header">
-              <h5 className="modal-title" id="vendorItemEditModalLabel">Edit Assignment</h5>
+              <h5 className="modal-title" id="vendorItemEditModalLabel">
+                <i className="fa-solid fa-pencil me-2 font-1"></i>
+                Edit Assignment
+              </h5>
               <button
                 type="button"
                 className="btn-close"
@@ -1076,7 +1181,7 @@ const VendorItemsMaster = () => {
               ></button>
             </div>
             <form onSubmit={handleEditVendorItem}>
-              <div className="modal-body">
+              <div className="modal-body overflow-hidden">
                 <div className="form-grid border-bottom pt-0">
                   <div className="row form-style">
                     <div className="col-3 d-flex flex-column form-group">
@@ -1090,15 +1195,19 @@ const VendorItemsMaster = () => {
                           id="vendor"
                           value={vendorItemDetails.vendor || ""}
                           onChange={(e) => {
-                            const selectedVendor = vendors.find(v => v.name === e.target.value);
+                            const selectedVendor = vendors.find(
+                              (v) => v.name === e.target.value
+                            );
                             setVendorItemDetails({
                               ...vendorItemDetails,
                               vendor: e.target.value,
-                              vendorCode: selectedVendor?.code || ""
+                              vendorCode: selectedVendor?.code || "",
                             });
                           }}
                         >
-                          <option value="" disabled>Select Vendor</option>
+                          <option value="" disabled>
+                            Select Vendor
+                          </option>
                           {vendors.map((vendor) => (
                             <option key={vendor.id} value={vendor.name}>
                               {vendor.name}
@@ -1124,15 +1233,19 @@ const VendorItemsMaster = () => {
                           id="item"
                           value={vendorItemDetails.item || ""}
                           onChange={(e) => {
-                            const selectedItem = items.find(i => i.name === e.target.value);
+                            const selectedItem = items.find(
+                              (i) => i.name === e.target.value
+                            );
                             setVendorItemDetails({
                               ...vendorItemDetails,
                               item: e.target.value,
-                              itemCode: selectedItem?.code || ""
+                              itemCode: selectedItem?.code || "",
                             });
                           }}
                         >
-                          <option value="" disabled>Select Item</option>
+                          <option value="" disabled>
+                            Select Item
+                          </option>
                           {items.map((item) => (
                             <option key={item.id} value={item.name}>
                               {item.name}
@@ -1223,12 +1336,14 @@ const VendorItemsMaster = () => {
                             type="checkbox"
                             role="switch"
                             id="switchCheckChecked"
-                            checked={vendorItemDetails.status === 'Active'}
+                            checked={vendorItemDetails.status === "Active"}
                             onChange={(e) => {
-                              const newStatus = e.target.checked ? 'Active' : 'Inactive';
+                              const newStatus = e.target.checked
+                                ? "Active"
+                                : "Inactive";
                               setVendorItemDetails({
                                 ...vendorItemDetails,
-                                status: newStatus
+                                status: newStatus,
                               });
                               setIsChecked(e.target.checked);
                               setStatus(newStatus);
@@ -1247,9 +1362,9 @@ const VendorItemsMaster = () => {
                             const newStatus = e.target.value;
                             setVendorItemDetails({
                               ...vendorItemDetails,
-                              status: newStatus
+                              status: newStatus,
                             });
-                            setIsChecked(newStatus === 'Active');
+                            setIsChecked(newStatus === "Active");
                             setStatus(newStatus);
                           }}
                         >
@@ -1263,15 +1378,12 @@ const VendorItemsMaster = () => {
                 </div>
               </div>
               <div className="modal-footer">
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                >
+                <button type="submit" className="btn btn-primary add-btn">
                   Save Changes
                 </button>
                 <button
                   type="button"
-                  className="btn btn-secondary"
+                  className="btn btn-secondary add-btn"
                   data-bs-dismiss="modal"
                 >
                   Close

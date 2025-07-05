@@ -36,47 +36,53 @@ const WarehouseMaster = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [filteredWarehouses, setFilteredWarehouses] = useState([]);
-  
+
   useEffect(() => {
     fetchWarehouses();
   }, []);
-  
+
   useEffect(() => {
     let result = [...warehouses];
-    
+
     // Apply search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      result = result.filter(warehouse => 
-        warehouse.name.toLowerCase().includes(query) ||
-        warehouse.code.toLowerCase().includes(query) ||
-        warehouse.trno.toLowerCase().includes(query)
+      result = result.filter(
+        (warehouse) =>
+          warehouse.name.toLowerCase().includes(query) ||
+          warehouse.code.toLowerCase().includes(query) ||
+          warehouse.trno.toLowerCase().includes(query)
       );
     }
-    
+
     // Apply status filter
     if (statusFilter) {
-      result = result.filter(warehouse => 
-        warehouse.status.toLowerCase() === statusFilter.toLowerCase()
+      result = result.filter(
+        (warehouse) =>
+          warehouse.status.toLowerCase() === statusFilter.toLowerCase()
       );
     }
-    
+
     setFilteredWarehouses(result);
   }, [warehouses, searchQuery, statusFilter]);
-  
+
   const fetchWarehouses = () => {
     setLoading(true);
-    api.get("/api/warehouses")
-      .then(response => {
+    api
+      .get("/api/warehouses")
+      .then((response) => {
         console.log("Warehouses response:", response.data);
         if (response.data && response.data.status) {
           setWarehouses(response.data.data || []);
         } else {
-          console.error("Error fetching warehouses:", response.data.message || "Unknown error");
+          console.error(
+            "Error fetching warehouses:",
+            response.data.message || "Unknown error"
+          );
         }
         setLoading(false);
       })
-      .catch(error => {
+      .catch((error) => {
         console.error("Error fetching warehouses:", error);
         setLoading(false);
       });
@@ -87,12 +93,17 @@ const WarehouseMaster = () => {
       const newSelected = prevSelected.includes(warehouseId)
         ? prevSelected.filter((id) => id !== warehouseId)
         : [...prevSelected, warehouseId];
-      
-      console.log("Warehouse selection changed:", warehouseId, "New selection:", newSelected);
-      
+
+      console.log(
+        "Warehouse selection changed:",
+        warehouseId,
+        "New selection:",
+        newSelected
+      );
+
       // Update select all checkbox state based on whether all warehouses are selected
       setSelectAll(newSelected.length === warehouses.length);
-      
+
       return newSelected;
     });
   };
@@ -100,7 +111,7 @@ const WarehouseMaster = () => {
   const handleSelectAllChange = (e) => {
     const checked = e.target.checked;
     setSelectAll(checked);
-    
+
     if (checked) {
       // Select all warehouses
       const allWarehouseIds = warehouses.map((warehouse) => warehouse.id);
@@ -119,34 +130,40 @@ const WarehouseMaster = () => {
 
   const handleViewDetails = (warehouse, e) => {
     e.preventDefault();
-    
+
     // Fetch detailed warehouse information
-    api.get(`/api/warehouses/${warehouse.id}`)
-      .then(response => {
+    api
+      .get(`/api/warehouses/${warehouse.id}`)
+      .then((response) => {
         if (response.data && response.data.status) {
           setWarehouseDetails({
             id: response.data.data.id,
             trno: response.data.data.trno,
             name: response.data.data.name,
             code: response.data.data.code,
-            status: response.data.data.status
+            status: response.data.data.status,
           });
           setIsShowWarehouseDetails(true);
-          
+
           // Initialize and show modal after a short delay to ensure DOM is updated
           setTimeout(() => {
-            const modalElement = document.getElementById('warehouseDetailModal');
+            const modalElement = document.getElementById(
+              "warehouseDetailModal"
+            );
             if (modalElement) {
               const modal = new Modal(modalElement);
               modal.show();
             }
           }, 100);
         } else {
-          console.error("Error fetching warehouse details:", response.data.message || "Unknown error");
+          console.error(
+            "Error fetching warehouse details:",
+            response.data.message || "Unknown error"
+          );
           alert("Error fetching warehouse details. Please try again.");
         }
       })
-      .catch(error => {
+      .catch((error) => {
         console.error("Error fetching warehouse details:", error);
         alert("Error fetching warehouse details. Please try again.");
       });
@@ -154,13 +171,14 @@ const WarehouseMaster = () => {
 
   const handleEditDetails = (warehouse, e) => {
     e.preventDefault();
-    
+
     // Prevent double-clicking
     if (isProcessing) return;
     setIsProcessing(true);
-    
-    api.get(`/api/warehouses/${warehouse.id}`)
-      .then(response => {
+
+    api
+      .get(`/api/warehouses/${warehouse.id}`)
+      .then((response) => {
         if (response.data && response.data.status) {
           const warehouseData = response.data.data;
           setWarehouseDetails({
@@ -168,16 +186,16 @@ const WarehouseMaster = () => {
             trno: warehouseData.trno,
             name: warehouseData.name,
             code: warehouseData.code,
-            status: warehouseData.status
+            status: warehouseData.status,
           });
           setIsEditWarehouseDetails(true);
           // Set status state to match warehouse status
           const currentStatus = warehouseData.status.toLowerCase();
           setStatus(currentStatus);
           setIsChecked(currentStatus === "active");
-          
+
           setTimeout(() => {
-            const modalElement = document.getElementById('warehouseEditModal');
+            const modalElement = document.getElementById("warehouseEditModal");
             if (modalElement) {
               const modal = new Modal(modalElement);
               modal.show();
@@ -185,12 +203,15 @@ const WarehouseMaster = () => {
             setIsProcessing(false);
           }, 100);
         } else {
-          console.error("Error fetching warehouse details:", response.data.message || "Unknown error");
+          console.error(
+            "Error fetching warehouse details:",
+            response.data.message || "Unknown error"
+          );
           alert("Error fetching warehouse details. Please try again.");
           setIsProcessing(false);
         }
       })
-      .catch(error => {
+      .catch((error) => {
         console.error("Error fetching warehouse details:", error);
         alert("Error fetching warehouse details. Please try again.");
         setIsProcessing(false);
@@ -199,26 +220,27 @@ const WarehouseMaster = () => {
 
   const handleEditWarehouse = (e) => {
     e.preventDefault();
-    
+
     // Clear previous errors
     setEditErrors({});
-    
+
     const updatedData = {
       id: warehouseDetails.id,
       name: warehouseDetails.name,
       code: warehouseDetails.code,
-      status: warehouseDetails.status
+      status: warehouseDetails.status,
     };
-    
-    api.put(`/api/warehouses/update/${warehouseDetails.id}`, updatedData)
-      .then(response => {
+
+    api
+      .put(`/api/warehouses/update/${warehouseDetails.id}`, updatedData)
+      .then((response) => {
         console.log("Update warehouse response:", response.data);
         if (response.data && response.data.status) {
           alert("Warehouse updated successfully");
           // Refresh warehouse list
           fetchWarehouses();
           // Close the modal
-          const modalElement = document.getElementById('warehouseEditModal');
+          const modalElement = document.getElementById("warehouseEditModal");
           if (modalElement) {
             const modalInstance = Modal.getInstance(modalElement);
             if (modalInstance) {
@@ -230,23 +252,32 @@ const WarehouseMaster = () => {
           setIsProcessing(false);
           setEditErrors({});
         } else {
-          console.error("Error in update response:", response.data.message || "Unknown error");
+          console.error(
+            "Error in update response:",
+            response.data.message || "Unknown error"
+          );
           // Handle validation errors from backend
           if (response.data.errors) {
             setEditErrors(response.data.errors);
           } else {
-            alert(response.data.message || "Error updating warehouse. Please try again.");
+            alert(
+              response.data.message ||
+                "Error updating warehouse. Please try again."
+            );
           }
         }
       })
-      .catch(error => {
+      .catch((error) => {
         console.error("Error updating warehouse:", error);
         if (error.response && error.response.data) {
           // Handle validation errors from backend
           if (error.response.data.errors) {
             setEditErrors(error.response.data.errors);
           } else {
-            alert(error.response.data.message || "Error updating warehouse. Please try again.");
+            alert(
+              error.response.data.message ||
+                "Error updating warehouse. Please try again."
+            );
           }
         } else {
           alert("Error updating warehouse. Please try again.");
@@ -267,24 +298,28 @@ const WarehouseMaster = () => {
         status: formData.status,
       };
 
-    console.log("Submitting add warehouse form");
-    api.post("/api/warehouses/add", finalData)
-      .then(response => {
-        console.log("Response received:", response.data);
-        if (response.data && response.data.status) {
-          alert("Warehouse added successfully:", response.data.data);
-          // Reset form and close it
-          handleReset(e);
-          setIsAddWarehouse(false);
-          // Refresh warehouse list
-          fetchWarehouses();
-        } else {
-          console.error("Error in response:", response.data.message || "Unknown error");
-        }
-      })
-      .catch(error => {
-        console.error("Error adding warehouse:", error);
-      });
+      console.log("Submitting add warehouse form");
+      api
+        .post("/api/warehouses/add", finalData)
+        .then((response) => {
+          console.log("Response received:", response.data);
+          if (response.data && response.data.status) {
+            alert("Warehouse added successfully:", response.data.data);
+            // Reset form and close it
+            handleReset(e);
+            setIsAddWarehouse(false);
+            // Refresh warehouse list
+            fetchWarehouses();
+          } else {
+            console.error(
+              "Error in response:",
+              response.data.message || "Unknown error"
+            );
+          }
+        })
+        .catch((error) => {
+          console.error("Error adding warehouse:", error);
+        });
     }
   };
 
@@ -309,66 +344,96 @@ const WarehouseMaster = () => {
     setIsChecked(true);
     setStatus("active");
   };
-  
+
   const handleDeleteWarehouse = (warehouseId) => {
     if (!window.confirm("Are you sure you want to delete this warehouse?")) {
       return;
     }
-    
-    api.delete(`/api/warehouses/delete/${warehouseId}`)
-      .then(response => {
+
+    api
+      .delete(`/api/warehouses/delete/${warehouseId}`)
+      .then((response) => {
         console.log("Delete warehouse response:", response.data);
         if (response.data && response.data.status) {
           console.log("Warehouse deleted successfully:", response.data.message);
           // Refresh the warehouses list
           fetchWarehouses();
         } else {
-          console.error("Error in delete response:", response.data.message || "Unknown error");
-          alert(response.data.message || "Error deleting warehouse. Please try again.");
+          console.error(
+            "Error in delete response:",
+            response.data.message || "Unknown error"
+          );
+          alert(
+            response.data.message ||
+              "Error deleting warehouse. Please try again."
+          );
         }
       })
-      .catch(error => {
+      .catch((error) => {
         console.error("Error deleting warehouse:", error);
         alert("Error deleting warehouse. Please try again.");
       });
   };
-  
+
   const handleDeleteSelected = () => {
     console.log("Current selected warehouses:", selectedWarehouses);
-    
+
     if (selectedWarehouses.length === 0) {
       alert("Please select at least one warehouse to delete.");
       return;
     }
-    
-    if (!window.confirm(`Are you sure you want to delete ${selectedWarehouses.length} selected warehouse(s)?`)) {
+
+    if (
+      !window.confirm(
+        `Are you sure you want to delete ${selectedWarehouses.length} selected warehouse(s)?`
+      )
+    ) {
       return;
     }
-    
+
     console.log("Sending delete request for warehouses:", selectedWarehouses);
-    
+
     // Make API call to delete selected warehouses
-    api.post("/api/warehouses/delete-multiple", selectedWarehouses)
-      .then(response => {
+    api
+      .post("/api/warehouses/delete-multiple", selectedWarehouses)
+      .then((response) => {
         console.log("Delete multiple response:", response.data);
         if (response.data && response.data.status) {
-          console.log("Selected warehouses deleted successfully:", response.data.message);
+          console.log(
+            "Selected warehouses deleted successfully:",
+            response.data.message
+          );
           // Clear selection state
           setSelectedWarehouses([]);
           setSelectAll(false);
           // Refresh the warehouses list
           fetchWarehouses();
           // Show success message
-          alert(response.data.message || `Successfully deleted ${selectedWarehouses.length} warehouse(s).`);
+          alert(
+            response.data.message ||
+              `Successfully deleted ${selectedWarehouses.length} warehouse(s).`
+          );
         } else {
-          console.error("Error in delete multiple response:", response.data.message || "Unknown error");
-          alert(response.data.message || "Error deleting selected warehouses. Please try again.");
+          console.error(
+            "Error in delete multiple response:",
+            response.data.message || "Unknown error"
+          );
+          alert(
+            response.data.message ||
+              "Error deleting selected warehouses. Please try again."
+          );
         }
       })
-      .catch(error => {
+      .catch((error) => {
         console.error("Error deleting selected warehouses:", error);
         alert("Error deleting selected warehouses. Please try again.");
       });
+  };
+
+  // Reset all filters
+  const handleResetFilters = () => {
+    setSearchQuery("");
+    setStatusFilter("");
   };
 
   return (
@@ -412,7 +477,7 @@ const WarehouseMaster = () => {
           />
         </div>
         <div className="filter-options">
-          <select 
+          <select
             className="filter-select"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
@@ -421,6 +486,10 @@ const WarehouseMaster = () => {
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
           </select>
+          <button className="filter-select" onClick={handleResetFilters}>
+            <i className="fas fa-filter me-2"></i>
+            Reset Filters
+          </button>
         </div>
       </div>
 
@@ -589,7 +658,10 @@ const WarehouseMaster = () => {
                 {selectedWarehouses.length} Selected
               </label>
             </div>
-            <button className="btn-action btn-danger" onClick={handleDeleteSelected}>
+            <button
+              className="btn-action btn-danger"
+              onClick={handleDeleteSelected}
+            >
               <i className="fas fa-trash"></i>
               Delete Selected
             </button>
@@ -598,8 +670,8 @@ const WarehouseMaster = () => {
             <thead>
               <tr>
                 <th className="checkbox-cell">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     id="select-all-header"
                     checked={selectAll}
                     onChange={handleSelectAllChange}
@@ -633,13 +705,13 @@ const WarehouseMaster = () => {
                     <div className="no-data-content">
                       <i className="fas fa-warehouse no-data-icon"></i>
                       <p className="no-data-text">
-                        {warehouses.length === 0 
-                          ? "No warehouses found" 
+                        {warehouses.length === 0
+                          ? "No warehouses found"
                           : "No matching warehouses found"}
                       </p>
                       <p className="no-data-subtext">
-                        {warehouses.length === 0 
-                          ? "Click the \"Add New Warehouse\" button to create your first warehouse"
+                        {warehouses.length === 0
+                          ? 'Click the "Add New Warehouse" button to create your first warehouse'
                           : "Try adjusting your search or filter criteria"}
                       </p>
                     </div>
@@ -674,8 +746,11 @@ const WarehouseMaster = () => {
                     </td>
                     <td className="ps-4">
                       <div>
-                        <span className={`badge status ${warehouse.status.toLowerCase()}`}>
-                          {warehouse.status.charAt(0).toUpperCase() + warehouse.status.slice(1).toLowerCase()}
+                        <span
+                          className={`badge status ${warehouse.status.toLowerCase()}`}
+                        >
+                          {warehouse.status.charAt(0).toUpperCase() +
+                            warehouse.status.slice(1).toLowerCase()}
                         </span>
                       </div>
                     </td>
@@ -711,7 +786,8 @@ const WarehouseMaster = () => {
           {/* Pagination */}
           <div className="pagination-container">
             <div className="pagination-info">
-              Showing {filteredWarehouses.length > 0 ? 1 : 0}-{filteredWarehouses.length} of {warehouses.length} entries
+              Showing {filteredWarehouses.length > 0 ? 1 : 0}-
+              {filteredWarehouses.length} of {warehouses.length} entries
             </div>
             <div className="pagination">
               <button className="btn-page" disabled>
@@ -733,6 +809,7 @@ const WarehouseMaster = () => {
           </div>
         </div>
       </div>
+
       {/* View Warehouse Details Modal */}
       {isShowWarehouseDetails && (
         <div
@@ -746,7 +823,8 @@ const WarehouseMaster = () => {
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title" id="warehouseDetailModalLabel">
-                  View {warehouseDetails.name}'s Details
+                  <i className="fas fa-circle-info me-2"></i>
+                  Warehouse Details
                 </h5>
                 <button
                   type="button"
@@ -756,29 +834,43 @@ const WarehouseMaster = () => {
                 ></button>
               </div>
               <div className="modal-body">
-                <p>
-                  <strong>TRNO:</strong> {warehouseDetails.trno}
-                </p>
-                <p>
-                  <strong>Name:</strong> {warehouseDetails.name}
-                </p>
-                <p>
-                  <strong>Code:</strong> {warehouseDetails.code}
-                </p>
-                <p>
-                  <strong>Status:</strong> {warehouseDetails.status}
-                </p>
+                <div className="user-details-grid">
+                  <div className="detail-item">
+                    <strong>TRNO:</strong>
+                    <span>{warehouseDetails.trno}</span>
+                  </div>
+
+                  <div className="detail-item">
+                    <strong>Name:</strong>
+                    <span>{warehouseDetails.name}</span>
+                  </div>
+
+                  <div className="detail-item">
+                    <strong>Code:</strong>
+                    <span>{warehouseDetails.code}</span>
+                  </div>
+
+                  <div className="detail-item">
+                    <strong>Status:</strong>
+                    <span
+                      className={`badge status ${warehouseDetails.status?.toLowerCase()} w-50`}
+                    >
+                      {warehouseDetails.status?.charAt(0).toUpperCase() +
+                        warehouseDetails.status?.slice(1)}
+                    </span>
+                  </div>
+                </div>
               </div>
               <div className="modal-footer">
                 <button
                   type="button"
-                  className="btn btn-secondary"
+                  className="btn btn-secondary add-btn"
                   data-bs-dismiss="modal"
                   onClick={() => {
                     document.activeElement?.blur();
                   }}
                 >
-                  Close
+                  <i className="fa-solid fa-xmark me-1"></i>Close
                 </button>
               </div>
             </div>
@@ -799,6 +891,7 @@ const WarehouseMaster = () => {
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title" id="warehouseEditModalLabel">
+                  <i className="fa-solid fa-pencil me-2 font-1"></i>
                   Edit Warehouse
                 </h5>
                 <button
@@ -846,7 +939,9 @@ const WarehouseMaster = () => {
                             <i className="fas fa-font position-absolute input-icon"></i>
                             <input
                               type="text"
-                              className={`form-control ps-5 text-font ${editErrors.name ? 'is-invalid' : ''}`}
+                              className={`form-control ps-5 text-font ${
+                                editErrors.name ? "is-invalid" : ""
+                              }`}
                               id="name"
                               placeholder="Enter warehouse name"
                               value={warehouseDetails.name}
@@ -859,7 +954,9 @@ const WarehouseMaster = () => {
                             />
                           </div>
                           {editErrors.name && (
-                            <span className="error-message">{editErrors.name}</span>
+                            <span className="error-message">
+                              {editErrors.name}
+                            </span>
                           )}
                         </div>
                         <div className="col-4 d-flex flex-column form-group">
@@ -870,7 +967,9 @@ const WarehouseMaster = () => {
                             <i className="fas fa-qrcode position-absolute input-icon"></i>
                             <input
                               type="text"
-                              className={`form-control ps-5 text-font ${editErrors.code ? 'is-invalid' : ''}`}
+                              className={`form-control ps-5 text-font ${
+                                editErrors.code ? "is-invalid" : ""
+                              }`}
                               id="code"
                               placeholder="Enter warehouse code"
                               value={warehouseDetails.code}
@@ -883,7 +982,9 @@ const WarehouseMaster = () => {
                             />
                           </div>
                           {editErrors.code && (
-                            <span className="error-message">{editErrors.code}</span>
+                            <span className="error-message">
+                              {editErrors.code}
+                            </span>
                           )}
                         </div>
                       </div>
@@ -901,12 +1002,14 @@ const WarehouseMaster = () => {
                                 id="editStatusSwitch"
                                 checked={isChecked}
                                 onChange={(e) => {
-                                  const newStatus = e.target.checked ? "active" : "inactive";
+                                  const newStatus = e.target.checked
+                                    ? "active"
+                                    : "inactive";
                                   setIsChecked(e.target.checked);
                                   setStatus(newStatus);
-                                  setWarehouseDetails(prev => ({
+                                  setWarehouseDetails((prev) => ({
                                     ...prev,
-                                    status: newStatus
+                                    status: newStatus,
                                   }));
                                 }}
                               />
@@ -923,9 +1026,9 @@ const WarehouseMaster = () => {
                                 const newStatus = e.target.value;
                                 setStatus(newStatus);
                                 setIsChecked(newStatus === "active");
-                                setWarehouseDetails(prev => ({
+                                setWarehouseDetails((prev) => ({
                                   ...prev,
-                                  status: newStatus
+                                  status: newStatus,
                                 }));
                               }}
                             >
@@ -942,7 +1045,7 @@ const WarehouseMaster = () => {
               </div>
               <div className="modal-footer">
                 <button
-                  className="btn btn-primary border border-0 text-8 px-3 fw-medium py-2 me-3 float-end"
+                  className="btn btn-primary add-btn"
                   data-bs-dismiss="modal"
                   onClick={(e) => {
                     document.activeElement?.blur();
@@ -952,13 +1055,13 @@ const WarehouseMaster = () => {
                   <i className="fa-solid fa-floppy-disk me-1"></i> Save Changes
                 </button>
                 <button
-                  className="btn btn-secondary border border-0 bg-secondary text-8 px-3 fw-medium py-2 me-3 float-end"
+                  className="btn btn-secondary add-btn"
                   data-bs-dismiss="modal"
                   onClick={() => {
                     document.activeElement?.blur();
                   }}
                 >
-                  <i className="fa-solid fa-x-mark me-1"></i> Close
+                  <i className="fa-solid fa-xmark me-1"></i> Close
                 </button>
               </div>
             </div>

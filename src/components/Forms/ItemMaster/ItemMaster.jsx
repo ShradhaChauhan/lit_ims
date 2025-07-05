@@ -31,7 +31,7 @@ const ItemMaster = () => {
   const [deleting, setDeleting] = useState(false);
   const [types, setTypes] = useState([]);
   const [groups, setGroups] = useState([]);
-  
+
   // Pagination states
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -39,7 +39,7 @@ const ItemMaster = () => {
     totalItems: 0,
     itemsPerPage: 10,
   });
-  
+
   const [formData, setFormData] = useState({
     name: "",
     code: "",
@@ -58,7 +58,7 @@ const ItemMaster = () => {
     try {
       setLoading(true);
       const response = await api.get("/api/items/all");
-      
+
       if (response.data.status && response.data.data) {
         const allItems = response.data.data;
         setItems(allItems);
@@ -83,35 +83,36 @@ const ItemMaster = () => {
     // Apply search filter
     if (searchQuery.trim()) {
       const searchLower = searchQuery.toLowerCase();
-      result = result.filter(item => 
-        item.name?.toLowerCase().includes(searchLower) ||
-        item.code?.toLowerCase().includes(searchLower) ||
-        item.barcode?.toLowerCase().includes(searchLower)
+      result = result.filter(
+        (item) =>
+          item.name?.toLowerCase().includes(searchLower) ||
+          item.code?.toLowerCase().includes(searchLower) ||
+          item.barcode?.toLowerCase().includes(searchLower)
       );
     }
 
     // Apply group filter
     if (selectedGroup) {
-      result = result.filter(item => item.groupName === selectedGroup);
+      result = result.filter((item) => item.groupName === selectedGroup);
     }
 
     // Apply type filter
     if (selectedType) {
-      result = result.filter(item => item.type === selectedType);
+      result = result.filter((item) => item.type === selectedType);
     }
 
     // Apply status filter
     if (selectedStatus) {
-      result = result.filter(item => item.status === selectedStatus);
+      result = result.filter((item) => item.status === selectedStatus);
     }
 
     // Update filtered items and pagination
     setFilteredItems(result);
-    setPagination(prev => ({
+    setPagination((prev) => ({
       ...prev,
       totalItems: result.length,
       totalPages: Math.ceil(result.length / prev.itemsPerPage),
-      currentPage: 1 // Reset to first page when filters change
+      currentPage: 1, // Reset to first page when filters change
     }));
   };
 
@@ -157,49 +158,55 @@ const ItemMaster = () => {
   }, []);
 
   const fetchTypes = () => {
-    api.get("/api/type/all")
-      .then(response => {
+    api
+      .get("/api/type/all")
+      .then((response) => {
         console.log("Types fetched:", response.data);
         setTypes(response.data.data || []);
       })
-      .catch(error => {
+      .catch((error) => {
         console.error("Error fetching types:", error);
       });
   };
 
   const fetchGroups = () => {
-    api.get("/api/group/all")
-      .then(response => {
+    api
+      .get("/api/group/all")
+      .then((response) => {
         console.log("Groups fetched:", response.data);
         setGroups(response.data.data || []);
       })
-      .catch(error => {
+      .catch((error) => {
         console.error("Error fetching groups:", error);
       });
   };
 
   const handlePageChange = (newPage) => {
-    if (newPage < 1 || newPage > pagination.totalPages || newPage === pagination.currentPage) {
+    if (
+      newPage < 1 ||
+      newPage > pagination.totalPages ||
+      newPage === pagination.currentPage
+    ) {
       return;
     }
-    
-    setPagination(prev => ({
+
+    setPagination((prev) => ({
       ...prev,
-      currentPage: newPage
+      currentPage: newPage,
     }));
-    
+
     // fetchItems will be called by the useEffect that depends on currentPage
   };
 
   const handleItemsPerPageChange = (e) => {
     const newItemsPerPage = parseInt(e.target.value);
-    
-    setPagination(prev => ({
+
+    setPagination((prev) => ({
       ...prev,
       itemsPerPage: newItemsPerPage,
-      currentPage: 1 // Reset to first page when changing items per page
+      currentPage: 1, // Reset to first page when changing items per page
     }));
-    
+
     // fetchItems will be called by the useEffect that depends on itemsPerPage
   };
 
@@ -207,20 +214,36 @@ const ItemMaster = () => {
   const getPageNumbers = () => {
     const totalPages = pagination.totalPages;
     const currentPage = pagination.currentPage;
-    
+
     if (totalPages <= 5) {
       return Array.from({ length: totalPages }, (_, i) => i + 1);
     }
-    
+
     if (currentPage <= 3) {
-      return [1, 2, 3, 4, 5, '...', totalPages];
+      return [1, 2, 3, 4, 5, "...", totalPages];
     }
-    
+
     if (currentPage >= totalPages - 2) {
-      return [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+      return [
+        1,
+        "...",
+        totalPages - 4,
+        totalPages - 3,
+        totalPages - 2,
+        totalPages - 1,
+        totalPages,
+      ];
     }
-    
-    return [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
+
+    return [
+      1,
+      "...",
+      currentPage - 1,
+      currentPage,
+      currentPage + 1,
+      "...",
+      totalPages,
+    ];
   };
 
   const handleItemCheckboxChange = (itemId) => {
@@ -261,31 +284,32 @@ const ItemMaster = () => {
         status: formData.status,
       };
 
-    console.log("Submitting add item form");
-    
-    api.post("/api/items/add", finalData)
-      .then(response => {
-        console.log("Item added response:", response.data);
-        // Check for success status in the new API response structure
-        if (response.data.status) {
-          // Show success message
-          alert(response.data.message || "Item Added Successfully");
-          // Reset form
-          handleReset(e);
-          // Close the form
-          setIsAddItem(false);
-          // Refresh the items list
-          fetchItems();
-        } else {
-          // Show error message from API
-          alert(response.data.message || "Error adding item");
-        }
-      })
-      .catch(error => {
-        console.error("Error adding item:", error);
-        // Show generic error message
-        alert("Error adding item. Please try again.");
-      });
+      console.log("Submitting add item form");
+
+      api
+        .post("/api/items/add", finalData)
+        .then((response) => {
+          console.log("Item added response:", response.data);
+          // Check for success status in the new API response structure
+          if (response.data.status) {
+            // Show success message
+            alert(response.data.message || "Item Added Successfully");
+            // Reset form
+            handleReset(e);
+            // Close the form
+            setIsAddItem(false);
+            // Refresh the items list
+            fetchItems();
+          } else {
+            // Show error message from API
+            alert(response.data.message || "Error adding item");
+          }
+        })
+        .catch((error) => {
+          console.error("Error adding item:", error);
+          // Show generic error message
+          alert("Error adding item. Please try again.");
+        });
     }
   };
   const validateForm = (data) => {
@@ -299,6 +323,8 @@ const ItemMaster = () => {
       errors.code = "Code is required";
     } else if (!/^\d+$/.test(data.code)) {
       errors.code = "Code must only be in digits";
+    } else if (data.code.length() !== 6) {
+      errors.code = "Code length should be 6 digits";
     }
 
     if (!data.uom) {
@@ -343,10 +369,11 @@ const ItemMaster = () => {
     if (!window.confirm("Are you sure you want to delete this item?")) {
       return;
     }
-    
+
     setDeleting(true);
-    api.delete(`/api/items/delete/${itemId}`)
-      .then(response => {
+    api
+      .delete(`/api/items/delete/${itemId}`)
+      .then((response) => {
         console.log("Item deleted successfully:", response.data);
         // Check for success status in the new API response structure
         if (response.data.status) {
@@ -358,7 +385,7 @@ const ItemMaster = () => {
         }
         setDeleting(false);
       })
-      .catch(error => {
+      .catch((error) => {
         console.error("Error deleting item:", error);
         setDeleting(false);
         // Handle error (show error message)
@@ -372,24 +399,30 @@ const ItemMaster = () => {
       return;
     }
 
-    if (!window.confirm(`Are you sure you want to delete ${selectedItems.length} selected item(s)?`)) {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete ${selectedItems.length} selected item(s)?`
+      )
+    ) {
       return;
     }
-    
+
     setDeleting(true);
-    
+
     // Create an array of promises for each delete operation
-    const deletePromises = selectedItems.map(itemId => 
+    const deletePromises = selectedItems.map((itemId) =>
       api.delete(`/api/items/delete/${itemId}`)
     );
-    
+
     // Execute all delete operations
     Promise.all(deletePromises)
-      .then(responses => {
+      .then((responses) => {
         console.log("Items deleted successfully:", responses);
         // Check if all deletions were successful
-        const allSuccessful = responses.every(response => response.data.status);
-        
+        const allSuccessful = responses.every(
+          (response) => response.data.status
+        );
+
         if (allSuccessful) {
           // Refresh the items list
           fetchItems();
@@ -402,7 +435,7 @@ const ItemMaster = () => {
         }
         setDeleting(false);
       })
-      .catch(error => {
+      .catch((error) => {
         console.error("Error deleting items:", error);
         setDeleting(false);
         // Handle error (show error message)
@@ -432,11 +465,11 @@ const ItemMaster = () => {
   const getDisplayRange = () => {
     const start = (pagination.currentPage - 1) * pagination.itemsPerPage + 1;
     const end = Math.min(start + items.length - 1, pagination.totalItems);
-    
+
     if (items.length === 0) {
       return "0";
     }
-    
+
     return `${start}-${end}`;
   };
 
@@ -460,7 +493,7 @@ const ItemMaster = () => {
 
   const handleEditItem = (e) => {
     e.preventDefault();
-    
+
     // Validate the form data
     const newErrors = validateForm(itemDetails);
     setErrors(newErrors);
@@ -476,11 +509,12 @@ const ItemMaster = () => {
         status: itemDetails.status || "active",
         price: itemDetails.price || null,
         stQty: parseInt(itemDetails.stQty) || 0,
-        life: parseInt(itemDetails.life) || 0
+        life: parseInt(itemDetails.life) || 0,
       };
 
-      api.put(`/api/items/update/${itemDetails.id}`, finalData)
-        .then(response => {
+      api
+        .put(`/api/items/update/${itemDetails.id}`, finalData)
+        .then((response) => {
           console.log("Item updated response:", response.data);
           // Check for success status in the API response structure
           if (response.data.status) {
@@ -497,7 +531,7 @@ const ItemMaster = () => {
             alert(response.data.message || "Error updating item");
           }
         })
-        .catch(error => {
+        .catch((error) => {
           console.error("Error updating item:", error);
           // Show generic error message
           alert("Error updating item. Please try again.");
@@ -507,7 +541,7 @@ const ItemMaster = () => {
 
   useEffect(() => {
     let bsModal = null;
-    
+
     if (isShowItemDetails && itemModalRef.current) {
       bsModal = new Modal(itemModalRef.current, {
         backdrop: "static",
@@ -519,7 +553,10 @@ const ItemMaster = () => {
         setIsShowItemDetails(false);
         setItemDetails({});
         // Remove the event listener
-        itemModalRef.current?.removeEventListener("hidden.bs.modal", handleHidden);
+        itemModalRef.current?.removeEventListener(
+          "hidden.bs.modal",
+          handleHidden
+        );
       };
 
       // Add event listener for modal hidden event
@@ -535,11 +572,17 @@ const ItemMaster = () => {
         setIsEditItemDetails(false);
         setItemDetails({});
         // Remove the event listener
-        itemEditModalRef.current?.removeEventListener("hidden.bs.modal", handleHidden);
+        itemEditModalRef.current?.removeEventListener(
+          "hidden.bs.modal",
+          handleHidden
+        );
       };
 
       // Add event listener for modal hidden event
-      itemEditModalRef.current.addEventListener("hidden.bs.modal", handleHidden);
+      itemEditModalRef.current.addEventListener(
+        "hidden.bs.modal",
+        handleHidden
+      );
     }
 
     // Cleanup function
@@ -549,6 +592,14 @@ const ItemMaster = () => {
       }
     };
   }, [isShowItemDetails, isEditItemDetails]);
+
+  // Reset all filters
+  const handleResetFilters = () => {
+    setSearchQuery("");
+    setSelectedGroup("");
+    setSelectedType("");
+    setSelectedStatus("");
+  };
 
   return (
     <div>
@@ -591,31 +642,31 @@ const ItemMaster = () => {
           />
         </div>
         <div className="filter-options">
-          <select 
+          <select
             className="filter-select"
             value={selectedGroup}
             onChange={handleGroupFilter}
           >
             <option value="">All Groups</option>
-            {groups.map(group => (
+            {groups.map((group) => (
               <option key={group.id} value={group.name}>
                 {group.name}
               </option>
             ))}
           </select>
-          <select 
+          <select
             className="filter-select"
             value={selectedType}
             onChange={handleTypeFilter}
           >
             <option value="">All Types</option>
-            {types.map(type => (
+            {types.map((type) => (
               <option key={type.id} value={type.name}>
                 {type.name}
               </option>
             ))}
           </select>
-          <select 
+          <select
             className="filter-select"
             value={selectedStatus}
             onChange={handleStatusFilter}
@@ -624,6 +675,10 @@ const ItemMaster = () => {
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
           </select>
+          <button className="filter-select" onClick={handleResetFilters}>
+            <i className="fas fa-filter me-2"></i>
+            Reset Filters
+          </button>
         </div>
       </div>
 
@@ -736,7 +791,7 @@ const ItemMaster = () => {
                       <option value="" disabled hidden className="text-muted">
                         Select Type Name
                       </option>
-                      {types.map(type => (
+                      {types.map((type) => (
                         <option key={type.id} value={type.name}>
                           {type.name}
                         </option>
@@ -787,7 +842,7 @@ const ItemMaster = () => {
                       <option value="" disabled hidden className="text-muted">
                         Select Group
                       </option>
-                      {groups.map(group => (
+                      {groups.map((group) => (
                         <option key={group.id} value={group.name}>
                           {group.name}
                         </option>
@@ -958,7 +1013,7 @@ const ItemMaster = () => {
                 <i className="fas fa-file-export"></i>
                 Export Selected
               </button>
-              <button 
+              <button
                 className="btn-action btn-danger"
                 onClick={handleDeleteSelected}
                 disabled={selectedItems.length === 0 || deleting}
@@ -981,8 +1036,8 @@ const ItemMaster = () => {
             <thead>
               <tr>
                 <th className="checkbox-cell">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     id="select-all-header"
                     checked={selectAll}
                     onChange={handleSelectAllChange}
@@ -1009,7 +1064,8 @@ const ItemMaster = () => {
                 <tr>
                   <td colSpan="12" className="text-center">
                     <div className="my-3">
-                      <i className="fas fa-spinner fa-spin me-2"></i> Loading items...
+                      <i className="fas fa-spinner fa-spin me-2"></i> Loading
+                      items...
                     </div>
                   </td>
                 </tr>
@@ -1020,9 +1076,9 @@ const ItemMaster = () => {
                       <i className="fas fa-box-open no-data-icon"></i>
                       <p className="no-data-text">No items found</p>
                       <p className="no-data-subtext">
-                        {items.length === 0 ? 
-                          "Click the \"Add New\" button to create your first item" :
-                          "No items match your search criteria"}
+                        {items.length === 0
+                          ? 'Click the "Add New" button to create your first item'
+                          : "No items match your search criteria"}
                       </p>
                     </div>
                   </td>
@@ -1095,8 +1151,8 @@ const ItemMaster = () => {
                       >
                         <i className="fas fa-edit"></i>
                       </button>
-                      <button 
-                        className="btn-icon btn-danger" 
+                      <button
+                        className="btn-icon btn-danger"
                         title="Delete"
                         onClick={() => handleDeleteItem(item.id)}
                         disabled={deleting}
@@ -1120,39 +1176,48 @@ const ItemMaster = () => {
               Showing {getDisplayRange()} of {filteredItems.length} entries
             </div>
             <div className="pagination">
-              <button 
-                className="btn-page" 
+              <button
+                className="btn-page"
                 disabled={pagination.currentPage === 1 || loading}
                 onClick={() => handlePageChange(pagination.currentPage - 1)}
               >
                 <i className="fas fa-chevron-left"></i>
               </button>
-              
-              {getPageNumbers().map((page, index) => (
+
+              {getPageNumbers().map((page, index) =>
                 page === "..." ? (
-                  <span key={`ellipsis-${index}`} className="pagination-ellipsis">...</span>
+                  <span
+                    key={`ellipsis-${index}`}
+                    className="pagination-ellipsis"
+                  >
+                    ...
+                  </span>
                 ) : (
-                  <button 
-                    key={page} 
-                    className={`btn-page ${pagination.currentPage === page ? 'active' : ''}`}
+                  <button
+                    key={page}
+                    className={`btn-page ${
+                      pagination.currentPage === page ? "active" : ""
+                    }`}
                     onClick={() => handlePageChange(page)}
                     disabled={loading}
                   >
                     {page}
                   </button>
                 )
-              ))}
-              
-              <button 
-                className="btn-page" 
-                disabled={pagination.currentPage === pagination.totalPages || loading}
+              )}
+
+              <button
+                className="btn-page"
+                disabled={
+                  pagination.currentPage === pagination.totalPages || loading
+                }
                 onClick={() => handlePageChange(pagination.currentPage + 1)}
               >
                 <i className="fas fa-chevron-right"></i>
               </button>
             </div>
             <div className="items-per-page">
-              <select 
+              <select
                 value={pagination.itemsPerPage}
                 onChange={handleItemsPerPageChange}
                 disabled={loading}
@@ -1175,7 +1240,7 @@ const ItemMaster = () => {
           tabIndex="-1"
         >
           <div className="modal-dialog">
-            <ItemMasterModal 
+            <ItemMasterModal
               item={itemDetails}
               onClose={() => {
                 document.activeElement?.blur();
@@ -1197,7 +1262,9 @@ const ItemMaster = () => {
           <div className="modal-dialog modal-lg">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Edit Item</h5>
+                <h5 className="modal-title">
+                  <i className="fas fa-pencil me-2 font-1"></i>Edit Item
+                </h5>
                 <button
                   type="button"
                   className="btn-close"
@@ -1227,7 +1294,10 @@ const ItemMaster = () => {
                             placeholder="Enter item name"
                             value={itemDetails.name}
                             onChange={(e) =>
-                              setItemDetails({ ...itemDetails, name: e.target.value })
+                              setItemDetails({
+                                ...itemDetails,
+                                name: e.target.value,
+                              })
                             }
                           />
                         </div>
@@ -1245,7 +1315,10 @@ const ItemMaster = () => {
                             placeholder="Enter item code"
                             value={itemDetails.code}
                             onChange={(e) =>
-                              setItemDetails({ ...itemDetails, code: e.target.value })
+                              setItemDetails({
+                                ...itemDetails,
+                                code: e.target.value,
+                              })
                             }
                           />
                         </div>
@@ -1262,7 +1335,10 @@ const ItemMaster = () => {
                             placeholder="UOM"
                             value={itemDetails.uom}
                             onChange={(e) =>
-                              setItemDetails({ ...itemDetails, uom: e.target.value })
+                              setItemDetails({
+                                ...itemDetails,
+                                uom: e.target.value,
+                              })
                             }
                           >
                             <option
@@ -1293,7 +1369,10 @@ const ItemMaster = () => {
                             placeholder="Type"
                             value={itemDetails.type}
                             onChange={(e) =>
-                              setItemDetails({ ...itemDetails, type: e.target.value })
+                              setItemDetails({
+                                ...itemDetails,
+                                type: e.target.value,
+                              })
                             }
                           >
                             <option
@@ -1324,7 +1403,10 @@ const ItemMaster = () => {
                             placeholder="Enter barcode"
                             value={itemDetails.barcode}
                             onChange={(e) =>
-                              setItemDetails({ ...itemDetails, barcode: e.target.value })
+                              setItemDetails({
+                                ...itemDetails,
+                                barcode: e.target.value,
+                              })
                             }
                           />
                         </div>
@@ -1341,7 +1423,10 @@ const ItemMaster = () => {
                             placeholder="Group"
                             value={itemDetails.group}
                             onChange={(e) =>
-                              setItemDetails({ ...itemDetails, group: e.target.value })
+                              setItemDetails({
+                                ...itemDetails,
+                                group: e.target.value,
+                              })
                             }
                           >
                             <option
@@ -1374,7 +1459,10 @@ const ItemMaster = () => {
                             placeholder="Enter price"
                             value={itemDetails.price}
                             onChange={(e) =>
-                              setItemDetails({ ...itemDetails, price: e.target.value })
+                              setItemDetails({
+                                ...itemDetails,
+                                price: e.target.value,
+                              })
                             }
                           />
                         </div>
@@ -1392,7 +1480,10 @@ const ItemMaster = () => {
                             placeholder="Enter ST QTY"
                             value={itemDetails.stQty}
                             onChange={(e) =>
-                              setItemDetails({ ...itemDetails, stQty: e.target.value })
+                              setItemDetails({
+                                ...itemDetails,
+                                stQty: e.target.value,
+                              })
                             }
                           />
                         </div>
@@ -1410,7 +1501,10 @@ const ItemMaster = () => {
                             placeholder="Enter life (in days)"
                             value={itemDetails.life}
                             onChange={(e) =>
-                              setItemDetails({ ...itemDetails, life: e.target.value })
+                              setItemDetails({
+                                ...itemDetails,
+                                life: e.target.value,
+                              })
                             }
                           />
                         </div>
@@ -1476,7 +1570,7 @@ const ItemMaster = () => {
               </div>
               <div className="modal-footer">
                 <button
-                  className="btn btn-primary border border-0 text-8 px-3 fw-medium py-2 me-3 float-end"
+                  className="btn btn-primary add-btn"
                   data-bs-dismiss="modal"
                   onClick={(e) => {
                     document.activeElement?.blur();
@@ -1486,13 +1580,13 @@ const ItemMaster = () => {
                   <i className="fa-solid fa-floppy-disk me-1"></i> Save Changes
                 </button>
                 <button
-                  className="btn btn-secondary border border-0 bg-secondary text-8 px-3 fw-medium py-2 me-3 float-end"
+                  className="btn btn-secondary add-btn"
                   data-bs-dismiss="modal"
                   onClick={() => {
                     document.activeElement?.blur();
                   }}
                 >
-                  <i className="fa-solid fa-x-mark me-1"></i> Close
+                  <i className="fa-solid fa-xmark me-1"></i> Close
                 </button>
               </div>
             </div>

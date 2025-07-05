@@ -994,12 +994,10 @@ const VendorMaster = () => {
           <div className="modal-dialog modal-lg">
             <div className="modal-content">
               <div className="modal-header">
-                <div class="modal-header d-flex align-items-center justify-content-between">
-                  <i className="fa-solid fa-circle-info me-2"></i>
-                  <h5 className="title">
-                    View {partnerDetails.name}’s Details
-                  </h5>
-                </div>
+                <h5 className="modal-title">
+                  <i className="fas fa-circle-info me-2"></i>
+                  Partner Details
+                </h5>
                 <button
                   type="button"
                   className="btn-close"
@@ -1100,7 +1098,10 @@ const VendorMaster = () => {
           <div className="modal-dialog modal-lg">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Edit Partner</h5>
+                <h5 className="modal-title">
+                  <i className="fa-solid fa-pencil me-2 font-1"></i>
+                  Edit Partner
+                </h5>
                 <button
                   type="button"
                   className="btn-close"

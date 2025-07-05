@@ -2424,7 +2424,7 @@ const Users = () => {
                   <div className="detail-item">
                     <strong>Role</strong>
                     <span
-                      className={`badge ${userDetails.role?.toLowerCase()}`}
+                      className={`badge ${userDetails.role?.toLowerCase()} w-25`}
                     >
                       {userDetails.role}
                     </span>
@@ -2438,7 +2438,7 @@ const Users = () => {
                   <div className="detail-item">
                     <strong>Status</strong>
                     <span
-                      className={`badge status ${userDetails.status?.toLowerCase()}`}
+                      className={`badge status ${userDetails.status?.toLowerCase()} w-25`}
                     >
                       {userDetails.status}
                     </span>
@@ -2544,7 +2544,7 @@ const Users = () => {
               <div className="modal-footer">
                 <button
                   type="button"
-                  className="btn btn-secondary"
+                  className="btn btn-secondary add-btn"
                   onClick={handleCloseModal}
                 >
                   <i className="fas fa-times me-2"></i>
@@ -2571,7 +2571,7 @@ const Users = () => {
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title" id="editUserModalLabel">
-                  <i className="fas fa-user-edit me-2"></i>
+                  <i className="fas fa-user-edit me-2 font-1"></i>
                   Edit User
                 </h5>
                 <button
@@ -3288,7 +3288,7 @@ const Users = () => {
                         </button>
                         <button
                           type="button"
-                          className="btn btn-secondary border border-0 bg-secondary text-8 px-3 fw-medium py-2 me-3"
+                          className="btn btn-secondary border border-0 text-8 px-3 fw-medium py-2 me-3"
                           onClick={handleCloseEditModal}
                         >
                           <i className="fa-solid fa-times me-1"></i> Close

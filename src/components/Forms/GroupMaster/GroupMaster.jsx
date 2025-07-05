@@ -13,7 +13,7 @@ const GroupMaster = () => {
   const [isEditGroupDetails, setIsEditGroupDetails] = useState(false);
   const [groupDetails, setGroupDetails] = useState({
     id: "",
-    trNo: "",
+    trno: "",
     name: "",
     status: "",
   });
@@ -28,12 +28,12 @@ const GroupMaster = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  
+
   // Data loading state
   const [groups, setGroups] = useState([]);
   const [dataLoading, setDataLoading] = useState(false);
   const [dataError, setDataError] = useState(null);
-  
+
   // Pagination state
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -41,7 +41,7 @@ const GroupMaster = () => {
     itemsPerPage: 10,
     totalPages: 1,
   });
-  
+
   // Search and filter state
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -53,7 +53,7 @@ const GroupMaster = () => {
   const loadGroups = async () => {
     setDataLoading(true);
     setDataError(null);
-    
+
     try {
       const response = await api.get("/api/group/all", {
         params: {
@@ -63,13 +63,13 @@ const GroupMaster = () => {
           status: statusFilter,
         },
       });
-      
+
       // Updated to handle the new API response structure
       const groupsData = response.data.data || [];
       setGroups(groupsData);
-      
+
       // Update pagination based on the available data
-      setPagination(prev => ({
+      setPagination((prev) => ({
         ...prev,
         totalItems: groupsData.length,
         totalPages: Math.ceil(groupsData.length / prev.itemsPerPage),
@@ -86,7 +86,12 @@ const GroupMaster = () => {
   // Load data on component mount and when pagination, search or filter changes
   useEffect(() => {
     loadGroups();
-  }, [pagination.currentPage, pagination.itemsPerPage, searchTerm, statusFilter]);
+  }, [
+    pagination.currentPage,
+    pagination.itemsPerPage,
+    searchTerm,
+    statusFilter,
+  ]);
 
   const handleGroupCheckboxChange = (groupId) => {
     setSelectedGroups((prevSelected) =>
@@ -111,20 +116,24 @@ const GroupMaster = () => {
     if (selectedGroups.length === 0) {
       return;
     }
-    
-    if (!window.confirm(`Are you sure you want to delete ${selectedGroups.length} selected group(s)?`)) {
+
+    if (
+      !window.confirm(
+        `Are you sure you want to delete ${selectedGroups.length} selected group(s)?`
+      )
+    ) {
       return;
     }
-    
+
     setDeleteLoading(true);
     setDataError(null);
-    
+
     try {
       // Delete groups one by one
       for (const groupId of selectedGroups) {
         await api.delete(`/api/group/delete/${groupId}`);
       }
-      
+
       // Clear selection and reload data
       setSelectedGroups([]);
       setSelectAll(false);
@@ -141,18 +150,18 @@ const GroupMaster = () => {
     if (!window.confirm("Are you sure you want to delete this group?")) {
       return;
     }
-    
+
     setDataLoading(true);
     setDataError(null);
-    
+
     try {
       await api.delete(`/api/group/delete/${groupId}`);
-      
+
       // If the deleted group was selected, remove it from selection
       if (selectedGroups.includes(groupId)) {
-        setSelectedGroups(prev => prev.filter(id => id !== groupId));
+        setSelectedGroups((prev) => prev.filter((id) => id !== groupId));
       }
-      
+
       // Reload data
       loadGroups();
     } catch (err) {
@@ -167,7 +176,7 @@ const GroupMaster = () => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    
+
     const finalData = {
       name: formData.name,
       status: formData.status,
@@ -208,23 +217,26 @@ const GroupMaster = () => {
 
     const finalData = {
       name: groupDetails.name,
-      status: groupDetails.status
+      status: groupDetails.status,
     };
 
     try {
-      const response = await api.put(`/api/group/update/${groupDetails.id}`, finalData);
+      const response = await api.put(
+        `/api/group/update/${groupDetails.id}`,
+        finalData
+      );
       console.log("Group updated successfully:", response.data);
-      
+
       // Close the bootstrap modal properly
       if (groupEditModalRef.current) {
         const bsModal = Modal.getInstance(groupEditModalRef.current);
         bsModal?.hide();
       }
-      
+
       // Reset states
       setIsEditGroupDetails(false);
       setError(null);
-      
+
       // Reload the groups data to show updated information
       loadGroups();
     } catch (err) {
@@ -239,11 +251,14 @@ const GroupMaster = () => {
     e.preventDefault();
     try {
       const response = await api.get(`/api/group/${group.id}`);
+      console.log(response.data.data);
       setGroupDetails(response.data.data);
       setIsShowGroupDetails(true);
     } catch (err) {
       console.error("Error fetching group details:", err);
-      setDataError(err.response?.data?.message || "Error fetching group details");
+      setDataError(
+        err.response?.data?.message || "Error fetching group details"
+      );
     }
   };
 
@@ -252,11 +267,15 @@ const GroupMaster = () => {
     try {
       const response = await api.get(`/api/group/${group.id}`);
       setGroupDetails(response.data.data);
-      setEditSwitchChecked(response.data.data.status.toLowerCase() === "active");
+      setEditSwitchChecked(
+        response.data.data.status.toLowerCase() === "active"
+      );
       setIsEditGroupDetails(true);
     } catch (err) {
       console.error("Error fetching group details:", err);
-      setDataError(err.response?.data?.message || "Error fetching group details");
+      setDataError(
+        err.response?.data?.message || "Error fetching group details"
+      );
     }
   };
 
@@ -297,7 +316,7 @@ const GroupMaster = () => {
   // Handle pagination
   const handlePageChange = (newPage) => {
     if (newPage > 0 && newPage <= pagination.totalPages) {
-      setPagination({...pagination, currentPage: newPage});
+      setPagination({ ...pagination, currentPage: newPage });
     }
   };
 
@@ -313,17 +332,50 @@ const GroupMaster = () => {
   // Handle search and filter
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
-    setPagination({...pagination, currentPage: 1}); // Reset to first page when searching
+    setPagination({ ...pagination, currentPage: 1 }); // Reset to first page when searching
   };
 
   const handleStatusFilter = (e) => {
     setStatusFilter(e.target.value);
-    setPagination({...pagination, currentPage: 1}); // Reset to first page when filtering
+    setPagination({ ...pagination, currentPage: 1 }); // Reset to first page when filtering
   };
 
   const handleSetIsAddGroup = () => {
     setIsAddGroup(true);
   };
+
+  // Reset all filters
+  const handleResetFilters = () => {
+    setStatusFilter("");
+    setSearchTerm("");
+  };
+
+  // Filter types based on search term and status filter
+  const filteredTypes = groups.filter((group) => {
+    // Search term filter
+    const searchFields = [
+      group.trno?.toLowerCase() || "",
+      group.name?.toLowerCase() || "",
+      group.status?.toLowerCase() || "",
+    ];
+
+    const searchTermLower = searchTerm.toLowerCase();
+    const matchesSearch =
+      searchTerm === "" ||
+      searchFields.some((field) => field.includes(searchTermLower));
+
+    // Status filter
+    const matchesStatus =
+      !statusFilter ||
+      group.status?.toLowerCase() === statusFilter.toLowerCase();
+
+    return matchesSearch && matchesStatus;
+  });
+
+  // Sort types by trno
+  const sortedFilteredTypes = [...filteredTypes].sort((a, b) => {
+    return (a.trno || "").localeCompare(b.trno || "");
+  });
 
   return (
     <div>
@@ -366,7 +418,7 @@ const GroupMaster = () => {
           />
         </div>
         <div className="filter-options">
-          <select 
+          <select
             className="filter-select"
             value={statusFilter}
             onChange={handleStatusFilter}
@@ -375,6 +427,11 @@ const GroupMaster = () => {
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
           </select>
+
+          <button className="filter-select" onClick={handleResetFilters}>
+            <i className="fas fa-filter me-2"></i>
+            Reset Filters
+          </button>
         </div>
       </div>
 
@@ -400,7 +457,7 @@ const GroupMaster = () => {
             <div className="form-grid border-bottom pt-0">
               <div className="row form-style">
                 <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="trNo" className="form-label">
+                  <label htmlFor="trno" className="form-label">
                     TRNO
                   </label>
                   <div className="position-relative w-100">
@@ -408,7 +465,7 @@ const GroupMaster = () => {
                     <input
                       type="text"
                       className="form-control ps-5 text-font input-centered"
-                      id="trNo"
+                      id="trno"
                       placeholder="*******************"
                       disabled
                     />
@@ -497,16 +554,17 @@ const GroupMaster = () => {
               <button
                 type="submit"
                 className="btn btn-primary border border-0 text-8 px-3 fw-medium py-2 me-3 float-end"
-                
                 disabled={loading}
               >
                 {loading ? (
                   <span>
-                    <i className="fa-solid fa-spinner fa-spin me-1"></i> Saving...
+                    <i className="fa-solid fa-spinner fa-spin me-1"></i>{" "}
+                    Saving...
                   </span>
                 ) : (
                   <span>
-                    <i className="fa-solid fa-floppy-disk me-1"></i> Save Changes
+                    <i className="fa-solid fa-floppy-disk me-1"></i> Save
+                    Changes
                   </span>
                 )}
               </button>
@@ -538,14 +596,15 @@ const GroupMaster = () => {
                 {selectedGroups.length} Selected
               </label>
             </div>
-            <button 
+            <button
               className="btn-action btn-danger"
               onClick={handleDeleteSelected}
               disabled={deleteLoading || selectedGroups.length === 0}
             >
               {deleteLoading ? (
                 <span>
-                  <i className="fa-solid fa-spinner fa-spin me-1"></i> Deleting...
+                  <i className="fa-solid fa-spinner fa-spin me-1"></i>{" "}
+                  Deleting...
                 </span>
               ) : (
                 <span>
@@ -563,8 +622,8 @@ const GroupMaster = () => {
             <thead>
               <tr>
                 <th className="checkbox-cell">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     checked={selectAll}
                     onChange={handleSelectAllChange}
                   />
@@ -583,10 +642,11 @@ const GroupMaster = () => {
               {dataLoading ? (
                 <tr>
                   <td colSpan="5" className="text-center py-3">
-                    <i className="fa-solid fa-spinner fa-spin me-2"></i> Loading...
+                    <i className="fa-solid fa-spinner fa-spin me-2"></i>{" "}
+                    Loading...
                   </td>
                 </tr>
-              ) : groups.length === 0 ? (
+              ) : sortedFilteredTypes.length === 0 ? (
                 <tr className="no-data-row">
                   <td colSpan="5" className="no-data-cell">
                     <div className="no-data-content">
@@ -600,7 +660,7 @@ const GroupMaster = () => {
                   </td>
                 </tr>
               ) : (
-                groups.map((group) => (
+                sortedFilteredTypes.map((group) => (
                   <tr key={group.id}>
                     <td className="checkbox-cell ps-4">
                       <input
@@ -641,8 +701,8 @@ const GroupMaster = () => {
                       >
                         <i className="fas fa-edit"></i>
                       </button>
-                      <button 
-                        className="btn-icon btn-danger" 
+                      <button
+                        className="btn-icon btn-danger"
                         title="Delete"
                         onClick={() => handleDeleteSingle(group.id)}
                       >
@@ -658,28 +718,38 @@ const GroupMaster = () => {
           {/* Pagination */}
           <div className="pagination-container">
             <div className="pagination-info">
-              Showing {groups.length > 0 ? (pagination.currentPage - 1) * pagination.itemsPerPage + 1 : 0}-
-              {Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)} of {pagination.totalItems} entries
+              Showing{" "}
+              {sortedFilteredTypes.length > 0
+                ? (pagination.currentPage - 1) * pagination.itemsPerPage + 1
+                : 0}
+              -
+              {Math.min(
+                pagination.currentPage * pagination.itemsPerPage,
+                pagination.totalItems
+              )}{" "}
+              of {pagination.totalItems} entries
             </div>
             <div className="pagination">
-              <button 
-                className="btn-page" 
+              <button
+                className="btn-page"
                 disabled={pagination.currentPage === 1}
                 onClick={() => handlePageChange(pagination.currentPage - 1)}
               >
                 <i className="fas fa-chevron-left"></i>
               </button>
-              {[...Array(pagination.totalPages).keys()].map(page => (
-                <button 
+              {[...Array(pagination.totalPages).keys()].map((page) => (
+                <button
                   key={page + 1}
-                  className={`btn-page ${pagination.currentPage === page + 1 ? 'active' : ''}`}
+                  className={`btn-page ${
+                    pagination.currentPage === page + 1 ? "active" : ""
+                  }`}
                   onClick={() => handlePageChange(page + 1)}
                 >
                   {page + 1}
                 </button>
               ))}
-              <button 
-                className="btn-page" 
+              <button
+                className="btn-page"
                 disabled={pagination.currentPage === pagination.totalPages}
                 onClick={() => handlePageChange(pagination.currentPage + 1)}
               >
@@ -687,7 +757,10 @@ const GroupMaster = () => {
               </button>
             </div>
             <div className="items-per-page">
-              <select value={pagination.itemsPerPage} onChange={handleItemsPerPageChange}>
+              <select
+                value={pagination.itemsPerPage}
+                onChange={handleItemsPerPageChange}
+              >
                 <option value="10">10 per page</option>
                 <option value="25">25 per page</option>
                 <option value="50">50 per page</option>
@@ -706,11 +779,12 @@ const GroupMaster = () => {
           id="groupDetailModal"
           tabIndex="-1"
         >
-          <div className="modal-dialog">
+          <div className="modal-dialog modal-lg">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">
-                  View {groupDetails.name}'s Details
+                  <i className="fa-solid fa-circle-info me-2"></i>View Group
+                  Details
                 </h5>
                 <button
                   type="button"
@@ -720,26 +794,37 @@ const GroupMaster = () => {
                 ></button>
               </div>
               <div className="modal-body">
-                <p>
-                  <strong>TRNO:</strong> {groupDetails.trno}
-                </p>
-                <p>
-                  <strong>Name:</strong> {groupDetails.name}
-                </p>
-                <p>
-                  <strong>Status:</strong> {groupDetails.status}
-                </p>
+                <div className="user-details-grid">
+                  <div className="detail-item">
+                    <strong>TRNO:</strong>
+                    <span>{groupDetails.trno}</span>
+                  </div>
+
+                  <div className="detail-item">
+                    <strong>Name:</strong>
+                    <span>{groupDetails.name}</span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Status:</strong>
+                    <span
+                      className={`badge status ${groupDetails.status?.toLowerCase()} w-50`}
+                    >
+                      {groupDetails.status?.charAt(0).toUpperCase() +
+                        groupDetails.status?.slice(1)}
+                    </span>
+                  </div>
+                </div>
               </div>
               <div className="modal-footer">
                 <button
                   type="button"
-                  className="btn btn-secondary"
+                  className="btn btn-secondary add-btn"
                   data-bs-dismiss="modal"
                   onClick={() => {
                     document.activeElement?.blur();
                   }}
                 >
-                  Close
+                  <i className="fa-solid fa-xmark me-1"></i>Close
                 </button>
               </div>
             </div>
@@ -758,13 +843,17 @@ const GroupMaster = () => {
           <div className="modal-dialog modal-lg">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Edit Group</h5>
+                <h5 className="modal-title">
+                  <i className="fa-solid fa-pencil me-2 font-1"></i>Edit Group
+                </h5>
                 <button
                   type="button"
                   className="btn-close"
                   onClick={() => {
                     if (groupEditModalRef.current) {
-                      const bsModal = Modal.getInstance(groupEditModalRef.current);
+                      const bsModal = Modal.getInstance(
+                        groupEditModalRef.current
+                      );
                       bsModal?.hide();
                     }
                     setIsEditGroupDetails(false);
@@ -783,7 +872,7 @@ const GroupMaster = () => {
                   <div className="form-grid pt-0">
                     <div className="row form-style">
                       <div className="col-4 d-flex flex-column form-group">
-                        <label htmlFor="trNo" className="form-label">
+                        <label htmlFor="trno" className="form-label">
                           TRNO
                         </label>
                         <div className="position-relative w-100">
@@ -791,7 +880,7 @@ const GroupMaster = () => {
                           <input
                             type="text"
                             className="form-control ps-5 text-font input-centered"
-                            id="trNo"
+                            id="trno"
                             value={groupDetails.trno}
                             disabled
                           />
@@ -812,7 +901,7 @@ const GroupMaster = () => {
                             onChange={(e) =>
                               setGroupDetails({
                                 ...groupDetails,
-                                name: e.target.value
+                                name: e.target.value,
                               })
                             }
                           />
@@ -831,11 +920,13 @@ const GroupMaster = () => {
                               id="editSwitchCheckChecked"
                               checked={editSwitchChecked}
                               onChange={(e) => {
-                                const newStatus = e.target.checked ? "active" : "inactive";
+                                const newStatus = e.target.checked
+                                  ? "active"
+                                  : "inactive";
                                 setEditSwitchChecked(e.target.checked);
                                 setGroupDetails({
                                   ...groupDetails,
-                                  status: newStatus
+                                  status: newStatus,
                                 });
                               }}
                             />
@@ -853,7 +944,7 @@ const GroupMaster = () => {
                               setEditSwitchChecked(newStatus === "active");
                               setGroupDetails({
                                 ...groupDetails,
-                                status: newStatus
+                                status: newStatus,
                               });
                             }}
                           >
@@ -874,7 +965,7 @@ const GroupMaster = () => {
                   </div>
                 )}
                 <button
-                  className="btn btn-primary border border-0 text-8 px-3 fw-medium py-2 me-3 float-end"
+                  className="btn btn-primary add-btn"
                   onClick={(e) => {
                     handleEditGroup(e);
                   }}
@@ -882,26 +973,30 @@ const GroupMaster = () => {
                 >
                   {loading ? (
                     <span>
-                      <i className="fa-solid fa-spinner fa-spin me-1"></i> Saving...
+                      <i className="fa-solid fa-spinner fa-spin me-1"></i>{" "}
+                      Saving...
                     </span>
                   ) : (
                     <span>
-                      <i className="fa-solid fa-floppy-disk me-1"></i> Save Changes
+                      <i className="fa-solid fa-floppy-disk me-1"></i> Save
+                      Changes
                     </span>
                   )}
                 </button>
                 <button
-                  className="btn btn-secondary border border-0 bg-secondary text-8 px-3 fw-medium py-2 me-3 float-end"
+                  className="btn btn-secondary add-btn"
                   onClick={() => {
                     if (groupEditModalRef.current) {
-                      const bsModal = Modal.getInstance(groupEditModalRef.current);
+                      const bsModal = Modal.getInstance(
+                        groupEditModalRef.current
+                      );
                       bsModal?.hide();
                     }
                     setIsEditGroupDetails(false);
                     setError(null);
                   }}
                 >
-                  <i className="fa-solid fa-x me-1"></i> Close
+                  <i className="fa-solid fa-xmark me-1"></i> Close
                 </button>
               </div>
             </div>

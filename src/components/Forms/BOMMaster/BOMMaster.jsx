@@ -40,7 +40,7 @@ const BOMMaster = () => {
     currentPage: 1,
     totalPages: 1,
     totalItems: 0,
-    itemsPerPage: 10
+    itemsPerPage: 10,
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPart, setSelectedPart] = useState("");
@@ -65,7 +65,8 @@ const BOMMaster = () => {
   }, []);
 
   useEffect(() => {
-    api.get("/api/bom/all")
+    api
+      .get("/api/bom/all")
       .then((response) => {
         if (response.data.status && response.data.data) {
           setBoms(response.data.data);
@@ -107,25 +108,28 @@ const BOMMaster = () => {
 
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(bom => 
-        bom.name.toLowerCase().includes(searchLower) ||
-        bom.code.toLowerCase().includes(searchLower)
+      filtered = filtered.filter(
+        (bom) =>
+          bom.name.toLowerCase().includes(searchLower) ||
+          bom.code.toLowerCase().includes(searchLower)
       );
     }
 
     if (selectedStatus) {
-      filtered = filtered.filter(bom => bom.status === selectedStatus);
+      filtered = filtered.filter((bom) => bom.status === selectedStatus);
     }
 
     if (selectedWarehouse) {
-      filtered = filtered.filter(bom => 
-        bom.items?.some(item => item.warehouseId === parseInt(selectedWarehouse))
+      filtered = filtered.filter((bom) =>
+        bom.items?.some(
+          (item) => item.warehouseId === parseInt(selectedWarehouse)
+        )
       );
     }
 
     if (selectedPart) {
-      filtered = filtered.filter(bom => 
-        bom.items?.some(item => item.itemId === parseInt(selectedPart))
+      filtered = filtered.filter((bom) =>
+        bom.items?.some((item) => item.itemId === parseInt(selectedPart))
       );
     }
 
@@ -190,7 +194,8 @@ const BOMMaster = () => {
         }),
       };
 
-      api.post("/api/bom/add", finalData)
+      api
+        .post("/api/bom/add", finalData)
         .then((response) => {
           setFormData({
             name: "",
@@ -255,11 +260,12 @@ const BOMMaster = () => {
           uom: item.uom,
           quantity: parseFloat(item.quantity),
           warehouseId: item.warehouseId,
-          warehouseName: item.warehouseName
-        }))
+          warehouseName: item.warehouseName,
+        })),
       };
 
-      api.put(`/api/bom/update/${bomDetails.id}`, finalData)
+      api
+        .put(`/api/bom/update/${bomDetails.id}`, finalData)
         .then((response) => {
           console.log("BOM updated successfully:", response.data);
           // Close the modal using Bootstrap's hide method
@@ -278,7 +284,7 @@ const BOMMaster = () => {
   };
 
   const handleAddItemToEdit = () => {
-    setBomDetails(prev => ({
+    setBomDetails((prev) => ({
       ...prev,
       items: [
         ...prev.items,
@@ -289,51 +295,53 @@ const BOMMaster = () => {
           uom: "",
           quantity: "",
           warehouseId: "",
-          warehouseName: ""
-        }
-      ]
+          warehouseName: "",
+        },
+      ],
     }));
   };
 
   const handleRemoveItemFromEdit = (index) => {
-    setBomDetails(prev => ({
+    setBomDetails((prev) => ({
       ...prev,
-      items: prev.items.filter((_, i) => i !== index)
+      items: prev.items.filter((_, i) => i !== index),
     }));
   };
 
   const handleEditItemChange = (index, field, value) => {
-    setBomDetails(prev => {
+    setBomDetails((prev) => {
       const updatedItems = [...prev.items];
-      if (field === 'item') {
-        const selectedItem = items.find(item => item.id === parseInt(value));
+      if (field === "item") {
+        const selectedItem = items.find((item) => item.id === parseInt(value));
         if (selectedItem) {
           updatedItems[index] = {
             ...updatedItems[index],
             itemId: selectedItem.id,
             itemName: selectedItem.name,
             itemCode: selectedItem.code,
-            uom: selectedItem.uom
+            uom: selectedItem.uom,
           };
         }
-      } else if (field === 'warehouse') {
-        const selectedWarehouse = warehouses.find(w => w.id === parseInt(value));
+      } else if (field === "warehouse") {
+        const selectedWarehouse = warehouses.find(
+          (w) => w.id === parseInt(value)
+        );
         if (selectedWarehouse) {
           updatedItems[index] = {
             ...updatedItems[index],
             warehouseId: selectedWarehouse.id,
-            warehouseName: selectedWarehouse.name
+            warehouseName: selectedWarehouse.name,
           };
         }
       } else {
         updatedItems[index] = {
           ...updatedItems[index],
-          [field]: value
+          [field]: value,
         };
       }
       return {
         ...prev,
-        items: updatedItems
+        items: updatedItems,
       };
     });
   };
@@ -398,7 +406,8 @@ const BOMMaster = () => {
 
   // Function to fetch BOMs with pagination
   const fetchBOMs = (page = 1, perPage = pagination.itemsPerPage) => {
-    api.get(`/api/bom/all?page=${page}&per_page=${perPage}`)
+    api
+      .get(`/api/bom/all?page=${page}&per_page=${perPage}`)
       .then((response) => {
         if (response.data.status && response.data.data) {
           setBoms(response.data.data);
@@ -406,7 +415,7 @@ const BOMMaster = () => {
             currentPage: response.data.current_page || page,
             totalPages: response.data.total_pages || 1,
             totalItems: response.data.total_items || 0,
-            itemsPerPage: perPage
+            itemsPerPage: perPage,
           });
         }
       })
@@ -430,15 +439,15 @@ const BOMMaster = () => {
   // Handle items per page change
   const handleItemsPerPageChange = (e) => {
     const newItemsPerPage = parseInt(e.target.value);
-    setPagination(prev => ({ ...prev, itemsPerPage: newItemsPerPage }));
+    setPagination((prev) => ({ ...prev, itemsPerPage: newItemsPerPage }));
     fetchBOMs(1, newItemsPerPage);
   };
 
   const handleItemChange = (index, field, value) => {
     const updatedItems = [...formData.items];
-    
-    if (field === 'item') {
-      const selectedItem = items.find(item => item.id === parseInt(value));
+
+    if (field === "item") {
+      const selectedItem = items.find((item) => item.id === parseInt(value));
       if (selectedItem) {
         updatedItems[index] = {
           ...updatedItems[index],
@@ -447,28 +456,29 @@ const BOMMaster = () => {
           uom: selectedItem.uom,
         };
       }
-    } else if (field === 'warehouse') {
+    } else if (field === "warehouse") {
       updatedItems[index] = {
         ...updatedItems[index],
-        warehouse: value
+        warehouse: value,
       };
-    } else if (field === 'quantity') {
+    } else if (field === "quantity") {
       updatedItems[index] = {
         ...updatedItems[index],
-        quantity: value
+        quantity: value,
       };
     }
 
     setFormData({
       ...formData,
-      items: updatedItems
+      items: updatedItems,
     });
   };
 
   // Handle single BOM deletion
   const handleDeleteBom = (bomId) => {
-    if (window.confirm('Are you sure you want to delete this BOM?')) {
-      api.delete(`/api/bom/delete/${bomId}`)
+    if (window.confirm("Are you sure you want to delete this BOM?")) {
+      api
+        .delete(`/api/bom/delete/${bomId}`)
         .then((response) => {
           console.log("BOM deleted successfully:", response.data);
           // Refresh the current page
@@ -483,13 +493,17 @@ const BOMMaster = () => {
   // Handle bulk deletion
   const handleBulkDelete = () => {
     if (selectedBoms.length === 0) {
-      alert('Please select BOMs to delete');
+      alert("Please select BOMs to delete");
       return;
     }
 
-    if (window.confirm(`Are you sure you want to delete ${selectedBoms.length} selected BOMs?`)) {
+    if (
+      window.confirm(
+        `Are you sure you want to delete ${selectedBoms.length} selected BOMs?`
+      )
+    ) {
       // Create an array of promises for each delete operation
-      const deletePromises = selectedBoms.map(bomId =>
+      const deletePromises = selectedBoms.map((bomId) =>
         api.delete(`/api/bom/delete/${bomId}`)
       );
 
@@ -505,6 +519,14 @@ const BOMMaster = () => {
           console.error("Error deleting BOMs:", error);
         });
     }
+  };
+
+  // Reset all filters
+  const handleResetFilters = () => {
+    setSearchTerm("");
+    setSelectedPart("");
+    setSelectedWarehouse("");
+    setSelectedStatus("");
   };
 
   return (
@@ -546,31 +568,31 @@ const BOMMaster = () => {
           />
         </div>
         <div className="filter-options">
-          <select 
+          <select
             className="filter-select"
             value={selectedPart}
             onChange={(e) => setSelectedPart(e.target.value)}
           >
             <option value="">All Parts</option>
-            {items.map(item => (
+            {items.map((item) => (
               <option key={item.id} value={item.id}>
                 {item.name}
               </option>
             ))}
           </select>
-          <select 
+          <select
             className="filter-select"
             value={selectedWarehouse}
             onChange={(e) => setSelectedWarehouse(e.target.value)}
           >
             <option value="">All Warehouses</option>
-            {warehouses.map(warehouse => (
+            {warehouses.map((warehouse) => (
               <option key={warehouse.id} value={warehouse.id}>
                 {warehouse.name}
               </option>
             ))}
           </select>
-          <select 
+          <select
             className="filter-select"
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
@@ -579,6 +601,11 @@ const BOMMaster = () => {
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
           </select>
+
+          <button className="filter-select" onClick={handleResetFilters}>
+            <i className="fas fa-filter me-2"></i>
+            Reset Filters
+          </button>
         </div>
       </div>
 
@@ -741,7 +768,13 @@ const BOMMaster = () => {
                                   className="form-control text-font w-100 ps-5"
                                   required
                                   value={currentItem.item}
-                                  onChange={(e) => handleItemChange(index, 'item', e.target.value)}
+                                  onChange={(e) =>
+                                    handleItemChange(
+                                      index,
+                                      "item",
+                                      e.target.value
+                                    )
+                                  }
                                 >
                                   <option value="">Select Item</option>
                                   {items.map((item) => (
@@ -782,7 +815,13 @@ const BOMMaster = () => {
                                 step="0.01"
                                 required
                                 value={currentItem.quantity || ""}
-                                onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+                                onChange={(e) =>
+                                  handleItemChange(
+                                    index,
+                                    "quantity",
+                                    e.target.value
+                                  )
+                                }
                               />
                             </div>
                           </td>
@@ -794,7 +833,13 @@ const BOMMaster = () => {
                                   className="form-control text-font w-100 ps-5"
                                   required
                                   value={currentItem.warehouse || ""}
-                                  onChange={(e) => handleItemChange(index, 'warehouse', e.target.value)}
+                                  onChange={(e) =>
+                                    handleItemChange(
+                                      index,
+                                      "warehouse",
+                                      e.target.value
+                                    )
+                                  }
                                 >
                                   <option value="">Select Warehouse</option>
                                   {warehouses.map((warehouse) => (
@@ -897,7 +942,7 @@ const BOMMaster = () => {
                 <i className="fas fa-file-export"></i>
                 Export Selected
               </button>
-              <button 
+              <button
                 className="btn-action btn-danger"
                 onClick={handleBulkDelete}
                 disabled={selectedBoms.length === 0}
@@ -934,8 +979,8 @@ const BOMMaster = () => {
                       <i className="fas fa-sitemap no-data-icon mb-3"></i>
                       <p className="no-data-text mb-1">No BOM's found</p>
                       <p className="no-data-subtext">
-                        {boms.length === 0 
-                          ? "Click the \"Add New BOM\" button to create your first Bill of Materials"
+                        {boms.length === 0
+                          ? 'Click the "Add New BOM" button to create your first Bill of Materials'
                           : "No BOMs match your search criteria"}
                       </p>
                     </div>
@@ -944,14 +989,14 @@ const BOMMaster = () => {
               ) : (
                 filteredBoms.map((bom) => (
                   <tr key={bom.id}>
-                    <td className="checkbox-cell">
+                    <td className="checkbox-cell ps-4">
                       <input
                         type="checkbox"
                         checked={selectedBoms.includes(bom.id)}
                         onChange={() => handleBomCheckboxChange(bom.id)}
                       />
                     </td>
-                    <td>
+                    <td className="ps-4">
                       <div>
                         <span>{bom.name}</span>
                       </div>
@@ -981,8 +1026,8 @@ const BOMMaster = () => {
                       >
                         <i className="fas fa-edit"></i>
                       </button>
-                      <button 
-                        className="btn-icon btn-danger" 
+                      <button
+                        className="btn-icon btn-danger"
                         title="Delete"
                         onClick={() => handleDeleteBom(bom.id)}
                       >
@@ -998,13 +1043,17 @@ const BOMMaster = () => {
           {/* Pagination */}
           <div className="pagination-container">
             <div className="pagination-info">
-              Showing {((pagination.currentPage - 1) * pagination.itemsPerPage) + 1}-
-              {Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)} of{" "}
-              {pagination.totalItems} entries
+              Showing{" "}
+              {(pagination.currentPage - 1) * pagination.itemsPerPage + 1}-
+              {Math.min(
+                pagination.currentPage * pagination.itemsPerPage,
+                pagination.totalItems
+              )}{" "}
+              of {pagination.totalItems} entries
             </div>
             <div className="pagination">
-              <button 
-                className="btn-page" 
+              <button
+                className="btn-page"
                 disabled={pagination.currentPage === 1}
                 onClick={() => handlePageChange(pagination.currentPage - 1)}
               >
@@ -1013,14 +1062,16 @@ const BOMMaster = () => {
               {[...Array(pagination.totalPages)].map((_, index) => (
                 <button
                   key={index + 1}
-                  className={`btn-page ${pagination.currentPage === index + 1 ? 'active' : ''}`}
+                  className={`btn-page ${
+                    pagination.currentPage === index + 1 ? "active" : ""
+                  }`}
                   onClick={() => handlePageChange(index + 1)}
                 >
                   {index + 1}
                 </button>
               ))}
-              <button 
-                className="btn-page" 
+              <button
+                className="btn-page"
                 disabled={pagination.currentPage === pagination.totalPages}
                 onClick={() => handlePageChange(pagination.currentPage + 1)}
               >
@@ -1028,8 +1079,8 @@ const BOMMaster = () => {
               </button>
             </div>
             <div className="items-per-page">
-              <select 
-                value={pagination.itemsPerPage} 
+              <select
+                value={pagination.itemsPerPage}
                 onChange={handleItemsPerPageChange}
               >
                 <option value="10">10 per page</option>
@@ -1055,6 +1106,7 @@ const BOMMaster = () => {
           <div className="modal-content">
             <div className="modal-header">
               <h5 className="modal-title" id="bomViewModalLabel">
+                <i className="fas fa-circle-info me-2"></i>
                 BOM Details
               </h5>
               <button
@@ -1066,69 +1118,69 @@ const BOMMaster = () => {
             </div>
             <div className="modal-body">
               {bomDetails && (
-                <div className="bom-details">
-                  <div className="row mb-3">
-                    <div className="col-6">
-                      <p>
-                        <strong>Name:</strong> {bomDetails.name}
-                      </p>
+                <div>
+                  <div className="user-details-grid">
+                    <div className="detail-item">
+                      <strong>Name:</strong>
+                      <span>{bomDetails.name}</span>
                     </div>
-                    <div className="col-6">
-                      <p>
-                        <strong>Code:</strong> {bomDetails.code}
-                      </p>
+                    <div className="detail-item">
+                      <strong>Code:</strong>
+                      <span>{bomDetails.code}</span>
                     </div>
-                  </div>
-                  <div className="row mb-3">
-                    <div className="col-6">
-                      <p>
-                        <strong>Status:</strong>{" "}
-                        <span className={`status-badge ${bomDetails.status}`}>
-                          {bomDetails.status}
-                        </span>
-                      </p>
+                    <div className="detail-item">
+                      <strong>Status:</strong>
+                      <span
+                        className={`badge status ${bomDetails.status?.toLowerCase()} w-50`}
+                      >
+                        {bomDetails.status?.charAt(0).toUpperCase() +
+                          bomDetails.status?.slice(1)}
+                      </span>
                     </div>
-                    <div className="col-6">
-                      <p>
-                        <strong>Items Count:</strong>{" "}
+                    <div className="detail-item">
+                      <strong>Items Count:</strong>
+                      <span>
                         {bomDetails.items ? bomDetails.items.length : 0}
-                      </p>
+                      </span>
                     </div>
                   </div>
-                  
-                  {/* Items Table */}
-                  <div className="mt-4">
-                    <h6 className="mb-3">Items List</h6>
-                    <div className="table-responsive">
-                      <table className="table table-bordered table-hover">
-                        <thead className="table-light">
-                          <tr>
-                            <th>Item Name</th>
-                            <th>Item Code</th>
-                            <th>UOM</th>
-                            <th>Quantity</th>
-                            <th>Warehouse</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {bomDetails.items && bomDetails.items.map((item, index) => (
-                            <tr key={index}>
-                              <td>{item.itemName}</td>
-                              <td>{item.itemCode}</td>
-                              <td>{item.uom}</td>
-                              <td>{item.quantity}</td>
-                              <td>{item.warehouseName}</td>
-                            </tr>
-                          ))}
-                          {(!bomDetails.items || bomDetails.items.length === 0) && (
+                  <div className="bom-details">
+                    {/* Items Table */}
+                    <div className="mt-4">
+                      <h6 className="mb-3">Items List</h6>
+                      <div className="table-responsive">
+                        <table className="table table-bordered table-hover">
+                          <thead className="table-light">
                             <tr>
-                              <td colSpan="5" className="text-center">
-                                No items found
-                              </td>
+                              <th>Item Name</th>
+                              <th>Item Code</th>
+                              <th>UOM</th>
+                              <th>Quantity</th>
+                              <th>Warehouse</th>
                             </tr>
-                          )}
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody>
+                            {bomDetails.items &&
+                              bomDetails.items.map((item, index) => (
+                                <tr key={index}>
+                                  <td>{item.itemName}</td>
+                                  <td>{item.itemCode}</td>
+                                  <td>{item.uom}</td>
+                                  <td>{item.quantity}</td>
+                                  <td>{item.warehouseName}</td>
+                                </tr>
+                              ))}
+                            {(!bomDetails.items ||
+                              bomDetails.items.length === 0) && (
+                              <tr>
+                                <td colSpan="5" className="text-center">
+                                  No items found
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1137,10 +1189,10 @@ const BOMMaster = () => {
             <div className="modal-footer">
               <button
                 type="button"
-                className="btn btn-secondary"
+                className="btn btn-secondary add-btn"
                 data-bs-dismiss="modal"
               >
-                Close
+                <i className="fas fa-xmark me-2"></i>Close
               </button>
             </div>
           </div>
@@ -1159,7 +1211,7 @@ const BOMMaster = () => {
           <div className="modal-content">
             <div className="modal-header">
               <h5 className="modal-title" id="bomEditModalLabel">
-                <i className="fas fa-edit me-2"></i>Edit BOM
+                <i className="fas fa-pencil me-2 font-1"></i>Edit BOM
               </h5>
               <button
                 type="button"
@@ -1168,7 +1220,7 @@ const BOMMaster = () => {
                 aria-label="Close"
               ></button>
             </div>
-            <div className="modal-body">
+            <div className="modal-body overflow-hidden">
               <form onSubmit={handleEditBom}>
                 {bomDetails && (
                   <>
@@ -1186,7 +1238,10 @@ const BOMMaster = () => {
                               id="editBomName"
                               value={bomDetails.name}
                               onChange={(e) =>
-                                setBomDetails({ ...bomDetails, name: e.target.value })
+                                setBomDetails({
+                                  ...bomDetails,
+                                  name: e.target.value,
+                                })
                               }
                             />
                           </div>
@@ -1206,7 +1261,10 @@ const BOMMaster = () => {
                               id="editBomCode"
                               value={bomDetails.code}
                               onChange={(e) =>
-                                setBomDetails({ ...bomDetails, code: e.target.value })
+                                setBomDetails({
+                                  ...bomDetails,
+                                  code: e.target.value,
+                                })
                               }
                             />
                           </div>
@@ -1228,7 +1286,9 @@ const BOMMaster = () => {
                                 onChange={(e) =>
                                   setBomDetails({
                                     ...bomDetails,
-                                    status: e.target.checked ? "active" : "inactive",
+                                    status: e.target.checked
+                                      ? "active"
+                                      : "inactive",
                                   })
                                 }
                               />
@@ -1269,96 +1329,119 @@ const BOMMaster = () => {
                             </tr>
                           </thead>
                           <tbody>
-                            {bomDetails.items && bomDetails.items.map((item, index) => (
-                              <tr key={index}>
-                                <td>
-                                  <div className="field-wrapper">
-                                    <div className="position-relative w-100">
-                                      <i className="fas fa-cogs position-absolute input-icon"></i>
-                                      <select
-                                        className="form-control text-font w-100 ps-5"
-                                        required
-                                        value={item.itemId}
-                                        onChange={(e) => handleEditItemChange(index, 'item', e.target.value)}
-                                      >
-                                        <option value="">Select Item</option>
-                                        {items.map((i) => (
-                                          <option key={i.id} value={i.id}>
-                                            {i.name} ({i.code})
-                                          </option>
-                                        ))}
-                                      </select>
+                            {bomDetails.items &&
+                              bomDetails.items.map((item, index) => (
+                                <tr key={index}>
+                                  <td>
+                                    <div className="field-wrapper">
+                                      <div className="position-relative w-100">
+                                        <i className="fas fa-cogs position-absolute input-icon"></i>
+                                        <select
+                                          className="form-control text-font w-100 ps-5"
+                                          required
+                                          value={item.itemId}
+                                          onChange={(e) =>
+                                            handleEditItemChange(
+                                              index,
+                                              "item",
+                                              e.target.value
+                                            )
+                                          }
+                                        >
+                                          <option value="">Select Item</option>
+                                          {items.map((i) => (
+                                            <option key={i.id} value={i.id}>
+                                              {i.name} ({i.code})
+                                            </option>
+                                          ))}
+                                        </select>
+                                      </div>
                                     </div>
-                                  </div>
-                                </td>
-                                <td>
-                                  <div className="field-wrapper">
-                                    <input
-                                      type="text"
-                                      className="form-control text-font w-100"
-                                      disabled
-                                      value={item.itemCode || ""}
-                                    />
-                                  </div>
-                                </td>
-                                <td>
-                                  <div className="field-wrapper">
-                                    <input
-                                      type="text"
-                                      className="form-control text-font w-100"
-                                      disabled
-                                      value={item.uom || ""}
-                                    />
-                                  </div>
-                                </td>
-                                <td>
-                                  <div className="field-wrapper">
-                                    <input
-                                      type="number"
-                                      className="form-control text-font w-100"
-                                      min="0.01"
-                                      step="0.01"
-                                      required
-                                      value={item.quantity || ""}
-                                      onChange={(e) => handleEditItemChange(index, 'quantity', e.target.value)}
-                                    />
-                                  </div>
-                                </td>
-                                <td>
-                                  <div className="field-wrapper">
-                                    <div className="position-relative w-100">
-                                      <i className="fas fa-warehouse position-absolute input-icon"></i>
-                                      <select
-                                        className="form-control text-font w-100 ps-5"
-                                        required
-                                        value={item.warehouseId || ""}
-                                        onChange={(e) => handleEditItemChange(index, 'warehouse', e.target.value)}
-                                      >
-                                        <option value="">Select Warehouse</option>
-                                        {warehouses.map((w) => (
-                                          <option key={w.id} value={w.id}>
-                                            {w.name} ({w.code})
-                                          </option>
-                                        ))}
-                                      </select>
+                                  </td>
+                                  <td>
+                                    <div className="field-wrapper">
+                                      <input
+                                        type="text"
+                                        className="form-control text-font w-100"
+                                        disabled
+                                        value={item.itemCode || ""}
+                                      />
                                     </div>
-                                  </div>
-                                </td>
-                                <td className="actions">
-                                  <div className="field-wrapper">
-                                    <button
-                                      type="button"
-                                      className="btn-icon btn-danger ms-2"
-                                      title="Remove Item"
-                                      onClick={() => handleRemoveItemFromEdit(index)}
-                                      disabled={bomDetails.items.length <= 1}
-                                    >
-                                      <i className="fas fa-trash"></i>
-                                    </button>
-                                  </div>
-                                </td>
-                              </tr>
-                            ))}
+                                  </td>
+                                  <td>
+                                    <div className="field-wrapper">
+                                      <input
+                                        type="text"
+                                        className="form-control text-font w-100"
+                                        disabled
+                                        value={item.uom || ""}
+                                      />
+                                    </div>
+                                  </td>
+                                  <td>
+                                    <div className="field-wrapper">
+                                      <input
+                                        type="number"
+                                        className="form-control text-font w-100"
+                                        min="0.01"
+                                        step="0.01"
+                                        required
+                                        value={item.quantity || ""}
+                                        onChange={(e) =>
+                                          handleEditItemChange(
+                                            index,
+                                            "quantity",
+                                            e.target.value
+                                          )
+                                        }
+                                      />
+                                    </div>
+                                  </td>
+                                  <td>
+                                    <div className="field-wrapper">
+                                      <div className="position-relative w-100">
+                                        <i className="fas fa-warehouse position-absolute input-icon"></i>
+                                        <select
+                                          className="form-control text-font w-100 ps-5"
+                                          required
+                                          value={item.warehouseId || ""}
+                                          onChange={(e) =>
+                                            handleEditItemChange(
+                                              index,
+                                              "warehouse",
+                                              e.target.value
+                                            )
+                                          }
+                                        >
+                                          <option value="">
+                                            Select Warehouse
+                                          </option>
+                                          {warehouses.map((w) => (
+                                            <option key={w.id} value={w.id}>
+                                              {w.name} ({w.code})
+                                            </option>
+                                          ))}
+                                        </select>
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className="actions">
+                                    <div className="field-wrapper">
+                                      <button
+                                        type="button"
+                                        className="btn-icon btn-danger ms-2"
+                                        title="Remove Item"
+                                        onClick={() =>
+                                          handleRemoveItemFromEdit(index)
+                                        }
+                                        disabled={bomDetails.items.length <= 1}
+                                      >
+                                        <i className="fas fa-trash"></i>
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
                           </tbody>
                         </table>
                         <button
@@ -1374,15 +1457,16 @@ const BOMMaster = () => {
                   </>
                 )}
                 <div className="modal-footer">
+                  <button type="submit" className="btn btn-primary add-btn">
+                    <i className="fa-solid fa-floppy-disk me-1"></i> Save
+                    Changes
+                  </button>
                   <button
                     type="button"
-                    className="btn btn-secondary"
+                    className="btn btn-secondary add-btn"
                     data-bs-dismiss="modal"
                   >
-                    Cancel
-                  </button>
-                  <button type="submit" className="btn btn-primary">
-                    <i className="fa-solid fa-floppy-disk me-1"></i> Save Changes
+                    <i className="fas fa-xmark me-2"></i> Close
                   </button>
                 </div>
               </form>

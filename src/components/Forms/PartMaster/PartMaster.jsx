@@ -11,6 +11,10 @@ const PartMaster = () => {
   const partEditModalRef = useRef(null);
   const [isShowPartDetails, setIsShowPartDetails] = useState(false);
   const [isEditPartDetails, setIsEditPartDetails] = useState(false);
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [uomFilter, setUOMFilter] = useState("");
   const [partDetails, setPartDetails] = useState({
     id: "",
     trNo: "",
@@ -39,13 +43,14 @@ const PartMaster = () => {
   const fetchParts = () => {
     setLoading(true);
     setError(null);
-    api.get("/api/part/all")
-      .then(response => {
+    api
+      .get("/api/part/all")
+      .then((response) => {
         console.log("Parts loaded:", response.data);
         setParts(response.data.data || []);
         setLoading(false);
       })
-      .catch(error => {
+      .catch((error) => {
         console.error("Error loading parts:", error);
         setError("Failed to load parts. Please try again.");
         setLoading(false);
@@ -85,8 +90,9 @@ const PartMaster = () => {
       };
 
       console.log("Submitting add part form");
-      api.post("/api/part/save", finalData)
-        .then(response => {
+      api
+        .post("/api/part/save", finalData)
+        .then((response) => {
           console.log("Part added successfully:", response.data);
           setIsAddPart(false);
           // Reset form after successful submission
@@ -94,7 +100,7 @@ const PartMaster = () => {
           // Refresh parts list
           fetchParts();
         })
-        .catch(error => {
+        .catch((error) => {
           console.error("Error adding part:", error);
         });
     }
@@ -183,18 +189,41 @@ const PartMaster = () => {
   const handleDeletePart = (partId) => {
     if (window.confirm("Are you sure you want to delete this part?")) {
       setLoading(true);
-      api.delete(`/api/part/delete/${partId}`)
-        .then(response => {
+      api
+        .delete(`/api/part/delete/${partId}`)
+        .then((response) => {
           console.log("Part deleted successfully:", response.data);
           // Refresh parts list after deletion
           fetchParts();
         })
-        .catch(error => {
+        .catch((error) => {
           console.error("Error deleting part:", error);
           setError("Failed to delete part. Please try again.");
           setLoading(false);
         });
     }
+  };
+
+  // Update search input handler
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  // Update uom filter handler
+  const handleUOMFilter = (e) => {
+    setUOMFilter(e.target.value);
+  };
+
+  // Update status filter handler
+  const handleStatusFilter = (e) => {
+    setStatusFilter(e.target.value);
+  };
+
+  // Reset all filters
+  const handleResetFilters = () => {
+    setStatusFilter("");
+    setUOMFilter("");
+    setSearchTerm("");
   };
 
   return (
@@ -233,10 +262,16 @@ const PartMaster = () => {
             type="text"
             className="form-control vendor-search-bar"
             placeholder="Search by types..."
+            value={searchTerm}
+            onChange={handleSearch}
           />
         </div>
         <div className="filter-options">
-          <select className="filter-select">
+          <select
+            className="filter-select"
+            value={uomFilter}
+            onChange={handleUOMFilter}
+          >
             <option value="">All UOM</option>
             <option value="pcs">Pieces (PCS)</option>
             <option value="kg">Kilogram (KG)</option>
@@ -245,11 +280,20 @@ const PartMaster = () => {
             <option value="mtr">Meter (MTR)</option>
             <option value="box">Box (BOX)</option>
           </select>
-          <select className="filter-select">
+          <select
+            className="filter-select"
+            value={statusFilter}
+            onChange={handleStatusFilter}
+          >
             <option value="">All Status</option>
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
           </select>
+
+          <button className="filter-select" onClick={handleResetFilters}>
+            <i className="fas fa-filter me-2"></i>
+            Reset Filters
+          </button>
         </div>
       </div>
 
@@ -452,9 +496,9 @@ const PartMaster = () => {
             <table>
               <thead>
                 <tr>
-                  <th className="checkbox-cell">
-                    <input 
-                      type="checkbox" 
+                  <th className="checkbox-cell ps-4">
+                    <input
+                      type="checkbox"
                       id="select-all-header"
                       checked={selectAll}
                       onChange={handleSelectAllChange}
@@ -490,29 +534,29 @@ const PartMaster = () => {
                 ) : (
                   parts.map((part) => (
                     <tr key={part.id}>
-                      <td className="checkbox-cell">
+                      <td className="checkbox-cell ps-4">
                         <input
                           type="checkbox"
                           checked={selectedParts.includes(part.id)}
                           onChange={() => handlePartCheckboxChange(part.id)}
                         />
                       </td>
-                      <td>
+                      <td className="ps-4">
                         <div>
                           <span>{part.code}</span>
                         </div>
                       </td>
-                      <td>
+                      <td className="ps-4">
                         <div>
                           <span>{part.name}</span>
                         </div>
                       </td>
-                      <td>
+                      <td className="ps-4">
                         <div>
                           <span>{part.uom}</span>
                         </div>
                       </td>
-                      <td>
+                      <td className="ps-3">
                         <div>
                           <span className={`status-badge ${part.status}`}>
                             {part.status === "active" ? "Active" : "Inactive"}
@@ -527,15 +571,15 @@ const PartMaster = () => {
                         >
                           <i className="fas fa-eye"></i>
                         </button>
-                        <button 
-                          className="btn-icon btn-success" 
+                        <button
+                          className="btn-icon btn-success"
                           title="Edit"
                           onClick={(e) => handleEditDetails(part, e)}
                         >
                           <i className="fas fa-edit"></i>
                         </button>
-                        <button 
-                          className="btn-icon btn-danger" 
+                        <button
+                          className="btn-icon btn-danger"
                           title="Delete"
                           onClick={() => handleDeletePart(part.id)}
                         >
@@ -552,7 +596,9 @@ const PartMaster = () => {
           {/* Pagination */}
           <div className="pagination-container">
             <div className="pagination-info">
-              {parts.length > 0 ? `Showing 1-${parts.length} of ${parts.length} entries` : "No entries"}
+              {parts.length > 0
+                ? `Showing 1-${parts.length} of ${parts.length} entries`
+                : "No entries"}
             </div>
             <div className="pagination">
               <button className="btn-page" disabled>
@@ -587,7 +633,8 @@ const PartMaster = () => {
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">
-                  View {partDetails.name}'s Details
+                  <i className="fas fa-circle-info me-2"></i>
+                  View Part Details
                 </h5>
                 <button
                   type="button"
@@ -597,29 +644,42 @@ const PartMaster = () => {
                 ></button>
               </div>
               <div className="modal-body">
-                <p>
-                  <strong>TRNO:</strong> {partDetails.trNo}
-                </p>
-                <p>
-                  <strong>Name:</strong> {partDetails.name}
-                </p>
-                <p>
-                  <strong>UOM:</strong> {partDetails.uom}
-                </p>
-                <p>
-                  <strong>Status:</strong> {partDetails.status}
-                </p>
+                <div className="user-details-grid">
+                  <div className="detail-item">
+                    <strong>TRNO:</strong>
+                    <span>{partDetails.trno}</span>
+                  </div>
+
+                  <div className="detail-item">
+                    <strong>Name:</strong>
+                    <span>{partDetails.name}</span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>UOM:</strong>
+                    <span>{partDetails.uom}</span>
+                  </div>
+
+                  <div className="detail-item">
+                    <strong>Status:</strong>
+                    <span
+                      className={`badge status ${partDetails.status?.toLowerCase()} w-50`}
+                    >
+                      {partDetails.status?.charAt(0).toUpperCase() +
+                        partDetails.status?.slice(1)}
+                    </span>
+                  </div>
+                </div>
               </div>
               <div className="modal-footer">
                 <button
                   type="button"
-                  className="btn btn-secondary"
+                  className="btn btn-secondary add-btn"
                   data-bs-dismiss="modal"
                   onClick={() => {
                     document.activeElement?.blur();
                   }}
                 >
-                  Close
+                  <i className="fas fa-xmark me-2"></i>Close
                 </button>
               </div>
             </div>
@@ -638,7 +698,10 @@ const PartMaster = () => {
           <div className="modal-dialog modal-lg">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Edit Part</h5>
+                <h5 className="modal-title">
+                  {" "}
+                  <i className="fas fa-pencil me-2 font-1"></i>Edit Part
+                </h5>
                 <button
                   type="button"
                   className="btn-close"
@@ -784,7 +847,7 @@ const PartMaster = () => {
               </div>
               <div className="modal-footer">
                 <button
-                  className="btn btn-primary border border-0 text-8 px-3 fw-medium py-2 me-3 float-end"
+                  className="btn btn-primary add-btn"
                   data-bs-dismiss="modal"
                   onClick={(e) => {
                     document.activeElement?.blur();
@@ -794,7 +857,7 @@ const PartMaster = () => {
                   <i className="fa-solid fa-floppy-disk me-1"></i> Save Changes
                 </button>
                 <button
-                  className="btn btn-secondary border border-0 bg-secondary text-8 px-3 fw-medium py-2 me-3 float-end"
+                  className="btn btn-secondary add-btn"
                   data-bs-dismiss="modal"
                   onClick={() => {
                     document.activeElement?.blur();

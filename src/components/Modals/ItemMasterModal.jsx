@@ -5,7 +5,7 @@ const ItemMasterModal = ({ item, onClose }) => {
     <div className="modal-content">
       <div className="modal-header">
         <h5 className="modal-title">
-          <i className="fas fa-box me-2"></i>
+          <i className="fas fa-circle-info me-2"></i>
           Item Details
         </h5>
         <button
@@ -15,129 +15,72 @@ const ItemMasterModal = ({ item, onClose }) => {
           aria-label="Close"
         ></button>
       </div>
-      <div className="modal-body p-4">
-        <div className="item-details">
-          <div className="row mb-3">
-            <div className="col-md-6">
-              <div className="detail-group">
-                <label className="detail-label small text-muted mb-1">
-                  <i className="fas fa-box-open me-2"></i>
-                  Name
-                </label>
-                <div className="detail-value fw-medium">{item?.name || "-"}</div>
-              </div>
-            </div>
-            <div className="col-md-6">
-              <div className="detail-group">
-                <label className="detail-label small text-muted mb-1">
-                  <i className="fas fa-qrcode me-2"></i>
-                  Code
-                </label>
-                <div className="detail-value fw-medium">{item?.code || "-"}</div>
-              </div>
-            </div>
+      <div className="modal-body">
+        <div className="user-details-grid">
+          <div className="detail-item">
+            <strong>Name:</strong>
+            <span>{item?.name || "-"}</span>
           </div>
 
-          <div className="row mb-3">
-            <div className="col-md-6">
-              <div className="detail-group">
-                <label className="detail-label small text-muted mb-1">
-                  <i className="fas fa-ruler me-2"></i>
-                  UOM
-                </label>
-                <div className="detail-value fw-medium">{item?.uom || "-"}</div>
-              </div>
-            </div>
-            <div className="col-md-6">
-              <div className="detail-group">
-                <label className="detail-label small text-muted mb-1">
-                  <i className="fas fa-tags me-2"></i>
-                  Type
-                </label>
-                <div className="detail-value fw-medium">{item?.type || "-"}</div>
-              </div>
-            </div>
+          <div className="detail-item">
+            <strong>Code:</strong>
+            <span>{item?.code || "-"}</span>
           </div>
 
-          <div className="row mb-3">
-            <div className="col-md-6">
-              <div className="detail-group">
-                <label className="detail-label small text-muted mb-1">
-                  <i className="fas fa-barcode me-2"></i>
-                  Barcode
-                </label>
-                <div className="detail-value fw-medium">{item?.barcode || "-"}</div>
-              </div>
-            </div>
-            <div className="col-md-6">
-              <div className="detail-group">
-                <label className="detail-label small text-muted mb-1">
-                  <i className="fas fa-layer-group me-2"></i>
-                  Group
-                </label>
-                <div className="detail-value fw-medium">{item?.groupName || "-"}</div>
-              </div>
-            </div>
+          <div className="detail-item">
+            <strong>UOM:</strong>
+            <span>{item?.uom || "-"}</span>
           </div>
 
-          <div className="row mb-3">
-            <div className="col-md-6">
-              <div className="detail-group">
-                <label className="detail-label small text-muted mb-1">
-                  <i className="fas fa-rupee-sign me-2"></i>
-                  Price
-                </label>
-                <div className="detail-value fw-medium">
-                  {item?.price ? `₹${item.price}` : "-"}
-                </div>
-              </div>
-            </div>
-            <div className="col-md-6">
-              <div className="detail-group">
-                <label className="detail-label small text-muted mb-1">
-                  <i className="fas fa-cubes me-2"></i>
-                  ST Qty
-                </label>
-                <div className="detail-value fw-medium">{item?.stQty || "-"}</div>
-              </div>
-            </div>
+          <div className="detail-item">
+            <strong>Type:</strong>
+            <span>{item?.type || "-"}</span>
           </div>
 
-          <div className="row mb-3">
-            <div className="col-md-6">
-              <div className="detail-group">
-                <label className="detail-label small text-muted mb-1">
-                  <i className="fas fa-clock me-2"></i>
-                  Life
-                </label>
-                <div className="detail-value fw-medium">
-                  {item?.life ? `${item.life} days` : "-"}
-                </div>
-              </div>
-            </div>
-            <div className="col-md-6">
-              <div className="detail-group">
-                <label className="detail-label small text-muted mb-1">
-                  <i className="fas fa-toggle-on me-2"></i>
-                  Status
-                </label>
-                <div className="detail-value">
-                  <span className={`badge status ${item?.status?.toLowerCase() || "inactive"}`}>
-                    {item?.status || "Inactive"}
-                  </span>
-                </div>
-              </div>
-            </div>
+          <div className="detail-item">
+            <strong>Barcode:</strong>
+            <span>{item?.barcode || "-"}</span>
+          </div>
+
+          <div className="detail-item">
+            <strong>Group:</strong>
+            <span>{item?.groupName || "-"}</span>
+          </div>
+
+          <div className="detail-item">
+            <strong>Price:</strong>
+            <span>{item?.price ? `₹${item.price}` : "-"}</span>
+          </div>
+
+          <div className="detail-item">
+            <strong>ST Qty:</strong>
+            <span>{item?.stQty || "-"}</span>
+          </div>
+
+          <div className="detail-item">
+            <strong>Life:</strong>
+            <span>{item?.life ? `${item.life} days` : "-"}</span>
+          </div>
+
+          <div className="detail-item">
+            <strong>Status:</strong>
+            <span
+              className={`badge status ${
+                item?.status?.toLowerCase() || "inactive"
+              } w-25`}
+            >
+              {item?.status || "Inactive"}
+            </span>
           </div>
         </div>
       </div>
       <div className="modal-footer">
         <button
           type="button"
-          className="btn btn-secondary border border-0 text-8 px-3 fw-medium py-2"
+          className="btn btn-secondary add-btn"
           onClick={onClose}
         >
-          <i className="fa-solid fa-x me-2"></i>
+          <i className="fa-solid fa-xmark me-2"></i>
           Close
         </button>
       </div>

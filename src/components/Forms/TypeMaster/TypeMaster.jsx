@@ -35,7 +35,7 @@ const TypeMaster = () => {
   const fetchTypes = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/api/type/all');
+      const response = await api.get("/api/type/all");
       setTypes(response.data.data);
     } catch (error) {
       console.error("Error fetching types:", error);
@@ -91,7 +91,7 @@ const TypeMaster = () => {
 
       try {
         console.log("Submitting type data:", finalData);
-        const response = await api.post('/api/type/save', finalData);
+        const response = await api.post("/api/type/save", finalData);
         console.log("Type added successfully:", response.data);
         setIsAddType(false);
         // Reset form after successful submission
@@ -105,7 +105,7 @@ const TypeMaster = () => {
           if (error.response.data.message) {
             // For structured error from backend (with message field)
             errorMessage = error.response.data.message;
-          } else if (typeof error.response.data === 'string') {
+          } else if (typeof error.response.data === "string") {
             // For plain string error from backend
             errorMessage = error.response.data;
           }
@@ -121,11 +121,11 @@ const TypeMaster = () => {
 
   const handleEditType = async (e) => {
     e.preventDefault();
-    
+
     // Validate the form data
     const newErrors = validateForm({
       name: typeDetails.name,
-      status: typeDetails.status
+      status: typeDetails.status,
     });
     setErrors(newErrors);
 
@@ -133,15 +133,18 @@ const TypeMaster = () => {
       try {
         const updateData = {
           name: typeDetails.name,
-          status: typeDetails.status
+          status: typeDetails.status,
         };
 
-        const response = await api.put(`/api/type/update/${typeDetails.id}`, updateData);
+        const response = await api.put(
+          `/api/type/update/${typeDetails.id}`,
+          updateData
+        );
         console.log("Type updated successfully:", response.data);
-        
+
         // Close the modal
         setIsEditTypeDetails(false);
-        
+
         // Refresh the types list
         fetchTypes();
       } catch (error) {
@@ -150,7 +153,7 @@ const TypeMaster = () => {
         if (error.response) {
           if (error.response.data.message) {
             errorMessage = error.response.data.message;
-          } else if (typeof error.response.data === 'string') {
+          } else if (typeof error.response.data === "string") {
             errorMessage = error.response.data;
           }
         } else {
@@ -248,18 +251,25 @@ const TypeMaster = () => {
       return;
     }
 
-    if (window.confirm(`Are you sure you want to delete ${selectedTypes.length} selected types?`)) {
+    if (
+      window.confirm(
+        `Are you sure you want to delete ${selectedTypes.length} selected types?`
+      )
+    ) {
       try {
         setIsDeleting(true);
         console.log("Deleting types with IDs:", selectedTypes);
-        await api.post('/api/type/delete-multiple', selectedTypes);
+        await api.post("/api/type/delete-multiple", selectedTypes);
         // Reset selection
         setSelectedTypes([]);
         setSelectAll(false);
         // Refresh the types list
         fetchTypes();
       } catch (error) {
-        console.error("Error deleting multiple types:", error.response ? error.response.data : error.message);
+        console.error(
+          "Error deleting multiple types:",
+          error.response ? error.response.data : error.message
+        );
         alert("Failed to delete selected types. Please try again.");
       } finally {
         setIsDeleting(false);
@@ -268,26 +278,30 @@ const TypeMaster = () => {
   };
 
   // Filter types based on search term and status filter
-  const filteredTypes = types.filter(type => {
+  const filteredTypes = types.filter((type) => {
     // Search term filter
     const searchFields = [
-      type.trno?.toLowerCase() || '',
-      type.name?.toLowerCase() || '',
-      type.status?.toLowerCase() || ''
+      type.trno?.toLowerCase() || "",
+      type.name?.toLowerCase() || "",
+      type.status?.toLowerCase() || "",
     ];
-    
+
     const searchTermLower = searchTerm.toLowerCase();
-    const matchesSearch = searchTerm === '' || searchFields.some(field => field.includes(searchTermLower));
+    const matchesSearch =
+      searchTerm === "" ||
+      searchFields.some((field) => field.includes(searchTermLower));
 
     // Status filter
-    const matchesStatus = !statusFilter || type.status?.toLowerCase() === statusFilter.toLowerCase();
+    const matchesStatus =
+      !statusFilter ||
+      type.status?.toLowerCase() === statusFilter.toLowerCase();
 
     return matchesSearch && matchesStatus;
   });
 
   // Sort types by trno
   const sortedFilteredTypes = [...filteredTypes].sort((a, b) => {
-    return (a.trno || '').localeCompare(b.trno || '');
+    return (a.trno || "").localeCompare(b.trno || "");
   });
 
   // Update search input handler
@@ -302,6 +316,12 @@ const TypeMaster = () => {
     setStatusFilter(e.target.value);
     // Reset to first page when filtering
     // If you have pagination, you might want to reset the current page here
+  };
+
+  // Reset all filters
+  const handleResetFilters = () => {
+    setStatusFilter("");
+    setSearchTerm("");
   };
 
   return (
@@ -345,7 +365,7 @@ const TypeMaster = () => {
           />
         </div>
         <div className="filter-options">
-          <select 
+          <select
             className="filter-select"
             value={statusFilter}
             onChange={handleStatusFilter}
@@ -354,6 +374,10 @@ const TypeMaster = () => {
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
           </select>
+          <button className="filter-select" onClick={handleResetFilters}>
+            <i className="fas fa-filter me-2"></i>
+            Reset Filters
+          </button>
         </div>
       </div>
 
@@ -500,15 +524,19 @@ const TypeMaster = () => {
                 {selectedTypes.length} Selected
               </label>
             </div>
-            <button 
+            <button
               className="btn-action btn-danger"
               onClick={handleDeleteMultiple}
               disabled={selectedTypes.length === 0 || isDeleting}
             >
               {isDeleting ? (
-                <><i className="fas fa-spinner fa-spin"></i> Deleting...</>
+                <>
+                  <i className="fas fa-spinner fa-spin"></i> Deleting...
+                </>
               ) : (
-                <><i className="fas fa-trash"></i> Delete Selected</>
+                <>
+                  <i className="fas fa-trash"></i> Delete Selected
+                </>
               )}
             </button>
           </div>
@@ -516,8 +544,8 @@ const TypeMaster = () => {
             <thead>
               <tr>
                 <th className="checkbox-cell">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     checked={selectAll}
                     onChange={handleSelectAllChange}
                   />
@@ -554,7 +582,8 @@ const TypeMaster = () => {
                         </p>
                       ) : (
                         <p className="no-data-subtext">
-                          Click the "Add New Type" button to create your first type
+                          Click the "Add New Type" button to create your first
+                          type
                         </p>
                       )}
                     </div>
@@ -602,8 +631,8 @@ const TypeMaster = () => {
                       >
                         <i className="fas fa-edit"></i>
                       </button>
-                      <button 
-                        className="btn-icon btn-danger" 
+                      <button
+                        className="btn-icon btn-danger"
                         title="Delete"
                         onClick={() => handleDeleteType(type.id)}
                         disabled={isDeleting}
@@ -664,7 +693,8 @@ const TypeMaster = () => {
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">
-                  View {typeDetails.name}'s Details
+                  <i className="fas fa-circle-info me-2"></i>
+                  View Type Details
                 </h5>
                 <button
                   type="button"
@@ -674,26 +704,38 @@ const TypeMaster = () => {
                 ></button>
               </div>
               <div className="modal-body">
-                <p>
-                  <strong>TRNO:</strong> {typeDetails.trno}
-                </p>
-                <p>
-                  <strong>Name:</strong> {typeDetails.name}
-                </p>
-                <p>
-                  <strong>Status:</strong> {typeDetails.status}
-                </p>
+                <div className="user-details-grid">
+                  <div className="detail-item">
+                    <strong>TRNO:</strong>
+                    <span>{typeDetails.trno}</span>
+                  </div>
+
+                  <div className="detail-item">
+                    <strong>Name:</strong>
+                    <span>{typeDetails.name}</span>
+                  </div>
+
+                  <div className="detail-item">
+                    <strong>Status:</strong>
+                    <span
+                      className={`badge status ${typeDetails.status?.toLowerCase()} w-50`}
+                    >
+                      {typeDetails.status?.charAt(0).toUpperCase() +
+                        typeDetails.status?.slice(1)}
+                    </span>
+                  </div>
+                </div>
               </div>
               <div className="modal-footer">
                 <button
                   type="button"
-                  className="btn btn-secondary"
+                  className="btn btn-secondary add-btn"
                   data-bs-dismiss="modal"
                   onClick={() => {
                     document.activeElement?.blur();
                   }}
                 >
-                  Close
+                  <i className="fas fa-xmark me-2"></i>Close
                 </button>
               </div>
             </div>
@@ -712,7 +754,9 @@ const TypeMaster = () => {
           <div className="modal-dialog modal-lg">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Edit Type</h5>
+                <h5 className="modal-title">
+                  <i className="fas fa-pencil me-2 font-1"></i>Edit Type
+                </h5>
                 <button
                   type="button"
                   className="btn-close"
@@ -757,7 +801,10 @@ const TypeMaster = () => {
                             placeholder="Enter type name"
                             value={typeDetails.name}
                             onChange={(e) =>
-                              setTypeDetails({ ...typeDetails, name: e.target.value })
+                              setTypeDetails({
+                                ...typeDetails,
+                                name: e.target.value,
+                              })
                             }
                           />
                         </div>
@@ -814,7 +861,7 @@ const TypeMaster = () => {
               </div>
               <div className="modal-footer">
                 <button
-                  className="btn btn-primary border border-0 text-8 px-3 fw-medium py-2 me-3 float-end"
+                  className="btn btn-primary add-btn"
                   data-bs-dismiss="modal"
                   onClick={(e) => {
                     document.activeElement?.blur();
@@ -824,13 +871,13 @@ const TypeMaster = () => {
                   <i className="fa-solid fa-floppy-disk me-1"></i> Save Changes
                 </button>
                 <button
-                  className="btn btn-secondary border border-0 bg-secondary text-8 px-3 fw-medium py-2 me-3 float-end"
+                  className="btn btn-secondary add-btn"
                   data-bs-dismiss="modal"
                   onClick={() => {
                     document.activeElement?.blur();
                   }}
                 >
-                  <i className="fa-solid fa-x-mark me-1"></i> Close
+                  <i className="fa-solid fa-xmark me-1"></i> Close
                 </button>
               </div>
             </div>
