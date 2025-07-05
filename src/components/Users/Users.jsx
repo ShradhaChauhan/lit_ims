@@ -4,6 +4,7 @@ import { AppContext } from "../../context/AppContext";
 import api from "../../services/api";
 import { Modal } from "bootstrap";
 import Select from "react-select";
+import { toast } from "react-toastify";
 
 const Users = () => {
   // const options = [
@@ -24,21 +25,21 @@ const Users = () => {
     branchDropdownValues,
     setBranchDropdownValues,
   } = useContext(AppContext);
-  
+
   // Add validateForm function to validate user form data
   const validateForm = (data, isUpdate = false) => {
     const errors = {};
-    
+
     if (!data.name || data.name.trim() === "") {
       errors.name = "Full name is required";
     }
-    
+
     if (!data.email || data.email.trim() === "") {
       errors.email = "Email is required";
     } else if (!/\S+@\S+\.\S+/.test(data.email)) {
       errors.email = "Email is invalid";
     }
-    
+
     // Skip password validation for updates if password field is empty
     if (isUpdate && (!data.password || data.password.trim() === "")) {
       // Skip password validation for updates
@@ -48,25 +49,24 @@ const Users = () => {
       } else if (data.password.length < 6) {
         errors.password = "Password must be at least 6 characters";
       }
-      
+
       if (data.password !== data.confirmPassword) {
         errors.confirmPassword = "Passwords do not match";
       }
     }
-    
+
     if (!data.role || data.role.trim() === "") {
       errors.role = "Role is required";
     }
-    
+
     if (!data.department || data.department.trim() === "") {
       errors.department = "Department is required";
     }
-    
+
     // Check if branch is selected - using selectedOptions from state
     if (!selectedOptions || selectedOptions.length === 0) {
       errors.branch = "At least one branch must be selected";
     }
-    
     return errors;
   };
 
@@ -141,41 +141,45 @@ const Users = () => {
   // Dedicated useEffect for handling userDetailModal
   useEffect(() => {
     let modal = null;
-    
-    if (isShowUserDetails && userDetails && Object.keys(userDetails).length > 0) {
+
+    if (
+      isShowUserDetails &&
+      userDetails &&
+      Object.keys(userDetails).length > 0
+    ) {
       console.log("User detail modal should show with data:", userDetails.name);
-      
+
       // Ensure any previous modal instance is disposed
       if (userModal) {
         userModal.dispose();
       }
-      
+
       // Clean up any existing modal artifacts
       cleanupModalArtifacts();
-      
-      const modalElement = document.getElementById('userDetailModal');
+
+      const modalElement = document.getElementById("userDetailModal");
       if (modalElement) {
         modal = new Modal(modalElement, {
           keyboard: true,
-          backdrop: true
+          backdrop: true,
         });
-        
+
         // Add event listeners
-        modalElement.addEventListener('hidden.bs.modal', () => {
-          console.log('Modal was hidden, cleaning up state');
+        modalElement.addEventListener("hidden.bs.modal", () => {
+          console.log("Modal was hidden, cleaning up state");
           cleanupModalArtifacts();
           setIsShowUserDetails(false);
           setUserDetails({});
         });
-        
+
         // Show the modal
         modal.show();
-        
+
         // Store modal reference
         setUserModal(modal);
       }
     }
-    
+
     // Clean up function
     return () => {
       if (modal) {
@@ -188,41 +192,41 @@ const Users = () => {
   // Update useEffect for edit modal
   useEffect(() => {
     let modal = null;
-    
+
     if (isEditUserDetails) {
       console.log("Edit modal should show");
-      const modalElement = document.getElementById('userEditModal');
-      
+      const modalElement = document.getElementById("userEditModal");
+
       if (modalElement) {
         // Dispose any existing modal instance first
         if (editModal) {
           editModal.dispose();
         }
-        
+
         // Clean up any existing modal artifacts
         cleanupModalArtifacts();
-        
+
         // Create new modal
         modal = new Modal(modalElement, {
-          backdrop: 'static',
-          keyboard: false
+          backdrop: "static",
+          keyboard: false,
         });
-        
+
         // Add event listener for when modal is hidden
-        modalElement.addEventListener('hidden.bs.modal', () => {
-          console.log('Edit modal was hidden, cleaning up');
+        modalElement.addEventListener("hidden.bs.modal", () => {
+          console.log("Edit modal was hidden, cleaning up");
           cleanupModalArtifacts();
           setIsEditUserDetails(false);
         });
-        
+
         // Show the modal
         modal.show();
-        
+
         // Store modal reference
         setEditModal(modal);
       }
     }
-    
+
     // Cleanup function
     return () => {
       if (modal) {
@@ -234,26 +238,34 @@ const Users = () => {
 
   useEffect(() => {
     // Check master permissions
-    const allMastersView = masters.every(m => masterViewPermissions[m.type]);
-    const allMastersEdit = masters.every(m => masterEditPermissions[m.type]);
+    const allMastersView = masters.every((m) => masterViewPermissions[m.type]);
+    const allMastersEdit = masters.every((m) => masterEditPermissions[m.type]);
     setIsAllMastersViewChecked(allMastersView);
     setIsAllMastersEditChecked(allMastersEdit);
 
     // Check transaction permissions
-    const allTransactionsView = transactions.every(t => transactionViewPermissions[t.type]);
-    const allTransactionsEdit = transactions.every(t => transactionEditPermissions[t.type]);
+    const allTransactionsView = transactions.every(
+      (t) => transactionViewPermissions[t.type]
+    );
+    const allTransactionsEdit = transactions.every(
+      (t) => transactionEditPermissions[t.type]
+    );
     setIsAllTransactionsViewChecked(allTransactionsView);
     setIsAllTransactionsEditChecked(allTransactionsEdit);
 
     // Check report permissions
-    const allReportsView = reports.every(r => reportViewPermissions[r.type]);
-    const allReportsEdit = reports.every(r => reportEditPermissions[r.type]);
+    const allReportsView = reports.every((r) => reportViewPermissions[r.type]);
+    const allReportsEdit = reports.every((r) => reportEditPermissions[r.type]);
     setIsAllReportsViewChecked(allReportsView);
     setIsAllReportsEditChecked(allReportsEdit);
 
     // Check administration permissions
-    const allAdminsView = administrations.every(a => adminViewPermissions[a.type]);
-    const allAdminsEdit = administrations.every(a => adminEditPermissions[a.type]);
+    const allAdminsView = administrations.every(
+      (a) => adminViewPermissions[a.type]
+    );
+    const allAdminsEdit = administrations.every(
+      (a) => adminEditPermissions[a.type]
+    );
     setIsAllAdministrationsViewChecked(allAdminsView);
     setIsAllAdministrationsEditChecked(allAdminsEdit);
   }, [
@@ -264,7 +276,7 @@ const Users = () => {
     reportViewPermissions,
     reportEditPermissions,
     adminViewPermissions,
-    adminEditPermissions
+    adminEditPermissions,
   ]);
 
   const fetchUsers = async () => {
@@ -290,7 +302,7 @@ const Users = () => {
           lastLoginIp: user.lastLoginIp,
           companyId: user.companyId,
           branchIds: user.branchIds,
-          permissions: user.permissions || [] // Ensure permissions are included
+          permissions: user.permissions || [], // Ensure permissions are included
         }));
 
         console.log("Processed users:", allUsers);
@@ -530,18 +542,23 @@ const Users = () => {
     e.preventDefault();
     console.log("Form data before validation:", formData);
     console.log("Selected branches:", selectedOptions);
-    
+
     const newErrors = validateForm(formData);
     setErrors(newErrors);
     console.log("Validation errors:", newErrors);
 
+    if (newErrors) {
+      toast.error(
+        "All fields are required. Please complete the form before submission"
+      );
+    }
     if (Object.keys(newErrors).length === 0) {
       const finalData = {
         username: formData.name,
         email: formData.email,
         password: formData.password,
         role: formData.role.toUpperCase(),
-        branchIds: selectedOptions.map(option => option.value), // Get branch IDs from selectedOptions
+        branchIds: selectedOptions.map((option) => option.value), // Get branch IDs from selectedOptions
         department: formData.department,
         status: formData.status,
         permissions: collectPermissions(),
@@ -553,7 +570,8 @@ const Users = () => {
         .then((response) => {
           console.log("Add user response:", response);
           if (response.data && response.data.status === true) {
-            alert(response.data.message); // Show success message
+            toast.error(response.data.message);
+            // alert(response.data.message); // Show success message
             handleReset(e); // Reset form after successful submission
             setIsAddUser(false); // Close the form
 
@@ -565,7 +583,14 @@ const Users = () => {
           } else {
             // Server returned a response but with status false
             console.error("Server returned error:", response.data);
-            alert(response.data.message || "Failed to create user. Please check the form and try again.");
+            toast.error(
+              response.data.message ||
+                "Failed to create user. Please check the form and try again."
+            );
+            // alert(
+            //   response.data.message ||
+            //     "Failed to create user. Please check the form and try again."
+            // );
           }
         })
         .catch((error) => {
@@ -576,9 +601,11 @@ const Users = () => {
             error.response.data &&
             error.response.data.message
           ) {
-            alert(error.response.data.message); // Show error message
+            toast.error(error.response.data.message);
+            // alert(error.response.data.message); // Show error message
           } else {
-            alert("An error occurred. Please try again later.");
+            toast.error("An error occurred. Please try again later.");
+            // alert("An error occurred. Please try again later.");
           }
         });
     }
@@ -605,10 +632,14 @@ const Users = () => {
   };
 
   const handleSingleMasterViewChange = (type) => {
-    console.log(`Changing master view permission for ${type} to ${!masterViewPermissions[type]}`);
+    console.log(
+      `Changing master view permission for ${type} to ${!masterViewPermissions[
+        type
+      ]}`
+    );
     const updatedPermissions = {
       ...masterViewPermissions,
-      [type]: !masterViewPermissions[type]
+      [type]: !masterViewPermissions[type],
     };
     setMasterViewPermissions(updatedPermissions);
     // Check if all masters are now checked
@@ -617,10 +648,14 @@ const Users = () => {
   };
 
   const handleSingleMasterEditChange = (type) => {
-    console.log(`Changing master edit permission for ${type} to ${!masterEditPermissions[type]}`);
+    console.log(
+      `Changing master edit permission for ${type} to ${!masterEditPermissions[
+        type
+      ]}`
+    );
     const updatedPermissions = {
       ...masterEditPermissions,
-      [type]: !masterEditPermissions[type]
+      [type]: !masterEditPermissions[type],
     };
     setMasterEditPermissions(updatedPermissions);
     // Check if all masters are now checked
@@ -718,7 +753,7 @@ const Users = () => {
   const handleReset = (e) => {
     e.preventDefault();
     console.log("Resetting form");
-    
+
     // Reset form data
     setFormData({
       name: "",
@@ -730,12 +765,12 @@ const Users = () => {
       status: "active",
       branch: "",
     });
-    
+
     // Reset all state variables
     setStatus("active");
     setIsChecked(true);
     setAccessModules([]);
-    
+
     // Reset all permissions
     setMasterViewPermissions({});
     setMasterEditPermissions({});
@@ -745,7 +780,7 @@ const Users = () => {
     setReportEditPermissions({});
     setAdminViewPermissions({});
     setAdminEditPermissions({});
-    
+
     // Reset permission checkboxes
     setIsAllMastersViewChecked(false);
     setIsAllMastersEditChecked(false);
@@ -755,13 +790,13 @@ const Users = () => {
     setIsAllReportsEditChecked(false);
     setIsAllAdministrationsViewChecked(false);
     setIsAllAdministrationsEditChecked(false);
-    
+
     // Reset branch selection
     setSelectedOptions([]);
-    
+
     // Reset validation errors
     setErrors({});
-    
+
     console.log("Form reset complete");
   };
 
@@ -769,23 +804,27 @@ const Users = () => {
     e.preventDefault();
     try {
       console.log("Fetching details for user:", user.id);
-      
+
       // First reset any existing user details
       setUserDetails({});
-      
+
       const response = await api.get(`/api/users/${user.id}`);
       console.log("User details response:", response.data);
-      
+
       if (response.data && response.data.status === true) {
         const userData = response.data.data;
-        
+
         // Make a clean permissions array by filtering out duplicates if needed
-        const uniquePermissions = userData.permissions ? 
-          [...new Map(userData.permissions.map(p => [p.pageName, p])).values()] : 
-          [];
-          
+        const uniquePermissions = userData.permissions
+          ? [
+              ...new Map(
+                userData.permissions.map((p) => [p.pageName, p])
+              ).values(),
+            ]
+          : [];
+
         console.log("Unique permissions:", uniquePermissions);
-        
+
         // Set user details with clean data
         setUserDetails({
           ...userData,
@@ -795,19 +834,19 @@ const Users = () => {
           email: userData.email,
           status: userData.status,
           department: userData.department,
-          permissions: uniquePermissions
+          permissions: uniquePermissions,
         });
-        
+
         // Now set flag to show modal
         setIsShowUserDetails(true);
-        
+
         // Initialize the modal after a short delay
         setTimeout(() => {
-          const modalElement = document.getElementById('userDetailModal');
+          const modalElement = document.getElementById("userDetailModal");
           if (modalElement) {
             const modal = new Modal(modalElement, {
               keyboard: true,
-              backdrop: true
+              backdrop: true,
             });
             setUserModal(modal);
             modal.show();
@@ -816,7 +855,8 @@ const Users = () => {
       }
     } catch (error) {
       console.error("Error fetching user details:", error);
-      alert("Failed to fetch user details. Please try again.");
+      toast.error("Failed to fetch user details. Please try again.");
+      // alert("Failed to fetch user details. Please try again.");
     }
   };
 
@@ -827,7 +867,7 @@ const Users = () => {
       userModal.hide();
       cleanupModalArtifacts();
     }
-    
+
     // Add a small delay before resetting states to allow animation to complete
     setTimeout(() => {
       setIsShowUserDetails(false);
@@ -839,7 +879,7 @@ const Users = () => {
   const handleEditDetails = async (user, e) => {
     e.preventDefault();
     console.log("Edit details for user:", user); // Log the user object
-    
+
     try {
       // First load branch data
       const branchResponse = await api.get("/api/branch/by-company");
@@ -856,15 +896,15 @@ const Users = () => {
       console.log("Fetching user details for ID:", user.id); // Log the user ID
       const response = await api.get(`/api/users/${user.id}`);
       console.log("User details response:", response.data); // Log the full response
-      
+
       if (response.data && response.data.status === true) {
         const userData = response.data.data;
         console.log("User data received:", userData); // Log the user data
-        
+
         // Set initial status state based on user data
         setIsChecked(userData.status.toUpperCase() === "ACTIVE");
         setStatus(userData.status.toUpperCase());
-        
+
         // Set user details with all necessary fields
         const updatedUserDetails = {
           ...userData,
@@ -875,12 +915,12 @@ const Users = () => {
           status: userData.status.toUpperCase(),
           department: userData.department,
           password: "", // Clear password field for security
-          confirmPassword: "" // Clear confirm password field
+          confirmPassword: "", // Clear confirm password field
         };
-        
+
         console.log("Setting user details to:", updatedUserDetails); // Log the updated user details
         setUserDetails(updatedUserDetails);
-        
+
         // Also update formData state to match
         setFormData({
           name: userData.username,
@@ -890,14 +930,14 @@ const Users = () => {
           role: userData.role,
           department: userData.department,
           status: userData.status.toUpperCase(),
-          branch: ""
+          branch: "",
         });
-        
+
         // Set selected branch options from the branches array in response
         if (userData.branches && Array.isArray(userData.branches)) {
-          const selectedBranches = userData.branches.map(branch => ({
+          const selectedBranches = userData.branches.map((branch) => ({
             label: `${branch.name} (${branch.code})`,
-            value: branch.id
+            value: branch.id,
           }));
           setSelectedOptions(selectedBranches);
         } else {
@@ -907,7 +947,7 @@ const Users = () => {
         // Set permissions based on user data
         if (userData.permissions && Array.isArray(userData.permissions)) {
           console.log("Setting permissions from:", userData.permissions);
-          
+
           // Reset all permissions first
           const newMasterViewPermissions = {};
           const newMasterEditPermissions = {};
@@ -917,52 +957,69 @@ const Users = () => {
           const newReportEditPermissions = {};
           const newAdminViewPermissions = {};
           const newAdminEditPermissions = {};
-          
+
           // Create a mapping of permission names to modules for more accurate matching
           const permissionMapping = {};
-          
+
           // Map exact permission names to modules
-          masters.forEach(master => {
+          masters.forEach((master) => {
             const exactName = master.name;
             const withoutMaster = master.name.replace(" Master", "");
-            permissionMapping[exactName] = { type: master.type, category: 'master' };
-            permissionMapping[withoutMaster] = { type: master.type, category: 'master' };
+            permissionMapping[exactName] = {
+              type: master.type,
+              category: "master",
+            };
+            permissionMapping[withoutMaster] = {
+              type: master.type,
+              category: "master",
+            };
           });
-          
-          transactions.forEach(transaction => {
-            permissionMapping[transaction.name] = { type: transaction.type, category: 'transaction' };
+
+          transactions.forEach((transaction) => {
+            permissionMapping[transaction.name] = {
+              type: transaction.type,
+              category: "transaction",
+            };
           });
-          
-          reports.forEach(report => {
-            permissionMapping[report.name] = { type: report.type, category: 'report' };
+
+          reports.forEach((report) => {
+            permissionMapping[report.name] = {
+              type: report.type,
+              category: "report",
+            };
           });
-          
-          administrations.forEach(admin => {
-            permissionMapping[admin.name] = { type: admin.type, category: 'admin' };
+
+          administrations.forEach((admin) => {
+            permissionMapping[admin.name] = {
+              type: admin.type,
+              category: "admin",
+            };
           });
-          
+
           console.log("Permission mapping:", permissionMapping);
-          
+
           // Set permissions based on user data
-          userData.permissions.forEach(permission => {
+          userData.permissions.forEach((permission) => {
             const { pageName, canView, canEdit } = permission;
-            console.log(`Processing permission: ${pageName}, canView: ${canView}, canEdit: ${canEdit}`);
-            
+            console.log(
+              `Processing permission: ${pageName}, canView: ${canView}, canEdit: ${canEdit}`
+            );
+
             // Find exact match first
             let moduleInfo = permissionMapping[pageName];
-            
+
             // If no exact match, try without "Master" suffix
             if (!moduleInfo && pageName.includes("Master")) {
               moduleInfo = permissionMapping[pageName.replace(" Master", "")];
             }
-            
+
             // If still no match, try a more fuzzy match as last resort
             if (!moduleInfo) {
               const possibleKeys = Object.keys(permissionMapping);
               for (const key of possibleKeys) {
                 // Check for significant overlap (more than 50% match)
                 if (
-                  (pageName.includes(key) && key.length > 3) || 
+                  (pageName.includes(key) && key.length > 3) ||
                   (key.includes(pageName) && pageName.length > 3)
                 ) {
                   moduleInfo = permissionMapping[key];
@@ -971,31 +1028,33 @@ const Users = () => {
                 }
               }
             }
-            
+
             if (moduleInfo) {
               const { type: moduleType, category: moduleCategory } = moduleInfo;
-              console.log(`Found match for ${pageName}: type=${moduleType}, category=${moduleCategory}`);
-              
+              console.log(
+                `Found match for ${pageName}: type=${moduleType}, category=${moduleCategory}`
+              );
+
               if (canView) {
-                if (moduleCategory === 'master') {
+                if (moduleCategory === "master") {
                   newMasterViewPermissions[moduleType] = true;
-                } else if (moduleCategory === 'transaction') {
+                } else if (moduleCategory === "transaction") {
                   newTransactionViewPermissions[moduleType] = true;
-                } else if (moduleCategory === 'report') {
+                } else if (moduleCategory === "report") {
                   newReportViewPermissions[moduleType] = true;
-                } else if (moduleCategory === 'admin') {
+                } else if (moduleCategory === "admin") {
                   newAdminViewPermissions[moduleType] = true;
                 }
               }
-              
+
               if (canEdit) {
-                if (moduleCategory === 'master') {
+                if (moduleCategory === "master") {
                   newMasterEditPermissions[moduleType] = true;
-                } else if (moduleCategory === 'transaction') {
+                } else if (moduleCategory === "transaction") {
                   newTransactionEditPermissions[moduleType] = true;
-                } else if (moduleCategory === 'report') {
+                } else if (moduleCategory === "report") {
                   newReportEditPermissions[moduleType] = true;
-                } else if (moduleCategory === 'admin') {
+                } else if (moduleCategory === "admin") {
                   newAdminEditPermissions[moduleType] = true;
                 }
               }
@@ -1003,10 +1062,16 @@ const Users = () => {
               console.warn(`No module match found for permission: ${pageName}`);
             }
           });
-          
-          console.log("Setting master view permissions:", newMasterViewPermissions);
-          console.log("Setting master edit permissions:", newMasterEditPermissions);
-          
+
+          console.log(
+            "Setting master view permissions:",
+            newMasterViewPermissions
+          );
+          console.log(
+            "Setting master edit permissions:",
+            newMasterEditPermissions
+          );
+
           // Set all permissions at once
           setMasterViewPermissions(newMasterViewPermissions);
           setMasterEditPermissions(newMasterEditPermissions);
@@ -1016,18 +1081,34 @@ const Users = () => {
           setReportEditPermissions(newReportEditPermissions);
           setAdminViewPermissions(newAdminViewPermissions);
           setAdminEditPermissions(newAdminEditPermissions);
-          
+
           // Update the "all checked" states after setting permissions
           setTimeout(() => {
-            const allMastersView = masters.every(m => newMasterViewPermissions[m.type]);
-            const allMastersEdit = masters.every(m => newMasterEditPermissions[m.type]);
-            const allTransactionsView = transactions.every(t => newTransactionViewPermissions[t.type]);
-            const allTransactionsEdit = transactions.every(t => newTransactionEditPermissions[t.type]);
-            const allReportsView = reports.every(r => newReportViewPermissions[r.type]);
-            const allReportsEdit = reports.every(r => newReportEditPermissions[r.type]);
-            const allAdminsView = administrations.every(a => newAdminViewPermissions[a.type]);
-            const allAdminsEdit = administrations.every(a => newAdminEditPermissions[a.type]);
-            
+            const allMastersView = masters.every(
+              (m) => newMasterViewPermissions[m.type]
+            );
+            const allMastersEdit = masters.every(
+              (m) => newMasterEditPermissions[m.type]
+            );
+            const allTransactionsView = transactions.every(
+              (t) => newTransactionViewPermissions[t.type]
+            );
+            const allTransactionsEdit = transactions.every(
+              (t) => newTransactionEditPermissions[t.type]
+            );
+            const allReportsView = reports.every(
+              (r) => newReportViewPermissions[r.type]
+            );
+            const allReportsEdit = reports.every(
+              (r) => newReportEditPermissions[r.type]
+            );
+            const allAdminsView = administrations.every(
+              (a) => newAdminViewPermissions[a.type]
+            );
+            const allAdminsEdit = administrations.every(
+              (a) => newAdminEditPermissions[a.type]
+            );
+
             setIsAllMastersViewChecked(allMastersView);
             setIsAllMastersEditChecked(allMastersEdit);
             setIsAllTransactionsViewChecked(allTransactionsView);
@@ -1036,18 +1117,18 @@ const Users = () => {
             setIsAllReportsEditChecked(allReportsEdit);
             setIsAllAdministrationsViewChecked(allAdminsView);
             setIsAllAdministrationsEditChecked(allAdminsEdit);
-            
+
             console.log("All masters view checked:", allMastersView);
             console.log("All masters edit checked:", allMastersEdit);
           }, 100);
         }
-        
+
         // Set edit modal to true and initialize modal
         setIsEditUserDetails(true);
-        
+
         // Initialize modal after a short delay to ensure DOM is ready
         setTimeout(() => {
-          const modalElement = document.getElementById('userEditModal');
+          const modalElement = document.getElementById("userEditModal");
           if (modalElement) {
             const modal = new Modal(modalElement);
             setEditModal(modal);
@@ -1057,7 +1138,8 @@ const Users = () => {
       }
     } catch (error) {
       console.error("Error fetching user details:", error);
-      alert("Failed to fetch user details. Please try again.");
+      toast.error("Failed to fetch user details. Please try again.");
+      // alert("Failed to fetch user details. Please try again.");
     }
   };
 
@@ -1071,7 +1153,8 @@ const Users = () => {
     try {
       const response = await api.delete(`/api/users/delete/${userId}`);
       if (response.data && response.data.status === true) {
-        alert(response.data.message);
+        toast.success(response.data.message);
+        // alert(response.data.message);
         fetchUsers(); // Refresh the user list
         // Remove from selected users if it was selected
         if (selectedUsers.includes(userId)) {
@@ -1085,9 +1168,11 @@ const Users = () => {
         error.response.data &&
         error.response.data.message
       ) {
-        alert(error.response.data.message);
+        toast.error(error.response.data.message);
+        // alert(error.response.data.message);
       } else {
-        alert("An error occurred while deleting the user.");
+        toast.error("An error occurred while deleting the user.");
+        // alert("An error occurred while deleting the user.");
       }
     } finally {
       setDeleteLoading(false);
@@ -1097,7 +1182,8 @@ const Users = () => {
   // Handle bulk delete
   const handleBulkDelete = async () => {
     if (selectedUsers.length === 0) {
-      alert("Please select users to delete");
+      toast.error("Please select users to delete");
+      // alert("Please select users to delete");
       return;
     }
 
@@ -1167,7 +1253,7 @@ const Users = () => {
       editModal.hide();
       cleanupModalArtifacts();
     }
-    
+
     // Add a small delay before resetting states to allow animation to complete
     setTimeout(() => {
       setIsEditUserDetails(false);
@@ -1183,64 +1269,73 @@ const Users = () => {
     console.log("handleEditUser called"); // Debug log
     console.log("Current masterViewPermissions:", masterViewPermissions);
     console.log("Current masterEditPermissions:", masterEditPermissions);
-    console.log("Current transactionViewPermissions:", transactionViewPermissions);
-    console.log("Current transactionEditPermissions:", transactionEditPermissions);
+    console.log(
+      "Current transactionViewPermissions:",
+      transactionViewPermissions
+    );
+    console.log(
+      "Current transactionEditPermissions:",
+      transactionEditPermissions
+    );
     console.log("Current reportViewPermissions:", reportViewPermissions);
     console.log("Current reportEditPermissions:", reportEditPermissions);
     console.log("Current adminViewPermissions:", adminViewPermissions);
     console.log("Current adminEditPermissions:", adminEditPermissions);
-    
+
     // Validate form data with isUpdate=true to skip password validation if empty
-    const validationErrors = validateForm({
-      ...userDetails,
-      branch: selectedOptions
-    }, true);
-    
+    const validationErrors = validateForm(
+      {
+        ...userDetails,
+        branch: selectedOptions,
+      },
+      true
+    );
+
     console.log("Validation errors:", validationErrors); // Debug log
     setErrors(validationErrors);
-    
+
     if (Object.keys(validationErrors).length > 0) {
       console.log("Form has validation errors"); // Debug log
       return;
     }
-    
+
     // Format permissions according to the required structure
     const formattedPermissions = [];
-    
+
     // Add master permissions with the original names from API
-    masters.forEach(master => {
+    masters.forEach((master) => {
       // Use the exact name as in the server's expected format
       formattedPermissions.push({
         pageName: master.name, // Keep the original name with "Master" suffix
         canView: !!masterViewPermissions[master.type],
-        canEdit: !!masterEditPermissions[master.type]
+        canEdit: !!masterEditPermissions[master.type],
       });
     });
-    
+
     // Add transaction permissions
-    transactions.forEach(transaction => {
+    transactions.forEach((transaction) => {
       formattedPermissions.push({
         pageName: transaction.name,
         canView: !!transactionViewPermissions[transaction.type],
-        canEdit: !!transactionEditPermissions[transaction.type]
+        canEdit: !!transactionEditPermissions[transaction.type],
       });
     });
-    
+
     // Add report permissions
-    reports.forEach(report => {
+    reports.forEach((report) => {
       formattedPermissions.push({
         pageName: report.name,
         canView: !!reportViewPermissions[report.type],
-        canEdit: !!reportEditPermissions[report.type]
+        canEdit: !!reportEditPermissions[report.type],
       });
     });
-    
+
     // Add administration permissions
-    administrations.forEach(admin => {
+    administrations.forEach((admin) => {
       formattedPermissions.push({
         pageName: admin.name,
         canView: !!adminViewPermissions[admin.type],
-        canEdit: !!adminEditPermissions[admin.type]
+        canEdit: !!adminEditPermissions[admin.type],
       });
     });
 
@@ -1254,8 +1349,8 @@ const Users = () => {
       role: userDetails.role.toUpperCase(), // Ensure role is uppercase
       department: userDetails.department,
       status: userDetails.status.toUpperCase(), // Ensure status is uppercase
-      branchIds: selectedOptions.map(option => option.value),
-      permissions: formattedPermissions
+      branchIds: selectedOptions.map((option) => option.value),
+      permissions: formattedPermissions,
     };
 
     // Only include password if it was changed
@@ -1266,67 +1361,67 @@ const Users = () => {
     console.log("Current user details:", userDetails); // Debug log
     console.log("Updating user with data:", updatedUser); // Debug log
     console.log("User ID being updated:", userDetails.id); // Debug log
-    
+
     try {
       // Make sure we have a valid user ID
       if (!userDetails.id) {
         alert("Error: Missing user ID for update");
         return;
       }
-      
+
       // Try multiple API endpoint formats to ensure one works
       let response;
       let endpoint = `/api/users/update/${userDetails.id}`;
       console.log("Trying API endpoint:", endpoint); // Debug log
-      
+
       try {
         response = await api({
-          method: 'put',
+          method: "put",
           url: endpoint,
           data: updatedUser,
           headers: {
-            'Content-Type': 'application/json'
-          }
+            "Content-Type": "application/json",
+          },
         });
       } catch (err) {
         console.log("First endpoint failed, trying alternate endpoint");
-        
+
         // Try alternate endpoint format
         endpoint = `/api/users/${userDetails.id}`;
         console.log("Trying alternate API endpoint:", endpoint); // Debug log
-        
+
         response = await api({
-          method: 'put',
+          method: "put",
           url: endpoint,
           data: updatedUser,
           headers: {
-            'Content-Type': 'application/json'
-          }
+            "Content-Type": "application/json",
+          },
         });
       }
-      
+
       console.log("Update response:", response); // Debug log
-      
+
       if (response.data && response.data.status === true) {
         // First properly hide the modal using Bootstrap's API
         if (editModal) {
           editModal.hide();
         }
-        
+
         // Clean up any modal artifacts
         cleanupModalArtifacts();
-        
+
         // Reset modal state
         setIsEditUserDetails(false);
-        
+
         // Reset form states
         setUserDetails({});
         setSelectedOptions([]);
         setErrors({});
-        
+
         // Refresh user list
         await fetchUsers();
-        
+
         // Show success message after all UI updates
         setTimeout(() => {
           alert(response.data.message);
@@ -1338,18 +1433,20 @@ const Users = () => {
     } catch (error) {
       console.error("Error updating user:", error);
       console.error("Error response:", error.response); // Debug log
-      
+
       // More detailed error logging
       if (error.response) {
         console.error("Error status:", error.response.status);
         console.error("Error headers:", error.response.headers);
         console.error("Error data:", error.response.data);
       }
-      
+
       if (error.response?.data?.message) {
         alert(error.response.data.message);
       } else {
-        alert("An error occurred while updating the user. Please try again later.");
+        alert(
+          "An error occurred while updating the user. Please try again later."
+        );
       }
     }
   };
@@ -1357,11 +1454,11 @@ const Users = () => {
   // Global function to clean up modal artifacts
   const cleanupModalArtifacts = () => {
     console.log("Cleaning up modal artifacts");
-    document.body.classList.remove('modal-open');
-    document.body.style.paddingRight = '';
-    document.body.style.overflow = '';
-    const backdrops = document.getElementsByClassName('modal-backdrop');
-    while(backdrops.length > 0) {
+    document.body.classList.remove("modal-open");
+    document.body.style.paddingRight = "";
+    document.body.style.overflow = "";
+    const backdrops = document.getElementsByClassName("modal-backdrop");
+    while (backdrops.length > 0) {
       backdrops[0].remove();
     }
   };
@@ -1989,9 +2086,7 @@ const Users = () => {
                       <tbody>
                         {administrations.map((administration) => (
                           <tr key={administration.type}>
-                            <td className="user-info">
-                              {administration.name}
-                            </td>
+                            <td className="user-info">{administration.name}</td>
                             <td className="icon-align">
                               <div className="permission-controls">
                                 <label
@@ -2209,8 +2304,8 @@ const Users = () => {
                       >
                         <i className="fas fa-eye"></i>
                       </button>
-                      <button 
-                        className="btn-icon btn-success" 
+                      <button
+                        className="btn-icon btn-success"
                         title="Edit"
                         onClick={(e) => handleEditDetails(user, e)}
                       >
@@ -2326,17 +2421,23 @@ const Users = () => {
                   </div>
                   <div className="detail-item">
                     <strong>Role</strong>
-                    <span className={`badge ${userDetails.role?.toLowerCase()}`}>
+                    <span
+                      className={`badge ${userDetails.role?.toLowerCase()}`}
+                    >
                       {userDetails.role}
                     </span>
                   </div>
                   <div className="detail-item">
                     <strong>Department</strong>
-                    <span className="text-capitalize">{userDetails.department}</span>
+                    <span className="text-capitalize">
+                      {userDetails.department}
+                    </span>
                   </div>
                   <div className="detail-item">
                     <strong>Status</strong>
-                    <span className={`badge status ${userDetails.status?.toLowerCase()}`}>
+                    <span
+                      className={`badge status ${userDetails.status?.toLowerCase()}`}
+                    >
                       {userDetails.status}
                     </span>
                   </div>
@@ -2346,15 +2447,21 @@ const Users = () => {
                   </div>
                   <div className="detail-item">
                     <strong>Last Login Time</strong>
-                    <span>{formatDateTime(userDetails.lastLoginDateTime) || 'Never'}</span>
+                    <span>
+                      {formatDateTime(userDetails.lastLoginDateTime) || "Never"}
+                    </span>
                   </div>
                   <div className="detail-item">
                     <strong>Last Login IP</strong>
-                    <span>{userDetails.lastLoginIp || 'N/A'}</span>
+                    <span>{userDetails.lastLoginIp || "N/A"}</span>
                   </div>
                   <div className="detail-item">
                     <strong>Assigned Branches</strong>
-                    <span>{userDetails.branches?.map(branch => `${branch.name} (${branch.code})`).join(", ") || 'None assigned'}</span>
+                    <span>
+                      {userDetails.branches
+                        ?.map((branch) => `${branch.name} (${branch.code})`)
+                        .join(", ") || "None assigned"}
+                    </span>
                   </div>
                 </div>
 
@@ -2368,33 +2475,63 @@ const Users = () => {
                     <table className="table">
                       <thead>
                         <tr>
-                          <th style={{width: '60%'}}>Module Name</th>
-                          <th style={{width: '20%'}} className="text-center">View</th>
-                          <th style={{width: '20%'}} className="text-center">Edit</th>
+                          <th style={{ width: "60%" }}>Module Name</th>
+                          <th style={{ width: "20%" }} className="text-center">
+                            View
+                          </th>
+                          <th style={{ width: "20%" }} className="text-center">
+                            Edit
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
-                        {userDetails.permissions && userDetails.permissions.length > 0 ? (
+                        {userDetails.permissions &&
+                        userDetails.permissions.length > 0 ? (
                           // Only render unique permissions by pageName
-                          [...new Map(userDetails.permissions.map(p => [p.pageName, p])).values()].map((permission, index) => {
-                            console.log(`Rendering permission: ${permission.pageName}, view: ${permission.canView}, edit: ${permission.canEdit}`);
+                          [
+                            ...new Map(
+                              userDetails.permissions.map((p) => [
+                                p.pageName,
+                                p,
+                              ])
+                            ).values(),
+                          ].map((permission, index) => {
+                            console.log(
+                              `Rendering permission: ${permission.pageName}, view: ${permission.canView}, edit: ${permission.canEdit}`
+                            );
                             return (
                               <tr key={index}>
                                 <td className="align-middle">
-                                  <span className="fw-medium">{permission.pageName}</span>
+                                  <span className="fw-medium">
+                                    {permission.pageName}
+                                  </span>
                                 </td>
                                 <td className="text-center align-middle">
-                                  <i className={`fas ${permission.canView ? 'fa-check text-success' : 'fa-times text-danger'}`}></i>
+                                  <i
+                                    className={`fas ${
+                                      permission.canView
+                                        ? "fa-check text-success"
+                                        : "fa-times text-danger"
+                                    }`}
+                                  ></i>
                                 </td>
                                 <td className="text-center align-middle">
-                                  <i className={`fas ${permission.canEdit ? 'fa-check text-success' : 'fa-times text-danger'}`}></i>
+                                  <i
+                                    className={`fas ${
+                                      permission.canEdit
+                                        ? "fa-check text-success"
+                                        : "fa-times text-danger"
+                                    }`}
+                                  ></i>
                                 </td>
                               </tr>
                             );
                           })
                         ) : (
                           <tr>
-                            <td colSpan="3" className="text-center">No permissions found</td>
+                            <td colSpan="3" className="text-center">
+                              No permissions found
+                            </td>
                           </tr>
                         )}
                       </tbody>
@@ -2518,7 +2655,9 @@ const Users = () => {
                               />
                             </div>
                             {errors.password && (
-                              <span className="error-message">{errors.password}</span>
+                              <span className="error-message">
+                                {errors.password}
+                              </span>
                             )}
                           </div>
                         </div>
@@ -2545,7 +2684,9 @@ const Users = () => {
                               />
                             </div>
                             {errors.confirmPassword && (
-                              <span className="error-message">{errors.confirmPassword}</span>
+                              <span className="error-message">
+                                {errors.confirmPassword}
+                              </span>
                             )}
                           </div>
                           <div className="col-4 d-flex flex-column form-group">
@@ -2629,12 +2770,14 @@ const Users = () => {
                                   id="switchCheckChecked"
                                   checked={isChecked}
                                   onChange={(e) => {
-                                    const newStatus = e.target.checked ? "ACTIVE" : "INACTIVE";
+                                    const newStatus = e.target.checked
+                                      ? "ACTIVE"
+                                      : "INACTIVE";
                                     setIsChecked(e.target.checked);
                                     setStatus(newStatus);
-                                    setUserDetails(prev => ({
+                                    setUserDetails((prev) => ({
                                       ...prev,
-                                      status: newStatus
+                                      status: newStatus,
                                     }));
                                   }}
                                 />
@@ -2651,9 +2794,9 @@ const Users = () => {
                                   const newStatus = e.target.value;
                                   setStatus(newStatus);
                                   setIsChecked(newStatus === "ACTIVE");
-                                  setUserDetails(prev => ({
+                                  setUserDetails((prev) => ({
                                     ...prev,
-                                    status: newStatus
+                                    status: newStatus,
                                   }));
                                 }}
                               >
@@ -2676,7 +2819,10 @@ const Users = () => {
                                 id="branch"
                                 value={selectedOptions}
                                 onChange={(options) => {
-                                  console.log("Branch selection changed:", options);
+                                  console.log(
+                                    "Branch selection changed:",
+                                    options
+                                  );
                                   setSelectedOptions(options || []);
                                 }}
                                 placeholder="Select branches..."
@@ -3135,7 +3281,8 @@ const Users = () => {
                           type="submit"
                           className="btn btn-primary border border-0 text-8 px-3 fw-medium py-2 me-3"
                         >
-                          <i className="fa-solid fa-floppy-disk me-1"></i> Save Changes
+                          <i className="fa-solid fa-floppy-disk me-1"></i> Save
+                          Changes
                         </button>
                         <button
                           type="button"
@@ -3158,4 +3305,3 @@ const Users = () => {
 };
 
 export default Users;
-
