@@ -197,18 +197,21 @@ const VendorMaster = () => {
   // Form validation function
   const validateForm = (data) => {
     const errors = {};
-    
+
     if (!data.type) errors.type = "Type is required";
     if (!data.name) errors.name = "Name is required";
     if (!data.mobile) errors.mobile = "Mobile number is required";
-    else if (!/^\d{10}$/.test(data.mobile)) errors.mobile = "Mobile number must be 10 digits";
-    if (data.email && !/\S+@\S+\.\S+/.test(data.email)) errors.email = "Email is not valid";
+    else if (!/^\d{10}$/.test(data.mobile))
+      errors.mobile = "Mobile number must be 10 digits";
+    if (data.email && !/\S+@\S+\.\S+/.test(data.email))
+      errors.email = "Email is not valid";
     if (!data.city) errors.city = "City is required";
     if (!data.state) errors.state = "State is required";
     if (!data.pincode) errors.pincode = "Pincode is required";
-    else if (!/^\d{6}$/.test(data.pincode)) errors.pincode = "Pincode must be 6 digits";
+    else if (!/^\d{6}$/.test(data.pincode))
+      errors.pincode = "Pincode must be 6 digits";
     if (!data.address) errors.address = "Address is required";
-    
+
     return errors;
   };
 
@@ -329,8 +332,11 @@ const VendorMaster = () => {
 
     if (Object.keys(newErrors).length === 0) {
       try {
-        const response = await api.put(`/api/vendor-customer/update/${partnerDetails.id}`, partnerDetails);
-        
+        const response = await api.put(
+          `/api/vendor-customer/update/${partnerDetails.id}`,
+          partnerDetails
+        );
+
         if (response.data && response.data.status === true) {
           alert(response.data.message || "Partner updated successfully!");
         } else {
@@ -339,7 +345,7 @@ const VendorMaster = () => {
 
         // Refresh the vendor list
         fetchVendors();
-        
+
         // Close the modal
         handleCloseEditModal();
       } catch (error) {
@@ -473,7 +479,7 @@ const VendorMaster = () => {
           />
         </div>
         <div className="filter-options">
-          <select 
+          <select
             className="filter-select"
             value={typeFilter}
             onChange={handleTypeFilterChange}
@@ -482,7 +488,7 @@ const VendorMaster = () => {
             <option value="vendor">Vendors Only</option>
             <option value="customer">Customers Only</option>
           </select>
-          <select 
+          <select
             className="filter-select"
             value={statusFilter}
             onChange={handleStatusFilterChange}
@@ -491,10 +497,7 @@ const VendorMaster = () => {
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
           </select>
-          <button 
-            className="filter-select"
-            onClick={handleResetFilters}
-          >
+          <button className="filter-select" onClick={handleResetFilters}>
             <i className="fas fa-filter me-2"></i>
             Reset Filters
           </button>
@@ -861,15 +864,15 @@ const VendorMaster = () => {
                 ) : (
                   currentItems.map((vendor) => (
                     <tr key={vendor.id}>
-                      <td className="checkbox-cell">
+                      <td className="checkbox-cell ps-4">
                         <input
                           type="checkbox"
                           checked={selectedVendors.includes(vendor.id)}
                           onChange={() => handleVendorCheckboxChange(vendor.id)}
                         />
                       </td>
-                      <td>{vendor.code}</td>
-                      <td>
+                      <td className="ps-4">{vendor.code}</td>
+                      <td className="ps-3">
                         <div className="user-info">
                           <img
                             src={`https://ui-avatars.com/api/?name=${vendor.name}&size=32&background=2563eb&color=fff`}
@@ -878,17 +881,17 @@ const VendorMaster = () => {
                           <span>{vendor.name}</span>
                         </div>
                       </td>
-                      <td>
+                      <td className="ps-4">
                         <span className={`badge ${vendor.type.toLowerCase()}`}>
                           {vendor.type.charAt(0).toUpperCase() +
                             vendor.type.slice(1)}
                         </span>
                       </td>
-                      <td>{vendor.email}</td>
-                      <td>{vendor.mobile}</td>
-                      <td>{vendor.city}</td>
+                      <td className="ps-4">{vendor.email}</td>
+                      <td className="ps-4">{vendor.mobile}</td>
+                      <td className="ps-4">{vendor.city}</td>
                       {/* <td>{vendor.pincode}</td> */}
-                      <td>
+                      <td className="ps-4">
                         <span
                           className={`badge status ${vendor.status.toLowerCase()}`}
                         >
@@ -904,7 +907,11 @@ const VendorMaster = () => {
                         >
                           <i className="fas fa-eye"></i>
                         </button>
-                        <button className="btn-icon btn-success" title="Edit" onClick={() => handleShowEditModal(vendor.id)}>
+                        <button
+                          className="btn-icon btn-success"
+                          title="Edit"
+                          onClick={() => handleShowEditModal(vendor.id)}
+                        >
                           <i className="fas fa-edit"></i>
                         </button>
                         <button
@@ -927,7 +934,8 @@ const VendorMaster = () => {
             <div className="pagination-container">
               <div className="pagination-info">
                 Showing {indexOfFirstItem + 1}-
-                {Math.min(indexOfLastItem, filteredVendors.length)} of {filteredVendors.length} entries
+                {Math.min(indexOfLastItem, filteredVendors.length)} of{" "}
+                {filteredVendors.length} entries
               </div>
               <div className="pagination">
                 <button
@@ -986,9 +994,12 @@ const VendorMaster = () => {
           <div className="modal-dialog modal-lg">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">
-                  View {partnerDetails.name}'s Details
-                </h5>
+                <div class="modal-header d-flex align-items-center justify-content-between">
+                  <i className="fa-solid fa-circle-info me-2"></i>
+                  <h5 className="title">
+                    View {partnerDetails.name}’s Details
+                  </h5>
+                </div>
                 <button
                   type="button"
                   className="btn-close"
@@ -996,78 +1007,81 @@ const VendorMaster = () => {
                 ></button>
               </div>
               <div className="modal-body">
-                <div className="row">
-                  <div className="col-md-6">
-                    <div className="mb-3">
-                      <label className="fw-bold">Partner Code:</label>
-                      <p>{partnerDetails.code}</p>
-                    </div>
-                    <div className="mb-3">
-                      <label className="fw-bold">Name:</label>
-                      <p>{partnerDetails.name}</p>
-                    </div>
-                    <div className="mb-3">
-                      <label className="fw-bold">Type:</label>
-                      <p>
-                        <span className={`badge ${partnerDetails.type?.toLowerCase()}`}>
-                          {partnerDetails.type?.charAt(0).toUpperCase() + partnerDetails.type?.slice(1)}
-                        </span>
-                      </p>
-                    </div>
-                    <div className="mb-3">
-                      <label className="fw-bold">Email:</label>
-                      <p>{partnerDetails.email}</p>
-                    </div>
-                    <div className="mb-3">
-                      <label className="fw-bold">Mobile:</label>
-                      <p>{partnerDetails.mobile}</p>
-                    </div>
+                <div className="user-details-grid">
+                  <div className="detail-item">
+                    <strong>Partner Code:</strong>
+                    <span>{partnerDetails.code}</span>
                   </div>
-                  <div className="col-md-6">
-                    <div className="mb-3">
-                      <label className="fw-bold">City:</label>
-                      <p>{partnerDetails.city}</p>
-                    </div>
-                    <div className="mb-3">
-                      <label className="fw-bold">State:</label>
-                      <p>{partnerDetails.state}</p>
-                    </div>
-                    <div className="mb-3">
-                      <label className="fw-bold">Pincode:</label>
-                      <p>{partnerDetails.pincode}</p>
-                    </div>
-                    <div className="mb-3">
-                      <label className="fw-bold">Status:</label>
-                      <p>
-                        <span className={`badge status ${partnerDetails.status?.toLowerCase()}`}>
-                          {partnerDetails.status?.charAt(0).toUpperCase() + partnerDetails.status?.slice(1)}
-                        </span>
-                      </p>
-                    </div>
-                    <div className="mb-3">
-                      <label className="fw-bold">Address:</label>
-                      <p>{partnerDetails.address}</p>
-                    </div>
+
+                  <div className="detail-item">
+                    <strong>Email:</strong>
+                    <span>{partnerDetails.email}</span>
+                  </div>
+
+                  <div className="detail-item">
+                    <strong>State:</strong>
+                    <span>{partnerDetails.state}</span>
+                  </div>
+
+                  <div className="detail-item">
+                    <strong>Address:</strong>
+                    <span>{partnerDetails.address}</span>
+                  </div>
+
+                  <div className="detail-item">
+                    <strong>Name:</strong>
+                    <span>{partnerDetails.name}</span>
+                  </div>
+
+                  <div className="detail-item">
+                    <strong>Mobile:</strong>
+                    <span>{partnerDetails.mobile}</span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Pincode:</strong>
+                    <span>{partnerDetails.pincode}</span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Type:</strong>
+                    <span
+                      className={`badge ${partnerDetails.type?.toLowerCase()} w-50`}
+                    >
+                      {partnerDetails.type?.charAt(0).toUpperCase() +
+                        partnerDetails.type?.slice(1)}
+                    </span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>City:</strong>
+                    <span>{partnerDetails.city}</span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Status:</strong>
+                    <span
+                      className={`badge status ${partnerDetails.status?.toLowerCase()} w-50`}
+                    >
+                      {partnerDetails.status?.charAt(0).toUpperCase() +
+                        partnerDetails.status?.slice(1)}
+                    </span>
                   </div>
                 </div>
               </div>
               <div className="modal-footer">
                 <button
                   type="button"
-                  className="btn btn-secondary"
-                  onClick={handleCloseViewModal}
-                >
-                  <i className="fa-solid fa-xmark me-1"></i> Close
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-primary"
+                  className="btn btn-primary add-btn"
                   onClick={() => {
                     handleCloseViewModal();
                     handleShowEditModal(partnerDetails.id);
                   }}
                 >
                   <i className="fa-solid fa-edit me-1"></i> Edit
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary add-btn"
+                  onClick={handleCloseViewModal}
+                >
+                  <i className="fa-solid fa-xmark me-1"></i> Close
                 </button>
               </div>
             </div>
@@ -1121,7 +1135,12 @@ const VendorMaster = () => {
                                 })
                               }
                             >
-                              <option value="" disabled hidden className="text-muted">
+                              <option
+                                value=""
+                                disabled
+                                hidden
+                                className="text-muted"
+                              >
                                 Select Type
                               </option>
                               <option value="vendor">Vendor</option>
@@ -1130,7 +1149,9 @@ const VendorMaster = () => {
                             <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                           </div>
                           {errors.type && (
-                            <span className="error-message ms-2">{errors.type}</span>
+                            <span className="error-message ms-2">
+                              {errors.type}
+                            </span>
                           )}
                         </div>
                         <div className="col-4 d-flex flex-column form-group">
@@ -1154,7 +1175,9 @@ const VendorMaster = () => {
                             />
                           </div>
                           {errors.name && (
-                            <span className="error-message ms-2">{errors.name}</span>
+                            <span className="error-message ms-2">
+                              {errors.name}
+                            </span>
                           )}
                         </div>
                         <div className="col-4 d-flex flex-column form-group">
@@ -1178,7 +1201,9 @@ const VendorMaster = () => {
                             />
                           </div>
                           {errors.mobile && (
-                            <span className="error-message ms-2">{errors.mobile}</span>
+                            <span className="error-message ms-2">
+                              {errors.mobile}
+                            </span>
                           )}
                         </div>
                       </div>
@@ -1204,7 +1229,9 @@ const VendorMaster = () => {
                             />
                           </div>
                           {errors.email && (
-                            <span className="error-message ms-2">{errors.email}</span>
+                            <span className="error-message ms-2">
+                              {errors.email}
+                            </span>
                           )}
                         </div>
                         <div className="col-4 d-flex flex-column form-group">
@@ -1228,7 +1255,9 @@ const VendorMaster = () => {
                             />
                           </div>
                           {errors.city && (
-                            <span className="error-message ms-2">{errors.city}</span>
+                            <span className="error-message ms-2">
+                              {errors.city}
+                            </span>
                           )}
                         </div>
                         <div className="col-4 d-flex flex-column form-group">
@@ -1252,7 +1281,9 @@ const VendorMaster = () => {
                             />
                           </div>
                           {errors.state && (
-                            <span className="error-message ms-2">{errors.state}</span>
+                            <span className="error-message ms-2">
+                              {errors.state}
+                            </span>
                           )}
                         </div>
                       </div>
@@ -1278,7 +1309,9 @@ const VendorMaster = () => {
                             />
                           </div>
                           {errors.pincode && (
-                            <span className="error-message ms-2">{errors.pincode}</span>
+                            <span className="error-message ms-2">
+                              {errors.pincode}
+                            </span>
                           )}
                         </div>
                         <div className="col-4 d-flex flex-column form-group">
@@ -1301,7 +1334,9 @@ const VendorMaster = () => {
                             ></textarea>
                           </div>
                           {errors.address && (
-                            <span className="error-message ms-2">{errors.address}</span>
+                            <span className="error-message ms-2">
+                              {errors.address}
+                            </span>
                           )}
                         </div>
                         <div className="col-4 d-flex flex-column form-group">
@@ -1353,14 +1388,14 @@ const VendorMaster = () => {
               <div className="modal-footer">
                 <button
                   type="submit"
-                  className="btn btn-primary border border-0 text-8 px-3 fw-medium py-2 me-3"
+                  className="btn btn-primary add-btn"
                   onClick={handleEditPartner}
                 >
                   <i className="fa-solid fa-floppy-disk me-1"></i> Save Changes
                 </button>
                 <button
                   type="button"
-                  className="btn btn-secondary border border-0 bg-secondary text-8 px-3 fw-medium py-2 me-3"
+                  className="btn btn-secondary add-btn"
                   onClick={handleCloseEditModal}
                 >
                   <i className="fa-solid fa-xmark me-1"></i> Close

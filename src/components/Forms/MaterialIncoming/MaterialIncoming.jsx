@@ -102,7 +102,7 @@ const MaterialIncoming = () => {
       if (Object.keys(newErrors).length === 0) {
         console.log("Sending request to generate batch no");
         const response = await api.post(
-          `/api/receipt/generate-batch?vendorCode=${formData.code}&itemCode=${formData.itemCode}`
+          `/api/receipt/generate-batch?vendorCode=${formData.code}&itemCode=${formData.itemCode}&quantity=${formData.quantity}`
         ); // API to generate batch no
         console.log(response.data);
         setFormData({ ...formData, batchno: response.data });
@@ -381,17 +381,16 @@ const MaterialIncoming = () => {
                 </label>
                 <div className="position-relative w-100">
                   <i className="fas fa-qrcode position-absolute ms-2 input-icon"></i>
-                  <select
+                  <input
+                    type="text"
                     className="form-control ps-5 ms-1 text-font"
                     id="item"
                     value={formData.barcode}
-                    disabled
-                  >
-                    <option value="" disabled hidden className="text-muted">
-                      Scan QR code
-                    </option>
-                  </select>
-                  <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                    placeholder="Scan QR code"
+                    onChange={(e) =>
+                      setFormData({ ...formData, barcode: e.target.value })
+                    }
+                  />
                 </div>
               </div>
             </div>

@@ -1073,3 +1073,15 @@ select:invalid {
     background-color: var(--lightRed);
     color: var(--red);
 }
+
+/* View modal styles */
+.view-details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.title {
+    color: var(--gray1);
+}
