@@ -4,6 +4,7 @@ import "./VendorMaster.css";
 import { AppContext } from "../../../context/AppContext";
 import { Link } from "react-router-dom";
 import api from "../../../services/api";
+import { toast } from "react-toastify";
 
 const VendorMaster = () => {
   const [errors, setErrors] = useState({});
@@ -18,6 +19,14 @@ const VendorMaster = () => {
   const [selectAll, setSelectAll] = useState(false);
   const [status, setStatus] = useState("active");
   const [isChecked, setIsChecked] = useState(true);
+
+  // Confirm modal states
+  const [message, setMesssage] = useState("");
+  const [confirmState, setConfirmState] = useState(false);
+  const [confirmType, setConfirmType] = useState("");
+  const [partnerIdState, setPartnerIdState] = useState("");
+  const [isConfirmModal, setIsConfirmModal] = useState(false);
+  const [confirmModal, setConfirmModal] = useState(null);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -45,6 +54,46 @@ const VendorMaster = () => {
   const [statusFilter, setStatusFilter] = useState("");
   const [filteredVendors, setFilteredVendors] = useState([]);
 
+  // Confirm useEffect for confirm modal
+  useEffect(() => {
+    let modal = null;
+
+    if (isConfirmModal) {
+      const modalElement = document.getElementById("userConfirmModal");
+
+      if (modalElement) {
+        // Clean up any existing modal artifacts
+        cleanupModalArtifacts();
+
+        // Create new modal
+        modal = new Modal(modalElement, {
+          backdrop: "static",
+          keyboard: false,
+        });
+
+        // Add event listener for when modal is hidden
+        modalElement.addEventListener("hidden.bs.modal", () => {
+          cleanupModalArtifacts();
+          setIsConfirmModal(false);
+        });
+
+        // Show the modal
+        modal.show();
+
+        // Store modal reference
+        setConfirmModal(modal);
+      }
+    }
+
+    // Cleanup function
+    return () => {
+      if (modal) {
+        modal.dispose();
+        cleanupModalArtifacts();
+      }
+    };
+  }, [isConfirmModal]);
+
   // Initialize filteredVendors with vendors on mount and when vendors change
   useEffect(() => {
     setFilteredVendors(vendors);
@@ -66,6 +115,51 @@ const VendorMaster = () => {
       modal.show();
     }
   }, [isEditPartnerDetails, editModal]);
+
+  // Global function to clean up modal artifacts
+  const cleanupModalArtifacts = () => {
+    console.log("Cleaning up modal artifacts");
+    document.body.classList.remove("modal-open");
+    document.body.style.paddingRight = "";
+    document.body.style.overflow = "";
+    const backdrops = document.getElementsByClassName("modal-backdrop");
+    while (backdrops.length > 0) {
+      backdrops[0].remove();
+    }
+  };
+
+  const handleCloseConfirmModal = () => {
+    if (confirmModal) {
+      confirmModal.hide();
+      cleanupModalArtifacts();
+    }
+
+    // Add a small delay before resetting states to allow animation to complete
+    setTimeout(() => {
+      setIsConfirmModal(false);
+    }, 300);
+  };
+
+  const handleShowConfirm = (type) => {
+    if (type === "single") {
+      setMesssage("Are you sure you want to delete this partner?");
+      setIsConfirmModal(true);
+    } else {
+      if (selectedVendors.length === 0) {
+        toast.error("Please select at least one partner to delete.");
+        return;
+      }
+      setMesssage(
+        `Are you sure you want to delete ${selectedVendors.length} selected partner(s)?`
+      );
+      setIsConfirmModal(true);
+    }
+  };
+
+  const handleYesConfirm = () => {
+    if (confirmType === "single") handleDeletePartner(partnerIdState);
+    else handleDeleteSelected();
+  };
 
   // Fetch vendor/customer data from the API
   const fetchVendors = async () => {
@@ -89,6 +183,7 @@ const VendorMaster = () => {
       }
     } catch (error) {
       console.error("Error fetching vendor/customer data:", error);
+      toast.error("Error in fetching business partner details");
     } finally {
       setLoading(false);
     }
@@ -240,9 +335,9 @@ const VendorMaster = () => {
 
         // Check for the new response format
         if (response.data && response.data.status === true) {
-          alert(response.data.message || "Partner added successfully!");
+          toast.success("Partner added successfully!");
         } else {
-          alert("Partner added successfully!");
+          toast.success("Partner added successfully");
         }
 
         // Reset the form
@@ -255,73 +350,65 @@ const VendorMaster = () => {
         fetchVendors();
       } catch (error) {
         console.error("Error adding partner:", error);
-        alert("Error adding partner. Please try again.");
+        toast.error("Error adding partner. Please try again.");
       }
     } else {
-      console.log("Form submission failed due to validation errors.");
+      toast.error("Form submission failed due to validation errors.");
     }
   };
 
   const handleDeletePartner = async (id) => {
-    if (window.confirm("Are you sure you want to delete this partner?")) {
-      try {
-        const response = await api.delete(`/api/vendor-customer/delete/${id}`);
+    try {
+      const response = await api.delete(`/api/vendor-customer/delete/${id}`);
 
-        // Handle new API response format
-        if (response.data && response.data.status === true) {
-          alert(response.data.message || "Partner deleted successfully!");
-        } else {
-          alert("Partner deleted successfully!");
-        }
-
-        // Refresh the vendor list
-        fetchVendors();
-      } catch (error) {
-        console.error("Error deleting partner:", error);
-        alert("Error deleting partner. Please try again.");
+      // Handle new API response format
+      if (response.data && response.data.status === true) {
+        toast.success("Partner deleted successfully!");
+      } else {
+        toast.success("Partner deleted successfully!");
       }
+      setIsConfirmModal(false);
+      // Refresh the vendor list
+      fetchVendors();
+    } catch (error) {
+      console.error("Error deleting partner:", error);
+      toast.error("Error deleting partner. Please try again.");
+      setIsConfirmModal(false);
     }
   };
 
   const handleDeleteSelected = async () => {
-    if (selectedVendors.length === 0) {
-      alert("Please select at least one partner to delete.");
-      return;
-    }
+    try {
+      // Create an array of promises for each delete operation
+      const deletePromises = selectedVendors.map((id) =>
+        api.delete(`/api/vendor-customer/delete/${id}`)
+      );
 
-    if (
-      window.confirm(
-        `Are you sure you want to delete ${selectedVendors.length} selected partner(s)?`
-      )
-    ) {
-      try {
-        // Create an array of promises for each delete operation
-        const deletePromises = selectedVendors.map((id) =>
-          api.delete(`/api/vendor-customer/delete/${id}`)
+      // Wait for all delete operations to complete
+      const results = await Promise.all(deletePromises);
+
+      // Check if any of the responses use the new format
+      const hasNewFormat = results.some(
+        (res) => res.data && res.data.status === true
+      );
+
+      if (hasNewFormat) {
+        toast.success(
+          `${selectedVendors.length} partners deleted successfully!`
         );
-
-        // Wait for all delete operations to complete
-        const results = await Promise.all(deletePromises);
-
-        // Check if any of the responses use the new format
-        const hasNewFormat = results.some(
-          (res) => res.data && res.data.status === true
-        );
-
-        if (hasNewFormat) {
-          alert(`${selectedVendors.length} partners deleted successfully!`);
-        } else {
-          alert("Selected partners deleted successfully!");
-        }
-
-        // Clear selection and refresh the vendor list
-        setSelectedVendors([]);
-        setSelectAll(false);
-        fetchVendors();
-      } catch (error) {
-        console.error("Error deleting selected partners:", error);
-        alert("Error deleting selected partners. Please try again.");
+      } else {
+        toast.success("Selected partners deleted successfully!");
       }
+
+      // Clear selection and refresh the vendor list
+      setSelectedVendors([]);
+      setSelectAll(false);
+      fetchVendors();
+      setIsConfirmModal(false);
+    } catch (error) {
+      setIsConfirmModal(false);
+      console.error("Error deleting selected partners:", error);
+      toast.error("Error deleting selected partners. Please try again.");
     }
   };
 
@@ -338,9 +425,9 @@ const VendorMaster = () => {
         );
 
         if (response.data && response.data.status === true) {
-          alert(response.data.message || "Partner updated successfully!");
+          toast.success("Partner updated successfully!");
         } else {
-          alert("Partner updated successfully!");
+          toast.success("Partner updated successfully!");
         }
 
         // Refresh the vendor list
@@ -350,7 +437,7 @@ const VendorMaster = () => {
         handleCloseEditModal();
       } catch (error) {
         console.error("Error updating partner:", error);
-        alert("Error updating partner. Please try again.");
+        toast.error("Error updating partner. Please try again.");
       }
     }
   };
@@ -402,7 +489,7 @@ const VendorMaster = () => {
       setIsShowPartnerDetails(true);
     } catch (error) {
       console.error("Error fetching partner details:", error);
-      alert("Error fetching partner details. Please try again.");
+      toast.error("Error fetching partner details. Please try again.");
     }
   };
 
@@ -417,7 +504,7 @@ const VendorMaster = () => {
       setIsEditPartnerDetails(true);
     } catch (error) {
       console.error("Error fetching partner details:", error);
-      alert("Error fetching partner details. Please try again.");
+      toast.error("Error fetching partner details. Please try again.");
     }
   };
 
@@ -775,8 +862,8 @@ const VendorMaster = () => {
         </div>
       )}
 
+      {/* Table Section */}
       <div className="margin-2 mx-2">
-        {/* Table Section */}
         <div className="table-container">
           <div className="table-header">
             <div className="selected-count">
@@ -797,7 +884,10 @@ const VendorMaster = () => {
               </button>
               <button
                 className="btn-action btn-danger"
-                onClick={handleDeleteSelected}
+                onClick={() => {
+                  setConfirmType("multi");
+                  handleShowConfirm("multi");
+                }}
               >
                 <i className="fas fa-trash"></i>
                 Delete Selected
@@ -813,12 +903,7 @@ const VendorMaster = () => {
               <thead>
                 <tr>
                   <th className="checkbox-cell">
-                    <input
-                      type="checkbox"
-                      id="select-all-header"
-                      checked={selectAll}
-                      onChange={handleSelectAllChange}
-                    />
+                    <input type="checkbox" id="select-all-header" disabled />
                   </th>
                   <th>
                     Partner Code <i className="fas fa-sort color-gray ms-2"></i>
@@ -849,15 +934,8 @@ const VendorMaster = () => {
                         <i className="fas fa-search fa-3x mb-3 text-muted"></i>
                         <h5>No matching partners found</h5>
                         <p className="text-muted">
-                          Try adjusting your search or filter criteria
+                          Click on "Add New Partner" button to add new partners
                         </p>
-                        <button
-                          className="btn btn-primary mt-2"
-                          onClick={handleResetFilters}
-                        >
-                          <i className="fas fa-times-circle me-2"></i>
-                          Clear Filters
-                        </button>
                       </div>
                     </td>
                   </tr>
@@ -917,7 +995,11 @@ const VendorMaster = () => {
                         <button
                           className="btn-icon btn-danger"
                           title="Delete"
-                          onClick={() => handleDeletePartner(vendor.id)}
+                          onClick={() => {
+                            setPartnerIdState(vendor.id);
+                            setConfirmType("single");
+                            handleShowConfirm("single");
+                          }}
                         >
                           <i className="fas fa-trash"></i>
                         </button>
@@ -982,6 +1064,50 @@ const VendorMaster = () => {
           )}
         </div>
       </div>
+
+      {/* Confirmation dialog modal */}
+      {isConfirmModal && (
+        <div className="modal fade" id="userConfirmModal" tabIndex="-1">
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  <i className="fas fa-circle-check me-2"></i>
+                  Confirm
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={handleCloseConfirmModal}
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body">{message}</div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-primary add-btn"
+                  onClick={handleYesConfirm}
+                >
+                  <i className="fas fa-check me-2"></i>
+                  Yes
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary add-btn"
+                  onClick={() => {
+                    setConfirmState(false);
+                    handleCloseConfirmModal();
+                  }}
+                >
+                  <i className="fas fa-times me-2"></i>
+                  No
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* View Partner Details Modal */}
       {isShowPartnerDetails && (

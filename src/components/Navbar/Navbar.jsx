@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { AppContext } from "../../context/AppContext";
 import api from "../../services/api";
 import "./Navbar.css";
+import { toast } from "react-toastify";
 
 const Navbar = () => {
   const {
@@ -38,11 +39,10 @@ const Navbar = () => {
 
   const handleLoadBranchDropdownValues = async (e) => {
     e.preventDefault();
-    
 
-  try {
-    const response = await api.get("/api/branch/by-company"); // API call
-    const branchList = response.data.data; 
+    try {
+      const response = await api.get("/api/branch/by-company"); // API call
+      const branchList = response.data.data;
 
       const formattedBranches = branchList.map((branch) => ({
         label: `${branch.name} (${branch.code})`,
@@ -53,7 +53,7 @@ const Navbar = () => {
       setIsAddUser(true); // ✅ Open the Add User form/modal
     } catch (error) {
       console.error("Failed to load branch dropdown values:", error);
-      alert("Failed to load branches. Please try again.");
+      toast.error("Failed to load branches. Please try again");
     }
   };
 

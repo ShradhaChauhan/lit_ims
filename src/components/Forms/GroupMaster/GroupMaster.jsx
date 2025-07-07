@@ -3,6 +3,7 @@ import { AppContext } from "../../../context/AppContext";
 import api from "../../../services/api";
 import { Link } from "react-router-dom";
 import { Modal } from "bootstrap";
+import { toast } from "react-toastify";
 
 const GroupMaster = () => {
   const [errors, setErrors] = useState({});
@@ -77,6 +78,9 @@ const GroupMaster = () => {
     } catch (err) {
       console.error("Error loading groups:", err);
       setDataError(err.response?.data?.message || "Error loading groups");
+      toast.error(
+        "Error in getting groups list from database. Please try again."
+      );
       setGroups([]);
     } finally {
       setDataLoading(false);
@@ -133,12 +137,13 @@ const GroupMaster = () => {
       for (const groupId of selectedGroups) {
         await api.delete(`/api/group/delete/${groupId}`);
       }
-
+      toast.success("Groups deleted successfully");
       // Clear selection and reload data
       setSelectedGroups([]);
       setSelectAll(false);
       loadGroups();
     } catch (err) {
+      toast.error("Error in deleting groups");
       console.error("Error deleting groups:", err);
       setDataError(err.response?.data?.message || "Error deleting groups");
     } finally {
@@ -161,10 +166,11 @@ const GroupMaster = () => {
       if (selectedGroups.includes(groupId)) {
         setSelectedGroups((prev) => prev.filter((id) => id !== groupId));
       }
-
+      toast.success("Group deleted successfully");
       // Reload data
       loadGroups();
     } catch (err) {
+      toast.error("Error in deleting group. Please try agian");
       console.error("Error deleting group:", err);
       setDataError(err.response?.data?.message || "Error deleting group");
     } finally {
@@ -185,6 +191,7 @@ const GroupMaster = () => {
     try {
       const response = await api.post("/api/group/save", finalData);
       console.log("Group added successfully:", response.data);
+      toast.success("Group added successfully");
       setFormData({
         name: "",
         status: "active",
@@ -194,6 +201,7 @@ const GroupMaster = () => {
       // Reload the groups data after adding a new group
       loadGroups();
     } catch (err) {
+      toast.error("Error in adding group");
       console.error("Error adding group:", err);
       setError(err.response?.data?.message || "Error adding group");
     } finally {
@@ -226,7 +234,7 @@ const GroupMaster = () => {
         finalData
       );
       console.log("Group updated successfully:", response.data);
-
+      toast.success("Group updated successfully");
       // Close the bootstrap modal properly
       if (groupEditModalRef.current) {
         const bsModal = Modal.getInstance(groupEditModalRef.current);
@@ -240,6 +248,7 @@ const GroupMaster = () => {
       // Reload the groups data to show updated information
       loadGroups();
     } catch (err) {
+      toast, error("Error in updating group");
       console.error("Error updating group:", err);
       setError(err.response?.data?.message || "Error updating group");
     } finally {
@@ -255,6 +264,7 @@ const GroupMaster = () => {
       setGroupDetails(response.data.data);
       setIsShowGroupDetails(true);
     } catch (err) {
+      toast.error("Error in fetching group details");
       console.error("Error fetching group details:", err);
       setDataError(
         err.response?.data?.message || "Error fetching group details"
@@ -272,6 +282,7 @@ const GroupMaster = () => {
       );
       setIsEditGroupDetails(true);
     } catch (err) {
+      toast.error("Error in fetching group details");
       console.error("Error fetching group details:", err);
       setDataError(
         err.response?.data?.message || "Error fetching group details"

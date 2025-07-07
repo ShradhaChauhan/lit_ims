@@ -6,6 +6,7 @@ import leftImg from "../../assets/images/img1.jpg";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { AppContext } from "../../context/AppContext";
+import { toast } from "react-toastify";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -62,6 +63,7 @@ const LoginPage = () => {
       console.log("Login Response:", response);
       // setIsAuthenticated(true);
       // Navigate to dashboard after successful login
+      toast.success("Login successful");
       navigate("/dashboard");
 
       console.log("Login Response:", response);

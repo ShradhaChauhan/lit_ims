@@ -3,6 +3,7 @@ import { AppContext } from "../../../context/AppContext";
 import api from "../../../services/api";
 import { Link } from "react-router-dom";
 import { Modal } from "bootstrap";
+import { toast } from "react-toastify";
 
 const PartMaster = () => {
   const [errors, setErrors] = useState({});
@@ -51,6 +52,7 @@ const PartMaster = () => {
         setLoading(false);
       })
       .catch((error) => {
+        toast.error("Error in fetching parts from database. Please try again.");
         console.error("Error loading parts:", error);
         setError("Failed to load parts. Please try again.");
         setLoading(false);
@@ -94,6 +96,7 @@ const PartMaster = () => {
         .post("/api/part/save", finalData)
         .then((response) => {
           console.log("Part added successfully:", response.data);
+          toast.success("Part added successfully");
           setIsAddPart(false);
           // Reset form after successful submission
           handleReset(e);
@@ -101,6 +104,7 @@ const PartMaster = () => {
           fetchParts();
         })
         .catch((error) => {
+          toast.error("Failed to add part. Please try again");
           console.error("Error adding part:", error);
         });
     }
@@ -192,11 +196,13 @@ const PartMaster = () => {
       api
         .delete(`/api/part/delete/${partId}`)
         .then((response) => {
+          toast.success("Part deleted successfully");
           console.log("Part deleted successfully:", response.data);
           // Refresh parts list after deletion
           fetchParts();
         })
         .catch((error) => {
+          toast.error("Failed to deleted the part. Please try again");
           console.error("Error deleting part:", error);
           setError("Failed to delete part. Please try again.");
           setLoading(false);

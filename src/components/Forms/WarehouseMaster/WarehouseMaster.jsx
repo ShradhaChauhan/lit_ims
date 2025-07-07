@@ -3,12 +3,21 @@ import { AppContext } from "../../../context/AppContext";
 import api from "../../../services/api";
 import { Link } from "react-router-dom";
 import { Modal } from "bootstrap";
+import { toast } from "react-toastify";
 
 const WarehouseMaster = () => {
   const [errors, setErrors] = useState({});
   const warehouseModalRef = useRef(null);
   const warehouseEditModalRef = useRef(null);
   const { isAddWarehouse, setIsAddWarehouse } = useContext(AppContext);
+
+  // Confirm modal states
+  const [message, setMesssage] = useState("");
+  const [confirmState, setConfirmState] = useState(false);
+  const [confirmType, setConfirmType] = useState("");
+  const [warehouseIdState, setWarehouseIdState] = useState("");
+  const [isConfirmModal, setIsConfirmModal] = useState(false);
+  const [confirmModal, setConfirmModal] = useState(null);
 
   const [selectedWarehouses, setSelectedWarehouses] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
@@ -41,6 +50,46 @@ const WarehouseMaster = () => {
     fetchWarehouses();
   }, []);
 
+  // Confirm useEffect for confirm modal
+  useEffect(() => {
+    let modal = null;
+
+    if (isConfirmModal) {
+      const modalElement = document.getElementById("userConfirmModal");
+
+      if (modalElement) {
+        // Clean up any existing modal artifacts
+        cleanupModalArtifacts();
+
+        // Create new modal
+        modal = new Modal(modalElement, {
+          backdrop: "static",
+          keyboard: false,
+        });
+
+        // Add event listener for when modal is hidden
+        modalElement.addEventListener("hidden.bs.modal", () => {
+          cleanupModalArtifacts();
+          setIsConfirmModal(false);
+        });
+
+        // Show the modal
+        modal.show();
+
+        // Store modal reference
+        setConfirmModal(modal);
+      }
+    }
+
+    // Cleanup function
+    return () => {
+      if (modal) {
+        modal.dispose();
+        cleanupModalArtifacts();
+      }
+    };
+  }, [isConfirmModal]);
+
   useEffect(() => {
     let result = [...warehouses];
 
@@ -66,6 +115,18 @@ const WarehouseMaster = () => {
     setFilteredWarehouses(result);
   }, [warehouses, searchQuery, statusFilter]);
 
+  // Global function to clean up modal artifacts
+  const cleanupModalArtifacts = () => {
+    console.log("Cleaning up modal artifacts");
+    document.body.classList.remove("modal-open");
+    document.body.style.paddingRight = "";
+    document.body.style.overflow = "";
+    const backdrops = document.getElementsByClassName("modal-backdrop");
+    while (backdrops.length > 0) {
+      backdrops[0].remove();
+    }
+  };
+
   const fetchWarehouses = () => {
     setLoading(true);
     api
@@ -79,13 +140,50 @@ const WarehouseMaster = () => {
             "Error fetching warehouses:",
             response.data.message || "Unknown error"
           );
+          toast.error(
+            "Error in fetching warehouses. Please refresh the page and try again"
+          );
         }
         setLoading(false);
       })
       .catch((error) => {
         console.error("Error fetching warehouses:", error);
+        toast.error("Error in fetching warehouses. Please try again");
         setLoading(false);
       });
+  };
+
+  const handleCloseConfirmModal = () => {
+    if (confirmModal) {
+      confirmModal.hide();
+      cleanupModalArtifacts();
+    }
+
+    // Add a small delay before resetting states to allow animation to complete
+    setTimeout(() => {
+      setIsConfirmModal(false);
+    }, 300);
+  };
+
+  const handleShowConfirm = (type) => {
+    if (type === "single") {
+      setMesssage("Are you sure you want to delete this warehouse?");
+      setIsConfirmModal(true);
+    } else {
+      if (selectedWarehouses.length === 0) {
+        toast.error("Please select at least one warehouse to delete.");
+        return;
+      }
+      setMesssage(
+        `Are you sure you want to delete ${selectedWarehouses.length} selected warehouse(s)?`
+      );
+      setIsConfirmModal(true);
+    }
+  };
+
+  const handleYesConfirm = () => {
+    if (confirmType === "single") handleDeleteWarehouse(warehouseIdState);
+    else handleDeleteSelected();
   };
 
   const handleWarehouseCheckboxChange = (warehouseId) => {
@@ -93,14 +191,6 @@ const WarehouseMaster = () => {
       const newSelected = prevSelected.includes(warehouseId)
         ? prevSelected.filter((id) => id !== warehouseId)
         : [...prevSelected, warehouseId];
-
-      console.log(
-        "Warehouse selection changed:",
-        warehouseId,
-        "New selection:",
-        newSelected
-      );
-
       // Update select all checkbox state based on whether all warehouses are selected
       setSelectAll(newSelected.length === warehouses.length);
 
@@ -116,11 +206,9 @@ const WarehouseMaster = () => {
       // Select all warehouses
       const allWarehouseIds = warehouses.map((warehouse) => warehouse.id);
       setSelectedWarehouses(allWarehouseIds);
-      console.log("Selected all warehouses:", allWarehouseIds);
     } else {
       // Deselect all warehouses
       setSelectedWarehouses([]);
-      console.log("Deselected all warehouses");
     }
   };
 
@@ -160,12 +248,12 @@ const WarehouseMaster = () => {
             "Error fetching warehouse details:",
             response.data.message || "Unknown error"
           );
-          alert("Error fetching warehouse details. Please try again.");
+          toast.error("Error fetching warehouse details. Please try again.");
         }
       })
       .catch((error) => {
         console.error("Error fetching warehouse details:", error);
-        alert("Error fetching warehouse details. Please try again.");
+        toast.error("Error fetching warehouse details. Please try again.");
       });
   };
 
@@ -207,13 +295,13 @@ const WarehouseMaster = () => {
             "Error fetching warehouse details:",
             response.data.message || "Unknown error"
           );
-          alert("Error fetching warehouse details. Please try again.");
+          toast.error("Error fetching warehouse details. Please try again.");
           setIsProcessing(false);
         }
       })
       .catch((error) => {
         console.error("Error fetching warehouse details:", error);
-        alert("Error fetching warehouse details. Please try again.");
+        toast.error("Error fetching warehouse details. Please try again.");
         setIsProcessing(false);
       });
   };
@@ -236,7 +324,7 @@ const WarehouseMaster = () => {
       .then((response) => {
         console.log("Update warehouse response:", response.data);
         if (response.data && response.data.status) {
-          alert("Warehouse updated successfully");
+          toast.success("Warehouse updated successfully");
           // Refresh warehouse list
           fetchWarehouses();
           // Close the modal
@@ -260,7 +348,7 @@ const WarehouseMaster = () => {
           if (response.data.errors) {
             setEditErrors(response.data.errors);
           } else {
-            alert(
+            toast.error(
               response.data.message ||
                 "Error updating warehouse. Please try again."
             );
@@ -274,13 +362,13 @@ const WarehouseMaster = () => {
           if (error.response.data.errors) {
             setEditErrors(error.response.data.errors);
           } else {
-            alert(
+            toast.error(
               error.response.data.message ||
                 "Error updating warehouse. Please try again."
             );
           }
         } else {
-          alert("Error updating warehouse. Please try again.");
+          toast.error("Error updating warehouse. Please try again.");
         }
       });
   };
@@ -304,7 +392,7 @@ const WarehouseMaster = () => {
         .then((response) => {
           console.log("Response received:", response.data);
           if (response.data && response.data.status) {
-            alert("Warehouse added successfully:", response.data.data);
+            toast.success("Warehouse added successfully:", response.data.data);
             // Reset form and close it
             handleReset(e);
             setIsAddWarehouse(false);
@@ -318,6 +406,7 @@ const WarehouseMaster = () => {
           }
         })
         .catch((error) => {
+          toast.error("Error in adding warehouse. Please try again.");
           console.error("Error adding warehouse:", error);
         });
     }
@@ -346,16 +435,13 @@ const WarehouseMaster = () => {
   };
 
   const handleDeleteWarehouse = (warehouseId) => {
-    if (!window.confirm("Are you sure you want to delete this warehouse?")) {
-      return;
-    }
-
     api
       .delete(`/api/warehouses/delete/${warehouseId}`)
       .then((response) => {
         console.log("Delete warehouse response:", response.data);
         if (response.data && response.data.status) {
           console.log("Warehouse deleted successfully:", response.data.message);
+          toast.success("Successfully deleted the warehouse");
           // Refresh the warehouses list
           fetchWarehouses();
         } else {
@@ -363,36 +449,22 @@ const WarehouseMaster = () => {
             "Error in delete response:",
             response.data.message || "Unknown error"
           );
-          alert(
+          toast.error(
             response.data.message ||
               "Error deleting warehouse. Please try again."
           );
         }
+        setIsConfirmModal(false);
       })
       .catch((error) => {
         console.error("Error deleting warehouse:", error);
-        alert("Error deleting warehouse. Please try again.");
+        toast.error("Error deleting warehouse. Please try again.");
+        setIsConfirmModal(false);
       });
   };
 
   const handleDeleteSelected = () => {
-    console.log("Current selected warehouses:", selectedWarehouses);
-
-    if (selectedWarehouses.length === 0) {
-      alert("Please select at least one warehouse to delete.");
-      return;
-    }
-
-    if (
-      !window.confirm(
-        `Are you sure you want to delete ${selectedWarehouses.length} selected warehouse(s)?`
-      )
-    ) {
-      return;
-    }
-
     console.log("Sending delete request for warehouses:", selectedWarehouses);
-
     // Make API call to delete selected warehouses
     api
       .post("/api/warehouses/delete-multiple", selectedWarehouses)
@@ -409,7 +481,7 @@ const WarehouseMaster = () => {
           // Refresh the warehouses list
           fetchWarehouses();
           // Show success message
-          alert(
+          toast.success(
             response.data.message ||
               `Successfully deleted ${selectedWarehouses.length} warehouse(s).`
           );
@@ -418,15 +490,17 @@ const WarehouseMaster = () => {
             "Error in delete multiple response:",
             response.data.message || "Unknown error"
           );
-          alert(
+          toast.error(
             response.data.message ||
               "Error deleting selected warehouses. Please try again."
           );
         }
+        setIsConfirmModal(false);
       })
       .catch((error) => {
         console.error("Error deleting selected warehouses:", error);
-        alert("Error deleting selected warehouses. Please try again.");
+        toast.error("Error deleting selected warehouses. Please try again.");
+        setIsConfirmModal(false);
       });
   };
 
@@ -660,7 +734,10 @@ const WarehouseMaster = () => {
             </div>
             <button
               className="btn-action btn-danger"
-              onClick={handleDeleteSelected}
+              onClick={() => {
+                setConfirmType("multi");
+                handleShowConfirm("multi");
+              }}
             >
               <i className="fas fa-trash"></i>
               Delete Selected
@@ -670,12 +747,7 @@ const WarehouseMaster = () => {
             <thead>
               <tr>
                 <th className="checkbox-cell">
-                  <input
-                    type="checkbox"
-                    id="select-all-header"
-                    checked={selectAll}
-                    onChange={handleSelectAllChange}
-                  />
+                  <input type="checkbox" id="select-all-header" disabled />
                 </th>
                 <th>
                   TRNO <i className="fas fa-sort color-gray ms-2"></i>
@@ -772,7 +844,11 @@ const WarehouseMaster = () => {
                       <button
                         className="btn-icon btn-danger"
                         title="Delete"
-                        onClick={() => handleDeleteWarehouse(warehouse.id)}
+                        onClick={() => {
+                          setWarehouseIdState(warehouse.id);
+                          setConfirmType("single");
+                          handleShowConfirm("single");
+                        }}
                       >
                         <i className="fas fa-trash"></i>
                       </button>
@@ -809,6 +885,50 @@ const WarehouseMaster = () => {
           </div>
         </div>
       </div>
+
+      {/* Confirmation dialog modal */}
+      {isConfirmModal && (
+        <div className="modal fade" id="userConfirmModal" tabIndex="-1">
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  <i className="fas fa-circle-check me-2"></i>
+                  Confirm
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={handleCloseConfirmModal}
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body">{message}</div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-primary add-btn"
+                  onClick={handleYesConfirm}
+                >
+                  <i className="fas fa-check me-2"></i>
+                  Yes
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary add-btn"
+                  onClick={() => {
+                    setConfirmState(false);
+                    handleCloseConfirmModal();
+                  }}
+                >
+                  <i className="fas fa-times me-2"></i>
+                  No
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* View Warehouse Details Modal */}
       {isShowWarehouseDetails && (

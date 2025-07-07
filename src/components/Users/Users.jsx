@@ -7,14 +7,7 @@ import Select from "react-select";
 import { toast } from "react-toastify";
 
 const Users = () => {
-  // const options = [
-  //   { value: "react", label: "React" },
-  //   { value: "angular", label: "Angular" },
-  //   { value: "vue", label: "Vue" },
-  // ];
-
   const [selectedOptions, setSelectedOptions] = useState([]);
-
   const [errors, setErrors] = useState({});
   const userModalRef = useRef(null);
   const userEditModalRef = useRef(null);
@@ -25,50 +18,6 @@ const Users = () => {
     branchDropdownValues,
     setBranchDropdownValues,
   } = useContext(AppContext);
-
-  // Add validateForm function to validate user form data
-  const validateForm = (data, isUpdate = false) => {
-    const errors = {};
-
-    if (!data.name || data.name.trim() === "") {
-      errors.name = "Full name is required";
-    }
-
-    if (!data.email || data.email.trim() === "") {
-      errors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(data.email)) {
-      errors.email = "Email is invalid";
-    }
-
-    // Skip password validation for updates if password field is empty
-    if (isUpdate && (!data.password || data.password.trim() === "")) {
-      // Skip password validation for updates
-    } else {
-      if (!data.password || data.password.trim() === "") {
-        errors.password = "Password is required";
-      } else if (data.password.length < 6) {
-        errors.password = "Password must be at least 6 characters";
-      }
-
-      if (data.password !== data.confirmPassword) {
-        errors.confirmPassword = "Passwords do not match";
-      }
-    }
-
-    if (!data.role || data.role.trim() === "") {
-      errors.role = "Role is required";
-    }
-
-    if (!data.department || data.department.trim() === "") {
-      errors.department = "Department is required";
-    }
-
-    // Check if branch is selected - using selectedOptions from state
-    if (!selectedOptions || selectedOptions.length === 0) {
-      errors.branch = "At least one branch must be selected";
-    }
-    return errors;
-  };
 
   const [accessModules, setAccessModules] = useState([]);
   const [isChecked, setIsChecked] = useState(true);
@@ -87,6 +36,7 @@ const Users = () => {
   });
   const [isShowUserDetails, setIsShowUserDetails] = useState(false);
   const [isEditUserDetails, setIsEditUserDetails] = useState(false);
+  const [isConfirmModal, setIsConfirmModal] = useState(false);
   const [userDetails, setUserDetails] = useState({
     id: "",
     name: "",
@@ -132,6 +82,59 @@ const Users = () => {
 
   const [userModal, setUserModal] = useState(null);
   const [editModal, setEditModal] = useState(null);
+  const [confirmModal, setConfirmModal] = useState(null);
+
+  // Confirm modal states
+  const [message, setMesssage] = useState("");
+  const [confirmState, setConfirmState] = useState(false);
+  const [confirmType, setConfirmType] = useState("");
+
+  // Delete userId state
+  const [userIdState, setUserIdState] = useState("");
+
+  // Add validateForm function to validate user form data
+  const validateForm = (data, isUpdate = false) => {
+    const errors = {};
+
+    if (!data.name || data.name.trim() === "") {
+      errors.name = "Full name is required";
+    }
+
+    if (!data.email || data.email.trim() === "") {
+      errors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(data.email)) {
+      errors.email = "Email is invalid";
+    }
+
+    // Skip password validation for updates if password field is empty
+    if (isUpdate && (!data.password || data.password.trim() === "")) {
+      // Skip password validation for updates
+    } else {
+      if (!data.password || data.password.trim() === "") {
+        errors.password = "Password is required";
+      } else if (data.password.length < 6) {
+        errors.password = "Password must be at least 6 characters";
+      }
+
+      if (data.password !== data.confirmPassword) {
+        errors.confirmPassword = "Passwords do not match";
+      }
+    }
+
+    if (!data.role || data.role.trim() === "") {
+      errors.role = "Role is required";
+    }
+
+    if (!data.department || data.department.trim() === "") {
+      errors.department = "Department is required";
+    }
+
+    // Check if branch is selected - using selectedOptions from state
+    if (!selectedOptions || selectedOptions.length === 0) {
+      errors.branch = "At least one branch must be selected";
+    }
+    return errors;
+  };
 
   // Fetch users from API
   useEffect(() => {
@@ -236,6 +239,46 @@ const Users = () => {
     };
   }, [isEditUserDetails]);
 
+  // Confirm useEffect for confirm modal
+  useEffect(() => {
+    let modal = null;
+
+    if (isConfirmModal) {
+      const modalElement = document.getElementById("userConfirmModal");
+
+      if (modalElement) {
+        // Clean up any existing modal artifacts
+        cleanupModalArtifacts();
+
+        // Create new modal
+        modal = new Modal(modalElement, {
+          backdrop: "static",
+          keyboard: false,
+        });
+
+        // Add event listener for when modal is hidden
+        modalElement.addEventListener("hidden.bs.modal", () => {
+          cleanupModalArtifacts();
+          setIsConfirmModal(false);
+        });
+
+        // Show the modal
+        modal.show();
+
+        // Store modal reference
+        setConfirmModal(modal);
+      }
+    }
+
+    // Cleanup function
+    return () => {
+      if (modal) {
+        modal.dispose();
+        cleanupModalArtifacts();
+      }
+    };
+  }, [isConfirmModal]);
+
   useEffect(() => {
     // Check master permissions
     const allMastersView = masters.every((m) => masterViewPermissions[m.type]);
@@ -319,9 +362,11 @@ const Users = () => {
         setUsers(paginatedUsers);
         console.log("Updated users state with:", paginatedUsers);
       } else {
+        toast.warning("No users were found.");
         console.warn("No users data found in the response:", response.data);
       }
     } catch (error) {
+      toast.error("Error in fetching users. Please try again");
       console.error("Error fetching users:", error);
     } finally {
       setLoading(false);
@@ -571,7 +616,6 @@ const Users = () => {
           console.log("Add user response:", response);
           if (response.data && response.data.status === true) {
             toast.success(response.data.message);
-            // alert(response.data.message); // Show success message
             handleReset(e); // Reset form after successful submission
             setIsAddUser(false); // Close the form
 
@@ -587,10 +631,6 @@ const Users = () => {
               response.data.message ||
                 "Failed to create user. Please check the form and try again."
             );
-            // alert(
-            //   response.data.message ||
-            //     "Failed to create user. Please check the form and try again."
-            // );
           }
         })
         .catch((error) => {
@@ -602,10 +642,8 @@ const Users = () => {
             error.response.data.message
           ) {
             toast.error(error.response.data.message);
-            // alert(error.response.data.message); // Show error message
           } else {
             toast.error("An error occurred. Please try again later.");
-            // alert("An error occurred. Please try again later.");
           }
         });
     }
@@ -856,7 +894,6 @@ const Users = () => {
     } catch (error) {
       console.error("Error fetching user details:", error);
       toast.error("Failed to fetch user details. Please try again.");
-      // alert("Failed to fetch user details. Please try again.");
     }
   };
 
@@ -872,6 +909,18 @@ const Users = () => {
     setTimeout(() => {
       setIsShowUserDetails(false);
       setUserDetails({});
+    }, 300);
+  };
+
+  const handleCloseConfirmModal = () => {
+    if (confirmModal) {
+      confirmModal.hide();
+      cleanupModalArtifacts();
+    }
+
+    // Add a small delay before resetting states to allow animation to complete
+    setTimeout(() => {
+      setIsConfirmModal(false);
     }, 300);
   };
 
@@ -1139,28 +1188,48 @@ const Users = () => {
     } catch (error) {
       console.error("Error fetching user details:", error);
       toast.error("Failed to fetch user details. Please try again.");
-      // alert("Failed to fetch user details. Please try again.");
     }
+  };
+
+  const handleShowConfirm = (type) => {
+    if (type === "single") {
+      setMesssage("Are you sure you want to delete this user?");
+      setIsConfirmModal(true);
+    } else {
+      if (selectedUsers.length === 0) {
+        toast.error("Please select users to delete");
+        return;
+      }
+      setMesssage(
+        `Are you sure you want to delete ${selectedUsers.length} selected users?`
+      );
+      setIsConfirmModal(true);
+    }
+  };
+
+  const handleYesConfirm = () => {
+    if (confirmType === "single") handleDeleteUser(userIdState);
+    else handleBulkDelete();
   };
 
   // Handle delete user
   const handleDeleteUser = async (userId) => {
-    if (!window.confirm("Are you sure you want to delete this user?")) {
-      return;
-    }
-
+    // if (!window.confirm("Are you sure you want to delete this user?")) {
+    //   return;
+    // }
     setDeleteLoading(true);
     try {
       const response = await api.delete(`/api/users/delete/${userId}`);
       if (response.data && response.data.status === true) {
         toast.success(response.data.message);
-        // alert(response.data.message);
         fetchUsers(); // Refresh the user list
         // Remove from selected users if it was selected
         if (selectedUsers.includes(userId)) {
           setSelectedUsers(selectedUsers.filter((id) => id !== userId));
         }
       }
+      setUserIdState("");
+      setIsConfirmModal(false);
     } catch (error) {
       console.error("Error deleting user:", error);
       if (
@@ -1169,32 +1238,20 @@ const Users = () => {
         error.response.data.message
       ) {
         toast.error(error.response.data.message);
-        // alert(error.response.data.message);
       } else {
         toast.error("An error occurred while deleting the user.");
-        // alert("An error occurred while deleting the user.");
       }
+      setIsConfirmModal(false);
+      setUserIdState("");
     } finally {
+      setIsConfirmModal(false);
       setDeleteLoading(false);
+      setUserIdState("");
     }
   };
 
   // Handle bulk delete
   const handleBulkDelete = async () => {
-    if (selectedUsers.length === 0) {
-      toast.error("Please select users to delete");
-      // alert("Please select users to delete");
-      return;
-    }
-
-    if (
-      !window.confirm(
-        `Are you sure you want to delete ${selectedUsers.length} selected users?`
-      )
-    ) {
-      return;
-    }
-
     setDeleteLoading(true);
     let successCount = 0;
     let errorCount = 0;
@@ -1206,21 +1263,28 @@ const Users = () => {
           if (response.data && response.data.status === true) {
             successCount++;
           }
+          setIsConfirmModal(false);
         } catch (error) {
           errorCount++;
           console.error(`Error deleting user ${userId}:`, error);
+          toast.error(`Error deleting user ${userId}:`, error);
         }
       }
-
-      alert(
+      console.log(
         `${successCount} users deleted successfully. ${errorCount} deletions failed.`
       );
+
+      toast.success("Users deleted successfully");
       fetchUsers(); // Refresh the user list
       setSelectedUsers([]); // Clear selection
       setSelectAll(false);
+      setIsConfirmModal(false);
     } catch (error) {
       console.error("Error in bulk delete:", error);
+      toast.error("Error in deleting users. Please try again.");
+      setIsConfirmModal(false);
     } finally {
+      setIsConfirmModal(false);
       setDeleteLoading(false);
     }
   };
@@ -1241,7 +1305,7 @@ const Users = () => {
       setIsAddUser(true); // ✅ Open the Add User form/modal
     } catch (error) {
       console.error("Failed to load branch dropdown values:", error);
-      alert("Failed to load branches. Please try again.");
+      toast.error("Failed to load branches. Please try again.");
     }
   };
 
@@ -1366,7 +1430,7 @@ const Users = () => {
     try {
       // Make sure we have a valid user ID
       if (!userDetails.id) {
-        alert("Error: Missing user ID for update");
+        toast.error("Error: Missing user ID for update");
         return;
       }
 
@@ -1426,11 +1490,13 @@ const Users = () => {
 
         // Show success message after all UI updates
         setTimeout(() => {
-          alert(response.data.message);
+          toast.success(response.data.message);
         }, 100);
       } else {
         console.error("API returned success=false:", response.data);
-        alert(response.data.message || "Update failed. Please try again.");
+        toast.error(
+          response.data.message || "Update failed. Please try again."
+        );
       }
     } catch (error) {
       console.error("Error updating user:", error);
@@ -1444,9 +1510,9 @@ const Users = () => {
       }
 
       if (error.response?.data?.message) {
-        alert(error.response.data.message);
+        toast.error(error.response.data.message);
       } else {
-        alert(
+        toast.error(
           "An error occurred while updating the user. Please try again later."
         );
       }
@@ -2219,7 +2285,10 @@ const Users = () => {
               </button>
               <button
                 className="btn-action btn-danger"
-                onClick={handleBulkDelete}
+                onClick={() => {
+                  setConfirmType("multi");
+                  handleShowConfirm("multi");
+                }}
                 disabled={selectedUsers.length === 0 || deleteLoading}
               >
                 {deleteLoading ? (
@@ -2239,7 +2308,7 @@ const Users = () => {
             <thead>
               <tr>
                 <th className="checkbox-cell">
-                  <input type="checkbox" id="select-all" />
+                  <input type="checkbox" id="select-all" disabled />
                 </th>
                 <th>
                   User <i className="fas fa-sort color-gray"></i>
@@ -2271,27 +2340,27 @@ const Users = () => {
               ) : (
                 users.map((user) => (
                   <tr key={user.id}>
-                    <td className="checkbox-cell">
+                    <td className="checkbox-cell ps-4">
                       <input
                         type="checkbox"
                         checked={selectedUsers.includes(user.id)}
                         onChange={() => handleUserCheckboxChange(user.id)}
                       />
                     </td>
-                    <td>
+                    <td className="ps-4">
                       <div className="user-info">
                         <img src={user.img} alt={user.name} />
                         <span>{user.name}</span>
                       </div>
                     </td>
-                    <td>
+                    <td className="ps-4">
                       <span className={`badge ${user.role.toLowerCase()}`}>
                         {user.role}
                       </span>
                     </td>
-                    <td>{user.email}</td>
-                    <td>{user.time}</td>
-                    <td>
+                    <td className="ps-4">{user.email}</td>
+                    <td className="ps-4">{user.time}</td>
+                    <td className="ps-4">
                       <span
                         className={`badge status ${user.status.toLowerCase()}`}
                       >
@@ -2316,7 +2385,11 @@ const Users = () => {
                       <button
                         className="btn-icon btn-danger"
                         title="Delete"
-                        onClick={() => handleDeleteUser(user.id)}
+                        onClick={() => {
+                          setUserIdState(user.id);
+                          setConfirmType("single");
+                          handleShowConfirm("single");
+                        }}
                         disabled={deleteLoading}
                       >
                         <i
@@ -2392,6 +2465,50 @@ const Users = () => {
           </div>
         </div>
       </div>
+
+      {/* Confirmation dialog modal */}
+      {isConfirmModal && (
+        <div className="modal fade" id="userConfirmModal" tabIndex="-1">
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  <i className="fas fa-circle-check me-2"></i>
+                  Confirm
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={handleCloseConfirmModal}
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body">{message}</div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-primary add-btn"
+                  onClick={handleYesConfirm}
+                >
+                  <i className="fas fa-check me-2"></i>
+                  Yes
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary add-btn"
+                  onClick={() => {
+                    setConfirmState(false);
+                    handleCloseConfirmModal();
+                  }}
+                >
+                  <i className="fas fa-times me-2"></i>
+                  No
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* View User Details Modal */}
       {isShowUserDetails && (

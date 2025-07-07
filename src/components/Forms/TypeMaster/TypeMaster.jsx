@@ -3,6 +3,7 @@ import { AppContext } from "../../../context/AppContext";
 import api from "../../../services/api";
 import { Link } from "react-router-dom";
 import { Modal } from "bootstrap";
+import { toast } from "react-toastify";
 
 const TypeMaster = () => {
   const [errors, setErrors] = useState({});
@@ -38,6 +39,7 @@ const TypeMaster = () => {
       const response = await api.get("/api/type/all");
       setTypes(response.data.data);
     } catch (error) {
+      toast.error("Error in fetching types");
       console.error("Error fetching types:", error);
     } finally {
       setLoading(false);
@@ -93,6 +95,7 @@ const TypeMaster = () => {
         console.log("Submitting type data:", finalData);
         const response = await api.post("/api/type/save", finalData);
         console.log("Type added successfully:", response.data);
+        toast.success("Type added successfully");
         setIsAddType(false);
         // Reset form after successful submission
         handleReset(e);
@@ -114,7 +117,7 @@ const TypeMaster = () => {
         }
 
         console.error("Error adding type:", errorMessage);
-        alert(errorMessage);
+        toast.error(errorMessage);
       }
     }
   };
@@ -141,7 +144,7 @@ const TypeMaster = () => {
           updateData
         );
         console.log("Type updated successfully:", response.data);
-
+        toast.success("Type updated successfully");
         // Close the modal
         setIsEditTypeDetails(false);
 
@@ -161,7 +164,7 @@ const TypeMaster = () => {
         }
 
         console.error("Error updating type:", errorMessage);
-        alert(errorMessage);
+        toast.error(errorMessage);
       }
     }
   };
@@ -174,7 +177,7 @@ const TypeMaster = () => {
       setIsShowTypeDetails(true);
     } catch (error) {
       console.error("Error fetching type details:", error);
-      alert("Failed to fetch type details. Please try again.");
+      toast.error("Failed to fetch type details. Please try again.");
     }
   };
 
@@ -186,7 +189,7 @@ const TypeMaster = () => {
       setIsEditTypeDetails(true);
     } catch (error) {
       console.error("Error fetching type details:", error);
-      alert("Failed to fetch type details. Please try again.");
+      toast.error("Failed to fetch type details. Please try again.");
     }
   };
 
@@ -234,10 +237,12 @@ const TypeMaster = () => {
       try {
         setIsDeleting(true);
         await api.delete(`/api/type/delete/${id}`);
+        toast.success("Type deleted successfully");
         // Refresh the types list
         fetchTypes();
       } catch (error) {
         console.error("Error deleting type:", error);
+        toast.error("Error in deleting the type");
       } finally {
         setIsDeleting(false);
       }
@@ -247,7 +252,7 @@ const TypeMaster = () => {
   // Handle multiple delete
   const handleDeleteMultiple = async () => {
     if (selectedTypes.length === 0) {
-      alert("Please select at least one type to delete");
+      toast.error("Please select at least one type to delete");
       return;
     }
 
@@ -263,6 +268,7 @@ const TypeMaster = () => {
         // Reset selection
         setSelectedTypes([]);
         setSelectAll(false);
+        toast.success("Selected types deleted successfully");
         // Refresh the types list
         fetchTypes();
       } catch (error) {
@@ -270,7 +276,7 @@ const TypeMaster = () => {
           "Error deleting multiple types:",
           error.response ? error.response.data : error.message
         );
-        alert("Failed to delete selected types. Please try again.");
+        toast.error("Failed to delete selected types. Please try again.");
       } finally {
         setIsDeleting(false);
       }

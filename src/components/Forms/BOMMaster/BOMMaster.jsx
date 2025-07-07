@@ -3,6 +3,7 @@ import { AppContext } from "../../../context/AppContext";
 import api from "../../../services/api";
 import { Link } from "react-router-dom";
 import { Modal } from "bootstrap";
+import { toast } from "react-toastify";
 
 const BOMMaster = () => {
   const [errors, setErrors] = useState({});
@@ -73,6 +74,7 @@ const BOMMaster = () => {
         }
       })
       .catch((error) => {
+        toast.error("Error in fetching BOM's");
         console.error("Error fetching BOMs:", error);
       });
 
@@ -86,6 +88,7 @@ const BOMMaster = () => {
         }
       })
       .catch((error) => {
+        toast.error("Error in fetching warehouses");
         console.error("Error fetching warehouses:", error);
       });
 
@@ -99,6 +102,7 @@ const BOMMaster = () => {
         }
       })
       .catch((error) => {
+        toast.error("Error in fecthing items");
         console.error("Error fetching items:", error);
       });
   }, []);
@@ -212,6 +216,7 @@ const BOMMaster = () => {
               },
             ],
           });
+          toast.success("Bom added successfully");
           setIsAddBomPart([{ id: 1 }]);
           idRef.current = 2;
           setIsChecked(true);
@@ -222,6 +227,7 @@ const BOMMaster = () => {
           fetchBOMs(pagination.currentPage);
         })
         .catch((error) => {
+          toast.error("Error in adding new BOM");
           console.error("Error adding BOM:", error);
         });
     }
@@ -268,6 +274,7 @@ const BOMMaster = () => {
         .put(`/api/bom/update/${bomDetails.id}`, finalData)
         .then((response) => {
           console.log("BOM updated successfully:", response.data);
+          toast.success("Bom updated successfully");
           // Close the modal using Bootstrap's hide method
           const modal = Modal.getInstance(bomEditModalRef.current);
           if (modal) {
@@ -278,6 +285,7 @@ const BOMMaster = () => {
           fetchBOMs(pagination.currentPage);
         })
         .catch((error) => {
+          toast.error("Error in updating the BOM");
           console.error("Error updating BOM:", error);
         });
     }
@@ -420,6 +428,7 @@ const BOMMaster = () => {
         }
       })
       .catch((error) => {
+        toast.error("Error in fetching BOM's from database");
         console.error("Error fetching BOMs:", error);
       });
   };
@@ -481,10 +490,12 @@ const BOMMaster = () => {
         .delete(`/api/bom/delete/${bomId}`)
         .then((response) => {
           console.log("BOM deleted successfully:", response.data);
+          toast.success("BOM deleted successfully");
           // Refresh the current page
           fetchBOMs(pagination.currentPage);
         })
         .catch((error) => {
+          toast.error("Error deleting the BOM");
           console.error("Error deleting BOM:", error);
         });
     }
@@ -493,7 +504,7 @@ const BOMMaster = () => {
   // Handle bulk deletion
   const handleBulkDelete = () => {
     if (selectedBoms.length === 0) {
-      alert("Please select BOMs to delete");
+      toast.error("Please select BOMs to delete");
       return;
     }
 
@@ -510,12 +521,14 @@ const BOMMaster = () => {
       Promise.all(deletePromises)
         .then(() => {
           console.log("Selected BOMs deleted successfully");
+          toast.success("Selected BOM's deleted successfully");
           setSelectedBoms([]); // Clear selection
           setSelectAll(false); // Reset select all checkbox
           // Refresh the current page
           fetchBOMs(pagination.currentPage);
         })
         .catch((error) => {
+          toast.error("Error deleting selected BOM's.");
           console.error("Error deleting BOMs:", error);
         });
     }

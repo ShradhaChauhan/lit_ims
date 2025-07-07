@@ -3,6 +3,7 @@ import { AppContext } from "../../../context/AppContext";
 import { Link } from "react-router-dom";
 import { Modal } from "bootstrap";
 import api from "../../../services/api";
+import { toast } from "react-toastify";
 
 const VendorItemsMaster = () => {
   const [vendorItems, setVendorItems] = useState([]);
@@ -125,9 +126,11 @@ const VendorItemsMaster = () => {
             "Error fetching vendor items:",
             response.data?.message || "Unknown error"
           );
+          toast.error("Error in fetching vendor items");
         }
       })
       .catch((error) => {
+        toast.error("Error fetching vendor items");
         console.error("Error fetching vendor items:", error);
       });
   };
@@ -147,6 +150,10 @@ const VendorItemsMaster = () => {
               "Some vendors are missing required fields:",
               vendorData.filter((v) => !v.code || !v.name)
             );
+            toast.warning(
+              "Some vendors are missing required fields:",
+              vendorData.filter((v) => !v.code || !v.name)
+            );
           }
           setVendors(validVendors);
         } else {
@@ -154,9 +161,14 @@ const VendorItemsMaster = () => {
             "Error fetching vendors:",
             response.data?.message || "Unknown error"
           );
+          toast.error(
+            "Error fetching vendors:",
+            response.data?.message || "Unknown error"
+          );
         }
       })
       .catch((error) => {
+        toast.error("Error fetching vendors:", error);
         console.error("Error fetching vendors:", error);
       });
   };
@@ -173,9 +185,15 @@ const VendorItemsMaster = () => {
             "Error fetching items:",
             response.data?.message || "Unknown error"
           );
+          toast.error(
+            "Error fetching items:",
+            response.data?.message ||
+              "Unknown error. Please contact the support team."
+          );
         }
       })
       .catch((error) => {
+        toast.error("Error in fetching items");
         console.error("Error fetching items:", error);
       });
   };
@@ -215,6 +233,7 @@ const VendorItemsMaster = () => {
     );
 
     if (!selectedVendor || !selectedItem) {
+      toast.error("Could not find matching vendor or item");
       console.error("Could not find matching vendor or item");
       return;
     }
@@ -255,7 +274,7 @@ const VendorItemsMaster = () => {
       );
 
       if (!selectedVendor || !selectedItem) {
-        alert("Please select both vendor and item");
+        toast.error("Please select both vendor and item");
         return;
       }
 
@@ -277,7 +296,7 @@ const VendorItemsMaster = () => {
         .then((response) => {
           console.log("Response:", response.data);
           if (response.data && response.data.status) {
-            alert(
+            toast.success(
               response.data.message ||
                 "Vendor-Item assignment added successfully!"
             );
@@ -288,16 +307,17 @@ const VendorItemsMaster = () => {
             // Refresh the vendor-items list
             fetchVendorItems();
           } else {
-            alert(
+            toast.error(
               response.data?.message || "Error adding vendor-item assignment"
             );
           }
         })
         .catch((error) => {
           console.error("Error adding vendor-item assignment:", error);
-          alert("Error adding vendor-item assignment. Please try again.");
+          toast.error("Error adding vendor-item assignment. Please try again.");
         });
     } else {
+      toast.error("Form submission failed due to validation errors.");
       console.log("Form submission failed due to validation errors.");
     }
   };
@@ -346,7 +366,7 @@ const VendorItemsMaster = () => {
       );
 
       if (!selectedVendor || !selectedItem) {
-        alert("Please select both vendor and item");
+        toast.error("Please select both vendor and item");
         return;
       }
 
@@ -391,13 +411,12 @@ const VendorItemsMaster = () => {
 
             // Refresh the list
             fetchVendorItems();
-
-            alert(
+            toast.success(
               response.data.message ||
                 "Vendor-Item assignment updated successfully!"
             );
           } else {
-            alert(
+            toast.error(
               response.data?.message || "Error updating vendor-item assignment"
             );
           }
@@ -410,7 +429,7 @@ const VendorItemsMaster = () => {
             status: error.response?.status,
             finalData: finalData,
           });
-          alert(
+          toast.error(
             `Error updating vendor-item assignment: ${
               error.response?.data?.message || error.message
             }`
@@ -470,20 +489,22 @@ const VendorItemsMaster = () => {
         .delete(`/api/vendor-item/delete/${id}`)
         .then((response) => {
           if (response.data && response.data.status) {
-            alert(
+            toast.success(
               response.data.message ||
                 "Vendor-Item assignment deleted successfully!"
             );
             fetchVendorItems(); // Refresh the list
           } else {
-            alert(
+            toast.error(
               response.data?.message || "Error deleting vendor-item assignment"
             );
           }
         })
         .catch((error) => {
           console.error("Error deleting vendor-item assignment:", error);
-          alert("Error deleting vendor-item assignment. Please try again.");
+          toast.error(
+            "Error deleting vendor-item assignment. Please try again."
+          );
         });
     }
   };
@@ -491,7 +512,9 @@ const VendorItemsMaster = () => {
   // Function to delete multiple vendor items
   const handleDeleteSelectedVendorItems = () => {
     if (selectedVendorItems.length === 0) {
-      alert("Please select at least one vendor-item assignment to delete.");
+      toast.error(
+        "Please select at least one vendor-item assignment to delete."
+      );
       return;
     }
 
@@ -507,14 +530,16 @@ const VendorItemsMaster = () => {
 
       Promise.all(deletePromises)
         .then(() => {
-          alert("Selected vendor-item assignments deleted successfully!");
+          toast.success(
+            "Selected vendor-item assignments deleted successfully!"
+          );
           setSelectedVendorItems([]);
           setSelectAll(false);
           fetchVendorItems(); // Refresh the list
         })
         .catch((error) => {
           console.error("Error deleting vendor-item assignments:", error);
-          alert(
+          toast.error(
             "Error deleting some vendor-item assignments. Please try again."
           );
           fetchVendorItems(); // Refresh to see what was deleted

@@ -1117,3 +1117,29 @@ select:invalid {
 .font-1 {
     font-size: 1.1rem;
 }
+
+.print-btn {
+    width: 4rem;
+    height: 1.8rem;
+    font-size: 0.6rem !important;
+}
+
+.qc-btn {
+    font-size: 0.7rem !important;
+}
+
+.batch-details {
+    padding: 2rem;
+    justify-content: flex-end;
+    background-color: var(--background-color) !important;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+}
+
+.text-gray {
+    color: var(--secondary-color) !important;
+}
+
+.font-weight {
+    font-weight: 600;
+}

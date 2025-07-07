@@ -4,6 +4,7 @@ import { AppContext } from "../../../context/AppContext";
 import api from "../../../services/api";
 import { Link } from "react-router-dom";
 import { Modal } from "bootstrap";
+import { toast } from "react-toastify";
 
 const ItemMaster = () => {
   const [errors, setErrors] = useState({});
@@ -293,7 +294,7 @@ const ItemMaster = () => {
           // Check for success status in the new API response structure
           if (response.data.status) {
             // Show success message
-            alert(response.data.message || "Item Added Successfully");
+            toast.success("Item added successfully");
             // Reset form
             handleReset(e);
             // Close the form
@@ -302,13 +303,12 @@ const ItemMaster = () => {
             fetchItems();
           } else {
             // Show error message from API
-            alert(response.data.message || "Error adding item");
+            toast.error(response.data.message || "Error in adding item");
           }
         })
         .catch((error) => {
+          toast.error("Error in adding the item");
           console.error("Error adding item:", error);
-          // Show generic error message
-          alert("Error adding item. Please try again.");
         });
     }
   };
@@ -381,7 +381,7 @@ const ItemMaster = () => {
           fetchItems();
         } else {
           // Handle API error response
-          alert(response.data.message || "Error deleting item");
+          toast.error(response.data.message || "Error deleting item");
         }
         setDeleting(false);
       })
@@ -389,13 +389,13 @@ const ItemMaster = () => {
         console.error("Error deleting item:", error);
         setDeleting(false);
         // Handle error (show error message)
-        alert("Error deleting item. Please try again.");
+        toast.error("Error deleting item. Please try again.");
       });
   };
 
   const handleDeleteSelected = () => {
     if (selectedItems.length === 0) {
-      alert("Please select at least one item to delete.");
+      toast.error("Please select at least one item to delete.");
       return;
     }
 
@@ -431,7 +431,7 @@ const ItemMaster = () => {
           setSelectAll(false);
         } else {
           // Some deletions failed
-          alert("Some items could not be deleted. Please try again.");
+          toast.error("Some items could not be deleted. Please try again.");
         }
         setDeleting(false);
       })
@@ -439,7 +439,7 @@ const ItemMaster = () => {
         console.error("Error deleting items:", error);
         setDeleting(false);
         // Handle error (show error message)
-        alert("Error deleting items. Please try again.");
+        toast.error("Error deleting items. Please try again.");
       });
   };
 
@@ -519,7 +519,8 @@ const ItemMaster = () => {
           // Check for success status in the API response structure
           if (response.data.status) {
             // Show success message
-            alert(response.data.message || "Item Updated Successfully");
+            toast.success(response.data.message || "Item Updated Successfully");
+
             // Close the modal
             setIsEditItemDetails(false);
             // Reset item details
@@ -528,13 +529,13 @@ const ItemMaster = () => {
             fetchItems();
           } else {
             // Show error message from API
-            alert(response.data.message || "Error updating item");
+            toast.error(response.data.message || "Error updating item");
           }
         })
         .catch((error) => {
           console.error("Error updating item:", error);
           // Show generic error message
-          alert("Error updating item. Please try again.");
+          toast.error("Error updating item. Please try again.");
         });
     }
   };
