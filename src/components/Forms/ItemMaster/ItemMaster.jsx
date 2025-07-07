@@ -315,6 +315,8 @@ const ItemMaster = () => {
   const validateForm = (data) => {
     const errors = {};
 
+    console.log(data.code);
+
     if (!data.name?.trim()) {
       errors.name = "Item name is required";
     }
@@ -323,10 +325,10 @@ const ItemMaster = () => {
       errors.code = "Code is required";
     } else if (!/^\d+$/.test(data.code)) {
       errors.code = "Code must only be in digits";
-    } else if (data.code.length() !== 6) {
-      errors.code = "Code length should be 6 digits";
     }
-
+    //  else if (data.code.length() !== 6) {
+    //   errors.code = "Code length should be 6 digits";
+    // }
     if (!data.uom) {
       errors.uom = "UOM is required";
     }
@@ -378,6 +380,7 @@ const ItemMaster = () => {
         // Check for success status in the new API response structure
         if (response.data.status) {
           // Refresh the items list
+          toast.success("Successfully deleted selected items");
           fetchItems();
         } else {
           // Handle API error response
@@ -1037,12 +1040,7 @@ const ItemMaster = () => {
             <thead>
               <tr>
                 <th className="checkbox-cell">
-                  <input
-                    type="checkbox"
-                    id="select-all-header"
-                    checked={selectAll}
-                    onChange={handleSelectAllChange}
-                  />
+                  <input type="checkbox" id="select-all-header" disabled />
                 </th>
                 <th>
                   Name <i className="fas fa-sort color-gray ms-2"></i>

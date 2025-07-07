@@ -1124,10 +1124,6 @@ select:invalid {
     font-size: 0.6rem !important;
 }
 
-.qc-btn {
-    font-size: 0.7rem !important;
-}
-
 .batch-details {
     padding: 2rem;
     justify-content: flex-end;

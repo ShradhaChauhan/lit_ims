@@ -23,7 +23,6 @@ const MaterialIncoming = () => {
     mode: "",
     vendor: "",
     vendorName: "",
-
     code: "",
     item: "",
     barcode: "",
@@ -76,7 +75,7 @@ const MaterialIncoming = () => {
   const validateForm = (data) => {
     const errors = {};
 
-    if (!data.mode) {
+    if (!mode) {
       errors.mode = "Please select a mode";
     }
 
@@ -95,30 +94,69 @@ const MaterialIncoming = () => {
     e.preventDefault();
     const newErrors = validateForm(formData);
     setErrors(newErrors);
-    console.log(formData);
-    console.log(formData.code);
-    console.log(formData.itemCode);
-    try {
-      if (Object.keys(newErrors).length === 0) {
-        console.log("Sending request to generate batch no");
-        const response = await api.post(
-          `/api/receipt/generate-batch?vendorCode=${formData.code}&itemCode=${formData.itemCode}&quantity=${formData.quantity}`
-        ); // API to generate batch no
-        console.log(response.data);
-        setFormData({ ...formData, batchno: response.data });
-        const newItem = {
-          itemName: formData.itemName,
-          itemCode: formData.itemCode,
-          quantity: formData.quantity,
-          batchNo: response.data,
-        };
+    if (mode === "scan") {
+      // Verify the batchno if the mode is scan
+      try {
+        const response = await api.get(
+          `/api/receipt/verify-batch?batchNo=${formData.barcode}`
+        );
+        if (response.data.status) {
+          try {
+            if (Object.keys(newErrors).length === 0) {
+              console.log("Sending request to generate batch no");
+              const response = await api.post(
+                `/api/receipt/generate-batch?vendorCode=${formData.code}&itemCode=${formData.itemCode}&quantity=${formData.quantity}`
+              ); // API to generate batch no
+              console.log(response.data);
+              setFormData({ ...formData, batchno: response.data });
+              const newItem = {
+                itemName: formData.itemName,
+                itemCode: formData.itemCode,
+                quantity: formData.quantity,
+                batchNo: response.data,
+              };
 
-        setReceiptList((prev) => [...prev, newItem]);
-        toast.success("Item added successfully");
+              setReceiptList((prev) => [...prev, newItem]);
+              toast.success("Item added successfully");
+            }
+          } catch (error) {
+            toast.error("Error in generating batch number.");
+            console.error("Error generating batch number:", error);
+          }
+        }
+        handleModeChange();
+      } catch (error) {
+        toast.error("Error in fetching batch details");
+        console.error("Error fetching batch details:", error);
+        setIsShowQualityCheckForm(false);
+        handleModeChange();
       }
-    } catch (error) {
-      toast.error("Error in generating batch number.");
-      console.error("Error generating batch number:", error);
+    } else {
+      //If mode is auto then no need to verify the batchno
+      try {
+        if (Object.keys(newErrors).length === 0) {
+          console.log("Sending request to generate batch no");
+          const response = await api.post(
+            `/api/receipt/generate-batch?vendorCode=${formData.code}&itemCode=${formData.itemCode}&quantity=${formData.quantity}`
+          ); // API to generate batch no
+          console.log(response.data);
+          setFormData({ ...formData, batchno: response.data });
+          const newItem = {
+            itemName: formData.itemName,
+            itemCode: formData.itemCode,
+            quantity: formData.quantity,
+            batchNo: response.data,
+          };
+
+          setReceiptList((prev) => [...prev, newItem]);
+          toast.success("Item added successfully");
+        }
+        handleModeChange();
+      } catch (error) {
+        toast.error("Error in generating batch number.");
+        console.error("Error generating batch number:", error);
+        handleModeChange();
+      }
     }
   };
 
@@ -173,6 +211,21 @@ const MaterialIncoming = () => {
     }
   };
 
+  const handleModeChange = () => {
+    setVendor("");
+    // Reset form fields except mode
+    setFormData({
+      code: "",
+      itemName: "",
+      itemCode: "",
+      quantity: "",
+      batchno: "",
+    });
+
+    // Optionally clear item list if you're managing added items
+    // setReceiptList([]);
+  };
+
   return (
     <div>
       {/* Header section */}
@@ -225,10 +278,10 @@ const MaterialIncoming = () => {
                   <select
                     className="form-control ps-5 ms-1 text-font"
                     id="receiptMode"
-                    value={formData.mode}
+                    value={mode}
                     onChange={(e) => {
                       setMode(e.target.value);
-                      setFormData({ ...formData, mode: e.target.value });
+                      handleModeChange;
                     }}
                   >
                     <option value="" disabled hidden className="text-muted">
@@ -399,7 +452,8 @@ const MaterialIncoming = () => {
               </div>
               <div className="col-3 d-flex flex-column form-group">
                 <button
-                  className="btn btn-primary text-8 px-3 fw-medium mx-2 margin-top-2"
+                  className="btn btn-primary text-8 px-3 fw-medium mx-2"
+                  style={{ marginTop: "2.1rem" }}
                   onClick={handleAddReceiptItem}
                 >
                   <i className="fa-solid fa-add me-1"></i> Add Item
@@ -445,7 +499,9 @@ const MaterialIncoming = () => {
                             <td className="ps-4">{receipt.itemName}</td>
                             <td className="ps-4">{receipt.itemCode}</td>
                             <td className="ps-4">{receipt.quantity}</td>
-                            <td className="ps-4">{receipt.batchNo}</td>
+                            <td className="ps-4 text-break">
+                              {receipt.batchNo}
+                            </td>
                             <td className="actions ps-3">
                               <button
                                 className="btn-icon btn-primary"

@@ -24,6 +24,7 @@ import ProductionReceipt from "../Forms/ProductionReceipt/ProductionReceipt";
 import WIPReturn from "../Forms/WIPReturn/WIPReturn";
 import ActivityLogs from "../ActivityLogs/ActivityLogs";
 import MaterialIncoming from "../Forms/MaterialIncoming/MaterialIncoming";
+import IncomingQC from "../Forms/IncomingQC/IncomingQC";
 
 const SideBar = () => {
   const {
