@@ -242,8 +242,6 @@ const SideBar = () => {
     name === "Activity Logs" && setRightSideComponent(<ActivityLogs />);
   };
 
-  console.log("Hovered menu:", hoveredMenu);
-
   return (
     <div
       className={`d-flex flex-column vh-100 sidebar ${

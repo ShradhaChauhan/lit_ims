@@ -49,6 +49,99 @@ const BOMMaster = () => {
   const [selectedStatus, setSelectedStatus] = useState("");
   const [filteredBoms, setFilteredBoms] = useState([]);
 
+  // Confirm modal states
+  const [message, setMesssage] = useState("");
+  const [confirmState, setConfirmState] = useState(false);
+  const [confirmType, setConfirmType] = useState("");
+  const [bomIdState, setBomIdState] = useState("");
+  const [isConfirmModal, setIsConfirmModal] = useState(false);
+  const [confirmModal, setConfirmModal] = useState(null);
+
+  // Confirm useEffect for confirm modal
+  useEffect(() => {
+    let modal = null;
+
+    if (isConfirmModal) {
+      const modalElement = document.getElementById("bomConfirmModal");
+
+      if (modalElement) {
+        // Clean up any existing modal artifacts
+        cleanupModalArtifacts();
+
+        // Create new modal
+        modal = new Modal(modalElement, {
+          backdrop: "static",
+          keyboard: false,
+        });
+
+        // Add event listener for when modal is hidden
+        modalElement.addEventListener("hidden.bs.modal", () => {
+          cleanupModalArtifacts();
+          setIsConfirmModal(false);
+        });
+
+        // Show the modal
+        modal.show();
+
+        // Store modal reference
+        setConfirmModal(modal);
+      }
+    }
+
+    // Cleanup function
+    return () => {
+      if (modal) {
+        modal.dispose();
+        cleanupModalArtifacts();
+      }
+    };
+  }, [isConfirmModal]);
+
+  // Global function to clean up modal artifacts
+  const cleanupModalArtifacts = () => {
+    console.log("Cleaning up modal artifacts");
+    document.body.classList.remove("modal-open");
+    document.body.style.paddingRight = "";
+    document.body.style.overflow = "";
+    const backdrops = document.getElementsByClassName("modal-backdrop");
+    while (backdrops.length > 0) {
+      backdrops[0].remove();
+    }
+  };
+
+  const handleCloseConfirmModal = () => {
+    if (confirmModal) {
+      confirmModal.hide();
+      cleanupModalArtifacts();
+    }
+
+    // Add a small delay before resetting states to allow animation to complete
+    setTimeout(() => {
+      setIsConfirmModal(false);
+    }, 300);
+  };
+
+  const handleShowConfirm = (type) => {
+    if (type === "single") {
+      setMesssage("Are you sure you want to delete this BOM?");
+      setIsConfirmModal(true);
+    } else {
+      if (selectedBoms.length === 0) {
+        toast.error("Please select BOMs to delete");
+        return;
+      }
+      setMesssage(
+        `Are you sure you want to delete ${selectedBoms.length} selected BOMs?`
+      );
+      setIsConfirmModal(true);
+    }
+  };
+
+  const handleYesConfirm = () => {
+    if (confirmType === "single") handleDeleteBom(bomIdState);
+    else handleBulkDelete();
+  };
+
   useEffect(() => {
     if (formData.items.length === 0) {
       setFormData((prev) => ({
@@ -485,53 +578,44 @@ const BOMMaster = () => {
 
   // Handle single BOM deletion
   const handleDeleteBom = (bomId) => {
-    if (window.confirm("Are you sure you want to delete this BOM?")) {
-      api
-        .delete(`/api/bom/delete/${bomId}`)
-        .then((response) => {
-          console.log("BOM deleted successfully:", response.data);
-          toast.success("BOM deleted successfully");
-          // Refresh the current page
-          fetchBOMs(pagination.currentPage);
-        })
-        .catch((error) => {
-          toast.error("Error deleting the BOM");
-          console.error("Error deleting BOM:", error);
-        });
-    }
+    api
+      .delete(`/api/bom/delete/${bomId}`)
+      .then((response) => {
+        console.log("BOM deleted successfully:", response.data);
+        toast.success("BOM deleted successfully");
+        // Refresh the current page
+        fetchBOMs(pagination.currentPage);
+        setIsConfirmModal(false);
+      })
+      .catch((error) => {
+        toast.error("Error deleting the BOM");
+        console.error("Error deleting BOM:", error);
+        setIsConfirmModal(false);
+      });
   };
 
   // Handle bulk deletion
   const handleBulkDelete = () => {
-    if (selectedBoms.length === 0) {
-      toast.error("Please select BOMs to delete");
-      return;
-    }
+    // Create an array of promises for each delete operation
+    const deletePromises = selectedBoms.map((bomId) =>
+      api.delete(`/api/bom/delete/${bomId}`)
+    );
 
-    if (
-      window.confirm(
-        `Are you sure you want to delete ${selectedBoms.length} selected BOMs?`
-      )
-    ) {
-      // Create an array of promises for each delete operation
-      const deletePromises = selectedBoms.map((bomId) =>
-        api.delete(`/api/bom/delete/${bomId}`)
-      );
-
-      Promise.all(deletePromises)
-        .then(() => {
-          console.log("Selected BOMs deleted successfully");
-          toast.success("Selected BOM's deleted successfully");
-          setSelectedBoms([]); // Clear selection
-          setSelectAll(false); // Reset select all checkbox
-          // Refresh the current page
-          fetchBOMs(pagination.currentPage);
-        })
-        .catch((error) => {
-          toast.error("Error deleting selected BOM's.");
-          console.error("Error deleting BOMs:", error);
-        });
-    }
+    Promise.all(deletePromises)
+      .then(() => {
+        console.log("Selected BOMs deleted successfully");
+        toast.success("Selected BOM's deleted successfully");
+        setSelectedBoms([]); // Clear selection
+        setSelectAll(false); // Reset select all checkbox
+        // Refresh the current page
+        fetchBOMs(pagination.currentPage);
+        setIsConfirmModal(false);
+      })
+      .catch((error) => {
+        toast.error("Error deleting selected BOM's.");
+        console.error("Error deleting BOMs:", error);
+        setIsConfirmModal(false);
+      });
   };
 
   // Reset all filters
@@ -957,7 +1041,10 @@ const BOMMaster = () => {
               </button>
               <button
                 className="btn-action btn-danger"
-                onClick={handleBulkDelete}
+                onClick={() => {
+                  setConfirmType("multi");
+                  handleShowConfirm("multi");
+                }}
                 disabled={selectedBoms.length === 0}
               >
                 <i className="fas fa-trash"></i>
@@ -969,7 +1056,7 @@ const BOMMaster = () => {
             <thead>
               <tr>
                 <th className="checkbox-cell">
-                  <input type="checkbox" id="select-all" />
+                  <input type="checkbox" id="select-all" disabled />
                 </th>
                 <th>
                   Name <i className="fas fa-sort color-gray ms-2"></i>
@@ -1042,7 +1129,11 @@ const BOMMaster = () => {
                       <button
                         className="btn-icon btn-danger"
                         title="Delete"
-                        onClick={() => handleDeleteBom(bom.id)}
+                        onClick={() => {
+                          setBomIdState(bom.id);
+                          setConfirmType("single");
+                          handleShowConfirm("single");
+                        }}
                       >
                         <i className="fas fa-trash"></i>
                       </button>
@@ -1105,6 +1196,50 @@ const BOMMaster = () => {
           </div>
         </div>
       </div>
+
+      {/* Confirmation dialog modal */}
+      {isConfirmModal && (
+        <div className="modal fade" id="bomConfirmModal" tabIndex="-1">
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  <i className="fas fa-circle-check me-2"></i>
+                  Confirm
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={handleCloseConfirmModal}
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body">{message}</div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-primary add-btn"
+                  onClick={handleYesConfirm}
+                >
+                  <i className="fas fa-check me-2"></i>
+                  Yes
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary add-btn"
+                  onClick={() => {
+                    setConfirmState(false);
+                    handleCloseConfirmModal();
+                  }}
+                >
+                  <i className="fas fa-times me-2"></i>
+                  No
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* BOM View Modal */}
       <div
@@ -1212,6 +1347,7 @@ const BOMMaster = () => {
         </div>
       </div>
 
+      {/* BOM Edit Modal */}
       <div
         className="modal fade"
         id="bomEditModal"

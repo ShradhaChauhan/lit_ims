@@ -32,6 +32,99 @@ const TypeMaster = () => {
   const [statusFilter, setStatusFilter] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Confirm modal states
+  const [message, setMesssage] = useState("");
+  const [confirmState, setConfirmState] = useState(false);
+  const [confirmType, setConfirmType] = useState("");
+  const [typeIdState, setTypeIdState] = useState("");
+  const [isConfirmModal, setIsConfirmModal] = useState(false);
+  const [confirmModal, setConfirmModal] = useState(null);
+
+  // Confirm useEffect for confirm modal
+  useEffect(() => {
+    let modal = null;
+
+    if (isConfirmModal) {
+      const modalElement = document.getElementById("typeConfirmModal");
+
+      if (modalElement) {
+        // Clean up any existing modal artifacts
+        cleanupModalArtifacts();
+
+        // Create new modal
+        modal = new Modal(modalElement, {
+          backdrop: "static",
+          keyboard: false,
+        });
+
+        // Add event listener for when modal is hidden
+        modalElement.addEventListener("hidden.bs.modal", () => {
+          cleanupModalArtifacts();
+          setIsConfirmModal(false);
+        });
+
+        // Show the modal
+        modal.show();
+
+        // Store modal reference
+        setConfirmModal(modal);
+      }
+    }
+
+    // Cleanup function
+    return () => {
+      if (modal) {
+        modal.dispose();
+        cleanupModalArtifacts();
+      }
+    };
+  }, [isConfirmModal]);
+
+  // Global function to clean up modal artifacts
+  const cleanupModalArtifacts = () => {
+    console.log("Cleaning up modal artifacts");
+    document.body.classList.remove("modal-open");
+    document.body.style.paddingRight = "";
+    document.body.style.overflow = "";
+    const backdrops = document.getElementsByClassName("modal-backdrop");
+    while (backdrops.length > 0) {
+      backdrops[0].remove();
+    }
+  };
+
+  const handleCloseConfirmModal = () => {
+    if (confirmModal) {
+      confirmModal.hide();
+      cleanupModalArtifacts();
+    }
+
+    // Add a small delay before resetting states to allow animation to complete
+    setTimeout(() => {
+      setIsConfirmModal(false);
+    }, 300);
+  };
+
+  const handleShowConfirm = (type) => {
+    if (type === "single") {
+      setMesssage("Are you sure you want to delete this type?");
+      setIsConfirmModal(true);
+    } else {
+      if (selectedTypes.length === 0) {
+        toast.error("Please select at least one type to delete");
+        return;
+      }
+      setMesssage(
+        `Are you sure you want to delete ${selectedTypes.length} selected types?`
+      );
+      setIsConfirmModal(true);
+    }
+  };
+
+  const handleYesConfirm = () => {
+    if (confirmType === "single") handleDeleteType(typeIdState);
+    else handleDeleteMultiple();
+  };
+
   // Fetch types from API
   const fetchTypes = async () => {
     try {
@@ -233,53 +326,46 @@ const TypeMaster = () => {
 
   // Handle single delete
   const handleDeleteType = async (id) => {
-    if (window.confirm("Are you sure you want to delete this type?")) {
-      try {
-        setIsDeleting(true);
-        await api.delete(`/api/type/delete/${id}`);
-        toast.success("Type deleted successfully");
-        // Refresh the types list
-        fetchTypes();
-      } catch (error) {
-        console.error("Error deleting type:", error);
-        toast.error("Error in deleting the type");
-      } finally {
-        setIsDeleting(false);
-      }
+    try {
+      setIsDeleting(true);
+      await api.delete(`/api/type/delete/${id}`);
+      toast.success("Type deleted successfully");
+      // Refresh the types list
+      fetchTypes();
+      setIsConfirmModal(false);
+    } catch (error) {
+      console.error("Error deleting type:", error);
+      toast.error("Error in deleting the type");
+      setIsConfirmModal(false);
+    } finally {
+      setIsConfirmModal(false);
+      setIsDeleting(false);
     }
   };
 
   // Handle multiple delete
   const handleDeleteMultiple = async () => {
-    if (selectedTypes.length === 0) {
-      toast.error("Please select at least one type to delete");
-      return;
-    }
-
-    if (
-      window.confirm(
-        `Are you sure you want to delete ${selectedTypes.length} selected types?`
-      )
-    ) {
-      try {
-        setIsDeleting(true);
-        console.log("Deleting types with IDs:", selectedTypes);
-        await api.post("/api/type/delete-multiple", selectedTypes);
-        // Reset selection
-        setSelectedTypes([]);
-        setSelectAll(false);
-        toast.success("Selected types deleted successfully");
-        // Refresh the types list
-        fetchTypes();
-      } catch (error) {
-        console.error(
-          "Error deleting multiple types:",
-          error.response ? error.response.data : error.message
-        );
-        toast.error("Failed to delete selected types. Please try again.");
-      } finally {
-        setIsDeleting(false);
-      }
+    try {
+      setIsDeleting(true);
+      console.log("Deleting types with IDs:", selectedTypes);
+      await api.post("/api/type/delete-multiple", selectedTypes);
+      // Reset selection
+      setSelectedTypes([]);
+      setSelectAll(false);
+      toast.success("Selected types deleted successfully");
+      // Refresh the types list
+      fetchTypes();
+      setIsConfirmModal(false);
+    } catch (error) {
+      console.error(
+        "Error deleting multiple types:",
+        error.response ? error.response.data : error.message
+      );
+      toast.error("Failed to delete selected types. Please try again.");
+      setIsConfirmModal(false);
+    } finally {
+      setIsConfirmModal(false);
+      setIsDeleting(false);
     }
   };
 
@@ -529,7 +615,10 @@ const TypeMaster = () => {
             </div>
             <button
               className="btn-action btn-danger"
-              onClick={handleDeleteMultiple}
+              onClick={() => {
+                setConfirmType("multi");
+                handleShowConfirm("multi");
+              }}
               disabled={selectedTypes.length === 0 || isDeleting}
             >
               {isDeleting ? (
@@ -547,11 +636,7 @@ const TypeMaster = () => {
             <thead>
               <tr>
                 <th className="checkbox-cell">
-                  <input
-                    type="checkbox"
-                    checked={selectAll}
-                    onChange={handleSelectAllChange}
-                  />
+                  <input type="checkbox" disabled />
                 </th>
                 <th>
                   TRNO <i className="fas fa-sort color-gray ms-2"></i>
@@ -637,8 +722,12 @@ const TypeMaster = () => {
                       <button
                         className="btn-icon btn-danger"
                         title="Delete"
-                        onClick={() => handleDeleteType(type.id)}
                         disabled={isDeleting}
+                        onClick={() => {
+                          setTypeIdState(type.id);
+                          setConfirmType("single");
+                          handleShowConfirm("single");
+                        }}
                       >
                         {isDeleting ? (
                           <i className="fas fa-spinner fa-spin"></i>
@@ -683,6 +772,50 @@ const TypeMaster = () => {
           </div>
         </div>
       </div>
+
+      {/* Confirmation dialog modal */}
+      {isConfirmModal && (
+        <div className="modal fade" id="typeConfirmModal" tabIndex="-1">
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  <i className="fas fa-circle-check me-2"></i>
+                  Confirm
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={handleCloseConfirmModal}
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body">{message}</div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-primary add-btn"
+                  onClick={handleYesConfirm}
+                >
+                  <i className="fas fa-check me-2"></i>
+                  Yes
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary add-btn"
+                  onClick={() => {
+                    setConfirmState(false);
+                    handleCloseConfirmModal();
+                  }}
+                >
+                  <i className="fas fa-times me-2"></i>
+                  No
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* View Type Details Modal */}
       {isShowTypeDetails && (

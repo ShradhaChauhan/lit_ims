@@ -1214,9 +1214,6 @@ const Users = () => {
 
   // Handle delete user
   const handleDeleteUser = async (userId) => {
-    // if (!window.confirm("Are you sure you want to delete this user?")) {
-    //   return;
-    // }
     setDeleteLoading(true);
     try {
       const response = await api.delete(`/api/users/delete/${userId}`);

@@ -59,7 +59,7 @@ const VendorMaster = () => {
     let modal = null;
 
     if (isConfirmModal) {
-      const modalElement = document.getElementById("userConfirmModal");
+      const modalElement = document.getElementById("vendorConfirmModal");
 
       if (modalElement) {
         // Clean up any existing modal artifacts
@@ -1068,7 +1068,7 @@ const VendorMaster = () => {
 
       {/* Confirmation dialog modal */}
       {isConfirmModal && (
-        <div className="modal fade" id="userConfirmModal" tabIndex="-1">
+        <div className="modal fade" id="vendorConfirmModal" tabIndex="-1">
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">

@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const IssueProduction = () => {
+  const [requestedItems, setRequestedItems] = useState([]);
   // Auto generate issue number
   const generateIssueNumber = () => {
     const year = new Date().getFullYear(); // e.g., 2025
@@ -10,6 +12,22 @@ const IssueProduction = () => {
   };
 
   const [issueNumber] = useState(generateIssueNumber());
+
+  // Fetch and Load Requisition Number List
+  useEffect(() => {
+    handleFetchRequisitionNumberList();
+  }, []);
+
+  const handleFetchRequisitionNumberList = async () => {
+    try {
+      const response = await api.get("/api/");
+      setRequestedItems(response.data.data);
+    } catch (error) {
+      toast.error("Error in fetching requisition number list");
+      console.error("Error fetching requisition number list:", error);
+    }
+  };
+
   return (
     <div>
       {" "}
@@ -105,17 +123,67 @@ const IssueProduction = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="no-data-row">
-                      <td colSpan="7" className="no-data-cell">
-                        <div className="no-data-content">
-                          <i className="fas fa-dolly no-data-icon"></i>
-                          <p className="no-data-text">No Items to Issue</p>
-                          <p className="no-data-subtext">
-                            Select a requisition to view items
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
+                    {requestedItems.length === 0 ? (
+                      <tr className="no-data-row">
+                        <td colSpan="7" className="no-data-cell">
+                          <div className="no-data-content">
+                            <i className="fas fa-dolly no-data-icon"></i>
+                            <p className="no-data-text">No Items to Issue</p>
+                            <p className="no-data-subtext">
+                              Select a requisition to view items
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      requestedItems.map((items) => (
+                        <tr key={items.id}>
+                          <td className="ps-4">
+                            <div>
+                              <span>{items.itemName}</span>
+                            </div>
+                          </td>
+                          <td className="ps-4">
+                            <div>
+                              <span>{items.code}</span>
+                            </div>
+                          </td>
+                          <td className="ps-4">
+                            <div>
+                              <span>{items.requestedQty}</span>
+                            </div>
+                          </td>
+                          <td className="ps-4">
+                            <div>
+                              <span>{items.standardQty}</span>
+                            </div>
+                          </td>
+                          <td className="ps-4">
+                            <div>
+                              <span>{items.issuedQty}</span>
+                            </div>
+                          </td>
+                          <td className="ps-4">
+                            <div>
+                              <span>{items.variance}</span>
+                            </div>
+                          </td>
+                          <td className="ps-4">
+                            <div>
+                              <span
+                                className={`badge status ${
+                                  items.status.toLowerCase() === "pending"
+                                    ? "inactive"
+                                    : "active"
+                                }`}
+                              >
+                                {items.status}
+                              </span>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>

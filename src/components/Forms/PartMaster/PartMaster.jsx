@@ -37,6 +37,89 @@ const PartMaster = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Confirm modal states
+  const [message, setMesssage] = useState("");
+  const [confirmState, setConfirmState] = useState(false);
+  const [confirmType, setConfirmType] = useState("");
+  const [partIdState, setPartIdState] = useState("");
+  const [isConfirmModal, setIsConfirmModal] = useState(false);
+  const [confirmModal, setConfirmModal] = useState(null);
+
+  // Confirm useEffect for confirm modal
+  useEffect(() => {
+    let modal = null;
+
+    if (isConfirmModal) {
+      const modalElement = document.getElementById("partConfirmModal");
+
+      if (modalElement) {
+        // Clean up any existing modal artifacts
+        cleanupModalArtifacts();
+
+        // Create new modal
+        modal = new Modal(modalElement, {
+          backdrop: "static",
+          keyboard: false,
+        });
+
+        // Add event listener for when modal is hidden
+        modalElement.addEventListener("hidden.bs.modal", () => {
+          cleanupModalArtifacts();
+          setIsConfirmModal(false);
+        });
+
+        // Show the modal
+        modal.show();
+
+        // Store modal reference
+        setConfirmModal(modal);
+      }
+    }
+
+    // Cleanup function
+    return () => {
+      if (modal) {
+        modal.dispose();
+        cleanupModalArtifacts();
+      }
+    };
+  }, [isConfirmModal]);
+
+  // Global function to clean up modal artifacts
+  const cleanupModalArtifacts = () => {
+    console.log("Cleaning up modal artifacts");
+    document.body.classList.remove("modal-open");
+    document.body.style.paddingRight = "";
+    document.body.style.overflow = "";
+    const backdrops = document.getElementsByClassName("modal-backdrop");
+    while (backdrops.length > 0) {
+      backdrops[0].remove();
+    }
+  };
+
+  const handleCloseConfirmModal = () => {
+    if (confirmModal) {
+      confirmModal.hide();
+      cleanupModalArtifacts();
+    }
+
+    // Add a small delay before resetting states to allow animation to complete
+    setTimeout(() => {
+      setIsConfirmModal(false);
+    }, 300);
+  };
+
+  const handleShowConfirm = (type) => {
+    if (type === "single") {
+      setMesssage("Are you sure you want to delete this part?");
+      setIsConfirmModal(true);
+    }
+  };
+
+  const handleYesConfirm = () => {
+    if (confirmType === "single") handleDeletePart(partIdState);
+  };
+
   useEffect(() => {
     fetchParts();
   }, []);
@@ -191,23 +274,23 @@ const PartMaster = () => {
   };
 
   const handleDeletePart = (partId) => {
-    if (window.confirm("Are you sure you want to delete this part?")) {
-      setLoading(true);
-      api
-        .delete(`/api/part/delete/${partId}`)
-        .then((response) => {
-          toast.success("Part deleted successfully");
-          console.log("Part deleted successfully:", response.data);
-          // Refresh parts list after deletion
-          fetchParts();
-        })
-        .catch((error) => {
-          toast.error("Failed to deleted the part. Please try again");
-          console.error("Error deleting part:", error);
-          setError("Failed to delete part. Please try again.");
-          setLoading(false);
-        });
-    }
+    setLoading(true);
+    api
+      .delete(`/api/part/delete/${partId}`)
+      .then((response) => {
+        toast.success("Part deleted successfully");
+        console.log("Part deleted successfully:", response.data);
+        // Refresh parts list after deletion
+        fetchParts();
+        setIsConfirmModal(false);
+      })
+      .catch((error) => {
+        toast.error("Failed to deleted the part. Please try again");
+        console.error("Error deleting part:", error);
+        setError("Failed to delete part. Please try again.");
+        setLoading(false);
+        setIsConfirmModal(false);
+      });
   };
 
   // Update search input handler
@@ -503,12 +586,7 @@ const PartMaster = () => {
               <thead>
                 <tr>
                   <th className="checkbox-cell ps-4">
-                    <input
-                      type="checkbox"
-                      id="select-all-header"
-                      checked={selectAll}
-                      onChange={handleSelectAllChange}
-                    />
+                    <input type="checkbox" id="select-all-header" disabled />
                   </th>
                   <th>
                     Code <i className="fas fa-sort color-gray ms-2"></i>
@@ -587,7 +665,11 @@ const PartMaster = () => {
                         <button
                           className="btn-icon btn-danger"
                           title="Delete"
-                          onClick={() => handleDeletePart(part.id)}
+                          onClick={() => {
+                            setPartIdState(part.id);
+                            setConfirmType("single");
+                            handleShowConfirm("single");
+                          }}
                         >
                           <i className="fas fa-trash"></i>
                         </button>
@@ -626,6 +708,50 @@ const PartMaster = () => {
           </div>
         </div>
       </div>
+
+      {/* Confirmation dialog modal */}
+      {isConfirmModal && (
+        <div className="modal fade" id="partConfirmModal" tabIndex="-1">
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  <i className="fas fa-circle-check me-2"></i>
+                  Confirm
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={handleCloseConfirmModal}
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body">{message}</div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-primary add-btn"
+                  onClick={handleYesConfirm}
+                >
+                  <i className="fas fa-check me-2"></i>
+                  Yes
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary add-btn"
+                  onClick={() => {
+                    setConfirmState(false);
+                    handleCloseConfirmModal();
+                  }}
+                >
+                  <i className="fas fa-times me-2"></i>
+                  No
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* View Part Details Modal */}
       {isShowPartDetails && (

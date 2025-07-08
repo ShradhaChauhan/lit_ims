@@ -50,6 +50,98 @@ const GroupMaster = () => {
   // Edit switch state
   const [editSwitchChecked, setEditSwitchChecked] = useState(true);
 
+  // Confirm modal states
+  const [message, setMesssage] = useState("");
+  const [confirmState, setConfirmState] = useState(false);
+  const [confirmType, setConfirmType] = useState("");
+  const [groupIdState, setGroupIdState] = useState("");
+  const [isConfirmModal, setIsConfirmModal] = useState(false);
+  const [confirmModal, setConfirmModal] = useState(null);
+
+  // Confirm useEffect for confirm modal
+  useEffect(() => {
+    let modal = null;
+
+    if (isConfirmModal) {
+      const modalElement = document.getElementById("groupConfirmModal");
+
+      if (modalElement) {
+        // Clean up any existing modal artifacts
+        cleanupModalArtifacts();
+
+        // Create new modal
+        modal = new Modal(modalElement, {
+          backdrop: "static",
+          keyboard: false,
+        });
+
+        // Add event listener for when modal is hidden
+        modalElement.addEventListener("hidden.bs.modal", () => {
+          cleanupModalArtifacts();
+          setIsConfirmModal(false);
+        });
+
+        // Show the modal
+        modal.show();
+
+        // Store modal reference
+        setConfirmModal(modal);
+      }
+    }
+
+    // Cleanup function
+    return () => {
+      if (modal) {
+        modal.dispose();
+        cleanupModalArtifacts();
+      }
+    };
+  }, [isConfirmModal]);
+
+  // Global function to clean up modal artifacts
+  const cleanupModalArtifacts = () => {
+    console.log("Cleaning up modal artifacts");
+    document.body.classList.remove("modal-open");
+    document.body.style.paddingRight = "";
+    document.body.style.overflow = "";
+    const backdrops = document.getElementsByClassName("modal-backdrop");
+    while (backdrops.length > 0) {
+      backdrops[0].remove();
+    }
+  };
+
+  const handleCloseConfirmModal = () => {
+    if (confirmModal) {
+      confirmModal.hide();
+      cleanupModalArtifacts();
+    }
+
+    // Add a small delay before resetting states to allow animation to complete
+    setTimeout(() => {
+      setIsConfirmModal(false);
+    }, 300);
+  };
+
+  const handleShowConfirm = (type) => {
+    if (type === "single") {
+      setMesssage("Are you sure you want to delete this group?");
+      setIsConfirmModal(true);
+    } else {
+      if (selectedGroups.length === 0) {
+        return;
+      }
+      setMesssage(
+        `Are you sure you want to delete ${selectedGroups.length} selected group(s)?`
+      );
+      setIsConfirmModal(true);
+    }
+  };
+
+  const handleYesConfirm = () => {
+    if (confirmType === "single") handleDeleteSingle(groupIdState);
+    else handleDeleteSelected();
+  };
+
   // Load groups data
   const loadGroups = async () => {
     setDataLoading(true);
@@ -117,21 +209,8 @@ const GroupMaster = () => {
   };
 
   const handleDeleteSelected = async () => {
-    if (selectedGroups.length === 0) {
-      return;
-    }
-
-    if (
-      !window.confirm(
-        `Are you sure you want to delete ${selectedGroups.length} selected group(s)?`
-      )
-    ) {
-      return;
-    }
-
     setDeleteLoading(true);
     setDataError(null);
-
     try {
       // Delete groups one by one
       for (const groupId of selectedGroups) {
@@ -142,20 +221,19 @@ const GroupMaster = () => {
       setSelectedGroups([]);
       setSelectAll(false);
       loadGroups();
+      setIsConfirmModal(false);
     } catch (err) {
       toast.error("Error in deleting groups");
       console.error("Error deleting groups:", err);
       setDataError(err.response?.data?.message || "Error deleting groups");
+      setIsConfirmModal(false);
     } finally {
       setDeleteLoading(false);
+      setIsConfirmModal(false);
     }
   };
 
   const handleDeleteSingle = async (groupId) => {
-    if (!window.confirm("Are you sure you want to delete this group?")) {
-      return;
-    }
-
     setDataLoading(true);
     setDataError(null);
 
@@ -169,11 +247,14 @@ const GroupMaster = () => {
       toast.success("Group deleted successfully");
       // Reload data
       loadGroups();
+      setIsConfirmModal(false);
     } catch (err) {
       toast.error("Error in deleting group. Please try agian");
       console.error("Error deleting group:", err);
       setDataError(err.response?.data?.message || "Error deleting group");
+      setIsConfirmModal(false);
     } finally {
+      setIsConfirmModal(false);
       setDataLoading(false);
     }
   };
@@ -609,7 +690,10 @@ const GroupMaster = () => {
             </div>
             <button
               className="btn-action btn-danger"
-              onClick={handleDeleteSelected}
+              onClick={() => {
+                setConfirmType("multi");
+                handleShowConfirm("multi");
+              }}
               disabled={deleteLoading || selectedGroups.length === 0}
             >
               {deleteLoading ? (
@@ -633,11 +717,7 @@ const GroupMaster = () => {
             <thead>
               <tr>
                 <th className="checkbox-cell">
-                  <input
-                    type="checkbox"
-                    checked={selectAll}
-                    onChange={handleSelectAllChange}
-                  />
+                  <input type="checkbox" disabled />
                 </th>
                 <th>
                   TRNO <i className="fas fa-sort color-gray ms-2"></i>
@@ -715,7 +795,11 @@ const GroupMaster = () => {
                       <button
                         className="btn-icon btn-danger"
                         title="Delete"
-                        onClick={() => handleDeleteSingle(group.id)}
+                        onClick={() => {
+                          setGroupIdState(group.id);
+                          setConfirmType("single");
+                          handleShowConfirm("single");
+                        }}
                       >
                         <i className="fas fa-trash"></i>
                       </button>
@@ -781,6 +865,50 @@ const GroupMaster = () => {
           </div>
         </div>
       </div>
+
+      {/* Confirmation dialog modal */}
+      {isConfirmModal && (
+        <div className="modal fade" id="groupConfirmModal" tabIndex="-1">
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  <i className="fas fa-circle-check me-2"></i>
+                  Confirm
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={handleCloseConfirmModal}
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body">{message}</div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-primary add-btn"
+                  onClick={handleYesConfirm}
+                >
+                  <i className="fas fa-check me-2"></i>
+                  Yes
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary add-btn"
+                  onClick={() => {
+                    setConfirmState(false);
+                    handleCloseConfirmModal();
+                  }}
+                >
+                  <i className="fas fa-times me-2"></i>
+                  No
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* View Group Details Modal */}
       {isShowGroupDetails && (

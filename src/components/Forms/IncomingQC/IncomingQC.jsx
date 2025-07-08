@@ -183,7 +183,7 @@ const IncomingQC = () => {
     let modal = null;
 
     if (isConfirmModal) {
-      const modalElement = document.getElementById("userConfirmModal");
+      const modalElement = document.getElementById("incomingQcConfirmModal");
 
       if (modalElement) {
         // Clean up any existing modal artifacts
@@ -857,7 +857,7 @@ const IncomingQC = () => {
 
       {/* Confirmation dialog modal */}
       {isConfirmModal && (
-        <div className="modal fade" id="userConfirmModal" tabIndex="-1">
+        <div className="modal fade" id="incomingQcConfirmModal" tabIndex="-1">
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">

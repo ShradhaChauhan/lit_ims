@@ -54,6 +54,99 @@ const ItemMaster = () => {
     status: "active",
   });
 
+  // Confirm modal states
+  const [message, setMesssage] = useState("");
+  const [confirmState, setConfirmState] = useState(false);
+  const [confirmType, setConfirmType] = useState("");
+  const [itemIdState, setItemIdState] = useState("");
+  const [isConfirmModal, setIsConfirmModal] = useState(false);
+  const [confirmModal, setConfirmModal] = useState(null);
+
+  // Confirm useEffect for confirm modal
+  useEffect(() => {
+    let modal = null;
+
+    if (isConfirmModal) {
+      const modalElement = document.getElementById("itemConfirmModal");
+
+      if (modalElement) {
+        // Clean up any existing modal artifacts
+        cleanupModalArtifacts();
+
+        // Create new modal
+        modal = new Modal(modalElement, {
+          backdrop: "static",
+          keyboard: false,
+        });
+
+        // Add event listener for when modal is hidden
+        modalElement.addEventListener("hidden.bs.modal", () => {
+          cleanupModalArtifacts();
+          setIsConfirmModal(false);
+        });
+
+        // Show the modal
+        modal.show();
+
+        // Store modal reference
+        setConfirmModal(modal);
+      }
+    }
+
+    // Cleanup function
+    return () => {
+      if (modal) {
+        modal.dispose();
+        cleanupModalArtifacts();
+      }
+    };
+  }, [isConfirmModal]);
+
+  // Global function to clean up modal artifacts
+  const cleanupModalArtifacts = () => {
+    console.log("Cleaning up modal artifacts");
+    document.body.classList.remove("modal-open");
+    document.body.style.paddingRight = "";
+    document.body.style.overflow = "";
+    const backdrops = document.getElementsByClassName("modal-backdrop");
+    while (backdrops.length > 0) {
+      backdrops[0].remove();
+    }
+  };
+
+  const handleCloseConfirmModal = () => {
+    if (confirmModal) {
+      confirmModal.hide();
+      cleanupModalArtifacts();
+    }
+
+    // Add a small delay before resetting states to allow animation to complete
+    setTimeout(() => {
+      setIsConfirmModal(false);
+    }, 300);
+  };
+
+  const handleShowConfirm = (type) => {
+    if (type === "single") {
+      setMesssage("Are you sure you want to delete this item?");
+      setIsConfirmModal(true);
+    } else {
+      if (selectedItems.length === 0) {
+        toast.error("Please select at least one item to delete.");
+        return;
+      }
+      setMesssage(
+        `Are you sure you want to delete ${selectedItems.length} selected item(s)?`
+      );
+      setIsConfirmModal(true);
+    }
+  };
+
+  const handleYesConfirm = () => {
+    if (confirmType === "single") handleDeleteItem(itemIdState);
+    else handleDeleteSelected();
+  };
+
   // Fetch items data
   const fetchItems = async () => {
     try {
@@ -370,10 +463,6 @@ const ItemMaster = () => {
     return errors;
   };
   const handleDeleteItem = (itemId) => {
-    if (!window.confirm("Are you sure you want to delete this item?")) {
-      return;
-    }
-
     setDeleting(true);
     api
       .delete(`/api/items/delete/${itemId}`)
@@ -389,29 +478,18 @@ const ItemMaster = () => {
           toast.error(response.data.message || "Error deleting item");
         }
         setDeleting(false);
+        setIsConfirmModal(false);
       })
       .catch((error) => {
         console.error("Error deleting item:", error);
         setDeleting(false);
         // Handle error (show error message)
         toast.error("Error deleting item. Please try again.");
+        setIsConfirmModal(false);
       });
   };
 
   const handleDeleteSelected = () => {
-    if (selectedItems.length === 0) {
-      toast.error("Please select at least one item to delete.");
-      return;
-    }
-
-    if (
-      !window.confirm(
-        `Are you sure you want to delete ${selectedItems.length} selected item(s)?`
-      )
-    ) {
-      return;
-    }
-
     setDeleting(true);
 
     // Create an array of promises for each delete operation
@@ -439,12 +517,14 @@ const ItemMaster = () => {
           toast.error("Some items could not be deleted. Please try again.");
         }
         setDeleting(false);
+        setIsConfirmModal(false);
       })
       .catch((error) => {
         console.error("Error deleting items:", error);
         setDeleting(false);
         // Handle error (show error message)
         toast.error("Error deleting items. Please try again.");
+        setIsConfirmModal(false);
       });
   };
 
@@ -1022,7 +1102,10 @@ const ItemMaster = () => {
               </button>
               <button
                 className="btn-action btn-danger"
-                onClick={handleDeleteSelected}
+                onClick={() => {
+                  setConfirmType("multi");
+                  handleShowConfirm("multi");
+                }}
                 disabled={selectedItems.length === 0 || deleting}
               >
                 {deleting ? (
@@ -1156,7 +1239,11 @@ const ItemMaster = () => {
                       <button
                         className="btn-icon btn-danger"
                         title="Delete"
-                        onClick={() => handleDeleteItem(item.id)}
+                        onClick={() => {
+                          setItemIdState(item.id);
+                          setConfirmType("single");
+                          handleShowConfirm("single");
+                        }}
                         disabled={deleting}
                       >
                         {deleting ? (
@@ -1233,6 +1320,49 @@ const ItemMaster = () => {
           </div>
         </div>
       </div>
+      {/* Confirmation dialog modal */}
+      {isConfirmModal && (
+        <div className="modal fade" id="itemConfirmModal" tabIndex="-1">
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  <i className="fas fa-circle-check me-2"></i>
+                  Confirm
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={handleCloseConfirmModal}
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body">{message}</div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-primary add-btn"
+                  onClick={handleYesConfirm}
+                >
+                  <i className="fas fa-check me-2"></i>
+                  Yes
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary add-btn"
+                  onClick={() => {
+                    setConfirmState(false);
+                    handleCloseConfirmModal();
+                  }}
+                >
+                  <i className="fas fa-times me-2"></i>
+                  No
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {/* View Item Details Modal */}
       {isShowItemDetails && (
         <div
