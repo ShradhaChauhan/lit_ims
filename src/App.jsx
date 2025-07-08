@@ -20,6 +20,7 @@ import MaterialIncoming from "./components/Forms/MaterialIncoming/MaterialIncomi
 import IncomingQC from "./components/Forms/IncomingQC/IncomingQC";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import MaterialIssueRequest from "./components/Forms/MaterialIssueRequest/MaterialIssueRequest";
 
 function App() {
   const { rightSideComponent, setRightSideComponent, isAuthenticated } =
@@ -72,13 +73,17 @@ function App() {
                   element={<MaterialIncoming />}
                 />
                 <Route path="/incoming-qc" element={<IncomingQC />} />
+                <Route
+                  path="/material-issue-request"
+                  element={<MaterialIssueRequest />}
+                />
               </Routes>
             </div>
           </div>
         </div>
       )}
     </>
-  )
+  );
 }
 
 export default App;

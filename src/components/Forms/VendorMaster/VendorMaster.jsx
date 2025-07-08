@@ -671,7 +671,8 @@ const VendorMaster = () => {
                       type="tel"
                       className="form-control ps-5 ms-2 text-font"
                       id="mobile"
-                      placeholder="Enter mobile number"
+                      placeholder="Enter 10-digit mobile number"
+                      maxLength={10}
                       value={formData.mobile}
                       onChange={(e) =>
                         setFormData({ ...formData, mobile: e.target.value })

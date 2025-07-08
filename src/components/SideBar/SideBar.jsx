@@ -14,10 +14,7 @@ import BOMMaster from "../Forms/BOMMaster/BOMMaster";
 import TypeMaster from "../Forms/TypeMaster/TypeMaster";
 import GroupMaster from "../Forms/GroupMaster/GroupMaster";
 import PartMaster from "../Forms/PartMaster/PartMaster";
-import Incoming from "../Forms/Incoming/Incoming";
-import IncomingReprint from "../Forms/IncomingReprint/IncomingReprint";
 import IQC from "../Forms/IQC/IQC";
-import Requisition from "../Forms/Requisition/Requisition";
 import IssueProduction from "../Forms/IssueProduction/IssueProduction";
 import RequisitionReceipt from "../Forms/RequisitionReceipt/RequisitionReceipt";
 import ProductionReceipt from "../Forms/ProductionReceipt/ProductionReceipt";
@@ -25,6 +22,7 @@ import WIPReturn from "../Forms/WIPReturn/WIPReturn";
 import ActivityLogs from "../ActivityLogs/ActivityLogs";
 import MaterialIncoming from "../Forms/MaterialIncoming/MaterialIncoming";
 import IncomingQC from "../Forms/IncomingQC/IncomingQC";
+import MaterialIssueRequest from "../Forms/MaterialIssueRequest/MaterialIssueRequest";
 
 const SideBar = () => {
   const {
@@ -230,7 +228,8 @@ const SideBar = () => {
     name === "MaterialIncoming" && setRightSideComponent(<MaterialIncoming />);
     name === "IncomingQC" && setRightSideComponent(<IncomingQC />);
     name === "IQC" && setRightSideComponent(<IQC />);
-    name === "Requisition" && setRightSideComponent(<Requisition />);
+    name === "MaterialIssueRequest" &&
+      setRightSideComponent(<MaterialIssueRequest />);
     name === "IssueProduction" && setRightSideComponent(<IssueProduction />);
     name === "RequisitionReceipt" &&
       setRightSideComponent(<RequisitionReceipt />);

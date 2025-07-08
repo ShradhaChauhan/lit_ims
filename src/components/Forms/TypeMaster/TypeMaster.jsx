@@ -497,14 +497,11 @@ const TypeMaster = () => {
               </div>
             </div>
             <div className="form-actions">
-              <button
-                type="submit"
-                className="btn btn-primary border border-0 text-8 px-3 fw-medium py-2 me-3 float-end"
-              >
+              <button type="submit" className="btn btn-primary add-btn">
                 <i className="fa-solid fa-floppy-disk me-1"></i> Save Changes
               </button>
               <button
-                className="btn btn-secondary border border-0 text-8 px-3 fw-medium py-2 bg-secondary me-3 float-end"
+                className="btn btn-secondary add-btn"
                 type="button"
                 onClick={handleReset}
               >
