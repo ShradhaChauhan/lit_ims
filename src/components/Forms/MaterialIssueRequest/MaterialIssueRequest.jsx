@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import "./MaterialIssueRequest.css";
 
 const MaterialIssueRequest = () => {
   const handleReset = (e) => {
@@ -36,6 +37,7 @@ const MaterialIssueRequest = () => {
       // Call api to load select bom dropdown list
       try {
         const response = await api.get("/api/bom/all");
+        setAvailableBOMs(response.data.data);
       } catch (error) {
         toast.error("Error fetching BOM list");
         console.error("Error fetching bom form dropdown list:", error);
