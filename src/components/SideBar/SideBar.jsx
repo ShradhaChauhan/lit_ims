@@ -309,7 +309,7 @@ const SideBar = () => {
                         setLabelName(sub.label);
                         setHoveredMenu(null);
                       }}
-                      className="nav-link text-dark small submenu-item"
+                      className="nav-link small submenu-item"
                     >
                       <i className={`${sub.icon} me-2`}></i>
                       {sub.label}
