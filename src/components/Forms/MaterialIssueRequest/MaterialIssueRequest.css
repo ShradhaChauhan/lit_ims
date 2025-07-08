@@ -11,3 +11,38 @@
 .margin-top-8 {
     margin-top: 0.8rem !important;
 }
+
+
+.btn-style {
+    padding: 0.5rem 1.2rem !important;
+    font-size: 0.8rem !important;
+    font-weight: 500 !important;
+}
+
+.status-badge {
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.status-badge.pending {
+  background-color: #fff4de;
+  color: #ff9500;
+}
+
+.status-badge.approved {
+  background-color: #e1f8e9;
+  color: #28a745;
+}
+
+.status-badge.rejected {
+  background-color: #fde8e8;
+  color: #dc3545;
+}
+
+.status-badge.completed {
+  background-color: #e1f0ff;
+  color: #0d6efd;
+}

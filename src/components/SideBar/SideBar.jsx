@@ -32,6 +32,9 @@ const SideBar = () => {
     setLabelName,
   } = useContext(AppContext);
 
+  // Floating submenu state
+  const [hoveredMenu, setHoveredMenu] = useState(null);
+
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [openSubmenus, setOpenSubmenus] = useState({});
   const navigate = useNavigate();
@@ -133,7 +136,7 @@ const SideBar = () => {
         },
         {
           label: "Issue to Production",
-          compName: "IssuetoProduction",
+          compName: "IssueProduction",
           newPath: "issue-to-production",
           path: "Transactions / Issue to Production",
           icon: "fas fa-dolly",
@@ -239,6 +242,8 @@ const SideBar = () => {
     name === "Activity Logs" && setRightSideComponent(<ActivityLogs />);
   };
 
+  console.log("Hovered menu:", hoveredMenu);
+
   return (
     <div
       className={`d-flex flex-column vh-100 sidebar ${
@@ -262,82 +267,83 @@ const SideBar = () => {
       {!isCollapsed && <p className="heading">MAIN MENU</p>}
       <ul className="nav nav-pills flex-column mb-auto mt-1">
         {menuItems.map((item, idx) => (
-          <li key={idx} className="nav-item">
-            {item.submenu ? (
-              <>
-                <div
-                  className="nav-link text-white d-flex justify-content-between align-items-center menuListItem"
-                  onClick={() => toggleSubmenu(item.label)}
-                >
-                  <span>
-                    <i className={`${item.icon} me-2`}></i>
-                    {!isCollapsed && item.label}
-                  </span>
-                  {!isCollapsed && (
-                    <i
-                      className={`fas fa-chevron-${
-                        openSubmenus[item.label] ? "down" : "right"
-                      }`}
-                    ></i>
-                  )}
-                </div>
-                {!isCollapsed && openSubmenus[item.label] && (
-                  <ul className="nav flex-column ms-4">
-                    {item.submenu.map((sub, subIdx) => (
-                      <li key={subIdx} className="nav-item">
-                        <div
-                          onClick={() => {
-                            handleRightSideComponentName(sub.compName);
-                            setIsActiveComponent(sub.path);
-                            setLabelName(sub.label);
-                          }}
-                          className="nav-link text-white small menuListItem"
-                        >
-                          <span>
-                            <i className={`${sub.icon} me-2`}></i>
-                            <Link
-                              to={sub.newPath}
-                              className="text-decoration-none menuListItem"
-                            >
-                              {sub.label}
-                            </Link>
-                          </span>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </>
-            ) : (
-              <a className="nav-link text-white menuListItem">
+          <li
+            key={idx}
+            className="nav-item position-relative"
+            onMouseEnter={() => isCollapsed && setHoveredMenu(item.label)}
+            onMouseLeave={() => isCollapsed && setHoveredMenu(null)}
+          >
+            {/* Menu Item */}
+            <div
+              className={`nav-link text-white d-flex justify-content-between align-items-center menuListItem`}
+              onClick={() => {
+                if (!isCollapsed && item.submenu) {
+                  toggleSubmenu(item.label);
+                }
+              }}
+            >
+              <span>
                 <i className={`${item.icon} me-2`}></i>
                 {!isCollapsed && item.label}
-              </a>
+              </span>
+
+              {!isCollapsed && item.submenu && (
+                <i
+                  className={`fas fa-chevron-${
+                    openSubmenus[item.label] ? "down" : "right"
+                  }`}
+                ></i>
+              )}
+            </div>
+
+            {/* ▶️ Flyover submenu (collapsed mode) */}
+            {isCollapsed && hoveredMenu === item.label && item.submenu && (
+              <ul className="flyover-submenu nav flex-column">
+                {item.submenu.map((sub, subIdx) => (
+                  <li key={subIdx} className="nav-item">
+                    <Link
+                      to={sub.newPath}
+                      onClick={() => {
+                        handleRightSideComponentName(sub.compName);
+                        setIsActiveComponent(sub.path);
+                        setLabelName(sub.label);
+                        setHoveredMenu(null);
+                      }}
+                      className="nav-link text-dark small submenu-item"
+                    >
+                      <i className={`${sub.icon} me-2`}></i>
+                      {sub.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {/* ▼ Expanded submenu (expanded mode) */}
+            {!isCollapsed && openSubmenus[item.label] && item.submenu && (
+              <ul className="nav flex-column ms-4">
+                {item.submenu.map((sub, subIdx) => (
+                  <li key={subIdx} className="nav-item">
+                    <Link
+                      to={sub.newPath}
+                      onClick={() => {
+                        handleRightSideComponentName(sub.compName);
+                        setIsActiveComponent(sub.path);
+                        setLabelName(sub.label);
+                      }}
+                      className="nav-link text-white small menuListItem"
+                    >
+                      <i className={`${sub.icon} me-2`}></i>
+                      {sub.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             )}
           </li>
         ))}
-
-        {!isCollapsed && <p className="heading">ADMINISTRATION</p>}
-        <li className="nav-item">
-          <a className="nav-link text-white menuListItem mt-3">
-            <i className="fas fa-sliders-h me-2"></i>
-            {!isCollapsed && "Settings"}
-          </a>
-        </li>
-        <li
-          className="nav-item"
-          onClick={() => {
-            handleRightSideComponentName("ActivityLogs");
-            setLabelName("Activity Logs");
-            setIsActiveComponent("Activity Logs");
-          }}
-        >
-          <a className="nav-link text-white menuListItem">
-            <i className="fa-solid fa-layer-group me-2"></i>
-            {!isCollapsed && "Logs"}
-          </a>
-        </li>
       </ul>
+
       {!isCollapsed && (
         <div className="ms-2">
           <div className="user-profile">

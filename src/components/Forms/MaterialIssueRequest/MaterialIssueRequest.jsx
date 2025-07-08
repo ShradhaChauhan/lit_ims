@@ -1,10 +1,108 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "./MaterialIssueRequest.css";
+import { toast } from "react-toastify";
+import api from "../../../services/api";
 
 const MaterialIssueRequest = () => {
+  // Helper function to check requisition type restriction
+  const getRequisitionTypeOptions = () => {
+    // If no items have been added yet, allow both types
+    if (request.length === 0) {
+      return ["complete bom", "individual items"];
+    }
+
+    // If we have a BOM in the list already, only allow BOM type
+    if (request.some((item) => item.type === "BOM")) {
+      return ["complete bom"];
+    }
+
+    // If we have individual items, only allow individual items
+    if (request.some((item) => item.type === "Item")) {
+      return ["individual items"];
+    }
+
+    // Fallback - should not reach here
+    return ["complete bom", "individual items"];
+  };
+
   const handleReset = (e) => {
+    if (e) e.preventDefault();
+
+    // Reset all form fields
+    setRequest([]);
+    setRequisitionType("");
+    setBom("");
+    setType("");
+    setQuantity("");
+    setIsBOMAdded(false);
+
+    // Reset available items from the original items list
+    const itemNames = itemsList.map((item) => ({
+      id: item.id,
+      name: item.name,
+      code: item.code,
+      uom: item.uom,
+    }));
+    setAvailableItems(itemNames);
+
+    // Generate new transaction number
+    setTransactionNumber(generateTransactionNumber());
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (request.length === 0) {
+      toast.error("Please add at least one item to the request");
+      return;
+    }
+
+    try {
+      // Determine type based on the first item
+      const requestType = request[0].type === "BOM" ? "bom" : "items";
+
+      // Format data for API
+      const formattedItems = request.map((item) => ({
+        id: item.id,
+        name: item.name,
+        code: item.code,
+        type: item.type.toLowerCase(),
+        quantity: Number(item.quantity),
+      }));
+
+      const payload = {
+        transactionNumber,
+        type: requestType,
+        items: formattedItems,
+      };
+
+      console.log("Submitting payload:", payload);
+
+      const response = await api.post("/api/requisitions/save", payload);
+
+      if (response.data.status) {
+        toast.success("Material request saved successfully");
+
+        // Fetch updated recent requests
+        try {
+          const recentResponse = await api.get("/api/requisitions/recent");
+          if (recentResponse.data.status) {
+            setRecentRequests(recentResponse.data.data);
+          }
+        } catch (error) {
+          console.error("Error fetching updated recent requests:", error);
+        }
+
+        // Perform complete form reset
+        handleReset();
+      } else {
+        toast.error(response.data.message || "Error saving request");
+      }
+    } catch (error) {
+      toast.error("Error submitting request");
+      console.error("Error submitting material request:", error);
+    }
   };
 
   const [requisitionType, setRequisitionType] = useState("");
@@ -13,13 +111,16 @@ const MaterialIssueRequest = () => {
   const [type, setType] = useState("");
   const [quantity, setQuantity] = useState("");
   const [isBOMAdded, setIsBOMAdded] = useState(false);
-  const allItems = ["Screw M4", "Bolt M6", "Washer 8mm"];
-  const [availableItems, setAvailableItems] = useState(allItems);
-  const [availableBOMs, setAvailableBOMs] = useState([
-    "Product A Assembly",
-    "Product B Assembly",
-    "Product C Assembly",
-  ]);
+  const [availableItems, setAvailableItems] = useState([]);
+  const [availableBOMs, setAvailableBOMs] = useState([]);
+  const [bomList, setBomList] = useState([]);
+  const [itemsList, setItemsList] = useState([]);
+  const [recentRequests, setRecentRequests] = useState([]);
+
+  // Disable add to request button until all fields are filled
+  const isFormValid =
+    (requisitionType === "complete bom" && bom && quantity) ||
+    (requisitionType === "individual items" && type && quantity);
 
   // Modal
   const [selectedItem, setSelectedItem] = useState(null);
@@ -30,21 +131,54 @@ const MaterialIssueRequest = () => {
     setShowModal(true);
   };
 
-  const handleRequisitionChange = async (e) => {
+  // Load BOM and Item data on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch BOM data
+        const bomResponse = await api.get("/api/bom/all");
+        const bomData = bomResponse.data.data;
+        setBomList(bomData);
+
+        // Extract BOM names for dropdown
+        const bomNames = bomData.map((bom) => ({
+          id: bom.id,
+          name: bom.name,
+          code: bom.code,
+        }));
+        setAvailableBOMs(bomNames);
+
+        // Fetch Item data
+        const itemsResponse = await api.get("/api/items/all");
+        const itemsData = itemsResponse.data.data;
+        setItemsList(itemsData);
+
+        // Extract item names for dropdown
+        const itemNames = itemsData.map((item) => ({
+          id: item.id,
+          name: item.name,
+          code: item.code,
+          uom: item.uom,
+        }));
+        setAvailableItems(itemNames);
+
+        // Fetch recent requests
+        const recentResponse = await api.get("/api/requisitions/recent");
+        if (recentResponse.data.status) {
+          setRecentRequests(recentResponse.data.data);
+        }
+      } catch (error) {
+        toast.error("Error fetching data");
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const handleRequisitionChange = (e) => {
     e.preventDefault();
     setRequisitionType(e.target.value);
-    if (e.target.value === "complete bom") {
-      // Call api to load select bom dropdown list
-      try {
-        const response = await api.get("/api/bom/all");
-        setAvailableBOMs(response.data.data);
-      } catch (error) {
-        toast.error("Error fetching BOM list");
-        console.error("Error fetching bom form dropdown list:", error);
-      }
-    } else {
-      // Call api to load select item dropdown list
-    }
   };
 
   const isCompleteBOM = requisitionType === "complete bom";
@@ -56,7 +190,19 @@ const MaterialIssueRequest = () => {
   const handleAddRequest = (e) => {
     e.preventDefault();
 
-    if (!quantity || (!bom && !type)) return;
+    if (!quantity || (!bom && !type)) {
+      toast.error("Please select item and quantity");
+      return;
+    }
+
+    // Ensure we're consistent with the current request type
+    const currentRequestType = request.length > 0 ? request[0].type : null;
+    const newItemType = requisitionType === "complete bom" ? "BOM" : "Item";
+
+    if (currentRequestType && currentRequestType !== newItemType) {
+      toast.error(`You can only add ${currentRequestType}s to this request`);
+      return;
+    }
 
     if (requisitionType === "complete bom") {
       if (isBOMAdded) {
@@ -64,11 +210,21 @@ const MaterialIssueRequest = () => {
         return;
       }
 
+      // Find the selected BOM from the list
+      const selectedBOM = bomList.find((b) => b.id.toString() === bom);
+
+      if (!selectedBOM) {
+        toast.error("Selected BOM not found");
+        return;
+      }
+
       const newBOM = {
-        name: bom,
+        id: selectedBOM.id,
+        name: selectedBOM.name,
         type: "BOM",
-        code: "100000",
+        code: selectedBOM.code,
         quantity,
+        items: selectedBOM.items,
       };
 
       setRequest((prev) => [...prev, newBOM]);
@@ -81,7 +237,7 @@ const MaterialIssueRequest = () => {
     if (requisitionType === "individual items") {
       // Check for duplicates
       const isDuplicate = request.some(
-        (item) => item.name === type && item.type === "Item"
+        (item) => item.id.toString() === type && item.type === "Item"
       );
 
       if (isDuplicate) {
@@ -89,17 +245,31 @@ const MaterialIssueRequest = () => {
         return;
       }
 
+      // Find the selected item from the list
+      const selectedItem = itemsList.find(
+        (item) => item.id.toString() === type
+      );
+
+      if (!selectedItem) {
+        toast.error("Selected item not found");
+        return;
+      }
+
       const newItem = {
-        name: type,
+        id: selectedItem.id,
+        name: selectedItem.name,
         type: "Item",
-        code: "100001",
+        code: selectedItem.code,
+        uom: selectedItem.uom,
         quantity,
       };
 
       setRequest((prev) => [...prev, newItem]);
 
       // Remove item from dropdown list
-      setAvailableItems((prev) => prev.filter((item) => item !== type));
+      setAvailableItems((prev) =>
+        prev.filter((item) => item.id.toString() !== type)
+      );
 
       // Reset form
       setType("");
@@ -115,19 +285,33 @@ const MaterialIssueRequest = () => {
     return `REQ-${year}-${randomNum}`;
   };
 
-  const [transactionNumber] = useState(generateTransactionNumber());
+  const [transactionNumber, setTransactionNumber] = useState(
+    generateTransactionNumber()
+  );
 
-  // Delete item form Requesteed items
-  const handleDelete = (nameToDelete) => {
+  // Delete item from Requested items
+  const handleDelete = (idToDelete) => {
     // Remove item from request list
-    const updatedRequest = request.filter((item) => item.name !== nameToDelete);
+    const updatedRequest = request.filter((item) => item.id !== idToDelete);
     setRequest(updatedRequest);
 
     // If it's an individual item, re-add it to available items
-    const deletedItem = request.find((item) => item.name === nameToDelete);
+    const deletedItem = request.find((item) => item.id === idToDelete);
 
     if (deletedItem?.type === "Item") {
-      setAvailableItems((prev) => [...prev, deletedItem.name]);
+      // Find the original item in the items list
+      const originalItem = itemsList.find((item) => item.id === deletedItem.id);
+      if (originalItem) {
+        setAvailableItems((prev) => [
+          ...prev,
+          {
+            id: originalItem.id,
+            name: originalItem.name,
+            code: originalItem.code,
+            uom: originalItem.uom,
+          },
+        ]);
+      }
     }
 
     // If it's a BOM, allow user to add BOM again
@@ -184,11 +368,18 @@ const MaterialIssueRequest = () => {
                   >
                     <option value="">Select Type</option>
 
-                    {!isBOMAdded && (
-                      <option value="complete bom">Complete BOM</option>
-                    )}
+                    {/* Show BOM option only if allowed by current request state */}
+                    {getRequisitionTypeOptions().includes("complete bom") &&
+                      !isBOMAdded && (
+                        <option value="complete bom">Complete BOM</option>
+                      )}
 
-                    <option value="individual items">Individual Items</option>
+                    {/* Show Individual Items option only if allowed by current request state */}
+                    {getRequisitionTypeOptions().includes(
+                      "individual items"
+                    ) && (
+                      <option value="individual items">Individual Items</option>
+                    )}
                   </select>
 
                   <i className="fa-solid fa-angle-down position-absolute down-arrow-icon margin-top-8"></i>
@@ -210,9 +401,9 @@ const MaterialIssueRequest = () => {
                       onChange={(e) => setBom(e.target.value)}
                     >
                       <option value="">Select BOM</option>
-                      {availableBOMs.map((b, idx) => (
-                        <option key={idx} value={b}>
-                          {b}
+                      {availableBOMs.map((b) => (
+                        <option key={b.id} value={b.id}>
+                          {b.name} ({b.code})
                         </option>
                       ))}
                     </select>
@@ -235,9 +426,9 @@ const MaterialIssueRequest = () => {
                       onChange={(e) => setType(e.target.value)}
                     >
                       <option value="">Select Item</option>
-                      {availableItems.map((item, idx) => (
-                        <option key={idx} value={item}>
-                          {item}
+                      {availableItems.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.name} ({item.code}) - {item.uom}
                         </option>
                       ))}
                     </select>
@@ -270,6 +461,7 @@ const MaterialIssueRequest = () => {
                   type="button"
                   className="btn btn-primary text-8 px-3 fw-medium w-100 mt-4"
                   onClick={handleAddRequest}
+                  disabled={!isFormValid}
                 >
                   <i className="fa-solid fa-add me-1"></i> Add to Request
                 </button>
@@ -305,7 +497,9 @@ const MaterialIssueRequest = () => {
                             <span>{i.code}</span>
                           </td>
                           <td className="ps-4">
-                            <span>{i.quantity}</span>
+                            <span>
+                              {i.quantity} {i.uom ? i.uom : ""}
+                            </span>
                           </td>
                           <td className="actions ps-4">
                             <button
@@ -324,7 +518,7 @@ const MaterialIssueRequest = () => {
                               type="button"
                               className="btn-icon btn-danger"
                               title="Delete"
-                              onClick={() => handleDelete(i.name)}
+                              onClick={() => handleDelete(i.id)}
                             >
                               <i className="fas fa-trash"></i>
                             </button>
@@ -350,8 +544,13 @@ const MaterialIssueRequest = () => {
             </div>{" "}
             {/* Button Section */}
             <div className="form-actions">
-              <button type="button" className="btn btn-primary add-btn">
-                <i className="fa-solid fa-floppy-disk me-1"></i> Save Receipt
+              <button
+                type="button"
+                className="btn btn-primary add-btn"
+                onClick={handleSubmit}
+                disabled={request.length === 0}
+              >
+                <i className="fa-solid fa-floppy-disk me-1"></i> Save Request
               </button>
               <button
                 className="btn btn-secondary add-btn me-2"
@@ -378,14 +577,36 @@ const MaterialIssueRequest = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="no-data-row">
-                      <td colSpan="5" className="no-data-cell">
-                        <div className="no-data-content">
-                          <i className="fas fa-clock-rotate-left no-data-icon"></i>
-                          <p className="no-data-text">No Recent Requests</p>
-                        </div>
-                      </td>
-                    </tr>
+                    {recentRequests.length > 0 ? (
+                      recentRequests.map((req, index) => (
+                        <tr key={index}>
+                          <td className="ps-4">{req.transactionNumber}</td>
+                          <td className="ps-4">{req.createdAt}</td>
+                          <td className="ps-4 text-capitalize">{req.type}</td>
+                          <td className="ps-4">
+                            {req.items && req.items.length > 0
+                              ? req.items.map((item) => item.name).join(", ")
+                              : "-"}
+                          </td>
+                          <td className="ps-4">
+                            <span
+                              className={`status-badge ${req.status.toLowerCase()}`}
+                            >
+                              {req.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr className="no-data-row">
+                        <td colSpan="5" className="no-data-cell">
+                          <div className="no-data-content">
+                            <i className="fas fa-clock-rotate-left no-data-icon"></i>
+                            <p className="no-data-text">No Recent Requests</p>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -412,10 +633,47 @@ const MaterialIssueRequest = () => {
                 ></button>
               </div>
               <div className="modal-body">
-                <p>Name: {selectedItem?.name}</p>
-                <p>Type: {selectedItem?.type}</p>
-                <p>Code: {selectedItem?.code}</p>
-                <p>Quantity: {selectedItem?.quantity}</p>
+                <p>
+                  <strong>Name:</strong> {selectedItem?.name}
+                </p>
+                <p>
+                  <strong>Type:</strong> {selectedItem?.type}
+                </p>
+                <p>
+                  <strong>Code:</strong> {selectedItem?.code}
+                </p>
+                <p>
+                  <strong>Quantity:</strong> {selectedItem?.quantity}
+                </p>
+
+                {selectedItem?.items && selectedItem.items.length > 0 && (
+                  <>
+                    <hr />
+                    <h6>BOM Items:</h6>
+                    <table className="table table-striped table-sm">
+                      <thead>
+                        <tr>
+                          <th>Item Name</th>
+                          <th>Code</th>
+                          <th>UOM</th>
+                          <th>Qty</th>
+                          <th>Warehouse</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selectedItem.items.map((item, idx) => (
+                          <tr key={idx}>
+                            <td>{item.itemName}</td>
+                            <td>{item.itemCode}</td>
+                            <td>{item.uom}</td>
+                            <td>{item.quantity}</td>
+                            <td>{item.warehouseName}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </>
+                )}
               </div>
             </div>
           </div>
