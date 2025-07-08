@@ -325,6 +325,8 @@ const ItemMaster = () => {
       errors.code = "Code is required";
     } else if (!/^\d+$/.test(data.code)) {
       errors.code = "Code must only be in digits";
+    } else if (String(data.code).length() > 6) {
+      errors.code = "Code must only be 6 digits";
     }
     //  else if (data.code.length() !== 6) {
     //   errors.code = "Code length should be 6 digits";
@@ -734,10 +736,11 @@ const ItemMaster = () => {
                   <div className="position-relative w-100">
                     <i className="fas fa-qrcode position-absolute input-icon"></i>
                     <input
-                      type="text"
+                      type="number"
                       className="form-control ps-5 text-font"
                       id="code"
                       placeholder="Enter item code"
+                      minLength={6}
                       value={formData.code}
                       onChange={(e) =>
                         setFormData({ ...formData, code: e.target.value })
@@ -867,7 +870,7 @@ const ItemMaster = () => {
                   <div className="position-relative w-100">
                     <i className="fas fa-rupee-sign position-absolute input-icon"></i>
                     <input
-                      type="text"
+                      type="number"
                       className="form-control ps-5 text-font"
                       id="price"
                       placeholder="Enter price"
@@ -888,7 +891,7 @@ const ItemMaster = () => {
                   <div className="position-relative w-100">
                     <i className="fas fa-cubes position-absolute input-icon"></i>
                     <input
-                      type="text"
+                      type="number"
                       className="form-control ps-5 text-font"
                       id="stQty"
                       placeholder="Enter ST QTY"
@@ -909,7 +912,7 @@ const ItemMaster = () => {
                   <div className="position-relative w-100">
                     <i className="fas fa-clock position-absolute input-icon"></i>
                     <input
-                      type="text"
+                      type="number"
                       className="form-control ps-5 text-font ms-2"
                       id="life"
                       placeholder="Enter life (in days)"
