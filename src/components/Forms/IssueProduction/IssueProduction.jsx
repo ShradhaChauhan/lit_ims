@@ -1,14 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import api from "../../../services/api";
 
 const IssueProduction = () => {
   const [requestedItems, setRequestedItems] = useState([]);
+  const [requisitionNumbers, setRequisitionNumbers] = useState([]);
+  const [selectedRequisition, setSelectedRequisition] = useState("");
+  const [batchNumber, setBatchNumber] = useState("");
+  const [scannedBatches, setScannedBatches] = useState([]);
+  const [allItemsFulfilled, setAllItemsFulfilled] = useState(false);
+  
   // Auto generate issue number
   const generateIssueNumber = () => {
     const year = new Date().getFullYear(); // e.g., 2025
     const randomNum = Math.floor(1000 + Math.random() * 9000); // 4-digit random
-    return `REQ-${year}-${randomNum}`;
+    return `ISSU-${year}-${randomNum}`;
   };
 
   const [issueNumber] = useState(generateIssueNumber());
@@ -18,14 +25,188 @@ const IssueProduction = () => {
     handleFetchRequisitionNumberList();
   }, []);
 
+  // Fetch item details when requisition is selected
+  useEffect(() => {
+    if (selectedRequisition) {
+      fetchRequisitionItems(selectedRequisition);
+      // Reset scanned batches when requisition changes
+      setScannedBatches([]);
+      setAllItemsFulfilled(false);
+    }
+  }, [selectedRequisition]);
+
+  // Check if all items are fulfilled whenever requestedItems changes
+  useEffect(() => {
+    if (requestedItems.length > 0) {
+      const allFulfilled = requestedItems.every(item => item.issuedQty >= item.requestedQty);
+      setAllItemsFulfilled(allFulfilled);
+    }
+  }, [requestedItems]);
+
   const handleFetchRequisitionNumberList = async () => {
     try {
-      const response = await api.get("/api/");
-      setRequestedItems(response.data.data);
+      const response = await api.get("/api/requisitions/trNo");
+      setRequisitionNumbers(response.data.data);
     } catch (error) {
-      // toast.error("Error in fetching requisition number list");
+      toast.error("Error in fetching requisition number list");
       console.error("Error fetching requisition number list:", error);
     }
+  };
+
+  const fetchRequisitionItems = async (requisitionNumber) => {
+    try {
+      const response = await api.get(`/api/requisitions/${requisitionNumber}/items/full`);
+      if (response.data.status) {
+        const formattedItems = response.data.data.map((item, index) => ({
+          id: index + 1,
+          itemName: item.name,
+          code: item.code,
+          requestedQty: item.quantityRequested,
+          standardQty: item.stQuantity,
+          issuedQty: 0,
+          variance: 0,
+          status: "Pending"
+        }));
+        setRequestedItems(formattedItems);
+      }
+    } catch (error) {
+      toast.error("Error fetching requisition items");
+      console.error("Error fetching requisition items:", error);
+    }
+  };
+
+  const handleRequisitionChange = (e) => {
+    const newRequisition = e.target.value;
+    if (newRequisition !== selectedRequisition) {
+      // Clear scanned batches when changing requisition
+      setSelectedRequisition(newRequisition);
+    }
+  };
+
+  const handleBatchNumberChange = (e) => {
+    setBatchNumber(e.target.value);
+  };
+
+  const handleBatchNumberKeyDown = async (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      await verifyBatch(batchNumber);
+    }
+  };
+
+  const verifyBatch = async (batchNo) => {
+    if (!batchNo.trim()) {
+      toast.error("Please enter a batch number");
+      return;
+    }
+
+    if (!selectedRequisition) {
+      toast.error("Please select a requisition first");
+      return;
+    }
+
+    if (allItemsFulfilled) {
+      toast.warning("All requested quantities have been fulfilled");
+      setBatchNumber("");
+      return;
+    }
+
+    try {
+      // Using the new API endpoint for verifying and issuing the batch
+      const response = await api.get(`/api/receipt/issue-fifo?batchNo=${batchNo}`);
+      
+      if (response.data.status) {
+        const batchData = response.data.data;
+        
+        // Check if this batch has already been scanned
+        const alreadyScanned = scannedBatches.some(batch => batch.batchNo === batchData.batchNo);
+        if (alreadyScanned) {
+          toast.warning("This batch has already been scanned");
+          setBatchNumber("");
+          return;
+        }
+        
+        // Check if this item's requested quantity is already fulfilled
+        const matchingItem = requestedItems.find(item => item.code === batchData.itemCode);
+        if (matchingItem && matchingItem.issuedQty >= matchingItem.requestedQty) {
+          toast.warning(`Requested quantity for ${matchingItem.itemName} already fulfilled`);
+          setBatchNumber("");
+          return;
+        }
+        
+        // Add to scanned batches
+        const newScannedBatch = {
+          id: Date.now(), // Use timestamp as unique ID
+          itemName: batchData.itemName,
+          batchNo: batchData.batchNo,
+          quantity: batchData.quantity
+        };
+        
+        setScannedBatches([...scannedBatches, newScannedBatch]);
+        
+        // Update the requested items table with the issued quantity
+        const updatedItems = requestedItems.map(item => {
+          if (item.code === batchData.itemCode) {
+            const newIssuedQty = item.issuedQty + batchData.quantity;
+            const newVariance = newIssuedQty - item.requestedQty;
+            const newStatus = newIssuedQty >= item.requestedQty ? "Completed" : "Pending";
+            
+            return {
+              ...item,
+              issuedQty: newIssuedQty,
+              variance: newVariance,
+              status: newStatus
+            };
+          }
+          return item;
+        });
+        
+        setRequestedItems(updatedItems);
+        toast.success("Batch verified and issued successfully");
+        setBatchNumber("");
+      } else {
+        toast.error(response.data.message || "Invalid batch number");
+        setBatchNumber("");
+      }
+    } catch (error) {
+      toast.error("Error verifying and issuing batch");
+      console.error("Error verifying and issuing batch:", error);
+      setBatchNumber("");
+    }
+  };
+
+  const handleRemoveBatch = (batchToRemove) => {
+    // Find the item associated with this batch
+    const itemToUpdate = requestedItems.find(item => 
+      item.itemName === batchToRemove.itemName
+    );
+
+    if (itemToUpdate) {
+      // Update the requested items table
+      const updatedItems = requestedItems.map(item => {
+        if (item.itemName === batchToRemove.itemName) {
+          const newIssuedQty = Math.max(0, item.issuedQty - batchToRemove.quantity);
+          // Calculate variance: issued - requested (can be negative if less issued than requested)
+          const newVariance = newIssuedQty - item.requestedQty;
+          const newStatus = "Pending"; // Always revert to pending when removing a batch
+          
+          return {
+            ...item,
+            issuedQty: newIssuedQty,
+            variance: newVariance,
+            status: newStatus
+          };
+        }
+        return item;
+      });
+      
+      setRequestedItems(updatedItems);
+    }
+
+    // Remove from scanned batches
+    const updatedBatches = scannedBatches.filter(batch => batch.id !== batchToRemove.id);
+    setScannedBatches(updatedBatches);
+    toast.info("Batch removed successfully");
   };
 
   return (
@@ -77,9 +258,15 @@ const IssueProduction = () => {
                       <select
                         className="form-control ps-5 ms-1 text-font"
                         id="requisitionType"
+                        value={selectedRequisition}
+                        onChange={handleRequisitionChange}
                       >
-                        <option value="">Select Requisition</option>{" "}
-                        <option value="complete bom">nbdjhbs</option>
+                        <option value="">Select Requisition</option>
+                        {requisitionNumbers.map((reqNumber, index) => (
+                          <option key={index} value={reqNumber}>
+                            {reqNumber}
+                          </option>
+                        ))}
                       </select>
 
                       <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
@@ -87,7 +274,7 @@ const IssueProduction = () => {
                   </div>
                   <div className="col-6 d-flex flex-column form-group">
                     <label
-                      htmlFor="requisitionType"
+                      htmlFor="scanBatch"
                       className="form-label ms-2"
                     >
                       Scan Batch
@@ -96,8 +283,13 @@ const IssueProduction = () => {
                       <i className="fas fa-barcode ms-2 position-absolute input-icon"></i>
                       <input
                         type="text"
+                        id="scanBatch"
                         className="form-control ps-5 ms-1 text-font"
-                        placeholder="Scan batch number"
+                        placeholder={allItemsFulfilled ? "All quantities fulfilled" : "Scan batch number"}
+                        value={batchNumber}
+                        onChange={handleBatchNumberChange}
+                        onKeyDown={handleBatchNumberKeyDown}
+                        disabled={allItemsFulfilled}
                       />
                     </div>
                   </div>
@@ -136,48 +328,48 @@ const IssueProduction = () => {
                         </td>
                       </tr>
                     ) : (
-                      requestedItems.map((items) => (
-                        <tr key={items.id}>
+                      requestedItems.map((item) => (
+                        <tr key={item.id}>
                           <td className="ps-4">
                             <div>
-                              <span>{items.itemName}</span>
+                              <span>{item.itemName}</span>
                             </div>
                           </td>
                           <td className="ps-4">
                             <div>
-                              <span>{items.code}</span>
+                              <span>{item.code}</span>
                             </div>
                           </td>
                           <td className="ps-4">
                             <div>
-                              <span>{items.requestedQty}</span>
+                              <span>{item.requestedQty}</span>
                             </div>
                           </td>
                           <td className="ps-4">
                             <div>
-                              <span>{items.standardQty}</span>
+                              <span>{item.standardQty}</span>
                             </div>
                           </td>
                           <td className="ps-4">
                             <div>
-                              <span>{items.issuedQty}</span>
+                              <span>{item.issuedQty}</span>
                             </div>
                           </td>
                           <td className="ps-4">
                             <div>
-                              <span>{items.variance}</span>
+                              <span>{item.variance}</span>
                             </div>
                           </td>
                           <td className="ps-4">
                             <div>
                               <span
                                 className={`badge status ${
-                                  items.status.toLowerCase() === "pending"
+                                  item.status.toLowerCase() === "pending"
                                     ? "inactive"
                                     : "active"
                                 }`}
                               >
-                                {items.status}
+                                {item.status}
                               </span>
                             </div>
                           </td>
@@ -188,7 +380,7 @@ const IssueProduction = () => {
                 </table>
               </div>
             </div>{" "}
-            {/* Recent Requests Table Section */}
+            {/* Scanned Batches Table Section */}
             <div className="margin-2 mx-2">
               <div className="table-container">
                 <div className="table-header">
@@ -204,17 +396,50 @@ const IssueProduction = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="no-data-row">
-                      <td colSpan="4" className="no-data-cell">
-                        <div className="no-data-content">
-                          <i className="fas fa-barcode no-data-icon"></i>
-                          <p className="no-data-text">No Batches Scanned</p>
-                          <p className="no-data-subtext">
-                            Scan batches to issue materials
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
+                    {scannedBatches.length === 0 ? (
+                      <tr className="no-data-row">
+                        <td colSpan="4" className="no-data-cell">
+                          <div className="no-data-content">
+                            <i className="fas fa-barcode no-data-icon"></i>
+                            <p className="no-data-text">No Batches Scanned</p>
+                            <p className="no-data-subtext">
+                              Scan batches to issue materials
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      scannedBatches.map((batch) => (
+                        <tr key={batch.id}>
+                          <td className="ps-4">
+                            <div>
+                              <span>{batch.itemName}</span>
+                            </div>
+                          </td>
+                          <td className="ps-4">
+                            <div>
+                              <span>{batch.batchNo}</span>
+                            </div>
+                          </td>
+                          <td className="ps-4">
+                            <div>
+                              <span>{batch.quantity}</span>
+                            </div>
+                          </td>
+                          <td className="ps-4">
+                            <div>
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-danger"
+                                onClick={() => handleRemoveBatch(batch)}
+                              >
+                                <i className="fas fa-trash-alt"></i>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>

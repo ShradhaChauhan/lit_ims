@@ -521,7 +521,7 @@ const IncomingQC = () => {
                     className="form-control ps-5 text-font"
                     id="category"
                     placeholder="Select defect category"
-                    value=""
+                    value={defectCategory}
                     onChange={(e) => setDefectCategory(e.target.value)}
                   >
                     <option value="" disabled hidden className="text-muted">
