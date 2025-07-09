@@ -371,7 +371,7 @@ const IncomingQC = () => {
                   Scan or Enter Batch Number
                 </label>
                 <div className="search-box">
-                  <i className="fas fa-barcode position-absolute z-0 input-icon"></i>
+                  <i className="fas fa-barcode position-absolute input-icon"></i>
                   <input
                     type="text"
                     className="form-control vendor-search-bar"
@@ -516,12 +516,12 @@ const IncomingQC = () => {
                   Defect Category
                 </label>
                 <div className="position-relative w-100">
-                  <i className="fa-solid fa-triangle-exclamation position-absolute z-0 input-icon"></i>
+                  <i className="fa-solid fa-triangle-exclamation position-absolute input-icon"></i>
                   <select
                     className="form-control ps-5 text-font"
                     id="category"
                     placeholder="Select defect category"
-                    value=""
+                    value={defectCategory}
                     onChange={(e) => setDefectCategory(e.target.value)}
                   >
                     <option value="" disabled hidden className="text-muted">
@@ -556,7 +556,7 @@ const IncomingQC = () => {
                   Remarks
                 </label>
                 <div className="position-relative w-100">
-                  <i className="fas fa-comment position-absolute z-0 input-icon"></i>
+                  <i className="fas fa-comment position-absolute input-icon"></i>
                   <textarea
                     type="text"
                     className="form-control ps-5 text-font pt-3"
@@ -591,7 +591,7 @@ const IncomingQC = () => {
       {/* Search and Filter Section */}
       <div className="search-filter-container mx-2">
         <div className="search-box">
-          <i className="fas fa-search position-absolute z-0 input-icon"></i>
+          <i className="fas fa-search position-absolute input-icon"></i>
           <input
             type="text"
             className="form-control vendor-search-bar"

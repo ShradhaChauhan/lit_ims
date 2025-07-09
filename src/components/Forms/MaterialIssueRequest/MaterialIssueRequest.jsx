@@ -280,8 +280,8 @@ const MaterialIssueRequest = () => {
 
   // Auto generate transaction number
   const generateTransactionNumber = () => {
-    const year = new Date().getFullYear(); // e.g., 2025
-    const randomNum = Math.floor(1000 + Math.random() * 9000); // 4-digit random
+    const year = new Date().getFullYear();
+    const randomNum = Math.floor(1000 + Math.random() * 9000);
     return `REQ-${year}-${randomNum}`;
   };
 
@@ -338,6 +338,7 @@ const MaterialIssueRequest = () => {
           </div>
         </div>
       </nav>
+
       {/* Form Section */}
       <div className="table-form-container mx-2 mb-5">
         <div className="form-header">
@@ -614,8 +615,8 @@ const MaterialIssueRequest = () => {
           </div>
         </form>
       </div>
+
       {/* View Modal */}
-      {/* View Details Modal */}
       {showModal && (
         <div
           className="modal show d-block"
@@ -679,37 +680,6 @@ const MaterialIssueRequest = () => {
           </div>
         </div>
       )}
-
-      {/* {showModal && selectedItem && (
-        <div className="modal fade" id="viewModal" tabIndex="-1">
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Item Details</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  data-bs-dismiss="modal"
-                ></button>
-              </div>
-              <div className="modal-body">
-                <p>
-                  <strong>Name:</strong> {selectedItem.name}
-                </p>
-                <p>
-                  <strong>Type:</strong> {selectedItem.type}
-                </p>
-                <p>
-                  <strong>Code:</strong> {selectedItem.code}
-                </p>
-                <p>
-                  <strong>Quantity:</strong> {selectedItem.quantity}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )} */}
     </div>
   );
 };

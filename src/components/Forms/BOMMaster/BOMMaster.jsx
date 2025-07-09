@@ -1071,11 +1071,8 @@ const BOMMaster = () => {
             <tbody>
               {filteredBoms.length === 0 ? (
                 <tr className="no-data-row">
-                  <td colSpan="8" className="no-data-cell text-center">
-                    <div
-                      className="no-data-content d-flex flex-column align-items-center justify-content-center"
-                      style={{ minHeight: "200px" }}
-                    >
+                  <td colSpan="5" className="no-data-cell">
+                    <div className="no-data-content">
                       <i className="fas fa-sitemap no-data-icon mb-3"></i>
                       <p className="no-data-text mb-1">No BOM's found</p>
                       <p className="no-data-subtext">

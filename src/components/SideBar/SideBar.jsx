@@ -23,6 +23,7 @@ import ActivityLogs from "../ActivityLogs/ActivityLogs";
 import MaterialIncoming from "../Forms/MaterialIncoming/MaterialIncoming";
 import IncomingQC from "../Forms/IncomingQC/IncomingQC";
 import MaterialIssueRequest from "../Forms/MaterialIssueRequest/MaterialIssueRequest";
+import ProductionFloorReceipt from "../Forms/ProductionFloorReceipt/ProductionFloorReceipt";
 
 const SideBar = () => {
   const {
@@ -193,30 +194,6 @@ const SideBar = () => {
     setIsActiveMenu((prev) => (prev === label ? null : label));
   };
 
-  // const handleRightSideComponentName = (name) => {
-  //   // Master Submenu component list
-  //   name === "VendorMaster" && setRightSideComponent(<VendorMaster />);
-  //   name === "ItemMaster" && setRightSideComponent(<ItemMaster />);
-  //   name === "WarehouseMaster" && setRightSideComponent(<WarehouseMaster />);
-  //   name === "BOMMaster" && setRightSideComponent(<BOMMaster />);
-  //   name === "TypeMaster" && setRightSideComponent(<TypeMaster />);
-  //   name === "GroupMaster" && setRightSideComponent(<GroupMaster />);
-  //   name === "PartMaster" && setRightSideComponent(<PartMaster />);
-
-  //   // Transaction Submenu component list
-  //   name === "Incoming" && setRightSideComponent(<Incoming />);
-  //   name === "IncomingReprint" && setRightSideComponent(<IncomingReprint />);
-  //   name === "IQC" && setRightSideComponent(<IQC />);
-  //   name === "Requisition" && setRightSideComponent(<Requisition />);
-  //   name === "IssueProduction" && setRightSideComponent(<IssueProduction />);
-  //   name === "RequisitionReceipt" &&
-  //     setRightSideComponent(<RequisitionReceipt />);
-  //   name === "ProductionReceipt" &&
-  //     setRightSideComponent(<ProductionReceipt />);
-  //   name === "WIPReturn" && setRightSideComponent(<WIPReturn />);
-  //   name === "Activity Logs" && setRightSideComponent(<ActivityLogs />);
-  // };
-
   const handleRightSideComponentName = (name) => {
     // Master Submenu component list
     name === "VendorMaster" && setRightSideComponent(<VendorMaster />);
@@ -234,8 +211,8 @@ const SideBar = () => {
     name === "MaterialIssueRequest" &&
       setRightSideComponent(<MaterialIssueRequest />);
     name === "IssueProduction" && setRightSideComponent(<IssueProduction />);
-    name === "RequisitionReceipt" &&
-      setRightSideComponent(<RequisitionReceipt />);
+    name === "ProductionFloorReceipt" &&
+      setRightSideComponent(<ProductionFloorReceipt />);
     name === "ProductionReceipt" &&
       setRightSideComponent(<ProductionReceipt />);
     name === "WIPReturn" && setRightSideComponent(<WIPReturn />);
@@ -249,7 +226,7 @@ const SideBar = () => {
       }`}
     >
       <div className="p-2 d-flex justify-content-between align-items-center">
-        {!isCollapsed && <img src={ims_logo} width={70} height={60} />}
+        {!isCollapsed && <img src={ims_logo} width={66} height={60} />}
         <button
           className="btn btn-sm btn-outline-light"
           onClick={() => setIsCollapsed(!isCollapsed)}

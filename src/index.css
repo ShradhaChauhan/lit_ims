@@ -1139,3 +1139,11 @@ select:invalid {
 .font-weight {
     font-weight: 600;
 }
+
+.font-gray {
+    color: var(--gray2);
+}
+
+.bg-gray {
+    background-color: var(--background-color);
+}
