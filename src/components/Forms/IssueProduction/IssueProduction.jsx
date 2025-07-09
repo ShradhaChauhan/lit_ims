@@ -15,7 +15,7 @@ const IssueProduction = () => {
   const generateIssueNumber = () => {
     const year = new Date().getFullYear(); // e.g., 2025
     const randomNum = Math.floor(1000 + Math.random() * 9000); // 4-digit random
-    return `ISSU-${year}-${randomNum}`;
+    return `ISS-${year}-${randomNum}`;
   };
 
   const [issueNumber] = useState(generateIssueNumber());
