@@ -346,7 +346,7 @@ const PartMaster = () => {
       {/* Search and Filter Section */}
       <div className="search-filter-container mx-2">
         <div className="search-box">
-          <i className="fas fa-search position-absolute input-icon"></i>
+          <i className="fas fa-search position-absolute z-0 input-icon"></i>
           <input
             type="text"
             className="form-control vendor-search-bar"
@@ -412,7 +412,7 @@ const PartMaster = () => {
                     Name
                   </label>
                   <div className="position-relative w-100">
-                    <i className="fas fa-font position-absolute input-icon"></i>
+                    <i className="fas fa-font position-absolute z-0 input-icon"></i>
                     <input
                       type="text"
                       className="form-control ps-5 text-font"
@@ -433,7 +433,7 @@ const PartMaster = () => {
                     Code
                   </label>
                   <div className="position-relative w-100">
-                    <i className="fas fa-qrcode position-absolute input-icon"></i>
+                    <i className="fas fa-qrcode position-absolute z-0 input-icon"></i>
                     <input
                       type="text"
                       className="form-control ps-5 text-font"
@@ -454,7 +454,7 @@ const PartMaster = () => {
                     UOM
                   </label>
                   <div className="position-relative w-100">
-                    <i className="fas fa-ruler position-absolute input-icon"></i>
+                    <i className="fas fa-ruler position-absolute z-0 input-icon"></i>
                     <select
                       className="form-control ps-5 text-font"
                       id="uom"
@@ -486,7 +486,7 @@ const PartMaster = () => {
                     Status
                   </label>
                   <div className="position-relative w-100">
-                    <div className="form-check form-switch position-absolute input-icon mt-1 padding-left-2">
+                    <div className="form-check form-switch position-absolute z-0 input-icon mt-1 padding-left-2">
                       <input
                         className="form-check-input text-font switch-style"
                         type="checkbox"
@@ -855,7 +855,7 @@ const PartMaster = () => {
                           Name
                         </label>
                         <div className="position-relative w-100">
-                          <i className="fas fa-font position-absolute input-icon"></i>
+                          <i className="fas fa-font position-absolute z-0 input-icon"></i>
                           <input
                             type="text"
                             className="form-control ps-5 text-font"
@@ -873,7 +873,7 @@ const PartMaster = () => {
                           Code
                         </label>
                         <div className="position-relative w-100">
-                          <i className="fas fa-qrcode position-absolute input-icon"></i>
+                          <i className="fas fa-qrcode position-absolute z-0 input-icon"></i>
                           <input
                             type="text"
                             className="form-control ps-5 text-font"
@@ -891,7 +891,7 @@ const PartMaster = () => {
                           UOM
                         </label>
                         <div className="position-relative w-100">
-                          <i className="fas fa-ruler position-absolute input-icon"></i>
+                          <i className="fas fa-ruler position-absolute z-0 input-icon"></i>
                           <select
                             className="form-control ps-5 text-font"
                             id="uom"
@@ -925,7 +925,7 @@ const PartMaster = () => {
                           Status
                         </label>
                         <div className="position-relative w-100">
-                          <div className="form-check form-switch position-absolute input-icon mt-1 padding-left-2">
+                          <div className="form-check form-switch position-absolute z-0 input-icon mt-1 padding-left-2">
                             <input
                               className="form-check-input text-font switch-style"
                               type="checkbox"

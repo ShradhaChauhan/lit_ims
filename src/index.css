@@ -860,7 +860,7 @@ select:invalid {
     position: absolute;
     color: var(--gray3) !important;
     font-size: 0.7rem;
-    z-index: 1 !important;
+    /* z-index: 1 !important; */
     pointer-events: none;
 }
 
@@ -1138,4 +1138,12 @@ select:invalid {
 
 .font-weight {
     font-weight: 600;
+}
+
+.font-gray {
+    color: var(--gray2);
+}
+
+.bg-gray {
+    background-color: var(--background-color);
 }

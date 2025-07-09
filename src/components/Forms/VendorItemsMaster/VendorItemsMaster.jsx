@@ -737,7 +737,7 @@ const VendorItemsMaster = () => {
       {/* Search and Filter Section */}
       <div className="search-filter-container mx-2">
         <div className="search-box">
-          <i className="fas fa-search position-absolute input-icon"></i>
+          <i className="fas fa-search position-absolute z-0 input-icon"></i>
           <input
             type="text"
             className="form-control vendor-search-bar"
@@ -825,7 +825,7 @@ const VendorItemsMaster = () => {
                     Vendor
                   </label>
                   <div className="position-relative w-100">
-                    <i className="fas fa-user-tie position-absolute input-icon"></i>
+                    <i className="fas fa-user-tie position-absolute z-0 input-icon"></i>
                     <select
                       className="form-control ps-5 ms-2 text-font"
                       id="vendor"
@@ -854,7 +854,7 @@ const VendorItemsMaster = () => {
                     Item
                   </label>
                   <div className="position-relative w-100">
-                    <i className="fas fa-box position-absolute input-icon"></i>
+                    <i className="fas fa-box position-absolute z-0 input-icon"></i>
                     <select
                       className="form-control ps-5 ms-2 text-font"
                       id="item"
@@ -883,7 +883,7 @@ const VendorItemsMaster = () => {
                     Lead Time (Days)
                   </label>
                   <div className="position-relative w-100">
-                    <i className="fas fa-clock position-absolute input-icon"></i>
+                    <i className="fas fa-clock position-absolute z-0 input-icon"></i>
                     <input
                       type="text"
                       className="form-control ps-5 text-font"
@@ -905,7 +905,7 @@ const VendorItemsMaster = () => {
                     Min Order Qty
                   </label>
                   <div className="position-relative w-100">
-                    <i className="fas fa-cubes position-absolute input-icon"></i>
+                    <i className="fas fa-cubes position-absolute z-0 input-icon"></i>
                     <input
                       type="text"
                       className="form-control ps-5 text-font"
@@ -933,7 +933,7 @@ const VendorItemsMaster = () => {
                     Price
                   </label>
                   <div className="position-relative w-100">
-                    <i className="fas fa-rupee-sign position-absolute input-icon"></i>
+                    <i className="fas fa-rupee-sign position-absolute z-0 input-icon"></i>
                     <input
                       type="text"
                       className="form-control ps-5 text-font"
@@ -957,7 +957,7 @@ const VendorItemsMaster = () => {
                     Status
                   </label>
                   <div className="position-relative w-100">
-                    <div className="form-check form-switch position-absolute input-icon mt-1 padding-left-2">
+                    <div className="form-check form-switch position-absolute z-0 input-icon mt-1 padding-left-2">
                       <input
                         className="form-check-input text-font switch-style"
                         type="checkbox"
@@ -1343,7 +1343,7 @@ const VendorItemsMaster = () => {
                         Vendor
                       </label>
                       <div className="position-relative w-100">
-                        <i className="fas fa-user-tag position-absolute input-icon"></i>
+                        <i className="fas fa-user-tag position-absolute z-0 input-icon"></i>
                         <select
                           className="form-control ps-5 ms-2 text-font"
                           id="vendor"
@@ -1381,7 +1381,7 @@ const VendorItemsMaster = () => {
                         Item
                       </label>
                       <div className="position-relative w-100">
-                        <i className="fas fa-box position-absolute input-icon"></i>
+                        <i className="fas fa-box position-absolute z-0 input-icon"></i>
                         <select
                           className="form-control ps-5 ms-2 text-font"
                           id="item"
@@ -1419,7 +1419,7 @@ const VendorItemsMaster = () => {
                         Lead Time (Days)
                       </label>
                       <div className="position-relative w-100">
-                        <i className="fas fa-hashtag position-absolute input-icon"></i>
+                        <i className="fas fa-hashtag position-absolute z-0 input-icon"></i>
                         <input
                           type="text"
                           className="form-control ps-5 text-font"
@@ -1440,7 +1440,7 @@ const VendorItemsMaster = () => {
                         Min Order Qty
                       </label>
                       <div className="position-relative w-100">
-                        <i className="fas fa-hashtag position-absolute input-icon"></i>
+                        <i className="fas fa-hashtag position-absolute z-0 input-icon"></i>
                         <input
                           type="text"
                           className="form-control ps-5 text-font"
@@ -1463,7 +1463,7 @@ const VendorItemsMaster = () => {
                         Price
                       </label>
                       <div className="position-relative w-100">
-                        <i className="fas fa-hashtag position-absolute input-icon"></i>
+                        <i className="fas fa-hashtag position-absolute z-0 input-icon"></i>
                         <input
                           type="text"
                           className="form-control ps-5 text-font"
@@ -1484,7 +1484,7 @@ const VendorItemsMaster = () => {
                         Status
                       </label>
                       <div className="position-relative w-100">
-                        <div className="form-check form-switch position-absolute input-icon mt-1 padding-left-2">
+                        <div className="form-check form-switch position-absolute z-0 input-icon mt-1 padding-left-2">
                           <input
                             className="form-check-input text-font switch-style"
                             type="checkbox"

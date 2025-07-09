@@ -10,12 +10,12 @@ const IssueProduction = () => {
   const [batchNumber, setBatchNumber] = useState("");
   const [scannedBatches, setScannedBatches] = useState([]);
   const [allItemsFulfilled, setAllItemsFulfilled] = useState(false);
-  
+
   // Auto generate issue number
   const generateIssueNumber = () => {
     const year = new Date().getFullYear(); // e.g., 2025
     const randomNum = Math.floor(1000 + Math.random() * 9000); // 4-digit random
-    return `ISSU-${year}-${randomNum}`;
+    return `ISS-${year}-${randomNum}`;
   };
 
   const [issueNumber] = useState(generateIssueNumber());
@@ -38,7 +38,9 @@ const IssueProduction = () => {
   // Check if all items are fulfilled whenever requestedItems changes
   useEffect(() => {
     if (requestedItems.length > 0) {
-      const allFulfilled = requestedItems.every(item => item.issuedQty >= item.requestedQty);
+      const allFulfilled = requestedItems.every(
+        (item) => item.issuedQty >= item.requestedQty
+      );
       setAllItemsFulfilled(allFulfilled);
     }
   }, [requestedItems]);
@@ -55,7 +57,9 @@ const IssueProduction = () => {
 
   const fetchRequisitionItems = async (requisitionNumber) => {
     try {
-      const response = await api.get(`/api/requisitions/${requisitionNumber}/items/full`);
+      const response = await api.get(
+        `/api/requisitions/${requisitionNumber}/items/full`
+      );
       if (response.data.status) {
         const formattedItems = response.data.data.map((item, index) => ({
           id: index + 1,
@@ -65,7 +69,7 @@ const IssueProduction = () => {
           standardQty: item.stQuantity,
           issuedQty: 0,
           variance: 0,
-          status: "Pending"
+          status: "Pending",
         }));
         setRequestedItems(formattedItems);
       }
@@ -88,7 +92,7 @@ const IssueProduction = () => {
   };
 
   const handleBatchNumberKeyDown = async (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       await verifyBatch(batchNumber);
     }
@@ -113,54 +117,66 @@ const IssueProduction = () => {
 
     try {
       // Using the new API endpoint for verifying and issuing the batch
-      const response = await api.get(`/api/receipt/issue-fifo?batchNo=${batchNo}`);
-      
+      const response = await api.get(
+        `/api/receipt/issue-fifo?batchNo=${batchNo}`
+      );
+
       if (response.data.status) {
         const batchData = response.data.data;
-        
+
         // Check if this batch has already been scanned
-        const alreadyScanned = scannedBatches.some(batch => batch.batchNo === batchData.batchNo);
+        const alreadyScanned = scannedBatches.some(
+          (batch) => batch.batchNo === batchData.batchNo
+        );
         if (alreadyScanned) {
           toast.warning("This batch has already been scanned");
           setBatchNumber("");
           return;
         }
-        
+
         // Check if this item's requested quantity is already fulfilled
-        const matchingItem = requestedItems.find(item => item.code === batchData.itemCode);
-        if (matchingItem && matchingItem.issuedQty >= matchingItem.requestedQty) {
-          toast.warning(`Requested quantity for ${matchingItem.itemName} already fulfilled`);
+        const matchingItem = requestedItems.find(
+          (item) => item.code === batchData.itemCode
+        );
+        if (
+          matchingItem &&
+          matchingItem.issuedQty >= matchingItem.requestedQty
+        ) {
+          toast.warning(
+            `Requested quantity for ${matchingItem.itemName} already fulfilled`
+          );
           setBatchNumber("");
           return;
         }
-        
+
         // Add to scanned batches
         const newScannedBatch = {
           id: Date.now(), // Use timestamp as unique ID
           itemName: batchData.itemName,
           batchNo: batchData.batchNo,
-          quantity: batchData.quantity
+          quantity: batchData.quantity,
         };
-        
+
         setScannedBatches([...scannedBatches, newScannedBatch]);
-        
+
         // Update the requested items table with the issued quantity
-        const updatedItems = requestedItems.map(item => {
+        const updatedItems = requestedItems.map((item) => {
           if (item.code === batchData.itemCode) {
             const newIssuedQty = item.issuedQty + batchData.quantity;
             const newVariance = newIssuedQty - item.requestedQty;
-            const newStatus = newIssuedQty >= item.requestedQty ? "Completed" : "Pending";
-            
+            const newStatus =
+              newIssuedQty >= item.requestedQty ? "Completed" : "Pending";
+
             return {
               ...item,
               issuedQty: newIssuedQty,
               variance: newVariance,
-              status: newStatus
+              status: newStatus,
             };
           }
           return item;
         });
-        
+
         setRequestedItems(updatedItems);
         toast.success("Batch verified and issued successfully");
         setBatchNumber("");
@@ -177,38 +193,70 @@ const IssueProduction = () => {
 
   const handleRemoveBatch = (batchToRemove) => {
     // Find the item associated with this batch
-    const itemToUpdate = requestedItems.find(item => 
-      item.itemName === batchToRemove.itemName
+    const itemToUpdate = requestedItems.find(
+      (item) => item.itemName === batchToRemove.itemName
     );
 
     if (itemToUpdate) {
       // Update the requested items table
-      const updatedItems = requestedItems.map(item => {
+      const updatedItems = requestedItems.map((item) => {
         if (item.itemName === batchToRemove.itemName) {
-          const newIssuedQty = Math.max(0, item.issuedQty - batchToRemove.quantity);
+          const newIssuedQty = Math.max(
+            0,
+            item.issuedQty - batchToRemove.quantity
+          );
           // Calculate variance: issued - requested (can be negative if less issued than requested)
           const newVariance = newIssuedQty - item.requestedQty;
           const newStatus = "Pending"; // Always revert to pending when removing a batch
-          
+
           return {
             ...item,
             issuedQty: newIssuedQty,
             variance: newVariance,
-            status: newStatus
+            status: newStatus,
           };
         }
         return item;
       });
-      
+
       setRequestedItems(updatedItems);
     }
 
     // Remove from scanned batches
-    const updatedBatches = scannedBatches.filter(batch => batch.id !== batchToRemove.id);
+    const updatedBatches = scannedBatches.filter(
+      (batch) => batch.id !== batchToRemove.id
+    );
     setScannedBatches(updatedBatches);
     toast.info("Batch removed successfully");
   };
 
+  const handleCompleteIssue = async (e) => {
+    e.preventDefault();
+    const finalData = [];
+    try {
+      console.log("Complete issue with data:", finalData);
+      const response = await api.post("/api/", finalData);
+      console.log("Successfully completed the issue: ", response.data);
+      toast.success("Successfully completed the issue");
+    } catch (error) {
+      let errorMessage = "Failed to complete the issue. Please try again.";
+
+      if (error.response) {
+        if (error.response.data.message) {
+          // For structured error from backend (with message field)
+          errorMessage = error.response.data.message;
+        } else if (typeof error.response.data === "string") {
+          // For plain string error from backend
+          errorMessage = error.response.data;
+        }
+      } else {
+        errorMessage = error.message;
+      }
+
+      console.error("Error in completing the issue:", errorMessage);
+      toast.error(errorMessage);
+    }
+  };
   return (
     <div>
       {" "}
@@ -273,10 +321,7 @@ const IssueProduction = () => {
                     </div>
                   </div>
                   <div className="col-6 d-flex flex-column form-group">
-                    <label
-                      htmlFor="scanBatch"
-                      className="form-label ms-2"
-                    >
+                    <label htmlFor="scanBatch" className="form-label ms-2">
                       Scan Batch
                     </label>
                     <div className="position-relative w-100">
@@ -285,7 +330,11 @@ const IssueProduction = () => {
                         type="text"
                         id="scanBatch"
                         className="form-control ps-5 ms-1 text-font"
-                        placeholder={allItemsFulfilled ? "All quantities fulfilled" : "Scan batch number"}
+                        placeholder={
+                          allItemsFulfilled
+                            ? "All quantities fulfilled"
+                            : "Scan batch number"
+                        }
                         value={batchNumber}
                         onChange={handleBatchNumberChange}
                         onKeyDown={handleBatchNumberKeyDown}
@@ -446,6 +495,18 @@ const IssueProduction = () => {
             </div>
           </div>
         </form>
+        <div className="form-actions mt-0">
+          <button
+            type="submit"
+            className="btn btn-primary add-btn mb-4"
+            onClick={handleCompleteIssue}
+          >
+            <i className="fa-solid fa-check-circle me-1"></i> Complete Issue
+          </button>
+          <button className="btn btn-secondary add-btn mb-4 me-3" type="button">
+            <i className="fa-solid fa-xmark me-1"></i> Clear
+          </button>
+        </div>
       </div>
     </div>
   );

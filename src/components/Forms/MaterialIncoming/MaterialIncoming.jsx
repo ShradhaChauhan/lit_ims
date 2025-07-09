@@ -333,7 +333,7 @@ const MaterialIncoming = () => {
       {/* Search and Filter Section */}
       <div className="search-filter-container mx-2">
         <div className="search-box">
-          <i className="fas fa-search position-absolute input-icon"></i>
+          <i className="fas fa-search position-absolute z-0 input-icon"></i>
           <input
             type="text"
             className="form-control vendor-search-bar"
@@ -359,7 +359,7 @@ const MaterialIncoming = () => {
                   Receipt Mode
                 </label>
                 <div className="position-relative w-100">
-                  <i className="fas fa-right-left ms-2 position-absolute input-icon"></i>
+                  <i className="fas fa-right-left ms-2 position-absolute z-0 input-icon"></i>
                   <select
                     className="form-control ps-5 ms-1 text-font"
                     id="receiptMode"
@@ -386,7 +386,7 @@ const MaterialIncoming = () => {
                   Vendor Name
                 </label>
                 <div className="position-relative w-100">
-                  <i className="fas fa-building ms-2 position-absolute input-icon"></i>
+                  <i className="fas fa-building ms-2 position-absolute z-0 input-icon"></i>
                   <select
                     className="form-control ps-5 ms-1 text-font"
                     id="vendorName"
@@ -430,7 +430,7 @@ const MaterialIncoming = () => {
                   Vendor Code
                 </label>
                 <div className="position-relative w-100">
-                  <i className="fas fa-hashtag position-absolute ms-2 input-icon"></i>
+                  <i className="fas fa-hashtag position-absolute ms-2 z-0 input-icon"></i>
                   <input
                     type="text"
                     className="form-control ps-5 ms-1 text-font"
@@ -450,7 +450,7 @@ const MaterialIncoming = () => {
                   Select Item
                 </label>
                 <div className="position-relative w-100">
-                  <i className="fas fa-box position-absolute ms-2 input-icon"></i>
+                  <i className="fas fa-box position-absolute ms-2 z-0 input-icon"></i>
                   <select
                     className="form-control ps-5 ms-1 text-font"
                     id="item"
@@ -500,7 +500,7 @@ const MaterialIncoming = () => {
                   Scan Barcode
                 </label>
                 <div className="position-relative w-100">
-                  <i className="fas fa-qrcode position-absolute ms-2 input-icon"></i>
+                  <i className="fas fa-qrcode position-absolute ms-2 z-0 input-icon"></i>
                   <input
                     type="text"
                     className="form-control ps-5 ms-1 text-font"
@@ -524,7 +524,7 @@ const MaterialIncoming = () => {
                   Quantity
                 </label>
                 <div className="position-relative w-100">
-                  <i className="fas fa-calculator position-absolute ms-2 input-icon"></i>
+                  <i className="fas fa-calculator position-absolute ms-2 z-0 input-icon"></i>
                   <input
                     type="text"
                     className="form-control ps-5 ms-1 text-font"

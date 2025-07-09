@@ -556,7 +556,7 @@ const VendorMaster = () => {
       {/* Update Search and Filter Section */}
       <div className="search-filter-container mx-2">
         <div className="search-box">
-          <i className="fas fa-search position-absolute input-icon"></i>
+          <i className="fas fa-search position-absolute z-0 input-icon"></i>
           <input
             type="text"
             className="form-control vendor-search-bar"
@@ -619,7 +619,7 @@ const VendorMaster = () => {
                     Type
                   </label>
                   <div className="position-relative w-100">
-                    <i className="fas fa-user-tag position-absolute input-icon"></i>
+                    <i className="fas fa-user-tag position-absolute z-0 input-icon"></i>
                     <select
                       className="form-control ps-5 ms-2 text-font"
                       id="type"
@@ -645,7 +645,7 @@ const VendorMaster = () => {
                     Name
                   </label>
                   <div className="position-relative w-100 ms-2">
-                    <i className="fas fa-user position-absolute ps-2 input-icon"></i>
+                    <i className="fas fa-user position-absolute ps-2 z-0 input-icon"></i>
                     <input
                       type="text"
                       className="form-control ps-5 text-font"
@@ -666,7 +666,7 @@ const VendorMaster = () => {
                     Mobile
                   </label>
                   <div className="position-relative w-100">
-                    <i className="fas fa-phone position-absolute ps-2 input-icon"></i>
+                    <i className="fas fa-phone position-absolute ps-2 z-0 input-icon"></i>
                     <input
                       type="tel"
                       className="form-control ps-5 ms-2 text-font"
@@ -690,7 +690,7 @@ const VendorMaster = () => {
                     Email
                   </label>
                   <div className="position-relative w-100">
-                    <i className="fa-solid fa-envelope ps-2 position-absolute input-icon"></i>
+                    <i className="fa-solid fa-envelope ps-2 position-absolute z-0 input-icon"></i>
                     <input
                       type="email"
                       className="form-control ps-5 ms-2 text-font"
@@ -711,7 +711,7 @@ const VendorMaster = () => {
                     City
                   </label>
                   <div className="position-relative w-100">
-                    <i className="fas fa-city position-absolute ps-2 input-icon"></i>
+                    <i className="fas fa-city position-absolute ps-2 z-0 input-icon"></i>
                     <input
                       type="text"
                       className="form-control ps-5 ms-2 text-font"
@@ -732,7 +732,7 @@ const VendorMaster = () => {
                     State
                   </label>
                   <div className="position-relative w-100">
-                    <i className="fa-solid fa-location-crosshairs ps-2 position-absolute input-icon"></i>
+                    <i className="fa-solid fa-location-crosshairs ps-2 position-absolute z-0 input-icon"></i>
                     <input
                       type="text"
                       className="form-control ps-5 ms-2 text-font"
@@ -755,7 +755,7 @@ const VendorMaster = () => {
                     Pincode
                   </label>
                   <div className="position-relative w-100">
-                    <i className="fa-solid fa-map-pin ps-2 position-absolute input-icon"></i>
+                    <i className="fa-solid fa-map-pin ps-2 position-absolute z-0 input-icon"></i>
                     <input
                       type="text"
                       className="form-control ps-5 ms-2 text-font"
@@ -776,7 +776,7 @@ const VendorMaster = () => {
                     Address
                   </label>
                   <div className="position-relative w-100">
-                    <i className="fas fa-map-marker-alt ps-2 position-absolute input-icon"></i>
+                    <i className="fas fa-map-marker-alt ps-2 position-absolute z-0 input-icon"></i>
                     <textarea
                       type="text"
                       className="form-control pt-3 ps-5 ms-2 text-font"
@@ -797,7 +797,7 @@ const VendorMaster = () => {
                     Status
                   </label>
                   <div className="position-relative w-100 ms-2">
-                    <div className="form-check form-switch position-absolute input-icon mt-1 padding-left-2">
+                    <div className="form-check form-switch position-absolute z-0 input-icon mt-1 padding-left-2">
                       <input
                         className="form-check-input text-font switch-style"
                         type="checkbox"
@@ -1251,7 +1251,7 @@ const VendorMaster = () => {
                             Type
                           </label>
                           <div className="position-relative w-100">
-                            <i className="fas fa-user-tag position-absolute input-icon"></i>
+                            <i className="fas fa-user-tag position-absolute z-0 input-icon"></i>
                             <select
                               className="form-control ps-5 ms-2 text-font"
                               id="type"
@@ -1287,7 +1287,7 @@ const VendorMaster = () => {
                             Name
                           </label>
                           <div className="position-relative w-100 ms-2">
-                            <i className="fas fa-user position-absolute ps-2 input-icon"></i>
+                            <i className="fas fa-user position-absolute ps-2 z-0 input-icon"></i>
                             <input
                               type="text"
                               className="form-control ps-5 text-font"
@@ -1313,7 +1313,7 @@ const VendorMaster = () => {
                             Mobile
                           </label>
                           <div className="position-relative w-100">
-                            <i className="fas fa-phone position-absolute ps-2 input-icon"></i>
+                            <i className="fas fa-phone position-absolute ps-2 z-0 input-icon"></i>
                             <input
                               type="tel"
                               className="form-control ps-5 ms-2 text-font"
@@ -1341,7 +1341,7 @@ const VendorMaster = () => {
                             Email
                           </label>
                           <div className="position-relative w-100">
-                            <i className="fa-solid fa-envelope ps-2 position-absolute input-icon"></i>
+                            <i className="fa-solid fa-envelope ps-2 position-absolute z-0 input-icon"></i>
                             <input
                               type="email"
                               className="form-control ps-5 ms-2 text-font"
@@ -1367,7 +1367,7 @@ const VendorMaster = () => {
                             City
                           </label>
                           <div className="position-relative w-100">
-                            <i className="fas fa-city position-absolute ps-2 input-icon"></i>
+                            <i className="fas fa-city position-absolute ps-2 z-0 input-icon"></i>
                             <input
                               type="text"
                               className="form-control ps-5 ms-2 text-font"
@@ -1393,7 +1393,7 @@ const VendorMaster = () => {
                             State
                           </label>
                           <div className="position-relative w-100">
-                            <i className="fa-solid fa-location-crosshairs ps-2 position-absolute input-icon"></i>
+                            <i className="fa-solid fa-location-crosshairs ps-2 position-absolute z-0 input-icon"></i>
                             <input
                               type="text"
                               className="form-control ps-5 ms-2 text-font"
@@ -1421,7 +1421,7 @@ const VendorMaster = () => {
                             Pincode
                           </label>
                           <div className="position-relative w-100">
-                            <i className="fa-solid fa-map-pin ps-2 position-absolute input-icon"></i>
+                            <i className="fa-solid fa-map-pin ps-2 position-absolute z-0 input-icon"></i>
                             <input
                               type="text"
                               className="form-control ps-5 ms-2 text-font"
@@ -1447,7 +1447,7 @@ const VendorMaster = () => {
                             Address
                           </label>
                           <div className="position-relative w-100">
-                            <i className="fas fa-map-marker-alt ps-2 position-absolute input-icon"></i>
+                            <i className="fas fa-map-marker-alt ps-2 position-absolute z-0 input-icon"></i>
                             <textarea
                               className="form-control pt-3 ps-5 ms-2 text-font"
                               id="address"
@@ -1472,7 +1472,7 @@ const VendorMaster = () => {
                             Status
                           </label>
                           <div className="position-relative w-100 ms-2">
-                            <div className="form-check form-switch position-absolute input-icon mt-1 padding-left-2">
+                            <div className="form-check form-switch position-absolute z-0 input-icon mt-1 padding-left-2">
                               <input
                                 className="form-check-input text-font switch-style"
                                 type="checkbox"

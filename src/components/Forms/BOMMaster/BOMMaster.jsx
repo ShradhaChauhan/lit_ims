@@ -655,7 +655,7 @@ const BOMMaster = () => {
       {/* Search and Filter Section */}
       <div className="search-filter-container mx-2">
         <div className="search-box">
-          <i className="fas fa-search position-absolute input-icon"></i>
+          <i className="fas fa-search position-absolute z-0 input-icon"></i>
           <input
             type="text"
             className="form-control vendor-search-bar"
@@ -732,7 +732,7 @@ const BOMMaster = () => {
                     BOM Name
                   </label>
                   <div className="position-relative w-100">
-                    <i className="fas fa-file-alt position-absolute input-icon"></i>
+                    <i className="fas fa-file-alt position-absolute z-0 input-icon"></i>
                     <input
                       type="text"
                       className="form-control ps-5 text-font"
@@ -753,7 +753,7 @@ const BOMMaster = () => {
                     BOM Code
                   </label>
                   <div className="position-relative w-100">
-                    <i className="fas fa-qrcode position-absolute input-icon"></i>
+                    <i className="fas fa-qrcode position-absolute z-0 input-icon"></i>
                     <input
                       type="text"
                       className="form-control ps-5 text-font"
@@ -774,7 +774,7 @@ const BOMMaster = () => {
                     Status
                   </label>
                   <div className="position-relative w-100">
-                    <div className="form-check form-switch position-absolute input-icon mt-1 padding-left-2">
+                    <div className="form-check form-switch position-absolute z-0 input-icon mt-1 padding-left-2">
                       <input
                         className="form-check-input text-font switch-style"
                         type="checkbox"
@@ -860,7 +860,7 @@ const BOMMaster = () => {
                           <td>
                             <div className="field-wrapper">
                               <div className="position-relative w-100">
-                                <i className="fas fa-cogs position-absolute input-icon"></i>
+                                <i className="fas fa-cogs position-absolute z-0 input-icon"></i>
                                 <select
                                   className="form-control text-font w-100 ps-5"
                                   required
@@ -925,7 +925,7 @@ const BOMMaster = () => {
                           <td>
                             <div className="field-wrapper">
                               <div className="position-relative w-100">
-                                <i className="fas fa-warehouse position-absolute input-icon"></i>
+                                <i className="fas fa-warehouse position-absolute z-0 input-icon"></i>
                                 <select
                                   className="form-control text-font w-100 ps-5"
                                   required
@@ -1071,11 +1071,8 @@ const BOMMaster = () => {
             <tbody>
               {filteredBoms.length === 0 ? (
                 <tr className="no-data-row">
-                  <td colSpan="8" className="no-data-cell text-center">
-                    <div
-                      className="no-data-content d-flex flex-column align-items-center justify-content-center"
-                      style={{ minHeight: "200px" }}
-                    >
+                  <td colSpan="5" className="no-data-cell">
+                    <div className="no-data-content">
                       <i className="fas fa-sitemap no-data-icon mb-3"></i>
                       <p className="no-data-text mb-1">No BOM's found</p>
                       <p className="no-data-subtext">
@@ -1380,7 +1377,7 @@ const BOMMaster = () => {
                             BOM Name
                           </label>
                           <div className="position-relative w-100">
-                            <i className="fas fa-file-alt position-absolute input-icon"></i>
+                            <i className="fas fa-file-alt position-absolute z-0 input-icon"></i>
                             <input
                               type="text"
                               className="form-control ps-5 text-font"
@@ -1403,7 +1400,7 @@ const BOMMaster = () => {
                             BOM Code
                           </label>
                           <div className="position-relative w-100">
-                            <i className="fas fa-qrcode position-absolute input-icon"></i>
+                            <i className="fas fa-qrcode position-absolute z-0 input-icon"></i>
                             <input
                               type="text"
                               className="form-control ps-5 text-font"
@@ -1426,7 +1423,7 @@ const BOMMaster = () => {
                             Status
                           </label>
                           <div className="position-relative w-100">
-                            <div className="form-check form-switch position-absolute input-icon mt-1 padding-left-2">
+                            <div className="form-check form-switch position-absolute z-0 input-icon mt-1 padding-left-2">
                               <input
                                 className="form-check-input text-font switch-style"
                                 type="checkbox"
@@ -1484,7 +1481,7 @@ const BOMMaster = () => {
                                   <td>
                                     <div className="field-wrapper">
                                       <div className="position-relative w-100">
-                                        <i className="fas fa-cogs position-absolute input-icon"></i>
+                                        <i className="fas fa-cogs position-absolute z-0 input-icon"></i>
                                         <select
                                           className="form-control text-font w-100 ps-5"
                                           required
@@ -1549,7 +1546,7 @@ const BOMMaster = () => {
                                   <td>
                                     <div className="field-wrapper">
                                       <div className="position-relative w-100">
-                                        <i className="fas fa-warehouse position-absolute input-icon"></i>
+                                        <i className="fas fa-warehouse position-absolute z-0 input-icon"></i>
                                         <select
                                           className="form-control text-font w-100 ps-5"
                                           required
