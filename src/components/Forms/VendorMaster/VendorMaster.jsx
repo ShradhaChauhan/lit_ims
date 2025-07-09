@@ -1426,6 +1426,7 @@ const VendorMaster = () => {
                               type="text"
                               className="form-control ps-5 ms-2 text-font"
                               id="pincode"
+                              maxLength={6}
                               placeholder="Enter pincode"
                               value={partnerDetails.pincode || ""}
                               onChange={(e) =>

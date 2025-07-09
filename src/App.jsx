@@ -23,6 +23,8 @@ import "react-toastify/dist/ReactToastify.css";
 import MaterialIssueRequest from "./components/Forms/MaterialIssueRequest/MaterialIssueRequest";
 import IssueProduction from "./components/Forms/IssueProduction/IssueProduction";
 import ProductionFloorReceipt from "./components/Forms/ProductionFloorReceipt/ProductionFloorReceipt";
+import ActivityLogs from "./components/ActivityLogs/ActivityLogs";
+import Reports from "./components/Reports/Reports";
 
 function App() {
   const { rightSideComponent, setRightSideComponent, isAuthenticated } =
@@ -87,6 +89,8 @@ function App() {
                   path="/production-floor-receipt"
                   element={<ProductionFloorReceipt />}
                 />
+                <Route path="/reports" element={<Reports />} />
+                <Route path="/activity-logs" element={<ActivityLogs />} />
               </Routes>
             </div>
           </div>

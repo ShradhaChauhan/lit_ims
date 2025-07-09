@@ -170,6 +170,11 @@ const SideBar = () => {
       path: "Reports",
       label: "Reports",
     },
+    {
+      icon: "fa-solid fa-star",
+      path: "activity-logs",
+      label: "Activity Logs",
+    },
   ];
 
   const handleLogout = async () => {
@@ -216,6 +221,7 @@ const SideBar = () => {
     name === "ProductionReceipt" &&
       setRightSideComponent(<ProductionReceipt />);
     name === "WIPReturn" && setRightSideComponent(<WIPReturn />);
+    name === "Reports" && setRightSideComponent(<div>Reports Coming Soon</div>);
     name === "Activity Logs" && setRightSideComponent(<ActivityLogs />);
   };
 
@@ -252,8 +258,15 @@ const SideBar = () => {
             <div
               className={`nav-link text-white d-flex justify-content-between align-items-center menuListItem`}
               onClick={() => {
-                if (!isCollapsed && item.submenu) {
-                  toggleSubmenu(item.label);
+                if (item.submenu) {
+                  // Toggle submenu
+                  if (!isCollapsed) toggleSubmenu(item.label);
+                } else {
+                  // Navigate directly for menu items like "Reports" or "Activity Logs"
+                  navigate(`/${item.path.toLowerCase().replace(/\s+/g, "-")}`);
+                  setIsActiveComponent(item.path);
+                  setLabelName(item.label);
+                  handleRightSideComponentName(item.label); // Pass label if it's used as a compName
                 }
               }}
             >

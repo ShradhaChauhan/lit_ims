@@ -191,43 +191,57 @@ const IssueProduction = () => {
     }
   };
 
-  const handleRemoveBatch = (batchToRemove) => {
-    // Find the item associated with this batch
-    const itemToUpdate = requestedItems.find(
-      (item) => item.itemName === batchToRemove.itemName
-    );
+  const handleRemoveBatch = async (batchToRemove) => {
+    try {
+      // Call API to release the batch
+      const response = await api.delete(
+        `/api/receipt/release?batchNo=${batchToRemove.batchNo}`
+      );
 
-    if (itemToUpdate) {
-      // Update the requested items table
-      const updatedItems = requestedItems.map((item) => {
-        if (item.itemName === batchToRemove.itemName) {
-          const newIssuedQty = Math.max(
-            0,
-            item.issuedQty - batchToRemove.quantity
-          );
-          // Calculate variance: issued - requested (can be negative if less issued than requested)
-          const newVariance = newIssuedQty - item.requestedQty;
-          const newStatus = "Pending"; // Always revert to pending when removing a batch
+      if (response.data.status) {
+        // Find the item associated with this batch
+        const itemToUpdate = requestedItems.find(
+          (item) => item.itemName === batchToRemove.itemName
+        );
 
-          return {
-            ...item,
-            issuedQty: newIssuedQty,
-            variance: newVariance,
-            status: newStatus,
-          };
+        if (itemToUpdate) {
+          // Update the requested items table
+          const updatedItems = requestedItems.map((item) => {
+            if (item.itemName === batchToRemove.itemName) {
+              const newIssuedQty = Math.max(
+                0,
+                item.issuedQty - batchToRemove.quantity
+              );
+              // Calculate variance: issued - requested (can be negative if less issued than requested)
+              const newVariance = newIssuedQty - item.requestedQty;
+              const newStatus = "Pending"; // Always revert to pending when removing a batch
+
+              return {
+                ...item,
+                issuedQty: newIssuedQty,
+                variance: newVariance,
+                status: newStatus,
+              };
+            }
+            return item;
+          });
+
+          setRequestedItems(updatedItems);
         }
-        return item;
-      });
 
-      setRequestedItems(updatedItems);
+        // Remove from scanned batches
+        const updatedBatches = scannedBatches.filter(
+          (batch) => batch.id !== batchToRemove.id
+        );
+        setScannedBatches(updatedBatches);
+        toast.success("Batch removed and released successfully");
+      } else {
+        toast.error("Failed to release batch");
+      }
+    } catch (error) {
+      console.error("Error releasing batch:", error);
+      toast.error("Error releasing batch. Please try again.");
     }
-
-    // Remove from scanned batches
-    const updatedBatches = scannedBatches.filter(
-      (batch) => batch.id !== batchToRemove.id
-    );
-    setScannedBatches(updatedBatches);
-    toast.info("Batch removed successfully");
   };
 
   const handleCompleteIssue = async (e) => {
@@ -353,7 +367,7 @@ const IssueProduction = () => {
                 </div>
                 <table>
                   <thead>
-                    <tr>
+                    <tr className="text-break">
                       <th>Item Name</th>
                       <th>Code</th>
                       <th>Requested Qty</th>
@@ -363,7 +377,7 @@ const IssueProduction = () => {
                       <th>Status</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="text-break">
                     {requestedItems.length === 0 ? (
                       <tr className="no-data-row">
                         <td colSpan="7" className="no-data-cell">
@@ -437,14 +451,14 @@ const IssueProduction = () => {
                 </div>
                 <table>
                   <thead>
-                    <tr>
+                    <tr className="text-break">
                       <th>Item Name</th>
                       <th>Batch No</th>
                       <th>Quantity</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="text-break">
                     {scannedBatches.length === 0 ? (
                       <tr className="no-data-row">
                         <td colSpan="4" className="no-data-cell">
@@ -479,10 +493,10 @@ const IssueProduction = () => {
                             <div>
                               <button
                                 type="button"
-                                className="btn btn-sm btn-danger"
+                                className="btn-icon btn-danger"
                                 onClick={() => handleRemoveBatch(batch)}
                               >
-                                <i className="fas fa-trash-alt"></i>
+                                <i className="fas fa-trash"></i>
                               </button>
                             </div>
                           </td>
