@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState, useCallback } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../../../services/api";
 
 const IssueProduction = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [requestedItems, setRequestedItems] = useState([]);
   const [requisitionNumbers, setRequisitionNumbers] = useState([]);
   const [selectedRequisition, setSelectedRequisition] = useState("");
@@ -18,7 +20,7 @@ const IssueProduction = () => {
     return `ISS-${year}-${randomNum}`;
   };
 
-  const [issueNumber] = useState(generateIssueNumber());
+  const [issueNumber, setIssueNumber] = useState(generateIssueNumber());
 
   // Fetch and Load Requisition Number List
   useEffect(() => {
@@ -30,6 +32,7 @@ const IssueProduction = () => {
     if (selectedRequisition) {
       fetchRequisitionItems(selectedRequisition);
       // Reset scanned batches when requisition changes
+      releaseAllBatches();
       setScannedBatches([]);
       setAllItemsFulfilled(false);
     }
@@ -44,6 +47,52 @@ const IssueProduction = () => {
       setAllItemsFulfilled(allFulfilled);
     }
   }, [requestedItems]);
+
+  // Function to release all batches
+  const releaseAllBatches = useCallback(async () => {
+    if (scannedBatches.length === 0) return;
+    
+    try {
+      // Release all scanned batches
+      const releasePromises = scannedBatches.map(batch => 
+        api.delete(`/api/receipt/release?batchNo=${batch.batchNo}`)
+      );
+      
+      await Promise.all(releasePromises);
+      console.log("All batches released successfully");
+    } catch (error) {
+      console.error("Error releasing batches:", error);
+    }
+  }, [scannedBatches]);
+
+  // Cleanup effect when component unmounts or user navigates away
+  useEffect(() => {
+    // This will run when the component unmounts
+    return () => {
+      releaseAllBatches();
+    };
+  }, [releaseAllBatches]);
+
+  // Handle page navigation or refresh
+  useEffect(() => {
+    const handleBeforeUnload = (event) => {
+      if (scannedBatches.length > 0) {
+        // Release batches when page is refreshed or closed
+        releaseAllBatches();
+        
+        // Standard way to show a confirmation dialog before leaving
+        const message = "You have unsaved changes. Are you sure you want to leave?";
+        event.returnValue = message;
+        return message;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [scannedBatches, releaseAllBatches]);
 
   const handleFetchRequisitionNumberList = async () => {
     try {
@@ -155,6 +204,7 @@ const IssueProduction = () => {
           itemName: batchData.itemName,
           batchNo: batchData.batchNo,
           quantity: batchData.quantity,
+          itemCode: batchData.itemCode,
         };
 
         setScannedBatches([...scannedBatches, newScannedBatch]);
@@ -246,12 +296,59 @@ const IssueProduction = () => {
 
   const handleCompleteIssue = async (e) => {
     e.preventDefault();
-    const finalData = [];
+    
+    if (!selectedRequisition) {
+      toast.error("Please select a requisition first");
+      return;
+    }
+
+    if (scannedBatches.length === 0) {
+      toast.error("No batches have been scanned for issue");
+      return;
+    }
+
     try {
-      console.log("Complete issue with data:", finalData);
-      const response = await api.post("/api/", finalData);
-      console.log("Successfully completed the issue: ", response.data);
-      toast.success("Successfully completed the issue");
+      // Format the data according to the expected structure
+      const finalData = {
+        issueNumber: issueNumber,
+        requisitionNumber: selectedRequisition,
+        batchItems: scannedBatches.map(batch => {
+          // Find the corresponding item to get variance
+          const item = requestedItems.find(item => item.code === batch.itemCode);
+          
+          return {
+            itemCode: batch.itemCode,
+            itemName: batch.itemName,
+            batchNo: batch.batchNo,
+            quantity: batch.quantity,
+            issuedQty: batch.quantity,
+            variance: item ? item.variance : 0
+          };
+        })
+      };
+      
+      // Send data to the API
+      const response = await api.post("/api/issue-production/save", finalData);
+      
+      if (response.data.status) {
+        toast.success("Issue completed successfully");
+        
+        // Reset form state completely without releasing batches
+        // (batches are already saved to the system)
+        setSelectedRequisition("");
+        setScannedBatches([]);
+        setRequestedItems([]);
+        setBatchNumber("");
+        setAllItemsFulfilled(false);
+        
+        // Generate a new issue number for the next entry
+        setIssueNumber(generateIssueNumber());
+        
+        // Refresh the requisition number list
+        handleFetchRequisitionNumberList();
+      } else {
+        toast.error(response.data.message || "Failed to complete the issue");
+      }
     } catch (error) {
       let errorMessage = "Failed to complete the issue. Please try again.";
 
@@ -271,6 +368,27 @@ const IssueProduction = () => {
       toast.error(errorMessage);
     }
   };
+
+  // Clear form function
+  const handleClearForm = () => {
+    if (scannedBatches.length > 0) {
+      // Release all batches if any are scanned
+      releaseAllBatches();
+    }
+    
+    // Reset form state
+    setSelectedRequisition("");
+    setScannedBatches([]);
+    setRequestedItems([]);
+    setBatchNumber("");
+    setAllItemsFulfilled(false);
+    
+    // Generate a new issue number
+    setIssueNumber(generateIssueNumber());
+    
+    toast.info("Form cleared successfully");
+  };
+
   return (
     <div>
       {" "}
@@ -517,7 +635,7 @@ const IssueProduction = () => {
           >
             <i className="fa-solid fa-check-circle me-1"></i> Complete Issue
           </button>
-          <button className="btn btn-secondary add-btn mb-4 me-3" type="button">
+          <button className="btn btn-secondary add-btn mb-4 me-3" type="button" onClick={handleClearForm}>
             <i className="fa-solid fa-xmark me-1"></i> Clear
           </button>
         </div>
