@@ -640,7 +640,10 @@ const MaterialIncoming = () => {
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Item Details</h5>
+                <h5 className="modal-title">
+                  <i className="fas fa-circle-info me-2"></i>Receipt Item
+                  Details
+                </h5>
                 <button
                   type="button"
                   className="btn-close"
@@ -649,29 +652,35 @@ const MaterialIncoming = () => {
                 ></button>
               </div>
               <div className="modal-body">
-                <p>
-                  <strong>Item Name:</strong> {currentReceipt.itemName}
-                </p>
-                <p>
-                  <strong>Item Code:</strong> {currentReceipt.itemCode}
-                </p>
-                <p>
-                  <strong>Quantity:</strong> {currentReceipt.quantity}
-                </p>
-                <p>
-                  <strong>Batch No:</strong> {currentReceipt.batchNo}
-                </p>
+                <div className="user-details-grid">
+                  <div className="detail-item">
+                    <strong>Item Name:</strong>
+                    <span>{currentReceipt.itemName}</span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Item Code:</strong>
+                    <span>{currentReceipt.itemCode}</span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Quantity:</strong>
+                    <span>{currentReceipt.quantity}</span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Batch No:</strong>
+                    <span>{currentReceipt.batchNo}</span>
+                  </div>
+                </div>
               </div>
               <div className="modal-footer">
                 <button
                   type="button"
-                  className="btn btn-secondary"
+                  className="btn btn-secondary add-btn"
                   data-bs-dismiss="modal"
                   onClick={() => {
                     document.activeElement?.blur();
                   }}
                 >
-                  Close
+                  <i className="fas fa-xmark me-2"></i>Close
                 </button>
               </div>
             </div>

@@ -17,6 +17,7 @@ const IncomingQC = () => {
   const failRef = useRef(null);
   const [defectCategory, setDefectCategory] = useState("");
   const [remarks, setRemarks] = useState("");
+  const qcRef = useRef(null);
 
   // select QC to be deleted
   const [selectedItems, setSelectedItems] = useState([]);
@@ -371,7 +372,7 @@ const IncomingQC = () => {
                   Scan or Enter Batch Number
                 </label>
                 <div className="search-box">
-                  <i className="fas fa-barcode position-absolute input-icon"></i>
+                  <i className="fas fa-barcode position-absolute z-0 input-icon"></i>
                   <input
                     type="text"
                     className="form-control vendor-search-bar"
@@ -391,7 +392,7 @@ const IncomingQC = () => {
 
       {/* Quality Check Form */}
       {isShowQualityCheckForm && (
-        <div className="table-form-container mx-2 mb-4">
+        <div className="table-form-container mx-2 mb-4" id="qc" ref={qcRef}>
           <div className="form-header">
             <h2>
               <i className="fas fa-circle-check"></i> Quality Check
@@ -516,7 +517,7 @@ const IncomingQC = () => {
                   Defect Category
                 </label>
                 <div className="position-relative w-100">
-                  <i className="fa-solid fa-triangle-exclamation position-absolute input-icon"></i>
+                  <i className="fa-solid fa-triangle-exclamation position-absolute z-0 input-icon"></i>
                   <select
                     className="form-control ps-5 text-font"
                     id="category"
@@ -556,7 +557,7 @@ const IncomingQC = () => {
                   Remarks
                 </label>
                 <div className="position-relative w-100">
-                  <i className="fas fa-comment position-absolute input-icon"></i>
+                  <i className="fas fa-comment position-absolute z-0 input-icon"></i>
                   <textarea
                     type="text"
                     className="form-control ps-5 text-font pt-3"
@@ -591,7 +592,7 @@ const IncomingQC = () => {
       {/* Search and Filter Section */}
       <div className="search-filter-container mx-2">
         <div className="search-box">
-          <i className="fas fa-search position-absolute input-icon"></i>
+          <i className="fas fa-search position-absolute z-0 input-icon"></i>
           <input
             type="text"
             className="form-control vendor-search-bar"
@@ -721,16 +722,23 @@ const IncomingQC = () => {
                     <td className="ps-4">{i.createdAt}</td>
                     {/* Mar 15, 2024, 09:30 AM */}
                     <td className="actions ps-4">
-                      <button
-                        className="btn btn-primary"
-                        style={{ fontSize: "0.7rem" }}
-                        onClick={() => {
-                          handleSearchBatchNo(i.batchNumber);
-                        }}
-                      >
-                        <i className="fa-solid fa-clipboard-check me-1"></i>{" "}
-                        Start QC
-                      </button>
+                      <a href="#qc">
+                        <button
+                          className="btn btn-primary"
+                          style={{ fontSize: "0.7rem" }}
+                          onClick={() => {
+                            handleSearchBatchNo(i.batchNumber);
+                            setTimeout(() => {
+                              qcRef.current?.scrollIntoView({
+                                behavior: "smooth",
+                              });
+                            }, 100); // delay to wait for form render
+                          }}
+                        >
+                          <i className="fa-solid fa-clipboard-check me-1"></i>{" "}
+                          Start QC
+                        </button>
+                      </a>
                     </td>
                   </tr>
                 ))}
