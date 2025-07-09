@@ -860,7 +860,7 @@ select:invalid {
     position: absolute;
     color: var(--gray3) !important;
     font-size: 0.7rem;
-    z-index: 1 !important;
+    /* z-index: 1 !important; */
     pointer-events: none;
 }
 

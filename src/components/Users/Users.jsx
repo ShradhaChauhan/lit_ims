@@ -1567,7 +1567,7 @@ const Users = () => {
       <div className="search-filter-container">
         <div className="search-container content-container">
           <div className="position-relative w-100">
-            <i className="fas fa-search position-absolute input-icon"></i>
+            <i className="fas fa-search position-absolute z-0 input-icon"></i>
             <input
               type="text"
               className="form-control search-bar-style"
@@ -1617,7 +1617,7 @@ const Users = () => {
                       Full name
                     </label>
                     <div className="position-relative w-100">
-                      <i className="fas fa-user position-absolute input-icon"></i>
+                      <i className="fas fa-user position-absolute z-0 input-icon"></i>
                       <input
                         type="text"
                         className="form-control text-font ps-5"
@@ -1638,7 +1638,7 @@ const Users = () => {
                       Email
                     </label>
                     <div className="position-relative w-100">
-                      <i className="fa-solid fa-envelope position-absolute input-icon"></i>
+                      <i className="fa-solid fa-envelope position-absolute z-0 input-icon"></i>
                       <input
                         type="email"
                         className="form-control text-font ps-5"
@@ -1660,7 +1660,7 @@ const Users = () => {
                       Password
                     </label>
                     <div className="position-relative w-100">
-                      <i className="fas fa-lock position-absolute input-icon"></i>
+                      <i className="fas fa-lock position-absolute z-0 input-icon"></i>
                       <input
                         type="password"
                         className="form-control text-font ps-5"
@@ -1684,7 +1684,7 @@ const Users = () => {
                       Confirm Password
                     </label>
                     <div className="position-relative w-100">
-                      <i className="fas fa-lock position-absolute input-icon"></i>
+                      <i className="fas fa-lock position-absolute z-0 input-icon"></i>
                       <input
                         type="password"
                         className="form-control text-font ps-5"
@@ -1711,7 +1711,7 @@ const Users = () => {
                       Role
                     </label>
                     <div className="position-relative w-100">
-                      <i className="fas fa-user-tag position-absolute input-icon"></i>
+                      <i className="fas fa-user-tag position-absolute z-0 input-icon"></i>
                       <select
                         className="form-control ps-5 text-font"
                         id="role"
@@ -1738,7 +1738,7 @@ const Users = () => {
                       Department
                     </label>
                     <div className="position-relative w-100">
-                      <i className="fa-solid fa-building position-absolute input-icon"></i>
+                      <i className="fa-solid fa-building position-absolute z-0 input-icon"></i>
                       <select
                         className="form-control ps-5 text-font"
                         id="department"
@@ -1769,7 +1769,7 @@ const Users = () => {
                       Status
                     </label>
                     <div className="position-relative w-100">
-                      <div className="form-check form-switch position-absolute input-icon mt-1 padding-left-2">
+                      <div className="form-check form-switch position-absolute z-0 input-icon mt-1 padding-left-2">
                         <input
                           className="form-check-input text-font switch-style"
                           type="checkbox"
@@ -1820,7 +1820,7 @@ const Users = () => {
                       Branch
                     </label>
                     <div className="position-relative w-100">
-                      <i className="fa-solid fa-sitemap position-absolute input-icon"></i>
+                      <i className="fa-solid fa-sitemap position-absolute z-0 input-icon"></i>
                       <Select
                         className="form-control ps-5 text-font"
                         options={branchDropdownValues}
@@ -2711,7 +2711,7 @@ const Users = () => {
                               Full name
                             </label>
                             <div className="position-relative w-100">
-                              <i className="fas fa-user position-absolute input-icon"></i>
+                              <i className="fas fa-user position-absolute z-0 input-icon"></i>
                               <input
                                 type="text"
                                 className="form-control text-font ps-5"
@@ -2732,7 +2732,7 @@ const Users = () => {
                               Email
                             </label>
                             <div className="position-relative w-100">
-                              <i className="fa-solid fa-envelope position-absolute input-icon"></i>
+                              <i className="fa-solid fa-envelope position-absolute z-0 input-icon"></i>
                               <input
                                 type="email"
                                 className="form-control text-font ps-5"
@@ -2754,7 +2754,7 @@ const Users = () => {
                               Password
                             </label>
                             <div className="position-relative w-100">
-                              <i className="fas fa-lock position-absolute input-icon"></i>
+                              <i className="fas fa-lock position-absolute z-0 input-icon"></i>
                               <input
                                 type="password"
                                 className="form-control text-font ps-5"
@@ -2783,7 +2783,7 @@ const Users = () => {
                               Confirm Password
                             </label>
                             <div className="position-relative w-100">
-                              <i className="fas fa-lock position-absolute input-icon"></i>
+                              <i className="fas fa-lock position-absolute z-0 input-icon"></i>
                               <input
                                 type="password"
                                 className="form-control text-font ps-5"
@@ -2810,7 +2810,7 @@ const Users = () => {
                               Role
                             </label>
                             <div className="position-relative w-100">
-                              <i className="fas fa-user-tag position-absolute input-icon"></i>
+                              <i className="fas fa-user-tag position-absolute z-0 input-icon"></i>
                               <select
                                 className="form-control ps-5 text-font"
                                 id="role"
@@ -2842,7 +2842,7 @@ const Users = () => {
                               Department
                             </label>
                             <div className="position-relative w-100">
-                              <i className="fa-solid fa-building position-absolute input-icon"></i>
+                              <i className="fa-solid fa-building position-absolute z-0 input-icon"></i>
                               <select
                                 className="form-control ps-5 text-font"
                                 id="department"
@@ -2878,7 +2878,7 @@ const Users = () => {
                               Status
                             </label>
                             <div className="position-relative w-100">
-                              <div className="form-check form-switch position-absolute input-icon mt-1 padding-left-2">
+                              <div className="form-check form-switch position-absolute z-0 input-icon mt-1 padding-left-2">
                                 <input
                                   className="form-check-input text-font switch-style"
                                   type="checkbox"
@@ -2927,7 +2927,7 @@ const Users = () => {
                               Branch
                             </label>
                             <div className="position-relative w-100">
-                              <i className="fa-solid fa-sitemap position-absolute input-icon"></i>
+                              <i className="fa-solid fa-sitemap position-absolute z-0 input-icon"></i>
                               <Select
                                 className="form-control ps-5 text-font"
                                 options={branchDropdownValues}

@@ -73,7 +73,7 @@ const IssueProduction = () => {
                       Requisition Number
                     </label>
                     <div className="position-relative w-100">
-                      <i className="fas fa-file-invoice ms-2 position-absolute input-icon"></i>
+                      <i className="fas fa-file-invoice ms-2 position-absolute z-0 input-icon"></i>
                       <select
                         className="form-control ps-5 ms-1 text-font"
                         id="requisitionType"
@@ -93,7 +93,7 @@ const IssueProduction = () => {
                       Scan Batch
                     </label>
                     <div className="position-relative w-100">
-                      <i className="fas fa-barcode ms-2 position-absolute input-icon"></i>
+                      <i className="fas fa-barcode ms-2 position-absolute z-0 input-icon"></i>
                       <input
                         type="text"
                         className="form-control ps-5 ms-1 text-font"

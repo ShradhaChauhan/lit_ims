@@ -359,7 +359,7 @@ const MaterialIssueRequest = () => {
                   Requisition Type
                 </label>
                 <div className="position-relative w-100">
-                  <i className="fas fa-rectangle-list ms-2 position-absolute input-icon margin-top-8"></i>
+                  <i className="fas fa-rectangle-list ms-2 position-absolute z-0 input-icon margin-top-8"></i>
                   <select
                     className="form-control ps-5 ms-1 text-font"
                     id="requisitionType"
@@ -393,7 +393,7 @@ const MaterialIssueRequest = () => {
                     Select BOM
                   </label>
                   <div className="position-relative w-100">
-                    <i className="fas fa-sitemap ms-2 position-absolute input-icon margin-top-8"></i>
+                    <i className="fas fa-sitemap ms-2 position-absolute z-0 input-icon margin-top-8"></i>
                     <select
                       className="form-control ps-5 ms-1 text-font"
                       id="selectBOM"
@@ -418,7 +418,7 @@ const MaterialIssueRequest = () => {
                     Select Item
                   </label>
                   <div className="position-relative w-100">
-                    <i className="fas fa-box ms-2 position-absolute input-icon margin-top-8"></i>
+                    <i className="fas fa-box ms-2 position-absolute z-0 input-icon margin-top-8"></i>
                     <select
                       className="form-control ps-5 ms-1 text-font"
                       id="selectItem"
@@ -442,7 +442,7 @@ const MaterialIssueRequest = () => {
                   Quantity
                 </label>
                 <div className="position-relative w-100">
-                  <i className="fas fa-calculator ms-2 position-absolute input-icon margin-top-8"></i>
+                  <i className="fas fa-calculator ms-2 position-absolute z-0 input-icon margin-top-8"></i>
                   <input
                     type="number"
                     className="form-control ps-5 ms-1 text-font"
