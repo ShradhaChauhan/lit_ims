@@ -23,7 +23,7 @@ const IssueProduction = () => {
       const response = await api.get("/api/");
       setRequestedItems(response.data.data);
     } catch (error) {
-      toast.error("Error in fetching requisition number list");
+      // toast.error("Error in fetching requisition number list");
       console.error("Error fetching requisition number list:", error);
     }
   };
