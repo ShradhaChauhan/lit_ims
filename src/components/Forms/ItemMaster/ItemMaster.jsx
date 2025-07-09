@@ -418,8 +418,6 @@ const ItemMaster = () => {
       errors.code = "Code is required";
     } else if (!/^\d+$/.test(data.code)) {
       errors.code = "Code must only be in digits";
-    } else if (String(data.code).length() > 6) {
-      errors.code = "Code must only be 6 digits";
     }
     //  else if (data.code.length() !== 6) {
     //   errors.code = "Code length should be 6 digits";
@@ -536,7 +534,7 @@ const ItemMaster = () => {
       uom: "",
       type: "",
       barcode: "",
-      group: "",
+      groupName: "",
       price: "",
       stQty: "",
       life: "",
@@ -816,15 +814,19 @@ const ItemMaster = () => {
                   <div className="position-relative w-100">
                     <i className="fas fa-qrcode position-absolute z-0 input-icon"></i>
                     <input
-                      type="number"
+                      type="text"
                       className="form-control ps-5 text-font"
                       id="code"
                       placeholder="Enter item code"
-                      minLength={6}
+                      inputMode="numeric"
+                      maxLength="6"
                       value={formData.code}
-                      onChange={(e) =>
-                        setFormData({ ...formData, code: e.target.value })
-                      }
+                      onChange={(e) => {
+                        const digitsOnly = e.target.value.replace(/\D/g, "");
+                        if (digitsOnly.length <= 6) {
+                          setFormData({ ...formData, code: digitsOnly });
+                        }
+                      }}
                     />
                   </div>
                   {errors.code && (
