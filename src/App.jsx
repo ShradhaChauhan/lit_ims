@@ -25,6 +25,8 @@ import IssueProduction from "./components/Forms/IssueProduction/IssueProduction"
 import ProductionFloorReceipt from "./components/Forms/ProductionFloorReceipt/ProductionFloorReceipt";
 import ActivityLogs from "./components/ActivityLogs/ActivityLogs";
 import Reports from "./components/Reports/Reports";
+import ProductionMaterialUsage from "./components/Forms/ProductionMaterialUsage/ProductionMaterialUsage";
+import WIPReturn from "./components/Forms/WIPReturn/WIPReturn";
 
 function App() {
   const { rightSideComponent, setRightSideComponent, isAuthenticated } =
@@ -91,6 +93,11 @@ function App() {
                 />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/activity-logs" element={<ActivityLogs />} />
+                <Route
+                  path="/production-material-usage"
+                  element={<ProductionMaterialUsage />}
+                />
+                <Route path="/wip-return" element={<WIPReturn />} />
               </Routes>
             </div>
           </div>

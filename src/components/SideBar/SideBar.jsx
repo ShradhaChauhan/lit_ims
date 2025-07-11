@@ -14,7 +14,6 @@ import BOMMaster from "../Forms/BOMMaster/BOMMaster";
 import TypeMaster from "../Forms/TypeMaster/TypeMaster";
 import GroupMaster from "../Forms/GroupMaster/GroupMaster";
 import PartMaster from "../Forms/PartMaster/PartMaster";
-import IQC from "../Forms/IQC/IQC";
 import IssueProduction from "../Forms/IssueProduction/IssueProduction";
 import RequisitionReceipt from "../Forms/RequisitionReceipt/RequisitionReceipt";
 import ProductionReceipt from "../Forms/ProductionReceipt/ProductionReceipt";
@@ -24,6 +23,7 @@ import MaterialIncoming from "../Forms/MaterialIncoming/MaterialIncoming";
 import IncomingQC from "../Forms/IncomingQC/IncomingQC";
 import MaterialIssueRequest from "../Forms/MaterialIssueRequest/MaterialIssueRequest";
 import ProductionFloorReceipt from "../Forms/ProductionFloorReceipt/ProductionFloorReceipt";
+import ProductionMaterialUsage from "../Forms/ProductionMaterialUsage/ProductionMaterialUsage";
 
 const SideBar = () => {
   const {
@@ -122,7 +122,7 @@ const SideBar = () => {
           icon: "fas fa-truck-ramp-box",
         },
         {
-          label: "Incoming QC",
+          label: "Incoming Quality Control",
           compName: "IncomingQC",
           newPath: "incoming-qc",
           path: "Transactions / Incoming QC",
@@ -220,6 +220,8 @@ const SideBar = () => {
       setRightSideComponent(<ProductionFloorReceipt />);
     name === "ProductionReceipt" &&
       setRightSideComponent(<ProductionReceipt />);
+    name === "ProductionMaterialUsage" &&
+      setRightSideComponent(<ProductionMaterialUsage />);
     name === "WIPReturn" && setRightSideComponent(<WIPReturn />);
     name === "Reports" && setRightSideComponent(<div>Reports Coming Soon</div>);
     name === "Activity Logs" && setRightSideComponent(<ActivityLogs />);

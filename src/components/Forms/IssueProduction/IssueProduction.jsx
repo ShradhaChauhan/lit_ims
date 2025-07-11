@@ -51,13 +51,13 @@ const IssueProduction = () => {
   // Function to release all batches
   const releaseAllBatches = useCallback(async () => {
     if (scannedBatches.length === 0) return;
-    
+
     try {
       // Release all scanned batches
-      const releasePromises = scannedBatches.map(batch => 
+      const releasePromises = scannedBatches.map((batch) =>
         api.delete(`/api/receipt/release?batchNo=${batch.batchNo}`)
       );
-      
+
       await Promise.all(releasePromises);
       console.log("All batches released successfully");
     } catch (error) {
@@ -79,18 +79,19 @@ const IssueProduction = () => {
       if (scannedBatches.length > 0) {
         // Release batches when page is refreshed or closed
         releaseAllBatches();
-        
+
         // Standard way to show a confirmation dialog before leaving
-        const message = "You have unsaved changes. Are you sure you want to leave?";
+        const message =
+          "You have unsaved changes. Are you sure you want to leave?";
         event.returnValue = message;
         return message;
       }
     };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [scannedBatches, releaseAllBatches]);
 
@@ -296,7 +297,7 @@ const IssueProduction = () => {
 
   const handleCompleteIssue = async (e) => {
     e.preventDefault();
-    
+
     if (!selectedRequisition) {
       toast.error("Please select a requisition first");
       return;
@@ -312,27 +313,29 @@ const IssueProduction = () => {
       const finalData = {
         issueNumber: issueNumber,
         requisitionNumber: selectedRequisition,
-        batchItems: scannedBatches.map(batch => {
+        batchItems: scannedBatches.map((batch) => {
           // Find the corresponding item to get variance
-          const item = requestedItems.find(item => item.code === batch.itemCode);
-          
+          const item = requestedItems.find(
+            (item) => item.code === batch.itemCode
+          );
+
           return {
             itemCode: batch.itemCode,
             itemName: batch.itemName,
             batchNo: batch.batchNo,
             quantity: batch.quantity,
             issuedQty: batch.quantity,
-            variance: item ? item.variance : 0
+            variance: item ? item.variance : 0,
           };
-        })
+        }),
       };
-      
+
       // Send data to the API
       const response = await api.post("/api/issue-production/save", finalData);
-      
+
       if (response.data.status) {
         toast.success("Issue completed successfully");
-        
+
         // Reset form state completely without releasing batches
         // (batches are already saved to the system)
         setSelectedRequisition("");
@@ -340,10 +343,10 @@ const IssueProduction = () => {
         setRequestedItems([]);
         setBatchNumber("");
         setAllItemsFulfilled(false);
-        
+
         // Generate a new issue number for the next entry
         setIssueNumber(generateIssueNumber());
-        
+
         // Refresh the requisition number list
         handleFetchRequisitionNumberList();
       } else {
@@ -375,17 +378,17 @@ const IssueProduction = () => {
       // Release all batches if any are scanned
       releaseAllBatches();
     }
-    
+
     // Reset form state
     setSelectedRequisition("");
     setScannedBatches([]);
     setRequestedItems([]);
     setBatchNumber("");
     setAllItemsFulfilled(false);
-    
+
     // Generate a new issue number
     setIssueNumber(generateIssueNumber());
-    
+
     toast.info("Form cleared successfully");
   };
 
@@ -434,7 +437,7 @@ const IssueProduction = () => {
                       Requisition Number
                     </label>
                     <div className="position-relative w-100">
-                      <i className="fas fa-file-invoice ms-2 position-absolute input-icon"></i>
+                      <i className="fas fa-file-invoice ms-2 position-absolute z-0 input-icon"></i>
                       <select
                         className="form-control ps-5 ms-1 text-font"
                         id="requisitionType"
@@ -457,7 +460,7 @@ const IssueProduction = () => {
                       Scan Batch
                     </label>
                     <div className="position-relative w-100">
-                      <i className="fas fa-barcode ms-2 position-absolute input-icon"></i>
+                      <i className="fas fa-barcode ms-2 position-absolute z-0 input-icon"></i>
                       <input
                         type="text"
                         id="scanBatch"
@@ -635,7 +638,11 @@ const IssueProduction = () => {
           >
             <i className="fa-solid fa-check-circle me-1"></i> Complete Issue
           </button>
-          <button className="btn btn-secondary add-btn mb-4 me-3" type="button" onClick={handleClearForm}>
+          <button
+            className="btn btn-secondary add-btn mb-4 me-3"
+            type="button"
+            onClick={handleClearForm}
+          >
             <i className="fa-solid fa-xmark me-1"></i> Clear
           </button>
         </div>
