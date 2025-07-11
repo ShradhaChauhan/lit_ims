@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import "./Login.css";
 import ims_logo from "../../assets/images/ims_logo.png";
 import lit_logo from "../../assets/images/lit_logo.png";
@@ -13,6 +13,7 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [branch, setBranch] = useState("");
   const [branches, setBranches] = useState([]);
   const [error, setError] = useState("");
@@ -61,6 +62,12 @@ const LoginPage = () => {
         },
       });
 
+      if (rememberMe) {
+        localStorage.setItem("rememberedUsername", username);
+      } else {
+        localStorage.removeItem("rememberedUsername");
+      }
+
       console.log("Login Response:", response);
       // setIsAuthenticated(true);
       // Navigate to dashboard after successful login
@@ -81,19 +88,20 @@ const LoginPage = () => {
 
   const isBranchSelection = branches.length > 0;
 
+  // Load stored username on mount
+  useEffect(() => {
+    const savedUsername = localStorage.getItem("rememberedUsername");
+    if (savedUsername) {
+      setUsername(savedUsername);
+      setRememberMe(true);
+    }
+  }, []);
+
   return (
     <div className="container-fluid container-bg min-vh-100 d-flex align-items-center justify-content-center bg-light">
       <div className="row shadow-lg login-container bg-white rounded-4 overflow-hidden">
         {/* Left Panel */}
         <div className="col-md-6 p-5 login-box">
-          {/* <img
-            className="mx-auto"
-            src={checklist}
-            alt="Checklist"
-            width={50}
-            height={50}
-          />
-          <h2 className="fw-semibold mb-3 text-fade-in">Welcome Back to IMS</h2> */}
           <div className="text-center mb-4">
             <img
               src={checklist}
@@ -164,6 +172,8 @@ const LoginPage = () => {
                     className="form-check-input"
                     type="checkbox"
                     id="rememberMe"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
                   />
                   <label className="form-check-label" htmlFor="rememberMe">
                     Remember Me

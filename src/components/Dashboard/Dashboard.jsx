@@ -12,6 +12,7 @@ import GroupMaster from "../Forms/GroupMaster/GroupMaster";
 import WarehouseMaster from "../Forms/WarehouseMaster/WarehouseMaster";
 import BOMMaster from "../Forms/BOMMaster/BOMMaster";
 import TypeMaster from "../Forms/TypeMaster/TypeMaster";
+import LandingPage from "../LandingPage/LandingPage";
 
 const Dashboard = () => {
   const { rightSideComponent, setRightSideComponent } = useContext(AppContext);
@@ -33,11 +34,11 @@ const Dashboard = () => {
         <BOMMaster />
       ) : rightSideComponent === "/type-master" ? (
         <TypeMaster />
-      ) : (
+      ) : rightSideComponent === "/users" ? (
         <Users />
+      ) : (
+        <LandingPage />
       )}
-      {/* <Link to={"/item-master"}>Item Master</Link> */}
-      {/* <Link to="/vendor-master">Vendor Master</Link> */}
     </div>
   );
 };

@@ -439,10 +439,15 @@ const PartMaster = () => {
                       className="form-control ps-5 text-font"
                       id="code"
                       placeholder="Enter part code"
+                      inputMode="numeric"
+                      maxLength="6"
                       value={formData.code}
-                      onChange={(e) =>
-                        setFormData({ ...formData, code: e.target.value })
-                      }
+                      onChange={(e) => {
+                        const digitsOnly = e.target.value.replace(/\D/g, "");
+                        if (digitsOnly.length <= 6) {
+                          setFormData({ ...formData, code: e.target.value });
+                        }
+                      }}
                     />
                   </div>
                   {errors.code && (
@@ -995,7 +1000,7 @@ const PartMaster = () => {
                     document.activeElement?.blur();
                   }}
                 >
-                  <i className="fa-solid fa-x-mark me-1"></i> Close
+                  <i className="fa-solid fa-xmark me-1"></i> Close
                 </button>
               </div>
             </div>

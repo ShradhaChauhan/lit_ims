@@ -371,9 +371,7 @@ const MaterialIssueRequest = () => {
 
                     {/* Show BOM option only if allowed by current request state */}
                     {getRequisitionTypeOptions().includes("complete bom") &&
-                      !isBOMAdded && (
-                        <option value="complete bom">Complete BOM</option>
-                      )}
+                      !isBOMAdded && <option value="complete bom">BOM</option>}
 
                     {/* Show Individual Items option only if allowed by current request state */}
                     {getRequisitionTypeOptions().includes(
