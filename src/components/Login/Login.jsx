@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { AppContext } from "../../context/AppContext";
 import { toast } from "react-toastify";
-import checklist from "../../assets/images/assortment.png";
+import checklist from "../../assets/images/stock.gif";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -98,8 +98,8 @@ const LoginPage = () => {
             <img
               src={checklist}
               alt="Img"
-              width={50}
-              height={50}
+              width={60}
+              height={60}
               className="d-block mx-auto mb-3 jump-in"
             />
             <h2 className="fw-semibold mb-3 text-fade-in">
