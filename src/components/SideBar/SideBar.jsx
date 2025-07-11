@@ -23,6 +23,7 @@ import MaterialIncoming from "../Forms/MaterialIncoming/MaterialIncoming";
 import IncomingQC from "../Forms/IncomingQC/IncomingQC";
 import MaterialIssueRequest from "../Forms/MaterialIssueRequest/MaterialIssueRequest";
 import ProductionFloorReceipt from "../Forms/ProductionFloorReceipt/ProductionFloorReceipt";
+import ProductionMaterialUsage from "../Forms/ProductionMaterialUsage/ProductionMaterialUsage";
 
 const SideBar = () => {
   const {
@@ -219,6 +220,8 @@ const SideBar = () => {
       setRightSideComponent(<ProductionFloorReceipt />);
     name === "ProductionReceipt" &&
       setRightSideComponent(<ProductionReceipt />);
+    name === "ProductionMaterialUsage" &&
+      setRightSideComponent(<ProductionMaterialUsage />);
     name === "WIPReturn" && setRightSideComponent(<WIPReturn />);
     name === "Reports" && setRightSideComponent(<div>Reports Coming Soon</div>);
     name === "Activity Logs" && setRightSideComponent(<ActivityLogs />);
