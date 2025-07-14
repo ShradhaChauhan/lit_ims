@@ -48,38 +48,25 @@ const IssueProduction = () => {
     }
   }, [requestedItems]);
 
-  // Function to release all batches
+  // Function placeholder - no longer performs batch release
   const releaseAllBatches = useCallback(async () => {
     if (scannedBatches.length === 0) return;
-
-    try {
-      // Release all scanned batches
-      const releasePromises = scannedBatches.map((batch) =>
-        api.delete(`/api/receipt/release?batchNo=${batch.batchNo}`)
-      );
-
-      await Promise.all(releasePromises);
-      console.log("All batches released successfully");
-    } catch (error) {
-      console.error("Error releasing batches:", error);
-    }
+    // Batch release functionality removed
+    console.log("Release batches function called");
   }, [scannedBatches]);
 
   // Cleanup effect when component unmounts or user navigates away
   useEffect(() => {
     // This will run when the component unmounts
     return () => {
-      releaseAllBatches();
+      // Cleanup code (batch release removed)
     };
-  }, [releaseAllBatches]);
+  }, []);
 
   // Handle page navigation or refresh
   useEffect(() => {
     const handleBeforeUnload = (event) => {
       if (scannedBatches.length > 0) {
-        // Release batches when page is refreshed or closed
-        releaseAllBatches();
-
         // Standard way to show a confirmation dialog before leaving
         const message =
           "You have unsaved changes. Are you sure you want to leave?";
@@ -93,7 +80,7 @@ const IssueProduction = () => {
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [scannedBatches, releaseAllBatches]);
+  }, [scannedBatches]);
 
   const handleFetchRequisitionNumberList = async () => {
     try {
@@ -167,8 +154,8 @@ const IssueProduction = () => {
 
     try {
       // Using the new API endpoint for verifying and issuing the batch
-      const response = await api.get(
-        `/api/receipt/issue-fifo?batchNo=${batchNo}`
+      const response = await api.post(
+        `/api/receipt/batches/reserve?batchNo=${batchNo}`
       );
 
       if (response.data.status) {
@@ -246,19 +233,19 @@ const IssueProduction = () => {
     try {
       // Call API to release the batch
       const response = await api.delete(
-        `/api/receipt/release?batchNo=${batchToRemove.batchNo}`
+        `/api/receipt/release-reservation?batchNo=${batchToRemove.batchNo}`
       );
 
       if (response.data.status) {
         // Find the item associated with this batch
         const itemToUpdate = requestedItems.find(
-          (item) => item.itemName === batchToRemove.itemName
+          (item) => item.code === batchToRemove.itemCode
         );
 
         if (itemToUpdate) {
           // Update the requested items table
           const updatedItems = requestedItems.map((item) => {
-            if (item.itemName === batchToRemove.itemName) {
+            if (item.code === batchToRemove.itemCode) {
               const newIssuedQty = Math.max(
                 0,
                 item.issuedQty - batchToRemove.quantity
@@ -309,6 +296,18 @@ const IssueProduction = () => {
     }
 
     try {
+      // First confirm all batch allocations
+      for (const batch of scannedBatches) {
+        const confirmResponse = await api.post(
+          `/api/receipt/batches/confirm?batchNo=${batch.batchNo}`
+        );
+
+        if (!confirmResponse.data.status) {
+          toast.error(`Failed to confirm batch ${batch.batchNo}`);
+          return;
+        }
+      }
+
       // Format the data according to the expected structure
       const finalData = {
         issueNumber: issueNumber,
@@ -374,11 +373,6 @@ const IssueProduction = () => {
 
   // Clear form function
   const handleClearForm = () => {
-    if (scannedBatches.length > 0) {
-      // Release all batches if any are scanned
-      releaseAllBatches();
-    }
-
     // Reset form state
     setSelectedRequisition("");
     setScannedBatches([]);

@@ -9,6 +9,11 @@ const ProductionFloorReceipt = () => {
   const [issuedItems, setIssuedItems] = useState([]);
   const [selectedIssueNo, setSelectedIssueNo] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
+  const [issueSummary, setIssueSummary] = useState({
+    requisitionNumber: "",
+    issueDate: "",
+    receiptDate: new Date().toISOString().split('T')[0],
+  });
 
   // Auto generate transaction number
   const generateTransactionNumber = () => {
@@ -25,7 +30,7 @@ const ProductionFloorReceipt = () => {
   const fetchIssueNoList = async () => {
     try {
       const response = await api.get("/api/issue-production/all-issue-numbers");
-      setIssueNoList(response.data.data);
+      setIssueNoList(response.data.data.map(issueNo => ({ issueNo })));
     } catch (error) {
       toast.error("Error in fetching issue number list");
       console.error("Error fetching issue number list:", error);
@@ -37,15 +42,95 @@ const ProductionFloorReceipt = () => {
     fetchIssueNoList();
   }, []);
 
-  const handleSetIssuedItemsList = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await api.get("/api/");
-      setIssuedItems(response.data.data);
-    } catch (error) {
-      toast.error("Error in fetching issued items list");
-      console.error("Error fetching issued items list:", error);
+  const handleIssueNumberChange = async (e) => {
+    const selectedIssueNumber = e.target.value;
+    setIssueNumber(selectedIssueNumber);
+    
+    if (selectedIssueNumber) {
+      try {
+        // Fetch issue summary data
+        const summaryResponse = await api.get(`/api/issue-production/summary-by-issue?issueNumber=${selectedIssueNumber}`);
+        const summaryData = summaryResponse.data.data;
+        
+        // Update issue summary state
+        setIssueSummary({
+          requisitionNumber: summaryData.requisitionNumber,
+          issueDate: formatDateFromString(summaryData.issueDate),
+          receiptDate: new Date().toISOString().split('T')[0],
+        });
+        
+        // Process items data - each batch number is a separate item
+        const processedItems = summaryData.items.map((item) => ({
+          id: item.id, // Use the id from the API response
+          itemCode: item.itemCode,
+          itemName: item.itemName,
+          issuedQty: item.totalIssued,
+          batchNumber: item.batchNumber,
+          receivedQty: "",
+          variance: -item.totalIssued,
+          notes: ""
+        }));
+        
+        setIssuedItems(processedItems);
+        
+        // Don't select items by default
+        setSelectedIssueNo([]);
+        setSelectAll(false);
+        
+      } catch (error) {
+        toast.error("Error in fetching issue summary");
+        console.error("Error fetching issue summary:", error);
+        setIssuedItems([]);
+        setIssueSummary({
+          requisitionNumber: "",
+          issueDate: "",
+          receiptDate: new Date().toISOString().split('T')[0],
+        });
+      }
     }
+  };
+
+  // Helper function to format date from string like "12/07/2025 12:11 pm"
+  const formatDateFromString = (dateString) => {
+    try {
+      if (!dateString) return "";
+      
+      const parts = dateString.split(" ")[0].split("/");
+      if (parts.length !== 3) return "";
+      
+      // Format as YYYY-MM-DD for input date field
+      return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "";
+    }
+  };
+
+  // Handle received quantity change
+  const handleReceivedQtyChange = (id, value) => {
+    const numValue = value === "" ? "" : parseFloat(value) || 0;
+    
+    setIssuedItems(prevItems => 
+      prevItems.map(item => {
+        if (item.id === id) {
+          const variance = numValue === "" ? -item.issuedQty : numValue - item.issuedQty;
+          return { ...item, receivedQty: numValue, variance };
+        }
+        return item;
+      })
+    );
+  };
+
+  // Handle notes change
+  const handleNotesChange = (id, value) => {
+    setIssuedItems(prevItems => 
+      prevItems.map(item => {
+        if (item.id === id) {
+          return { ...item, notes: value };
+        }
+        return item;
+      })
+    );
   };
 
   // Checkbox select all function
@@ -53,13 +138,14 @@ const ProductionFloorReceipt = () => {
     const checked = e.target.checked;
     setSelectAll(checked);
     if (checked) {
-      const allIssueNoIds = issueNoList.map((issueNo) => issueNo.id);
+      const allIssueNoIds = issuedItems.map((item) => item.id);
       setSelectedIssueNo(allIssueNoIds);
     } else {
       setSelectedIssueNo([]);
     }
   };
-  // Single single checkbox function
+  
+  // Single checkbox function
   const handleIssueNoCheckboxChange = (issueNoId) => {
     setSelectedIssueNo((prevSelected) =>
       prevSelected.includes(issueNoId)
@@ -71,17 +157,70 @@ const ProductionFloorReceipt = () => {
   // Reset the form fields
   const handleReset = (e) => {
     e.preventDefault();
-    setIssuedItems("");
+    setIssuedItems([]);
     setIssueNumber("");
+    setIssueSummary({
+      requisitionNumber: "",
+      issueDate: "",
+      receiptDate: new Date().toISOString().split('T')[0],
+    });
+    setSelectedIssueNo([]);
+    setSelectAll(false);
+    setTransactionNumber(generateTransactionNumber());
   };
 
   // Function to save confirmed receipt
   const handleConfirmReceipt = async (e) => {
     e.preventDefault();
-    const finalData = [];
+    
+    // Filter only selected items
+    const selectedItems = issuedItems.filter(item => 
+      selectedIssueNo.includes(item.id)
+    );
+    
+    if (selectedItems.length === 0) {
+      toast.warning("Please select at least one item to confirm receipt");
+      return;
+    }
+    
+    // Check if all selected items have received quantities
+    const missingReceivedQty = selectedItems.some(item => 
+      item.receivedQty === "" || item.receivedQty === null
+    );
+    
+    if (missingReceivedQty) {
+      toast.warning("Please enter received quantity for all selected items");
+      return;
+    }
+    
+    // Format dates to YYYY-MM-DD
+    const formatDateToYYYYMMDD = (dateString) => {
+      if (!dateString) return "";
+      const date = new Date(dateString);
+      return date.toISOString().split('T')[0];
+    };
+    
+    const finalData = {
+      transactionNumber,
+      issueNumber,
+      requisitionNumber: issueSummary.requisitionNumber,
+      issueDate: formatDateToYYYYMMDD(issueSummary.issueDate),
+      receiptDate: formatDateToYYYYMMDD(issueSummary.receiptDate),
+      items: selectedItems.map(item => ({
+        id: item.id,
+        itemCode: item.itemCode,
+        itemName: item.itemName,
+        batchNumber: item.batchNumber,
+        issuedQty: parseFloat(item.issuedQty) || 0,
+        receivedQty: parseFloat(item.receivedQty) || 0,
+        variance: parseFloat(item.variance) || 0,
+        notes: item.notes || ""
+      }))
+    };
+    
     try {
       console.log("Confirming receipt with data:", finalData);
-      const response = await api.post("/api/", finalData);
+      const response = await api.post("/api/production-receipt/confirm", finalData);
       console.log("Successfully confirmed the receipt: ", response.data);
       toast.success("Successfully confirmed the receipt");
       // Reset form after successful submission
@@ -103,7 +242,7 @@ const ProductionFloorReceipt = () => {
         errorMessage = error.message;
       }
 
-      console.error("Error confirming the receipt type:", errorMessage);
+      console.error("Error confirming the receipt:", errorMessage);
       toast.error(errorMessage);
     }
   };
@@ -155,16 +294,15 @@ const ProductionFloorReceipt = () => {
                     className="form-control ps-5 text-font"
                     id="issueNumber"
                     value={issueNumber}
-                    onChange={() => {
-                      setIssueNumber(e.target.value);
-                      handleSetIssuedItemsList;
-                    }}
+                    onChange={handleIssueNumberChange}
                   >
                     <option value="" disabled hidden className="text-muted">
                       Select Issue Transaction
                     </option>
                     {issueNoList.map((issueNo) => (
-                      <option key={issueNo.issueNo}>{issueNo.issueNo}</option>
+                      <option key={issueNo.issueNo} value={issueNo.issueNo}>
+                        {issueNo.issueNo}
+                      </option>
                     ))}
                   </select>
                   <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
@@ -180,6 +318,7 @@ const ProductionFloorReceipt = () => {
                     type="date"
                     className="form-control ps-5 text-font"
                     id="issueDate"
+                    value={issueSummary.issueDate}
                     placeholder="Issue Date"
                     disabled
                   />
@@ -195,6 +334,7 @@ const ProductionFloorReceipt = () => {
                     type="text"
                     className="form-control ps-5 text-font"
                     id="requisitionNumber"
+                    value={issueSummary.requisitionNumber}
                     placeholder="Requisition Number"
                     disabled
                   />
@@ -210,8 +350,9 @@ const ProductionFloorReceipt = () => {
                     type="date"
                     className="form-control ps-5 text-font"
                     id="receiptDate"
+                    value={issueSummary.receiptDate}
+                    onChange={(e) => setIssueSummary({...issueSummary, receiptDate: e.target.value})}
                     placeholder="Receipt Date"
-                    disabled
                   />
                 </div>
               </div>
@@ -229,7 +370,7 @@ const ProductionFloorReceipt = () => {
                       onChange={handleSelectAllChange}
                     />
                     <label htmlFor="select-all">
-                      {issuedItems.length} Selected
+                      {selectedIssueNo.length} Selected
                     </label>
                   </div>
                 </div>
@@ -265,7 +406,7 @@ const ProductionFloorReceipt = () => {
                         </td>
                       </tr>
                     ) : (
-                      issuedItems.map((issuedItem) => {
+                      issuedItems.map((issuedItem) => (
                         <tr key={issuedItem.id}>
                           <td className="checkbox-cell ps-4">
                             <input
@@ -292,8 +433,14 @@ const ProductionFloorReceipt = () => {
                             </div>
                           </td>
                           <td className="ps-4">
-                            <div>
-                              <span>{issuedItem.receivedQty}</span>
+                            <div className="position-relative w-100">
+                              <input
+                                type="number"
+                                className="form-control text-font"
+                                value={issuedItem.receivedQty}
+                                placeholder="Enter qty"
+                                onChange={(e) => handleReceivedQtyChange(issuedItem.id, e.target.value)}
+                              />
                             </div>
                           </td>
                           <td className="ps-4">
@@ -302,18 +449,18 @@ const ProductionFloorReceipt = () => {
                             </div>
                           </td>
                           <td className="ps-4">
-                            <div>
-                              <span>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  disabled
-                                />
-                              </span>
+                            <div className="position-relative w-100">
+                              <input
+                                type="text"
+                                className="form-control text-font"
+                                value={issuedItem.notes || ""}
+                                placeholder="Add notes"
+                                onChange={(e) => handleNotesChange(issuedItem.id, e.target.value)}
+                              />
                             </div>
                           </td>
-                        </tr>;
-                      })
+                        </tr>
+                      ))
                     )}
                   </tbody>
                 </table>
@@ -338,7 +485,7 @@ const ProductionFloorReceipt = () => {
                     <div className="row bg-gray font-weight me-2 p-3 d-flex align-items-center justify-content-between">
                       <p className="col-6 font-gray mb-0">Selected Items:</p>
                       <p className="col-6 mb-0 text-end">
-                        {issuedItems.length}
+                        {selectedIssueNo.length}
                       </p>
                     </div>
                   </div>
@@ -347,7 +494,7 @@ const ProductionFloorReceipt = () => {
                     <div className="row bg-gray font-weight me-2 p-3 d-flex align-items-center justify-content-between">
                       <p className="col-6 font-gray mb-0">Pending Items:</p>
                       <p className="col-6 mb-0 text-end">
-                        {issuedItems.length - issuedItems.length}
+                        {issuedItems.length - selectedIssueNo.length}
                       </p>
                     </div>
                   </div>
@@ -360,10 +507,15 @@ const ProductionFloorReceipt = () => {
                 type="button"
                 className="btn btn-primary add-btn"
                 onClick={handleConfirmReceipt}
+                disabled={selectedIssueNo.length === 0}
               >
                 <i className="fa-solid fa-floppy-disk me-1"></i> Confirm Receipt
               </button>
-              <button className="btn btn-secondary add-btn me-2" type="button">
+              <button 
+                className="btn btn-secondary add-btn me-2" 
+                type="button"
+                onClick={handleReset}
+              >
                 <i className="fa-solid fa-xmark me-1"></i> Cancel
               </button>
             </div>
