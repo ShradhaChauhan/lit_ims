@@ -372,7 +372,7 @@ const MaterialIncoming = () => {
                       Select Mode
                     </option>
                     <option value="scan">Scan</option>
-                    <option value="auto">Auto</option>
+                    <option value="auto">Manual</option>
                   </select>
                   <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                 </div>
