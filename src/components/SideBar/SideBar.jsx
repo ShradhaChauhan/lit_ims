@@ -24,6 +24,7 @@ import IncomingQC from "../Forms/IncomingQC/IncomingQC";
 import MaterialIssueRequest from "../Forms/MaterialIssueRequest/MaterialIssueRequest";
 import ProductionFloorReceipt from "../Forms/ProductionFloorReceipt/ProductionFloorReceipt";
 import ProductionMaterialUsage from "../Forms/ProductionMaterialUsage/ProductionMaterialUsage";
+import Users from "../Users/Users";
 
 const SideBar = () => {
   const {
@@ -46,6 +47,11 @@ const SideBar = () => {
   };
 
   const menuItems = [
+    {
+      icon: "fas fa-user",
+      path: "users",
+      label: "Users",
+    },
     {
       icon: "fas fa-database",
       label: "Masters",
@@ -167,7 +173,7 @@ const SideBar = () => {
     },
     {
       icon: "fas fa-chart-pie",
-      path: "Reports",
+      path: "reports",
       label: "Reports",
     },
     {
@@ -200,6 +206,7 @@ const SideBar = () => {
   };
 
   const handleRightSideComponentName = (name) => {
+    name === "Users" && setRightSideComponent(<Users />);
     // Master Submenu component list
     name === "VendorMaster" && setRightSideComponent(<VendorMaster />);
     name === "ItemMaster" && setRightSideComponent(<ItemMaster />);

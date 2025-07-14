@@ -5,6 +5,7 @@ import api from "../../services/api";
 import { Modal } from "bootstrap";
 import Select from "react-select";
 import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
 
 const Users = () => {
   const [selectedOptions, setSelectedOptions] = useState([]);
@@ -1544,9 +1545,9 @@ const Users = () => {
           <div className="mt-4">
             <h3 className="nav-header header-style">User Management</h3>
             <p className="breadcrumb">
-              <a href="#">
+              <Link to="/dashboard">
                 <i className="fas fa-home text-8"></i>
-              </a>{" "}
+              </Link>{" "}
               <span className="ms-1 mt-1 text-small-gray">
                 / Settings / User Management
               </span>

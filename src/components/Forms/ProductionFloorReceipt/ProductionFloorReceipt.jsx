@@ -12,7 +12,7 @@ const ProductionFloorReceipt = () => {
   const [issueSummary, setIssueSummary] = useState({
     requisitionNumber: "",
     issueDate: "",
-    receiptDate: new Date().toISOString().split('T')[0],
+    receiptDate: new Date().toISOString().split("T")[0],
   });
 
   // Auto generate transaction number
@@ -30,7 +30,7 @@ const ProductionFloorReceipt = () => {
   const fetchIssueNoList = async () => {
     try {
       const response = await api.get("/api/issue-production/all-issue-numbers");
-      setIssueNoList(response.data.data.map(issueNo => ({ issueNo })));
+      setIssueNoList(response.data.data.map((issueNo) => ({ issueNo })));
     } catch (error) {
       toast.error("Error in fetching issue number list");
       console.error("Error fetching issue number list:", error);
@@ -45,20 +45,22 @@ const ProductionFloorReceipt = () => {
   const handleIssueNumberChange = async (e) => {
     const selectedIssueNumber = e.target.value;
     setIssueNumber(selectedIssueNumber);
-    
+
     if (selectedIssueNumber) {
       try {
         // Fetch issue summary data
-        const summaryResponse = await api.get(`/api/issue-production/summary-by-issue?issueNumber=${selectedIssueNumber}`);
+        const summaryResponse = await api.get(
+          `/api/issue-production/summary-by-issue?issueNumber=${selectedIssueNumber}`
+        );
         const summaryData = summaryResponse.data.data;
-        
+
         // Update issue summary state
         setIssueSummary({
           requisitionNumber: summaryData.requisitionNumber,
           issueDate: formatDateFromString(summaryData.issueDate),
-          receiptDate: new Date().toISOString().split('T')[0],
+          receiptDate: new Date().toISOString().split("T")[0],
         });
-        
+
         // Process items data - each batch number is a separate item
         const processedItems = summaryData.items.map((item) => ({
           id: item.id, // Use the id from the API response
@@ -68,15 +70,14 @@ const ProductionFloorReceipt = () => {
           batchNumber: item.batchNumber,
           receivedQty: "",
           variance: -item.totalIssued,
-          notes: ""
+          notes: "",
         }));
-        
+
         setIssuedItems(processedItems);
-        
+
         // Don't select items by default
         setSelectedIssueNo([]);
         setSelectAll(false);
-        
       } catch (error) {
         toast.error("Error in fetching issue summary");
         console.error("Error fetching issue summary:", error);
@@ -84,7 +85,7 @@ const ProductionFloorReceipt = () => {
         setIssueSummary({
           requisitionNumber: "",
           issueDate: "",
-          receiptDate: new Date().toISOString().split('T')[0],
+          receiptDate: new Date().toISOString().split("T")[0],
         });
       }
     }
@@ -94,12 +95,15 @@ const ProductionFloorReceipt = () => {
   const formatDateFromString = (dateString) => {
     try {
       if (!dateString) return "";
-      
+
       const parts = dateString.split(" ")[0].split("/");
       if (parts.length !== 3) return "";
-      
+
       // Format as YYYY-MM-DD for input date field
-      return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+      return `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(
+        2,
+        "0"
+      )}`;
     } catch (error) {
       console.error("Error formatting date:", error);
       return "";
@@ -109,11 +113,12 @@ const ProductionFloorReceipt = () => {
   // Handle received quantity change
   const handleReceivedQtyChange = (id, value) => {
     const numValue = value === "" ? "" : parseFloat(value) || 0;
-    
-    setIssuedItems(prevItems => 
-      prevItems.map(item => {
+
+    setIssuedItems((prevItems) =>
+      prevItems.map((item) => {
         if (item.id === id) {
-          const variance = numValue === "" ? -item.issuedQty : numValue - item.issuedQty;
+          const variance =
+            numValue === "" ? -item.issuedQty : numValue - item.issuedQty;
           return { ...item, receivedQty: numValue, variance };
         }
         return item;
@@ -123,8 +128,8 @@ const ProductionFloorReceipt = () => {
 
   // Handle notes change
   const handleNotesChange = (id, value) => {
-    setIssuedItems(prevItems => 
-      prevItems.map(item => {
+    setIssuedItems((prevItems) =>
+      prevItems.map((item) => {
         if (item.id === id) {
           return { ...item, notes: value };
         }
@@ -144,7 +149,7 @@ const ProductionFloorReceipt = () => {
       setSelectedIssueNo([]);
     }
   };
-  
+
   // Single checkbox function
   const handleIssueNoCheckboxChange = (issueNoId) => {
     setSelectedIssueNo((prevSelected) =>
@@ -162,7 +167,7 @@ const ProductionFloorReceipt = () => {
     setIssueSummary({
       requisitionNumber: "",
       issueDate: "",
-      receiptDate: new Date().toISOString().split('T')[0],
+      receiptDate: new Date().toISOString().split("T")[0],
     });
     setSelectedIssueNo([]);
     setSelectAll(false);
@@ -172,41 +177,41 @@ const ProductionFloorReceipt = () => {
   // Function to save confirmed receipt
   const handleConfirmReceipt = async (e) => {
     e.preventDefault();
-    
+
     // Filter only selected items
-    const selectedItems = issuedItems.filter(item => 
+    const selectedItems = issuedItems.filter((item) =>
       selectedIssueNo.includes(item.id)
     );
-    
+
     if (selectedItems.length === 0) {
       toast.warning("Please select at least one item to confirm receipt");
       return;
     }
-    
+
     // Check if all selected items have received quantities
-    const missingReceivedQty = selectedItems.some(item => 
-      item.receivedQty === "" || item.receivedQty === null
+    const missingReceivedQty = selectedItems.some(
+      (item) => item.receivedQty === "" || item.receivedQty === null
     );
-    
+
     if (missingReceivedQty) {
       toast.warning("Please enter received quantity for all selected items");
       return;
     }
-    
+
     // Format dates to YYYY-MM-DD
     const formatDateToYYYYMMDD = (dateString) => {
       if (!dateString) return "";
       const date = new Date(dateString);
-      return date.toISOString().split('T')[0];
+      return date.toISOString().split("T")[0];
     };
-    
+
     const finalData = {
       transactionNumber,
       issueNumber,
       requisitionNumber: issueSummary.requisitionNumber,
       issueDate: formatDateToYYYYMMDD(issueSummary.issueDate),
       receiptDate: formatDateToYYYYMMDD(issueSummary.receiptDate),
-      items: selectedItems.map(item => ({
+      items: selectedItems.map((item) => ({
         id: item.id,
         itemCode: item.itemCode,
         itemName: item.itemName,
@@ -214,13 +219,16 @@ const ProductionFloorReceipt = () => {
         issuedQty: parseFloat(item.issuedQty) || 0,
         receivedQty: parseFloat(item.receivedQty) || 0,
         variance: parseFloat(item.variance) || 0,
-        notes: item.notes || ""
-      }))
+        notes: item.notes || "",
+      })),
     };
-    
+
     try {
       console.log("Confirming receipt with data:", finalData);
-      const response = await api.post("/api/production-receipt/confirm", finalData);
+      const response = await api.post(
+        "/api/production-receipt/confirm",
+        finalData
+      );
       console.log("Successfully confirmed the receipt: ", response.data);
       toast.success("Successfully confirmed the receipt");
       // Reset form after successful submission
@@ -351,7 +359,12 @@ const ProductionFloorReceipt = () => {
                     className="form-control ps-5 text-font"
                     id="receiptDate"
                     value={issueSummary.receiptDate}
-                    onChange={(e) => setIssueSummary({...issueSummary, receiptDate: e.target.value})}
+                    onChange={(e) =>
+                      setIssueSummary({
+                        ...issueSummary,
+                        receiptDate: e.target.value,
+                      })
+                    }
                     placeholder="Receipt Date"
                   />
                 </div>
@@ -439,7 +452,12 @@ const ProductionFloorReceipt = () => {
                                 className="form-control text-font"
                                 value={issuedItem.receivedQty}
                                 placeholder="Enter qty"
-                                onChange={(e) => handleReceivedQtyChange(issuedItem.id, e.target.value)}
+                                onChange={(e) =>
+                                  handleReceivedQtyChange(
+                                    issuedItem.id,
+                                    e.target.value
+                                  )
+                                }
                               />
                             </div>
                           </td>
@@ -455,7 +473,12 @@ const ProductionFloorReceipt = () => {
                                 className="form-control text-font"
                                 value={issuedItem.notes || ""}
                                 placeholder="Add notes"
-                                onChange={(e) => handleNotesChange(issuedItem.id, e.target.value)}
+                                onChange={(e) =>
+                                  handleNotesChange(
+                                    issuedItem.id,
+                                    e.target.value
+                                  )
+                                }
                               />
                             </div>
                           </td>
@@ -511,8 +534,8 @@ const ProductionFloorReceipt = () => {
               >
                 <i className="fa-solid fa-floppy-disk me-1"></i> Confirm Receipt
               </button>
-              <button 
-                className="btn btn-secondary add-btn me-2" 
+              <button
+                className="btn btn-secondary add-btn me-2"
                 type="button"
                 onClick={handleReset}
               >

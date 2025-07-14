@@ -348,7 +348,6 @@ const MaterialIncoming = () => {
           <h2>
             <i className="fas fa-truck-ramp-box"></i> Material Receipt Entry
           </h2>
-          <button className="btn-close" onClick={handleReset}></button>
         </div>
         {/* Form Fields */}
         <form autoComplete="off" className="padding-2">

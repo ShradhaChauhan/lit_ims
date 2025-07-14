@@ -434,6 +434,7 @@
     font-size: 0.9rem;
 }
 
+
 .btn-filter:hover {
     background-color: var(--hover-color);
     border-color: var(--text-light);
@@ -659,6 +660,26 @@ tbody tr:hover {
     border-radius: 1rem;
     font-size: 0.7rem !important;
     font-weight: 500 !important;
+}
+
+.badge.create {
+    background-color: var(--green);
+    color: var(--white);
+}
+
+.badge.view {
+    background-color: var(--lightGold);
+    color: var(--white);
+}
+
+.badge.update {
+    background-color: var(--blue1);
+    color: var(--white);
+}
+
+.badge.delete {
+    background-color: var(--danger-color);
+    color: var(--white);
 }
 
 .badge.admin,
@@ -1115,7 +1136,7 @@ select:invalid {
 }
 
 .font-1 {
-    font-size: 1.1rem;
+    font-size: 1rem;
 }
 
 .print-btn {

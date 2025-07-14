@@ -27,6 +27,7 @@ import ActivityLogs from "./components/ActivityLogs/ActivityLogs";
 import Reports from "./components/Reports/Reports";
 import ProductionMaterialUsage from "./components/Forms/ProductionMaterialUsage/ProductionMaterialUsage";
 import WIPReturn from "./components/Forms/WIPReturn/WIPReturn";
+import Users from "./components/Users/Users";
 
 function App() {
   const { rightSideComponent, setRightSideComponent, isAuthenticated } =
@@ -63,6 +64,7 @@ function App() {
             <div className="right-side-div bg-light flex-grow-1 overflow-auto">
               <Routes>
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/users" element={<Users />} />
                 <Route path="/business-partner" element={<VendorMaster />} />
                 <Route path="/item-master" element={<ItemMaster />} />
                 <Route path="/warehouse-master" element={<WarehouseMaster />} />

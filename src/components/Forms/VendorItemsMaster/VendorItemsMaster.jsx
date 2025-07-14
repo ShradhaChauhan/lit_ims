@@ -1268,27 +1268,27 @@ const VendorItemsMaster = () => {
                   <span>{vendorItemDetails.vendor}</span>
                 </div>
 
-                <div className="detail-items">
+                <div className="detail-item">
                   <strong>Item:</strong>
                   <span>{vendorItemDetails.item}</span>
                 </div>
 
-                <div className="detail-items">
+                <div className="detail-item">
                   <strong>Lead Time (Days):</strong>
                   <span>{vendorItemDetails.leadTime}</span>
                 </div>
 
-                <div className="detail-items">
+                <div className="detail-item">
                   <strong>Min Order Qty:</strong>
                   <span>{vendorItemDetails.minOrderQty}</span>
                 </div>
 
-                <div className="detail-items">
+                <div className="detail-item">
                   <strong>Price:</strong>
                   <span>{vendorItemDetails.price}</span>
                 </div>
 
-                <div className="detail-items">
+                <div className="detail-item">
                   <strong>Status:</strong>
                   <span
                     className={`badge status ${vendorItemDetails.status.toLowerCase()} w-25`}
@@ -1304,7 +1304,7 @@ const VendorItemsMaster = () => {
                 className="btn btn-secondary add-btn"
                 data-bs-dismiss="modal"
               >
-                Close
+                <i className="fa-solid fa-xmark me-1"></i>Close
               </button>
             </div>
           </div>
@@ -1533,14 +1533,14 @@ const VendorItemsMaster = () => {
               </div>
               <div className="modal-footer">
                 <button type="submit" className="btn btn-primary add-btn">
-                  Save Changes
+                  <i className="fa-solid fa-floppy-disk me-1"></i>Save Changes
                 </button>
                 <button
                   type="button"
                   className="btn btn-secondary add-btn"
                   data-bs-dismiss="modal"
                 >
-                  Close
+                  <i className="fa-solid fa-xmark me-1"></i>Close
                 </button>
               </div>
             </form>
