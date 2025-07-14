@@ -1,17 +1,50 @@
 import React, { useEffect, useState } from "react";
+import { debounce } from "lodash";
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../../services/api";
+import "./ActivityLogs.css";
 
 const ActivityLogs = () => {
   const [logs, setLogs] = useState([]);
+  const [inputValue, setInputValue] = useState("");
+
+  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
+  // Filter
+  const [selectedAction, setSelectedAction] = useState("");
+
+  const filteredLogs = useMemo(() => {
+    const term = inputValue.toLowerCase();
+
+    return logs.filter((log) => {
+      const matchesSearch =
+        log.id?.toString().toLowerCase().includes(term) ||
+        log.details?.toLowerCase().includes(term) ||
+        log.performedBy?.toLowerCase().includes(term) ||
+        (log.timestamp &&
+          new Date(log.timestamp)
+            .toLocaleString()
+            .toLowerCase()
+            .includes(term)) ||
+        log.action?.toLowerCase().includes(term);
+
+      const matchesAction =
+        selectedAction === "" ||
+        log.action?.toLowerCase() === selectedAction.toLowerCase();
+
+      return matchesSearch && matchesAction;
+    });
+  }, [logs, inputValue, selectedAction]);
+
+  // Pagination Calculation
   const indexOfLastLog = currentPage * rowsPerPage;
   const indexOfFirstLog = indexOfLastLog - rowsPerPage;
-  const currentLogs = logs.slice(indexOfFirstLog, indexOfLastLog);
-  const totalPages = Math.ceil(logs.length / rowsPerPage);
+  const totalPages = Math.ceil(filteredLogs.length / rowsPerPage);
+  const currentLogs = filteredLogs.slice(indexOfFirstLog, indexOfLastLog);
 
   const getActivityLogs = async () => {
     try {
@@ -27,6 +60,19 @@ const ActivityLogs = () => {
   useEffect(() => {
     getActivityLogs();
   }, []);
+
+  useEffect(() => {
+    const debounced = debounce((val) => {
+      setCurrentPage(1);
+    }, 300);
+
+    debounced(inputValue);
+
+    return () => {
+      debounced.cancel();
+    };
+  }, [inputValue]);
+
   return (
     <div>
       {" "}
@@ -51,11 +97,36 @@ const ActivityLogs = () => {
           <input
             type="text"
             className="form-control vendor-search-bar"
-            placeholder="Search by transaction number..."
+            placeholder="Search transactions..."
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
           />
         </div>
         <div className="filter-options">
-          <button className="filter-select">
+          <select
+            className="filter-select"
+            value={selectedAction}
+            onChange={(e) => {
+              setSelectedAction(e.target.value);
+              setCurrentPage(1);
+            }}
+          >
+            <option value="">Action</option>
+            <option value="CREATE">Create</option>
+            <option value="VIEW">View</option>
+            <option value="UPDATE">Update</option>
+            <option value="DELETE">Delete</option>
+          </select>
+        </div>
+        <div className="filter-options">
+          <button
+            className="filter-select"
+            onClick={() => {
+              setInputValue("");
+              setSelectedAction("");
+              setCurrentPage(1);
+            }}
+          >
             <i className="fas fa-filter me-2"></i>
             Reset Filters
           </button>
@@ -76,7 +147,7 @@ const ActivityLogs = () => {
               </tr>
             </thead>
             <tbody>
-              {logs.length === 0 ? (
+              {filteredLogs.length === 0 ? (
                 <tr className="no-data-row">
                   <td colSpan="5" className="no-data-cell">
                     <div className="no-data-content">
@@ -97,7 +168,7 @@ const ActivityLogs = () => {
                         : "-"}
                     </td>
                     <td
-                      className={`badge ${
+                      className={`badge text-center ${
                         log.action === "CREATE"
                           ? "create"
                           : log.action === "VIEW"
@@ -105,7 +176,7 @@ const ActivityLogs = () => {
                           : log.action === "UPDATE"
                           ? "update"
                           : "delete"
-                      } w-25 ps-4`}
+                      } w-25 mt-3 ms-2`}
                     >
                       {log.action ?? "-"}
                     </td>
@@ -118,7 +189,8 @@ const ActivityLogs = () => {
           <div className="pagination-container d-flex justify-content-between align-items-center mt-3">
             <div>
               Showing {indexOfFirstLog + 1} to{" "}
-              {Math.min(indexOfLastLog, logs.length)} of {logs.length} entries
+              {Math.min(indexOfLastLog, filteredLogs.length)} of{" "}
+              {filteredLogs.length} entries
             </div>
             <div className="d-flex align-items-center gap-2">
               <button
