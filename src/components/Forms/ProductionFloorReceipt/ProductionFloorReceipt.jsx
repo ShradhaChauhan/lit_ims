@@ -307,6 +307,11 @@ const ProductionFloorReceipt = () => {
                     <option value="" disabled hidden className="text-muted">
                       Select Issue Transaction
                     </option>
+                    {issueNoList.length === 0 && (
+                      <option value="NaN" disabled>
+                        Nothing to issue
+                      </option>
+                    )}
                     {issueNoList.map((issueNo) => (
                       <option key={issueNo.issueNo} value={issueNo.issueNo}>
                         {issueNo.issueNo}
