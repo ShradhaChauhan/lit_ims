@@ -12,11 +12,7 @@ import api from "../../services/api";
 import { Link } from "react-router-dom";
 
 const LandingPage = () => {
-  const [data, setData] = useState([
-    { status: "Pass", count: 120 },
-    { status: "Fail", count: 30 },
-    { status: "Pending", count: 50 },
-  ]);
+  const [data, setData] = useState([]);
 
   const COLORS = ["#2e7d32", "#d32f2f", "#f9a825"]; // Green, Red, Yellow
 

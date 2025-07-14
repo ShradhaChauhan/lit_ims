@@ -1,8 +1,25 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
+import api from "../../services/api";
 
 const ActivityLogs = () => {
   const [logs, setLogs] = useState([]);
+
+  const getActivityLogs = async () => {
+    try {
+      const response = await api.get("/api/logs/recent/top10");
+      const logData = response?.data ?? [];
+      setLogs(logData);
+    } catch (error) {
+      toast.error("Error: Unable to fetch activity logs.");
+      console.error("Error fetching activity logs:", error);
+    }
+  };
+
+  useEffect(() => {
+    getActivityLogs();
+  }, []);
   return (
     <div>
       {" "}
@@ -64,32 +81,42 @@ const ActivityLogs = () => {
               ) : (
                 logs.map((log) => (
                   <tr key={log.id}>
-                    <td className="checkbox-cell ps-4">
-                      <div>
-                        <span>{log.id}</span>
-                      </div>
-                    </td>
+                    <td className="checkbox-cell ps-4">{log.id ?? "-"}</td>
+                    <td className="ps-4">{log.details ?? "-"}</td>
+                    <td className="ps-4">{log.performedBy ?? "System"}</td>
                     <td className="ps-4">
-                      <div>
-                        <span>{log.details}</span>
-                      </div>
+                      {log.timestamp
+                        ? new Date(log.timestamp).toLocaleString()
+                        : "-"}
                     </td>
-                    <td className="ps-4">
-                      <div>
-                        <span>{log.performed_by}</span>
-                      </div>
-                    </td>
-                    <td className="ps-4">
-                      <span>{log.time}</span>
-                    </td>
-                    <td className="ps-4">
-                      <span>{log.action}</span>
-                    </td>
+                    <td className="ps-4">{log.action ?? "-"}</td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
+          {/* Pagination */}
+          <div className="pagination-container">
+            <div className="pagination-info">Showing 1 of 10 entries</div>
+            <div className="pagination">
+              <button className="btn-page" disabled>
+                <i className="fas fa-chevron-left"></i>
+              </button>
+              {/* Generate page buttons */}
+              <button className="btn btn-primary">1</button>
+              <button className="btn-page" disabled>
+                <i className="fas fa-chevron-right"></i>
+              </button>
+            </div>
+            <div className="items-per-page">
+              <select>
+                <option value="10">10 per page</option>
+                <option value="25">25 per page</option>
+                <option value="50">50 per page</option>
+                <option value="100">100 per page</option>
+              </select>
+            </div>
+          </div>
         </div>
       </div>
     </div>
