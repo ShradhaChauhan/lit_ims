@@ -18,6 +18,7 @@ import {
 import { toast } from "react-toastify";
 import api from "../../services/api";
 import { Link } from "react-router-dom";
+import "./LandingPage.css";
 
 const COLORS = ["#2e7d32", "#d32f2f", "#f9a825"];
 

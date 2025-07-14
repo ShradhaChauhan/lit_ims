@@ -1147,11 +1147,3 @@ select:invalid {
 .bg-gray {
     background-color: var(--background-color);
 } 
-
-.dashboard-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 5px 10px rgba(0,0,0,0.06);
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-}
