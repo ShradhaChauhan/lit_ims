@@ -434,7 +434,6 @@
     font-size: 0.9rem;
 }
 
-
 .btn-filter:hover {
     background-color: var(--hover-color);
     border-color: var(--text-light);
