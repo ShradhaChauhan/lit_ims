@@ -530,7 +530,9 @@ const MaterialIncoming = () => {
                     id="quantity"
                     placeholder="Quantity"
                     value={formData.quantity}
-                    disabled
+                    onChange={(e) =>
+                      setFormData({ ...formData, quantity: e.target.value })
+                    }
                   />
                 </div>
               </div>
