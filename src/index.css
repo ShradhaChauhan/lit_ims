@@ -661,26 +661,6 @@ tbody tr:hover {
     font-weight: 500 !important;
 }
 
-.badge.create {
-    background-color: var(--green);
-    color: var(--white);
-}
-
-.badge.view {
-    background-color: var(--lightGold);
-    color: var(--white);
-}
-
-.badge.update {
-    background-color: var(--blue1);
-    color: var(--white);
-}
-
-.badge.delete {
-    background-color: var(--danger-color);
-    color: var(--white);
-}
-
 .badge.admin,
 .badge.vendor {
     background-color: var(--lightBlue3);
@@ -1156,7 +1136,7 @@ select:invalid {
     color: var(--secondary-color) !important;
 }
 
-.font-weight {
+.font-weight { 
     font-weight: 600;
 }
 

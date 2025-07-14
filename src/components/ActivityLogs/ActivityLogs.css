@@ -1,0 +1,26 @@
+.badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.7rem !important;
+    font-weight: 500 !important;
+}
+
+.badge.create {
+    background-color: var(--green);
+    color: var(--white);
+}
+ 
+.badge.view {
+    background-color: var(--warning-color);
+    color: var(--white);
+}
+
+.badge.update {
+    background-color: var(--blue1);
+    color: var(--white);
+}
+
+.badge.delete {
+    background-color: var(--danger-color);
+    color: var(--white);
+}

@@ -173,8 +173,8 @@ const SideBar = () => {
     },
     {
       icon: "fas fa-chart-pie",
-      path: "reports",
-      label: "Reports",
+      path: "audit-report",
+      label: "Audit Report",
     },
     {
       icon: "fa-solid fa-star",
