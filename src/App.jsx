@@ -93,7 +93,7 @@ function App() {
                   path="/production-floor-receipt"
                   element={<ProductionFloorReceipt />}
                 />
-                <Route path="/audit-reports" element={<Reports />} />
+                <Route path="/inventory-audit-report" element={<Reports />} />
                 <Route path="/activity-logs" element={<ActivityLogs />} />
                 <Route
                   path="/production-material-usage"
