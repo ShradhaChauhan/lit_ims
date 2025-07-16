@@ -357,6 +357,9 @@ const MaterialIncoming = () => {
       ...prev,
       itemName: "",
       itemCode: "",
+      code: "",
+      vendor: "",
+      vendorName: "",
       quantity: "",
       batchno: "",
     }));
@@ -642,12 +645,16 @@ const MaterialIncoming = () => {
                   onClick={(e) => {
                     e.preventDefault();
                     if (mode === "scan") {
-                      setMessage(
-                        "Are you sure you want to update the standard quantity?"
-                      );
-                      setIsConfirmModal(true); // show confirmation modal
+                      if (!isStdQty) {
+                        setMessage(
+                          "Are you sure you want to update the standard quantity?"
+                        );
+                        setIsConfirmModal(true);
+                      } else {
+                        handleAddReceiptItem(e);
+                      }
                     } else {
-                      handleAddReceiptItem(e); // directly add in manual mode
+                      handleAddReceiptItem(e);
                     }
                   }}
                 >

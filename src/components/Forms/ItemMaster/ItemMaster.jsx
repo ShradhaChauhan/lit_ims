@@ -1322,6 +1322,7 @@ const ItemMaster = () => {
           </div>
         </div>
       </div>
+
       {/* Confirmation dialog modal */}
       {isConfirmModal && (
         <div className="modal fade" id="itemConfirmModal" tabIndex="-1">
