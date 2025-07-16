@@ -431,9 +431,9 @@ const VendorItemsMaster = () => {
     }
 
     if (!data.minOrderQty) {
-      errors.minOrderQty = "Min Order Qty is required";
+      errors.minOrderQty = "Std Qty is required";
     } else if (!/^\d+$/.test(data.minOrderQty)) {
-      errors.minOrderQty = "Min Order Qty must only be in digits";
+      errors.minOrderQty = "Std Qty must only be in digits";
     }
 
     if (!data.price) {
@@ -902,7 +902,7 @@ const VendorItemsMaster = () => {
                 </div>
                 <div className="col-3 d-flex flex-column form-group">
                   <label htmlFor="minOrderQty" className="form-label">
-                    Min Order Qty
+                    Std Qty
                   </label>
                   <div className="position-relative w-100">
                     <i className="fas fa-cubes position-absolute z-0 input-icon"></i>
@@ -910,7 +910,7 @@ const VendorItemsMaster = () => {
                       type="text"
                       className="form-control ps-5 text-font"
                       id="minOrderQty"
-                      placeholder="Enter lead time"
+                      placeholder="Enter standard quantity"
                       value={formData.minOrderQty}
                       onChange={(e) =>
                         setFormData({
@@ -1068,7 +1068,7 @@ const VendorItemsMaster = () => {
                   Item <i className="fas fa-sort color-gray ms-2"></i>
                 </th>
                 <th>Lead Time</th>
-                <th>Min Order Qty</th>
+                <th>Std Qty</th>
                 <th>Price</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -1279,7 +1279,7 @@ const VendorItemsMaster = () => {
                 </div>
 
                 <div className="detail-item">
-                  <strong>Min Order Qty:</strong>
+                  <strong>Std Qty:</strong>
                   <span>{vendorItemDetails.minOrderQty}</span>
                 </div>
 
@@ -1419,7 +1419,7 @@ const VendorItemsMaster = () => {
                         Lead Time (Days)
                       </label>
                       <div className="position-relative w-100">
-                        <i className="fas fa-hashtag position-absolute z-0 input-icon"></i>
+                        <i className="fas fa-clock position-absolute z-0 input-icon"></i>
                         <input
                           type="text"
                           className="form-control ps-5 text-font"
@@ -1437,15 +1437,15 @@ const VendorItemsMaster = () => {
                     </div>
                     <div className="col-3 d-flex flex-column form-group">
                       <label htmlFor="minOrderQty" className="form-label">
-                        Min Order Qty
+                        Std Qty
                       </label>
                       <div className="position-relative w-100">
-                        <i className="fas fa-hashtag position-absolute z-0 input-icon"></i>
+                        <i className="fas fa-cubes position-absolute z-0 input-icon"></i>
                         <input
                           type="text"
                           className="form-control ps-5 text-font"
                           id="minOrderQty"
-                          placeholder="Enter minimum order quantity"
+                          placeholder="Enter standard quantity"
                           value={vendorItemDetails.minOrderQty}
                           onChange={(e) =>
                             setVendorItemDetails({
@@ -1463,7 +1463,7 @@ const VendorItemsMaster = () => {
                         Price
                       </label>
                       <div className="position-relative w-100">
-                        <i className="fas fa-hashtag position-absolute z-0 input-icon"></i>
+                        <i className="fas fa-rupee-sign position-absolute z-0 input-icon"></i>
                         <input
                           type="text"
                           className="form-control ps-5 text-font"

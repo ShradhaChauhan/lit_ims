@@ -105,7 +105,7 @@ const ProductionMaterialUsage = () => {
                   <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                 </div>
               </div>
-              <div className="col-3 d-flex flex-column form-group">
+              {/* <div className="col-3 d-flex flex-column form-group">
                 <label htmlFor="productionLine" className="form-label">
                   Production Line
                 </label>
@@ -124,8 +124,8 @@ const ProductionMaterialUsage = () => {
                   </select>
                   <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                 </div>
-              </div>
-              <div className="col-3 d-flex flex-column form-group">
+              </div> */}
+              {/* <div className="col-3 d-flex flex-column form-group">
                 <label htmlFor="shift" className="form-label">
                   Shift
                 </label>
@@ -151,8 +151,8 @@ const ProductionMaterialUsage = () => {
                   </select>
                   <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                 </div>
-              </div>
-              <div className="col-3 d-flex flex-column form-group">
+              </div> */}
+              {/* <div className="col-3 d-flex flex-column form-group">
                 <label htmlFor="operator" className="form-label">
                   Operator
                 </label>
@@ -171,7 +171,7 @@ const ProductionMaterialUsage = () => {
                   </select>
                   <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                 </div>
-              </div>
+              </div> */}
             </div>
             {/* Material Usage Table Section */}
             <div className="margin-2">
@@ -346,7 +346,7 @@ const ProductionMaterialUsage = () => {
               </div>
             </div>{" "}
             {/* Production Output Table Section */}
-            <div className="margin-2">
+            {/* <div className="margin-2">
               <div className="table-container">
                 <div className="row form-style p-4">
                   <h6 className="mb-2">Production Output</h6>
@@ -381,7 +381,7 @@ const ProductionMaterialUsage = () => {
                   </div>
                 </div>
               </div>
-            </div>{" "}
+            </div>{" "} */}
             {/* Button Section */}
             <div className="form-actions">
               <button type="button" className="btn btn-primary add-btn">
