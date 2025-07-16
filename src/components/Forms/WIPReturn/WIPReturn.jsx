@@ -64,7 +64,7 @@ const WIPReturn = () => {
                   <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                 </div>
               </div>
-              <div className="col-3 d-flex flex-column form-group">
+              {/* <div className="col-3 d-flex flex-column form-group">
                 <label htmlFor="productionLine" className="form-label">
                   Production Line
                 </label>
@@ -81,7 +81,7 @@ const WIPReturn = () => {
                   </select>
                   <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                 </div>
-              </div>
+              </div> */}
               <div className="col-3 d-flex flex-column form-group">
                 <label htmlFor="shift" className="form-label">
                   Return Type
@@ -95,6 +95,15 @@ const WIPReturn = () => {
                   >
                     <option value="" className="text-muted">
                       Select Type
+                    </option>
+                    <option value="Excess Material" className="text-muted">
+                      Excess Material
+                    </option>
+                    <option value="Defective Material" className="text-muted">
+                      Defective Material
+                    </option>
+                    <option value="Unused Material" className="text-muted">
+                      Unused Material
                     </option>
                   </select>
                   <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
@@ -145,8 +154,8 @@ const WIPReturn = () => {
                 </table>
               </div>
             </div>{" "}
-            {/* Production Output Table Section */}
-            <div className="margin-2">
+            {/* Return Summary Table Section */}
+            {/* <div className="margin-2">
               <div className="table-container">
                 <div className="row form-style p-4">
                   <h6 className="mb-2">Return Summary</h6>
@@ -179,7 +188,7 @@ const WIPReturn = () => {
                   </div>
                 </div>
               </div>
-            </div>{" "}
+            </div>{" "} */}
             {/* Button Section */}
             <div className="form-actions">
               <button type="button" className="btn btn-primary add-btn">

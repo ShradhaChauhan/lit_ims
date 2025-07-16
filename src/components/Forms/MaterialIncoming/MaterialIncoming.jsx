@@ -5,7 +5,10 @@ import { toast } from "react-toastify";
 import api from "../../../services/api";
 
 const MaterialIncoming = () => {
+  const modalRef = useRef(null);
   const [errors, setErrors] = useState({});
+  const [confirmState, setConfirmState] = useState(false);
+  const [message, setMessage] = useState("");
   const receiptModalRef = useRef(null);
   const [mode, setMode] = useState("");
   const [itemQuantity, setItemQuantity] = useState("");
@@ -17,6 +20,8 @@ const MaterialIncoming = () => {
   const [loading, setLoading] = useState(false);
   const [isShowReceiptDetails, setIsShowReceiptDetails] = useState(false);
   const [currentReceipt, setCurrentReceipt] = useState(null);
+  const [isStdQty, setIsStdQty] = useState(true);
+  const [isConfirmModal, setIsConfirmModal] = useState(false);
   // receiptList is used to store the concatenated formData and show it in the table and to save the material receipt entry in database.
   const [receiptList, setReceiptList] = useState([]);
   // formData is used to set, reset and validate the form data.
@@ -52,6 +57,20 @@ const MaterialIncoming = () => {
     setReceiptList([]);
   };
 
+  useEffect(() => {
+    if (isConfirmModal && modalRef.current) {
+      const bsModal = new Modal(modalRef.current, {
+        backdrop: "static",
+      });
+      bsModal.show();
+
+      // Optional: hide modal state when it's closed
+      modalRef.current.addEventListener("hidden.bs.modal", () =>
+        setIsConfirmModal(false)
+      );
+    }
+  }, [isConfirmModal]);
+
   const handleViewDetails = (receipt, e) => {
     e.preventDefault();
     console.log(receipt);
@@ -64,6 +83,18 @@ const MaterialIncoming = () => {
     e.preventDefault();
     setReceiptList((prev) => prev.filter((_, i) => i !== index));
     toast.success("Item removed from receipt");
+  };
+
+  // Global function to clean up modal artifacts
+  const cleanupModalArtifacts = () => {
+    console.log("Cleaning up modal artifacts");
+    document.body.classList.remove("modal-open");
+    document.body.style.paddingRight = "";
+    document.body.style.overflow = "";
+    const backdrops = document.getElementsByClassName("modal-backdrop");
+    while (backdrops.length > 0) {
+      backdrops[0].remove();
+    }
   };
 
   useEffect(() => {
@@ -102,6 +133,8 @@ const MaterialIncoming = () => {
 
     return errors;
   };
+
+  const handleShowConfirmationDialog = () => {};
 
   const handleAddReceiptItem = async (e) => {
     e.preventDefault();
@@ -216,6 +249,11 @@ const MaterialIncoming = () => {
     }
   };
 
+  const handleYesConfirm = (e) => {
+    handleAddReceiptItem(e);
+    handleCloseConfirmModal();
+  };
+
   const handleSaveReceiptItem = async (e) => {
     e.preventDefault();
 
@@ -257,7 +295,7 @@ const MaterialIncoming = () => {
       toast.success("Material receipt added successfully");
       handleReset(e);
     } catch (error) {
-      toast.error("Error: Unable to save material receipt.");
+      toast.error(error.response.data.message);
       console.error("Error saving material receipt:", error);
     } finally {
       setLoading(false);
@@ -282,6 +320,24 @@ const MaterialIncoming = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCloseConfirmModal = () => {
+    // Close Bootstrap modal manually
+    if (modalRef.current) {
+      const bsModal = Modal.getInstance(modalRef.current);
+      if (bsModal) {
+        bsModal.hide();
+      }
+    }
+
+    // Cleanup backdrop and modal-related styles
+    cleanupModalArtifacts();
+
+    // Delay state reset to avoid flicker
+    setTimeout(() => {
+      setIsConfirmModal(false);
+    }, 300);
   };
 
   const getVendorItems = async (code) => {
@@ -310,12 +366,22 @@ const MaterialIncoming = () => {
   };
 
   // Fetch vendor by vendor code
-  const handleFetchVendorByCode = async (code) => {
+  const handleFetchVendorByCode = async (batchno) => {
     try {
-      console.log("Code: " + code);
-      const response = await api.get(`/api/vendor-item/items/${code}`); // API to get vendors items list
-      setVendor(response.data.data);
-      console.log(response.data.data);
+      console.log("Batchno: " + batchno);
+      const response = await api.get(
+        `/api/receipt/verify-batch?batchNo=${batchno}`
+      ); // API to get vendors items list
+      setVendor(response.data.data.vendorName);
+      setFormData({
+        ...formData,
+        vendor: response.data.data.vendorName,
+        vendorName: response.data.data.vendorName,
+        code: response.data.data.vendorCode,
+        barcode: batchno,
+        quantity: response.data.data.quantity,
+      });
+      console.log(response.data.data.vendorName);
     } catch (error) {
       toast.error("Error: Unable to fetch vendors name.");
       console.error("Error fetching vendors name:", error);
@@ -523,10 +589,10 @@ const MaterialIncoming = () => {
                     placeholder="Scan QR code"
                     onChange={(e) => {
                       setFormData({ ...formData, barcode: e.target.value });
-                      const input = e.target.value;
-                      const vcode = input.substring(2, 8);
-                      console.log(vcode);
-                      handleFetchVendorByCode(vcode);
+                      // const input = e.target.value;
+                      // const vcode = input.substring(2, 8);
+                      // console.log(vcode);
+                      handleFetchVendorByCode(e.target.value);
                     }}
                   />
                 </div>
@@ -538,28 +604,52 @@ const MaterialIncoming = () => {
           <div>
             <div className="row">
               <div className="col-3 d-flex flex-column form-group">
-                <label htmlFor="quantity" className="form-label  ms-2">
+                <label htmlFor="quantity" className="form-label ms-2">
                   Quantity
                 </label>
-                <div className="position-relative w-100">
-                  <i className="fas fa-calculator position-absolute ms-2 z-0 input-icon"></i>
-                  <input
-                    type="text"
-                    className="form-control ps-5 ms-1 text-font"
-                    id="quantity"
-                    placeholder="Quantity"
-                    value={formData.quantity}
-                    onChange={(e) =>
-                      setFormData({ ...formData, quantity: e.target.value })
-                    }
-                  />
+
+                <div className="d-flex align-items-center justify-content-between gap-2">
+                  <div className="position-relative w-100">
+                    <i className="fas fa-calculator position-absolute ms-2 z-0 input-icon"></i>
+                    <input
+                      type="text"
+                      className="form-control ps-5 text-font"
+                      id="quantity"
+                      placeholder="Quantity"
+                      value={formData.quantity}
+                      onChange={(e) =>
+                        setFormData({ ...formData, quantity: e.target.value })
+                      }
+                      disabled={mode === "scan" && isStdQty}
+                    />
+                  </div>
+                  {mode === "scan" && (
+                    <input
+                      className="form-check-input mt-0"
+                      type="checkbox"
+                      id="isStdQtyManual"
+                      checked={!isStdQty}
+                      onChange={(e) => setIsStdQty(!e.target.checked)}
+                    />
+                  )}
                 </div>
               </div>
+
               <div className="col-3 d-flex flex-column form-group">
                 <button
                   className="btn btn-primary text-8 px-3 fw-medium mx-2"
                   style={{ marginTop: "2.1rem" }}
-                  onClick={handleAddReceiptItem}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (mode === "scan") {
+                      setMessage(
+                        "Are you sure you want to update the standard quantity?"
+                      );
+                      setIsConfirmModal(true); // show confirmation modal
+                    } else {
+                      handleAddReceiptItem(e); // directly add in manual mode
+                    }
+                  }}
                 >
                   <i className="fa-solid fa-add me-1"></i> Add Item
                 </button>
@@ -648,6 +738,56 @@ const MaterialIncoming = () => {
           )}
         </form>
       </div>
+
+      {/* Confirmation dialog modal */}
+      {isConfirmModal && (
+        <div
+          className="modal fade"
+          ref={modalRef}
+          id="confirmModal"
+          tabIndex="-1"
+        >
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  <i className="fas fa-circle-check me-2"></i>
+                  Confirm
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={handleCloseConfirmModal}
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body">{message}</div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-primary add-btn"
+                  onClick={handleYesConfirm}
+                >
+                  <i className="fas fa-check me-2"></i>
+                  Yes
+                </button>
+
+                <button
+                  type="button"
+                  className="btn btn-secondary add-btn"
+                  onClick={() => {
+                    setConfirmState(false);
+                    handleCloseConfirmModal();
+                  }}
+                >
+                  <i className="fas fa-times me-2"></i>
+                  No
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* View Receipt Details Modal */}
       {isShowReceiptDetails && currentReceipt && (

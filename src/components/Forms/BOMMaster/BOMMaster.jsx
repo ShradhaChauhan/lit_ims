@@ -1366,7 +1366,7 @@ const BOMMaster = () => {
                 aria-label="Close"
               ></button>
             </div>
-            <div className="modal-body overflow-hidden">
+            <div className="modal-body" style={{ overflowX: "hidden" }}>
               <form onSubmit={handleEditBom}>
                 {bomDetails && (
                   <>

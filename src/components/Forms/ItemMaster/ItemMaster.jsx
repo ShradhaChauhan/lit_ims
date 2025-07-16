@@ -976,7 +976,7 @@ const ItemMaster = () => {
                       type="number"
                       className="form-control ps-5 text-font"
                       id="stQty"
-                      placeholder="Enter ST QTY"
+                      placeholder="Enter standard quantity"
                       value={formData.stQty}
                       onChange={(e) =>
                         setFormData({ ...formData, stQty: e.target.value })
