@@ -768,7 +768,18 @@ const MaterialIncoming = () => {
                   aria-label="Close"
                 ></button>
               </div>
-              <div className="modal-body">{message}</div>
+              <div className="modal-body">
+                {message}
+                <label htmlFor="remarks" className="form-label mt-2">
+                  Remarks:{" "}
+                </label>
+                <input
+                  type="text"
+                  id="remarks"
+                  className="form-control text-font"
+                  placeholder="Enter Remarks"
+                />
+              </div>
               <div className="modal-footer">
                 <button
                   type="button"
