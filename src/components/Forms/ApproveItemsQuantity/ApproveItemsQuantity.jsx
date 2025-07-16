@@ -46,6 +46,7 @@ const ApproveItemsQuantity = () => {
                 </th>
                 <th>Std Qty</th>
                 <th>New Qty</th>
+                <th>Remarks</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -55,6 +56,7 @@ const ApproveItemsQuantity = () => {
                 <td className="ps-4">100200</td>
                 <td className="ps-4">200</td>
                 <td className="ps-4">150</td>
+                <td className="ps-4">Received 50 less.</td>
                 <td className="ps-4">
                   <div className="d-flex gap-2">
                     <button

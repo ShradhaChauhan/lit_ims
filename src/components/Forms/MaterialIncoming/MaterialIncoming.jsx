@@ -8,6 +8,7 @@ const MaterialIncoming = () => {
   const modalRef = useRef(null);
   const [errors, setErrors] = useState({});
   const [confirmState, setConfirmState] = useState(false);
+  const [reason, setReason] = useState("");
   const [message, setMessage] = useState("");
   const receiptModalRef = useRef(null);
   const [mode, setMode] = useState("");
@@ -134,8 +135,6 @@ const MaterialIncoming = () => {
     return errors;
   };
 
-  const handleShowConfirmationDialog = () => {};
-
   const handleAddReceiptItem = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -249,9 +248,58 @@ const MaterialIncoming = () => {
     }
   };
 
-  const handleYesConfirm = (e) => {
-    handleAddReceiptItem(e);
-    handleCloseConfirmModal();
+  const handleAddToApproveItemsQuantity = async () => {
+    console.log("Adding to approval list");
+    try {
+      const data = {
+        batchNo: formData.barcode,
+        requestedQty: formData.quantity,
+        reason: reason,
+      };
+      console.log("data: " + data);
+      const response = await api.post("/api/stock-adjustments/requests", data);
+      toast.success("Request sent for approval successfully");
+    } catch (error) {
+      toast.error(
+        error.response.data.message || "Error in sending request for approval"
+      );
+      console.error(error);
+    }
+  };
+
+  const handleYesConfirm = async (e) => {
+    try {
+      const newItem = {
+        itemName: batchData.itemName,
+        itemCode: batchData.itemCode,
+        quantity: batchData.quantity,
+        batchNo: batchData.batchNo,
+        vendorCode: formData.code,
+        vendorName: formData.vendorName,
+      };
+
+      // Add to receipt list
+      setReceiptList([newItem]);
+
+      const payload = {
+        mode: mode,
+        vendor: vendor,
+        vendorCode: formData.code,
+        items: receiptList,
+      };
+
+      console.log("Submitting receipt data:", payload);
+      const response = await api.post("/api/receipt/save", payload);
+      console.log(
+        "Material receipt entry added successfully:",
+        response.data.data
+      );
+      handleAddToApproveItemsQuantity();
+      handleCloseConfirmModal();
+    } catch (error) {
+      toast.error(error.response.data.message);
+      console.error(error.response.data.message);
+    }
   };
 
   const handleSaveReceiptItem = async (e) => {
@@ -296,7 +344,7 @@ const MaterialIncoming = () => {
       handleReset(e);
     } catch (error) {
       toast.error(error.response.data.message);
-      console.error("Error saving material receipt:", error);
+      console.error(error.response.data.message);
     } finally {
       setLoading(false);
     }
@@ -315,8 +363,8 @@ const MaterialIncoming = () => {
         console.error("Invalid vendors response:", response);
       }
     } catch (error) {
-      toast.error("Error: Unable to fetch vendors list.");
-      console.error("Error fetching vendors list:", error);
+      toast.error(error.response.data.message);
+      console.error(error.response.data.message);
     } finally {
       setLoading(false);
     }
@@ -345,8 +393,8 @@ const MaterialIncoming = () => {
       const response = await api.get(`/api/vendor-item/items/${code}`); // API to get vendors items list
       setVendorItems(response.data.data);
     } catch (error) {
-      toast.error("Error: Unable to fetch vendors list.");
-      console.error("Error fetching vendors list:", error);
+      toast.error(error.response.data.message);
+      console.error(error.response.data.message);
     }
   };
 
@@ -375,6 +423,7 @@ const MaterialIncoming = () => {
       const response = await api.get(
         `/api/receipt/verify-batch?batchNo=${batchno}`
       ); // API to get vendors items list
+      console.log(response);
       setVendor(response.data.data.vendorName);
       setFormData({
         ...formData,
@@ -386,8 +435,8 @@ const MaterialIncoming = () => {
       });
       console.log(response.data.data.vendorName);
     } catch (error) {
-      toast.error("Error: Unable to fetch vendors name.");
-      console.error("Error fetching vendors name:", error);
+      toast.error("Unable to fetch vendor name");
+      console.error(error);
     }
   };
   return (
@@ -770,14 +819,16 @@ const MaterialIncoming = () => {
               </div>
               <div className="modal-body">
                 {message}
-                <label htmlFor="remarks" className="form-label mt-2">
-                  Remarks:{" "}
+                <label htmlFor="reason" className="form-label mt-2">
+                  Reason:{" "}
                 </label>
                 <input
                   type="text"
-                  id="remarks"
+                  id="reason"
                   className="form-control text-font"
+                  value={reason}
                   placeholder="Enter Remarks"
+                  onChange={(e) => setReason(e.target.value)}
                 />
               </div>
               <div className="modal-footer">
