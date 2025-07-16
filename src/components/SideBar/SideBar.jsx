@@ -25,6 +25,7 @@ import MaterialIssueRequest from "../Forms/MaterialIssueRequest/MaterialIssueReq
 import ProductionFloorReceipt from "../Forms/ProductionFloorReceipt/ProductionFloorReceipt";
 import ProductionMaterialUsage from "../Forms/ProductionMaterialUsage/ProductionMaterialUsage";
 import Users from "../Users/Users";
+import ApproveItemsQuantity from "../Forms/ApproveItemsQuantity/ApproveItemsQuantity";
 
 const SideBar = () => {
   const {
@@ -126,6 +127,13 @@ const SideBar = () => {
           newPath: "material-incoming",
           path: "Transactions / Material Incoming",
           icon: "fas fa-truck-ramp-box",
+        },
+        {
+          label: "Approve Items Quantity",
+          compName: "ApproveItemsQuantity",
+          newPath: "approve-items-quantity",
+          path: "Transactions / Approve Items Quantity",
+          icon: "fas fa-thumbs-up",
         },
         {
           label: "Incoming Quality Control",
@@ -232,6 +240,8 @@ const SideBar = () => {
     name === "WIPReturn" && setRightSideComponent(<WIPReturn />);
     name === "Reports" && setRightSideComponent(<div>Reports Coming Soon</div>);
     name === "Activity Logs" && setRightSideComponent(<ActivityLogs />);
+    name === "Approve Items Quantity" &&
+      setRightSideComponent(<ApproveItemsQuantity />);
   };
 
   return (

@@ -1,0 +1,34 @@
+.icon-btn {
+  background-color: transparent;
+  border: none;
+  transition: background-color 0.2s ease;
+  color: #333;
+  width: 25px;         /* Ensures same width */
+  height: 25px;        /* Ensures same height */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-size: 14px;
+  padding: 0;
+}
+
+.icon-btn:hover.approve-btn {
+  background-color: #28a745;
+  color: white;
+}
+
+.icon-btn:hover.reject-btn {
+  background-color: #dc3545;
+  color: white;
+}
+
+.icon-btn.selected.approve-btn {
+  background-color: #28a745;
+  color: white;
+}
+
+.icon-btn.selected.reject-btn {
+  background-color: #dc3545;
+  color: white;
+}

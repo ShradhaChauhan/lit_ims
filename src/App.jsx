@@ -28,6 +28,7 @@ import Reports from "./components/Reports/Reports";
 import ProductionMaterialUsage from "./components/Forms/ProductionMaterialUsage/ProductionMaterialUsage";
 import WIPReturn from "./components/Forms/WIPReturn/WIPReturn";
 import Users from "./components/Users/Users";
+import ApproveItemsQuantity from "./components/Forms/ApproveItemsQuantity/ApproveItemsQuantity";
 
 function App() {
   const { rightSideComponent, setRightSideComponent, isAuthenticated } =
@@ -100,6 +101,10 @@ function App() {
                   element={<ProductionMaterialUsage />}
                 />
                 <Route path="/wip-return" element={<WIPReturn />} />
+                <Route
+                  path="/approve-items-quantity"
+                  element={<ApproveItemsQuantity />}
+                />
               </Routes>
             </div>
           </div>

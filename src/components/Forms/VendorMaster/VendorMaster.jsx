@@ -761,6 +761,7 @@ const VendorMaster = () => {
                       className="form-control ps-5 ms-2 text-font"
                       id="pincode"
                       placeholder="Enter pincode"
+                      maxLength={6}
                       value={formData.pincode}
                       onChange={(e) =>
                         setFormData({ ...formData, pincode: e.target.value })
