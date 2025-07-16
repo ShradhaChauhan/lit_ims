@@ -2,6 +2,39 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
 const ProductionMaterialUsage = () => {
+  const [materials, setMaterials] = useState([
+    {
+      id: 1,
+      material: "LED Display Panel",
+      batchno: "BATCH-001",
+      availableQty: 100,
+      usedQty: 0,
+      scrapQty: 0,
+      remainingQty: 100,
+      status: "Available",
+    },
+    {
+      id: 2,
+      material: "Control Board",
+      batchno: "BATCH-002",
+      availableQty: 50,
+      usedQty: 0,
+      scrapQty: 0,
+      remainingQty: 50,
+      status: "Available",
+    },
+    {
+      id: 3,
+      material: "Power Supply Unit",
+      batchno: "BATCH-003",
+      availableQty: 75,
+      usedQty: 0,
+      scrapQty: 0,
+      remainingQty: 75,
+      status: "Available",
+    },
+  ]);
+
   // Auto generate transaction number
   const generateTransactionNumber = () => {
     const year = new Date().getFullYear();
@@ -62,6 +95,12 @@ const ProductionMaterialUsage = () => {
                     <option value="" className="text-muted">
                       Select Work Order
                     </option>
+                    <option value="W0-2024-001 - LED Display Assembly">
+                      W0-2024-001 - LED Display Assembly
+                    </option>
+                    <option value="W0-2024-001 - LED Display Assembly">
+                      W0-2024-002 - Power Unit Assembly
+                    </option>
                   </select>
                   <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                 </div>
@@ -80,6 +119,8 @@ const ProductionMaterialUsage = () => {
                     <option value="" className="text-muted">
                       Select Line
                     </option>
+                    <option value="Assembly Line 01">Assembly Line 01</option>
+                    <option value="Assembly Line 02">Assembly Line 02</option>
                   </select>
                   <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                 </div>
@@ -97,6 +138,15 @@ const ProductionMaterialUsage = () => {
                   >
                     <option value="" className="text-muted">
                       Select Shift
+                    </option>
+                    <option value="Shift A (06:00 - 14:00)">
+                      Shift A (06:00 - 14:00)
+                    </option>
+                    <option value="Shift B (14:00 - 22:00)">
+                      Shift B (14:00 - 22:00)
+                    </option>
+                    <option value="Shift C (22:00 - 06:00)">
+                      Shift C (22:00 - 06:00)
                     </option>
                   </select>
                   <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
@@ -116,12 +166,14 @@ const ProductionMaterialUsage = () => {
                     <option value="" className="text-muted">
                       Select Operator
                     </option>
+                    <option value="John Smith">John Smith</option>
+                    <option value="Sarah Johnson">Sarah Johnson</option>
                   </select>
                   <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                 </div>
               </div>
             </div>
-            {/* Issued Items Table Section */}
+            {/* Material Usage Table Section */}
             <div className="margin-2">
               <div className="table-container">
                 <div className="table-header">
@@ -140,17 +192,155 @@ const ProductionMaterialUsage = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="no-data-row">
-                      <td colSpan="7" className="no-data-cell">
-                        <div className="no-data-content">
-                          <i className="fas fa-industry no-data-icon"></i>
-                          <p className="no-data-text">No Materials Selected</p>
-                          <p className="no-data-subtext">
-                            Select a work order to load materials
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
+                    {materials.length === 0 ? (
+                      <tr className="no-data-row">
+                        <td colSpan="7" className="no-data-cell">
+                          <div className="no-data-content">
+                            <i className="fas fa-industry no-data-icon"></i>
+                            <p className="no-data-text">
+                              No Materials Selected
+                            </p>
+                            <p className="no-data-subtext">
+                              Select a work order to load materials
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      materials.map((material) => (
+                        <tr key={material.id}>
+                          <td className="ps-4">
+                            <div>
+                              <span>{material.material}</span>
+                            </div>
+                          </td>
+                          <td className="ps-4">
+                            <div>
+                              <span>{material.batchno}</span>
+                            </div>
+                          </td>
+
+                          <td className="ps-4">
+                            <div>
+                              <span>{material.availableQty}</span>
+                            </div>
+                          </td>
+
+                          <td className="ps-4">
+                            <div>
+                              <span>
+                                <input
+                                  type="number"
+                                  id="usedQty"
+                                  className="form-control text-font"
+                                  value={String(material.usedQty)}
+                                  onChange={(e) => {
+                                    const input = e.target.value.replace(
+                                      /^0+(?=\d)/,
+                                      ""
+                                    );
+                                    const value = Number(input);
+
+                                    const updatedMaterials = materials.map(
+                                      (m) => {
+                                        if (m.id === material.id) {
+                                          const totalUsed = value;
+                                          const totalScrap = Number(m.scrapQty);
+                                          const remaining =
+                                            m.availableQty -
+                                            (totalUsed + totalScrap);
+
+                                          const status =
+                                            remaining === m.availableQty
+                                              ? "Available"
+                                              : remaining === 0
+                                              ? "Consumed"
+                                              : "In Progress";
+
+                                          return {
+                                            ...m,
+                                            usedQty: totalUsed,
+                                            remainingQty: remaining,
+                                            status,
+                                          };
+                                        }
+                                        return m;
+                                      }
+                                    );
+
+                                    setMaterials(updatedMaterials);
+                                  }}
+                                />
+                              </span>
+                            </div>
+                          </td>
+                          <td className="ps-4">
+                            <div>
+                              <span>
+                                <input
+                                  type="number"
+                                  id="scrapQty"
+                                  className="form-control text-font"
+                                  value={String(material.scrapQty)}
+                                  onChange={(e) => {
+                                    const input = e.target.value.replace(
+                                      /^0+(?=\d)/,
+                                      ""
+                                    );
+                                    const value = Number(input);
+
+                                    const updatedMaterials = materials.map(
+                                      (m) => {
+                                        if (m.id === material.id) {
+                                          const totalUsed = Number(m.usedQty);
+                                          const totalScrap = value;
+                                          const remaining =
+                                            m.availableQty -
+                                            (totalUsed + totalScrap);
+
+                                          const status =
+                                            remaining === m.availableQty
+                                              ? "Available"
+                                              : remaining === 0
+                                              ? "Consumed"
+                                              : "In Progress";
+
+                                          return {
+                                            ...m,
+                                            scrapQty: totalScrap,
+                                            remainingQty: remaining,
+                                            status,
+                                          };
+                                        }
+                                        return m;
+                                      }
+                                    );
+
+                                    setMaterials(updatedMaterials);
+                                  }}
+                                />
+                              </span>
+                            </div>
+                          </td>
+                          <td className="ps-4">
+                            <div>
+                              <span>{material.remainingQty}</span>
+                            </div>
+                          </td>
+                          <td className="ps-4">
+                            <div>
+                              <span>
+                                {material.availableQty === material.remainingQty
+                                  ? "Available"
+                                  : material.remainingQty === 0
+                                  ? "Consumed"
+                                  : "In Progress"}
+                              </span>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>

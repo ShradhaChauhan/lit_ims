@@ -157,8 +157,8 @@ const MaterialIncoming = () => {
         } else {
           toast.error("Invalid batch number. Please try again.");
         }
-      } else if (mode === "auto") {
-        // Auto mode - generate batch number
+      } else if (mode === "manual") {
+        // Manual mode - generate batch number
         if (!vendorItem || !formData.itemCode) {
           toast.error("Please select an item first");
           setLoading(false);
@@ -286,10 +286,8 @@ const MaterialIncoming = () => {
 
   const getVendorItems = async (code) => {
     try {
-      console.log("Code: " + code);
       const response = await api.get(`/api/vendor-item/items/${code}`); // API to get vendors items list
       setVendorItems(response.data.data);
-      console.log(response.data.data);
     } catch (error) {
       toast.error("Error: Unable to fetch vendors list.");
       console.error("Error fetching vendors list:", error);
@@ -311,6 +309,18 @@ const MaterialIncoming = () => {
     // setReceiptList([]);
   };
 
+  // Fetch vendor by vendor code
+  const handleFetchVendorByCode = async (code) => {
+    try {
+      console.log("Code: " + code);
+      const response = await api.get(`/api/vendor-item/items/${code}`); // API to get vendors items list
+      setVendor(response.data.data);
+      console.log(response.data.data);
+    } catch (error) {
+      toast.error("Error: Unable to fetch vendors name.");
+      console.error("Error fetching vendors name:", error);
+    }
+  };
   return (
     <div>
       {/* Header section */}
@@ -372,7 +382,7 @@ const MaterialIncoming = () => {
                       Select Mode
                     </option>
                     <option value="scan">Scan</option>
-                    <option value="auto">Manual</option>
+                    <option value="manual">Manual</option>
                   </select>
                   <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                 </div>
@@ -389,6 +399,7 @@ const MaterialIncoming = () => {
                   <select
                     className="form-control ps-5 ms-1 text-font"
                     id="vendorName"
+                    disabled={mode === "scan"}
                     value={vendor}
                     onChange={(e) => {
                       const selectedId = parseInt(e.target.value); // dropdown value is string, convert to number
@@ -409,7 +420,7 @@ const MaterialIncoming = () => {
                     }}
                   >
                     <option value="" disabled hidden className="text-muted">
-                      Select Vendor
+                      {mode === "scan" ? "Vendor Name" : "Select Vendor"}
                     </option>
                     {vendors.map((v) => (
                       <option value={v.id} key={v.id}>
@@ -418,7 +429,11 @@ const MaterialIncoming = () => {
                     ))}
                   </select>
 
-                  <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                  {mode === "scan" ? (
+                    ""
+                  ) : (
+                    <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                  )}
                 </div>
                 {errors.vendor && (
                   <span className="error-message">{errors.vendor}</span>
@@ -442,7 +457,7 @@ const MaterialIncoming = () => {
               </div>
             </div>
           </div>
-          {mode == "auto" ? (
+          {mode == "manual" ? (
             <div className="row">
               <div className="col-12 d-flex flex-column form-group">
                 <label htmlFor="item" className="form-label ms-2">
@@ -506,9 +521,13 @@ const MaterialIncoming = () => {
                     id="item"
                     value={formData.barcode}
                     placeholder="Scan QR code"
-                    onChange={(e) =>
-                      setFormData({ ...formData, barcode: e.target.value })
-                    }
+                    onChange={(e) => {
+                      setFormData({ ...formData, barcode: e.target.value });
+                      const input = e.target.value;
+                      const vcode = input.substring(2, 8);
+                      console.log(vcode);
+                      handleFetchVendorByCode(vcode);
+                    }}
                   />
                 </div>
               </div>

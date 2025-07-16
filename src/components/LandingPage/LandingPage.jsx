@@ -118,15 +118,16 @@ const LandingPage = () => {
           </div>
         </div>
       </nav>
-      <div className=" dashboard-card">
-        <h4 className="text-center mb-3">Quality Check Status</h4>
-        {/* Section: Gauges */}
-        <div className="d-flex gap-4 flex-wrap justify-content-center mt-4">
-          <GaugeChart title="Pass" value={120} max={30} color="#2e7d32" />
-          <GaugeChart title="Hold" value={50} max={10} color="#f9a825" />
-          <GaugeChart title="Fail" value={15} max={100} color="#d32f2f" />
+      <div>
+        <div className="dashboard-card section">
+          <h4 className="text-center mb-3">Quality Check Status</h4>
+          {/* Section: Gauges */}
+          <div className="d-flex gap-4 flex-wrap justify-content-center mt-4">
+            <GaugeChart title="Pass" value={120} max={30} color="#2e7d32" />
+            <GaugeChart title="Hold" value={50} max={10} color="#f9a825" />
+            <GaugeChart title="Fail" value={15} max={100} color="#d32f2f" />
+          </div>
         </div>
-
         {/* Section: QC Pie Chart */}
         {/* <div style={{ width: "100%", height: 400, marginTop: 40 }}>
         <h4 className="text-center mb-3">Quality Check Status</h4>
@@ -154,8 +155,8 @@ const LandingPage = () => {
         </ResponsiveContainer>
       </div> */}
 
-        {/* Section: Freshness Bar Chart */}
-        <div className="mt-5">
+        {/* Section: Paytm Model Production */}
+        <div className="mt-5 dashboard-card section">
           <h4 className="text-center mb-3">Paytm Model Production</h4>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={dummyFreshnessData}>
@@ -163,13 +164,13 @@ const LandingPage = () => {
               <XAxis dataKey="duration" />
               <YAxis />
               <Tooltip />
-              <Bar dataKey="percent" fill="#1976d2" />
+              <Bar dataKey="percent" fill="#6fcce8ff" />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
         {/* Section: Inventory Turnover */}
-        <div className="mt-5">
+        <div className="mt-5 dashboard-card section">
           <h4 className="text-center mb-3">Ageing Report</h4>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={dummyTurnoverData}>

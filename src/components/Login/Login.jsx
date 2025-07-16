@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { AppContext } from "../../context/AppContext";
 import { toast } from "react-toastify";
-import checklist from "../../assets/images/stock.gif";
+import checklist from "../../assets/images/blackhole.gif";
 
 const LoginPage = () => {
   const navigate = useNavigate();
