@@ -819,11 +819,11 @@ const ItemMaster = () => {
                       id="code"
                       placeholder="Enter item code"
                       inputMode="numeric"
-                      maxLength="8"
+                      maxLength="6"
                       value={formData.code}
                       onChange={(e) => {
                         const digitsOnly = e.target.value.replace(/\D/g, "");
-                        if (digitsOnly.length <= 8) {
+                        if (digitsOnly.length <= 6) {
                           setFormData({ ...formData, code: digitsOnly });
                         }
                       }}

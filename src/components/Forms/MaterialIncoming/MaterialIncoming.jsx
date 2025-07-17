@@ -291,14 +291,14 @@ const MaterialIncoming = () => {
       const verifyResponse = await api.get(
         `/api/receipt/verify-batch?batchNo=${formData.barcode}`
       );
-      
+
       if (!verifyResponse.data || !verifyResponse.data.status) {
         toast.error("Failed to verify batch. Please try again.");
         return;
       }
-      
+
       const batchData = verifyResponse.data.data;
-      
+
       // Create new item with the updated quantity
       const newItem = {
         itemName: batchData.itemName,
@@ -322,22 +322,27 @@ const MaterialIncoming = () => {
 
       console.log("Submitting receipt data:", payload);
       const response = await api.post("/api/receipt/save", payload);
-      
+
       if (response.data) {
-        console.log("Material receipt entry added successfully:", response.data);
-        
+        console.log(
+          "Material receipt entry added successfully:",
+          response.data
+        );
+
         // Send request for approval (resource blocking)
         await handleAddToApproveItemsQuantity();
-        toast.success("Material receipt added successfully with quantity change request");
-        
+        toast.success(
+          "Material receipt added successfully with quantity change request"
+        );
+
         // Reset form fields after successful submission
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
           barcode: "",
           quantity: "",
         }));
       }
-      
+
       handleCloseConfirmModal();
     } catch (error) {
       toast.error(error.response?.data?.message || "An error occurred");
@@ -466,7 +471,7 @@ const MaterialIncoming = () => {
       const response = await api.get(
         `/api/receipt/verify-batch?batchNo=${batchno}`
       );
-      
+
       if (response.data && response.data.status) {
         const batchData = response.data.data;
         setVendor(batchData.vendorName);
@@ -478,7 +483,7 @@ const MaterialIncoming = () => {
           barcode: batchno,
           quantity: batchData.quantity,
           itemCode: batchData.itemCode,
-          itemName: batchData.itemName
+          itemName: batchData.itemName,
         });
         console.log("Batch verified:", batchData);
       } else {
@@ -866,7 +871,7 @@ const MaterialIncoming = () => {
                   id="reason"
                   className="form-control text-font"
                   value={reason}
-                  placeholder="Enter Remarks"
+                  placeholder="Enter Reason"
                   onChange={(e) => setReason(e.target.value)}
                 />
               </div>
