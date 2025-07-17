@@ -137,7 +137,7 @@ const ProductionMaterialUsage = () => {
                     </option>
                     {workOrders.map((wo) => (
                       <option key={wo.issueNumber} value={wo.issueNumber}>
-                        {wo.issueNumber} - {wo.description}
+                        {wo.issueNumber}
                       </option>
                     ))}
                   </select>
