@@ -167,14 +167,26 @@ const MaterialIncoming = () => {
           // Use the data returned from the API
           const batchData = response.data.data;
 
+          // Check if quantity is being changed and requires approval
+          if (!isStdQty && formData.quantity !== batchData.quantity) {
+            setMessage(
+              "You are changing the standard quantity. This requires approval. Do you want to continue?"
+            );
+            setIsConfirmModal(true);
+            setLoading(false);
+            // Exit here as the handleYesConfirm will handle the direct save to DB
+            // The item will NOT be added to the receipt list table since it's saved directly
+            return;
+          }
+
           // Add the verified item to the receipt list with vendor information
           const newItem = {
             itemName: batchData.itemName,
             itemCode: batchData.itemCode,
-            quantity: batchData.quantity,
+            quantity: isStdQty ? batchData.quantity : formData.quantity,
             batchNo: batchData.batchNo,
-            vendorCode: formData.code,
-            vendorName: formData.vendorName,
+            vendorCode: formData.code || batchData.vendorCode,
+            vendorName: formData.vendorName || batchData.vendorName,
           };
 
           // Add to receipt list
@@ -249,56 +261,92 @@ const MaterialIncoming = () => {
   };
 
   const handleAddToApproveItemsQuantity = async () => {
-    console.log("Adding to approval list");
     try {
       const data = {
         batchNo: formData.barcode,
         requestedQty: formData.quantity,
         reason: reason,
       };
-      console.log("data: " + data);
+      console.log("Sending approval request:", data);
       const response = await api.post("/api/stock-adjustments/requests", data);
-      toast.success("Request sent for approval successfully");
+      console.log("Approval request response:", response.data);
+      return response.data;
     } catch (error) {
       toast.error(
-        error.response.data.message || "Error in sending request for approval"
+        error.response?.data?.message || "Error in sending request for approval"
       );
       console.error(error);
+      throw error;
     }
   };
 
   const handleYesConfirm = async (e) => {
     try {
+      if (!reason) {
+        toast.error("Please provide a reason for changing the quantity");
+        return;
+      }
+
+      // First verify the batch
+      const verifyResponse = await api.get(
+        `/api/receipt/verify-batch?batchNo=${formData.barcode}`
+      );
+
+      if (!verifyResponse.data || !verifyResponse.data.status) {
+        toast.error("Failed to verify batch. Please try again.");
+        return;
+      }
+
+      const batchData = verifyResponse.data.data;
+
+      // Create new item with the updated quantity
       const newItem = {
         itemName: batchData.itemName,
         itemCode: batchData.itemCode,
-        quantity: batchData.quantity,
+        quantity: formData.quantity, // Use the modified quantity
         batchNo: batchData.batchNo,
-        vendorCode: formData.code,
-        vendorName: formData.vendorName,
+        vendorCode: formData.code || batchData.vendorCode,
+        vendorName: formData.vendorName || batchData.vendorName,
       };
 
-      // Add to receipt list
-      setReceiptList([newItem]);
+      // Do NOT add to receipt list since we're saving directly to DB
+      // setReceiptList((prev) => [...prev, newItem]);
 
+      // Save the receipt
       const payload = {
         mode: mode,
-        vendor: vendor,
-        vendorCode: formData.code,
-        items: receiptList,
+        vendor: newItem.vendorName,
+        vendorCode: newItem.vendorCode,
+        items: [newItem], // Use the newly created item
       };
 
       console.log("Submitting receipt data:", payload);
       const response = await api.post("/api/receipt/save", payload);
-      console.log(
-        "Material receipt entry added successfully:",
-        response.data.data
-      );
-      handleAddToApproveItemsQuantity();
+
+      if (response.data) {
+        console.log(
+          "Material receipt entry added successfully:",
+          response.data
+        );
+
+        // Send request for approval (resource blocking)
+        await handleAddToApproveItemsQuantity();
+        toast.success(
+          "Material receipt added successfully with quantity change request"
+        );
+
+        // Reset form fields after successful submission
+        setFormData((prev) => ({
+          ...prev,
+          barcode: "",
+          quantity: "",
+        }));
+      }
+
       handleCloseConfirmModal();
     } catch (error) {
-      toast.error(error.response.data.message);
-      console.error(error.response.data.message);
+      toast.error(error.response?.data?.message || "An error occurred");
+      console.error(error.response?.data?.message || error);
     }
   };
 
@@ -419,21 +467,28 @@ const MaterialIncoming = () => {
   // Fetch vendor by vendor code
   const handleFetchVendorByCode = async (batchno) => {
     try {
-      console.log("Batchno: " + batchno);
+      console.log("Verifying batch:", batchno);
       const response = await api.get(
         `/api/receipt/verify-batch?batchNo=${batchno}`
-      ); // API to get vendors items list
-      console.log(response);
-      setVendor(response.data.data.vendorName);
-      setFormData({
-        ...formData,
-        vendor: response.data.data.vendorName,
-        vendorName: response.data.data.vendorName,
-        code: response.data.data.vendorCode,
-        barcode: batchno,
-        quantity: response.data.data.quantity,
-      });
-      console.log(response.data.data.vendorName);
+      );
+
+      if (response.data && response.data.status) {
+        const batchData = response.data.data;
+        setVendor(batchData.vendorName);
+        setFormData({
+          ...formData,
+          vendor: batchData.vendorName,
+          vendorName: batchData.vendorName,
+          code: batchData.vendorCode,
+          barcode: batchno,
+          quantity: batchData.quantity,
+          itemCode: batchData.itemCode,
+          itemName: batchData.itemName,
+        });
+        console.log("Batch verified:", batchData);
+      } else {
+        toast.error("Invalid batch number");
+      }
     } catch (error) {
       toast.error("Unable to fetch vendor name");
       console.error(error);
@@ -693,18 +748,7 @@ const MaterialIncoming = () => {
                   style={{ marginTop: "2.1rem" }}
                   onClick={(e) => {
                     e.preventDefault();
-                    if (mode === "scan") {
-                      if (!isStdQty) {
-                        setMessage(
-                          "Are you sure you want to update the standard quantity?"
-                        );
-                        setIsConfirmModal(true);
-                      } else {
-                        handleAddReceiptItem(e);
-                      }
-                    } else {
-                      handleAddReceiptItem(e);
-                    }
+                    handleAddReceiptItem(e);
                   }}
                 >
                   <i className="fa-solid fa-add me-1"></i> Add Item
@@ -827,7 +871,7 @@ const MaterialIncoming = () => {
                   id="reason"
                   className="form-control text-font"
                   value={reason}
-                  placeholder="Enter Remarks"
+                  placeholder="Enter Reason"
                   onChange={(e) => setReason(e.target.value)}
                 />
               </div>
