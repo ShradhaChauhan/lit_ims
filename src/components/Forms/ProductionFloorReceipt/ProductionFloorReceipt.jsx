@@ -25,6 +25,7 @@ const ProductionFloorReceipt = () => {
   const [transactionNumber, setTransactionNumber] = useState(
     generateTransactionNumber()
   );
+  const [recentReceipts, setRecentReceipts] = useState([]);
 
   // Fetch issue number list
   const fetchIssueNoList = async () => {
@@ -37,9 +38,21 @@ const ProductionFloorReceipt = () => {
     }
   };
 
+  // Fetch recent receipts
+  const fetchRecentReceipts = async () => {
+    try {
+      const response = await api.get("/api/production-receipt/table");
+      setRecentReceipts(response.data.data);
+    } catch (error) {
+      toast.error("Error fetching recent receipts");
+      console.error("Error fetching recent receipts:", error);
+    }
+  };
+
   // Initial data fetch
   useEffect(() => {
     fetchIssueNoList();
+    fetchRecentReceipts();
   }, []);
 
   const handleIssueNumberChange = async (e) => {
@@ -233,8 +246,9 @@ const ProductionFloorReceipt = () => {
       toast.success("Successfully confirmed the receipt");
       // Reset form after successful submission
       handleReset(e);
-      // Refresh the issue number list
+      // Refresh the issue number list and recent receipts
       fetchIssueNoList();
+      fetchRecentReceipts();
     } catch (error) {
       let errorMessage = "Failed to confirm the receipt. Please try again.";
 
@@ -410,7 +424,7 @@ const ProductionFloorReceipt = () => {
                       <th>Notes</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="text-break">
                     {issuedItems.length === 0 ? (
                       <tr className="no-data-row">
                         <td colSpan="7" className="no-data-cell">
@@ -559,22 +573,62 @@ const ProductionFloorReceipt = () => {
           <table>
             <thead>
               <tr>
-                <th>Transaction #</th>
-                <th>Date</th>
-                <th>Type</th>
-                <th>Items</th>
-                <th>Status</th>
+                <th className="ps-4">Transaction #</th>
+                <th className="ps-4">Date</th>
+                <th className="ps-4">Type</th>
+                <th className="ps-4">Items</th>
+                <th className="ps-4">Status</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="no-data-row">
-                <td colSpan="5" className="no-data-cell">
-                  <div className="no-data-content">
-                    <i className="fas fa-clock-rotate-left no-data-icon"></i>
-                    <p className="no-data-text">No Recent Receipts</p>
-                  </div>
-                </td>
-              </tr>
+              {recentReceipts.length === 0 ? (
+                <tr className="no-data-row">
+                  <td colSpan="5" className="no-data-cell">
+                    <div className="no-data-content">
+                      <i className="fas fa-clock-rotate-left no-data-icon"></i>
+                      <p className="no-data-text">No Recent Receipts</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                recentReceipts.map((receipt) => (
+                  <tr key={receipt.transactionNumber}>
+                    <td className="ps-4">
+                      <div>
+                        <span>{receipt.transactionNumber}</span>
+                      </div>
+                    </td>
+                    <td className="ps-4">
+                      <div>
+                        <span>{receipt.receiptDate}</span>
+                      </div>
+                    </td>
+                    <td className="ps-4">
+                      <div>
+                        <span className="text-capitalize">{receipt.type}</span>
+                      </div>
+                    </td>
+                    <td className="ps-4">
+                      <div>
+                        <span>
+                          {receipt.items
+                            .map((item) => item.itemName)
+                            .join(", ")}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="ps-4">
+                      <div>
+                        <span
+                          className={`status-badge ${receipt.status.toLowerCase()}`}
+                        >
+                          {receipt.status}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

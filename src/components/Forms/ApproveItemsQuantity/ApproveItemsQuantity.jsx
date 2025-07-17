@@ -114,7 +114,9 @@ const ApproveItemsQuantity = () => {
       }
 
       const response = await api.post(
-        `/api/stock-adjustments/requests/${selectedItemId}/reject?reason=${encodeURIComponent(rejectionReason)}`
+        `/api/stock-adjustments/requests/${selectedItemId}/reject?reason=${encodeURIComponent(
+          rejectionReason
+        )}`
       );
 
       if (response.data.status) {
@@ -165,7 +167,7 @@ const ApproveItemsQuantity = () => {
                 <th>Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="text-break">
               {list.map((val) => (
                 <tr key={val.id}>
                   <td className="ps-4">{val.itemName}</td>

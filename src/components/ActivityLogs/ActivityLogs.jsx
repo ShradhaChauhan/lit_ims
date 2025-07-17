@@ -146,7 +146,7 @@ const ActivityLogs = () => {
                 <th>Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="text-break">
               {filteredLogs.length === 0 ? (
                 <tr className="no-data-row">
                   <td colSpan="5" className="no-data-cell">
