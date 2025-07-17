@@ -928,7 +928,7 @@ const VendorMaster = () => {
                   <th>Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="text-break">
                 {filteredVendors.length === 0 ? (
                   <tr>
                     <td colSpan="9" className="text-center">

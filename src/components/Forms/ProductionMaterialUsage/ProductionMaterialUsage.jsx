@@ -7,6 +7,9 @@ const ProductionMaterialUsage = () => {
   const [materials, setMaterials] = useState([]);
   const [selectedWorkOrder, setSelectedWorkOrder] = useState("");
   const [workOrders, setWorkOrders] = useState([]);
+  const [recentRecords, setRecentRecords] = useState([]);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState(null);
 
   // Load materials when work order changes
   useEffect(() => {
@@ -15,7 +18,7 @@ const ProductionMaterialUsage = () => {
       return;
     }
 
-    console.log(selectedWorkOrder);
+    console.log("Selected work order:", selectedWorkOrder);
 
     api
       .get(
@@ -71,20 +74,113 @@ const ProductionMaterialUsage = () => {
         setWorkOrders([]);
       });
   };
+  const fetchRecentRecords = () => {
+    api
+      .get("/api/production-usage/summary")
+      .then((response) => {
+        if (response.data.status && response.data.data) {
+          setRecentRecords(response.data.data);
+        } else {
+          toast.error(
+            response.data.message || "Failed to fetch recent records"
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching recent records:", error);
+        toast.error("Error loading recent records. Please try again.");
+      });
+  };
+
+  const handleViewDetails = (record) => {
+    api
+      .get(`/api/production-usage/${record.id}`)
+      .then((response) => {
+        if (response.data.status && response.data.data) {
+          setSelectedRecord(response.data.data);
+          setShowDetailsModal(true);
+        } else {
+          toast.error(
+            response.data.message || "Failed to fetch record details"
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching record details:", error);
+        toast.error("Error loading record details. Please try again.");
+      });
+  };
+
   useEffect(() => {
     fetchWorkOrders();
+    fetchRecentRecords();
   }, []);
 
   // Auto generate transaction number
   const generateTransactionNumber = () => {
-    const year = new Date().getFullYear();
-    const randomNum = Math.floor(1000 + Math.random() * 9000);
-    return `PRD-${year}-${randomNum}`;
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const randomNum = String(Math.floor(1 + Math.random() * 9999)).padStart(
+      4,
+      "0"
+    );
+    return `PU${year}${month}${day}${randomNum}`;
   };
 
   const [transactionNumber, setTransactionNumber] = useState(
     generateTransactionNumber()
   );
+
+  const handleSave = () => {
+    if (!selectedWorkOrder || materials.length === 0) {
+      toast.error("Please select a work order and ensure materials are loaded");
+      return;
+    }
+
+    const payload = {
+      transactionNumber,
+      workOrder: selectedWorkOrder,
+      items: materials.map((material) => ({
+        itemCode: material.id,
+        itemName: material.material,
+        batchNumber: material.batchno,
+        availableQty: material.availableQty,
+        usedQty: material.usedQty,
+        scrapQty: material.scrapQty,
+        remainingQty: material.remainingQty,
+        status:
+          material.status === "Consumed"
+            ? "USED"
+            : material.status.toUpperCase(),
+      })),
+    };
+
+    api
+      .post("/api/production-usage/save", payload)
+      .then((response) => {
+        if (response.data.status) {
+          toast.success(
+            response.data.message || "Production usage saved successfully"
+          );
+          // Reset form
+          setSelectedWorkOrder("");
+          setMaterials([]);
+          setTransactionNumber(generateTransactionNumber());
+          // Refresh recent records
+          fetchRecentRecords();
+        } else {
+          toast.error(
+            response.data.message || "Failed to save production usage"
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Error saving production usage:", error);
+        toast.error("Error saving production usage. Please try again.");
+      });
+  };
   return (
     <div>
       {/* Header section */}
@@ -356,7 +452,11 @@ const ProductionMaterialUsage = () => {
             </div>{" "} */}
             {/* Button Section */}
             <div className="form-actions">
-              <button type="button" className="btn btn-primary add-btn">
+              <button
+                type="button"
+                className="btn btn-primary add-btn"
+                onClick={handleSave}
+              >
                 <i className="fa-solid fa-floppy-disk me-1"></i> Save Production
                 Record
               </button>
@@ -375,23 +475,51 @@ const ProductionMaterialUsage = () => {
                     <tr>
                       <th>Date</th>
                       <th>Work Order</th>
-                      <th>Line</th>
-                      <th>Shift</th>
-                      <th>Target Qty</th>
-                      <th>Produced Qty</th>
-                      <th>Yield Rate</th>
+                      <th>TRNO</th>
                       <th>Status</th>
                     </tr>
                   </thead>
                   <tbody className="text-break">
-                    <tr className="no-data-row">
-                      <td colSpan="8" className="no-data-cell">
-                        <div className="no-data-content">
-                          <i className="fas fa-clock-rotate-left no-data-icon"></i>
-                          <p className="no-data-text">No Recent Records</p>
-                        </div>
-                      </td>
-                    </tr>
+                    {recentRecords.length === 0 ? (
+                      <tr className="no-data-row">
+                        <td colSpan="4" className="no-data-cell">
+                          <div className="no-data-content">
+                            <i className="fas fa-clock-rotate-left no-data-icon"></i>
+                            <p className="no-data-text">No Recent Records</p>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      recentRecords.map((record) => (
+                        <tr key={record.id}>
+                          <td className="ps-4">
+                            <div>
+                              <span>{record.usageDate}</span>
+                            </div>
+                          </td>
+                          <td className="ps-4">
+                            <div>
+                              <span>{record.workOrder}</span>
+                            </div>
+                          </td>
+                          <td className="ps-4">
+                            <div>
+                              <span>{record.transactionNumber}</span>
+                            </div>
+                          </td>
+                          <td className="ps-4 actions">
+                            <button
+                              type="button"
+                              className="btn-icon btn-primary"
+                              title="View Details"
+                              onClick={() => handleViewDetails(record)}
+                            >
+                              <i className="fas fa-eye"></i>
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -399,6 +527,81 @@ const ProductionMaterialUsage = () => {
           </div>
         </form>
       </div>
+
+      {/* Details Modal */}
+      {showDetailsModal && selectedRecord && (
+        <>
+          <div className="modal show d-block" tabIndex="-1" role="dialog">
+            <div className="modal-dialog modal-lg" role="document">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Production Usage Details</h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={() => setShowDetailsModal(false)}
+                    aria-label="Close"
+                  ></button>
+                </div>
+                <div className="modal-body">
+                  <div className="row mb-3">
+                    <div className="col-md-6">
+                      <p>
+                        <strong>Transaction Number:</strong>{" "}
+                        {selectedRecord.transactionNumber}
+                      </p>
+                      <p>
+                        <strong>Work Order:</strong> {selectedRecord.workOrder}
+                      </p>
+                    </div>
+                    <div className="col-md-6">
+                      <p>
+                        <strong>Usage Date:</strong> {selectedRecord.usageDate}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="table-container">
+                    <div className="table-header">
+                      <h6>Material Usage Details</h6>
+                    </div>
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          <th>Batch Number</th>
+                          <th>Used Qty</th>
+                          <th>Scrap Qty</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selectedRecord.items.map((item, index) => (
+                          <tr key={index}>
+                            <td>{item.batchNumber}</td>
+                            <td>{item.usedQty}</td>
+                            <td>{item.scrapQty}</td>
+                            <td>{item.status}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-secondary add-btn"
+                    onClick={() => setShowDetailsModal(false)}
+                  >
+                    <i className="fa-solid fa-xmark me-1"></i> Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="modal-backdrop show"></div>
+        </>
+      )}
     </div>
   );
 };

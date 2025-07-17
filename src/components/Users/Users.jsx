@@ -1886,7 +1886,7 @@ const Users = () => {
                           </th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="text-break">
                         {masters.map((master) => (
                           <tr key={master.type}>
                             <td className="user-info">{master.name}</td>
@@ -1968,7 +1968,7 @@ const Users = () => {
                           </th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="text-break">
                         {transactions.map((transaction) => (
                           <tr key={transaction.type}>
                             <td className="user-info">{transaction.name}</td>
@@ -2062,7 +2062,7 @@ const Users = () => {
                           </th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="text-break">
                         {reports.map((report) => (
                           <tr key={report.type}>
                             <td className="user-info">{report.name}</td>
@@ -2149,7 +2149,7 @@ const Users = () => {
                           </th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="text-break">
                         {administrations.map((administration) => (
                           <tr key={administration.type}>
                             <td className="user-info">{administration.name}</td>
@@ -2322,7 +2322,7 @@ const Users = () => {
                 <th>Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="text-break">
               {loading ? (
                 <tr>
                   <td colSpan="7" className="text-center">
@@ -2601,7 +2601,7 @@ const Users = () => {
                           </th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="text-break">
                         {userDetails.permissions &&
                         userDetails.permissions.length > 0 ? (
                           // Only render unique permissions by pageName
@@ -2991,7 +2991,7 @@ const Users = () => {
                                   </th>
                                 </tr>
                               </thead>
-                              <tbody>
+                              <tbody className="text-break">
                                 {masters.map((master) => (
                                   <tr key={master.type}>
                                     <td className="user-info">{master.name}</td>
@@ -3089,7 +3089,7 @@ const Users = () => {
                                   </th>
                                 </tr>
                               </thead>
-                              <tbody>
+                              <tbody className="text-break">
                                 {transactions.map((transaction) => (
                                   <tr key={transaction.type}>
                                     <td className="user-info">
@@ -3189,7 +3189,7 @@ const Users = () => {
                                   </th>
                                 </tr>
                               </thead>
-                              <tbody>
+                              <tbody className="text-break">
                                 {reports.map((report) => (
                                   <tr key={report.type}>
                                     <td className="user-info">{report.name}</td>
@@ -3294,7 +3294,7 @@ const Users = () => {
                                   </th>
                                 </tr>
                               </thead>
-                              <tbody>
+                              <tbody className="text-break">
                                 {administrations.map((administration) => (
                                   <tr key={administration.type}>
                                     <td className="user-info">

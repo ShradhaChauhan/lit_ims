@@ -482,7 +482,7 @@ const MaterialIssueRequest = () => {
                       <th>Actions</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="text-break">
                     {Array.isArray(request) && request.length > 0 ? (
                       request.map((i, index) => (
                         <tr key={index}>
@@ -575,7 +575,7 @@ const MaterialIssueRequest = () => {
                       <th>Status</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="text-break">
                     {recentRequests.length > 0 ? (
                       recentRequests.map((req, index) => (
                         <tr key={index}>
@@ -659,7 +659,7 @@ const MaterialIssueRequest = () => {
                           <th>Warehouse</th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="text-break">
                         {selectedItem.items.map((item, idx) => (
                           <tr key={idx}>
                             <td>{item.itemName}</td>

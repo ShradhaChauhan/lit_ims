@@ -580,7 +580,7 @@ const ProductionFloorReceipt = () => {
                 <th className="ps-4">Status</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="text-break">
               {recentReceipts.length === 0 ? (
                 <tr className="no-data-row">
                   <td colSpan="5" className="no-data-cell">

@@ -729,7 +729,7 @@ const GroupMaster = () => {
                 <th>Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="text-break">
               {dataLoading ? (
                 <tr>
                   <td colSpan="5" className="text-center py-3">

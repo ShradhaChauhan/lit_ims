@@ -29,7 +29,7 @@ const VendorModal = ({ vendorName, showModal, setShowModal }) => {
                       <th scope="col">Code</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="text-break">
                     {/* Map the Vendors/Customers details here */}
                     <tr
                       className="tableRow"

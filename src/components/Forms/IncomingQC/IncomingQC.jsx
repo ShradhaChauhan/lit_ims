@@ -704,7 +704,7 @@ const IncomingQC = () => {
                   <th>Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="text-break">
                 {iqc.map((i) => (
                   <tr key={i.id}>
                     <td className="checkbox-cell ps-4">
@@ -810,7 +810,7 @@ const IncomingQC = () => {
                   <th>Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="text-break">
                 {passFailQC.map((pfqc) => (
                   <tr key={pfqc.id}>
                     <td className="ps-4">{pfqc.itemName}</td>

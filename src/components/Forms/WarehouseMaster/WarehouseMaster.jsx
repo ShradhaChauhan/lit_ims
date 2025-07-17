@@ -762,7 +762,7 @@ const WarehouseMaster = () => {
                 <th>Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="text-break">
               {loading ? (
                 <tr>
                   <td colSpan="6" className="text-center">
