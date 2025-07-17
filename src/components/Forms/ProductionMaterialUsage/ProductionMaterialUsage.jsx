@@ -1,39 +1,79 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
+import api from "../../../services/api";
 
 const ProductionMaterialUsage = () => {
-  const [materials, setMaterials] = useState([
-    {
-      id: 1,
-      material: "LED Display Panel",
-      batchno: "BATCH-001",
-      availableQty: 100,
-      usedQty: 0,
-      scrapQty: 0,
-      remainingQty: 100,
-      status: "Available",
-    },
-    {
-      id: 2,
-      material: "Control Board",
-      batchno: "BATCH-002",
-      availableQty: 50,
-      usedQty: 0,
-      scrapQty: 0,
-      remainingQty: 50,
-      status: "Available",
-    },
-    {
-      id: 3,
-      material: "Power Supply Unit",
-      batchno: "BATCH-003",
-      availableQty: 75,
-      usedQty: 0,
-      scrapQty: 0,
-      remainingQty: 75,
-      status: "Available",
-    },
-  ]);
+  const [materials, setMaterials] = useState([]);
+  const [selectedWorkOrder, setSelectedWorkOrder] = useState("");
+  const [workOrders, setWorkOrders] = useState([]);
+
+  // Load materials when work order changes
+  useEffect(() => {
+    if (!selectedWorkOrder) {
+      setMaterials([]);
+      return;
+    }
+
+    console.log(selectedWorkOrder);
+
+    api
+      .get(
+        `/api/issue-production/summary-by-issue?issueNumber=${selectedWorkOrder}`
+      )
+      .then((response) => {
+        console.log("Materials fetched:", response.data);
+        if (response.data.status && response.data.data?.items) {
+          // Transform the API response data to match the table structure
+          const transformedMaterials = response.data.data.items.map((item) => ({
+            id: item.id,
+            material: item.itemName,
+            batchno: item.batchNumber,
+            availableQty: item.totalIssued || 0,
+            usedQty: 0,
+            scrapQty: 0,
+            remainingQty: item.totalIssued || 0,
+            status: "Available",
+          }));
+          setMaterials(transformedMaterials);
+        } else {
+          toast.error(response.data.message || "Failed to fetch materials");
+          setMaterials([]);
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching materials:", error);
+        toast.error("Error loading materials. Please try again.");
+        setMaterials([]);
+      });
+  }, [selectedWorkOrder]);
+
+  const fetchWorkOrders = () => {
+    api
+      .get("/api/issue-production/all-issue")
+      .then((response) => {
+        console.log("Work orders fetched:", response.data);
+        if (response.data.status && response.data.data) {
+          // Transform the data to include both issue number and description
+          const formattedWorkOrders = response.data.data.map((issueNumber) => ({
+            issueNumber,
+            description: "LED Display Assembly", // This should come from API if available
+          }));
+          setWorkOrders(formattedWorkOrders);
+        } else {
+          toast.error(response.data.message || "Failed to fetch work orders");
+          setWorkOrders([]);
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching work orders:", error);
+        toast.error("Error loading work orders. Please try again.");
+        setWorkOrders([]);
+      });
+  };
+  useEffect(() => {
+    fetchWorkOrders();
+  }, []);
 
   // Auto generate transaction number
   const generateTransactionNumber = () => {
@@ -79,7 +119,6 @@ const ProductionMaterialUsage = () => {
         {/* Form Fields */}
         <form autoComplete="off" className="padding-2">
           <div className="form-grid pt-0">
-            {/* Input fields section */}
             <div className="row form-style">
               <div className="col-3 d-flex flex-column form-group">
                 <label htmlFor="workOrder" className="form-label">
@@ -90,88 +129,21 @@ const ProductionMaterialUsage = () => {
                   <select
                     className="form-control ps-5 text-font"
                     id="workOrder"
-                    value=""
+                    value={selectedWorkOrder}
+                    onChange={(e) => setSelectedWorkOrder(e.target.value)}
                   >
                     <option value="" className="text-muted">
                       Select Work Order
                     </option>
-                    <option value="W0-2024-001 - LED Display Assembly">
-                      W0-2024-001 - LED Display Assembly
-                    </option>
-                    <option value="W0-2024-001 - LED Display Assembly">
-                      W0-2024-002 - Power Unit Assembly
-                    </option>
+                    {workOrders.map((wo) => (
+                      <option key={wo.issueNumber} value={wo.issueNumber}>
+                        {wo.issueNumber} - {wo.description}
+                      </option>
+                    ))}
                   </select>
                   <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                 </div>
               </div>
-              {/* <div className="col-3 d-flex flex-column form-group">
-                <label htmlFor="productionLine" className="form-label">
-                  Production Line
-                </label>
-                <div className="position-relative w-100">
-                  <i className="fas fa-gears position-absolute z-0 input-icon"></i>
-                  <select
-                    className="form-control ps-5 text-font"
-                    id="productionLine"
-                    value=""
-                  >
-                    <option value="" className="text-muted">
-                      Select Line
-                    </option>
-                    <option value="Assembly Line 01">Assembly Line 01</option>
-                    <option value="Assembly Line 02">Assembly Line 02</option>
-                  </select>
-                  <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
-                </div>
-              </div> */}
-              {/* <div className="col-3 d-flex flex-column form-group">
-                <label htmlFor="shift" className="form-label">
-                  Shift
-                </label>
-                <div className="position-relative w-100">
-                  <i className="fas fa-clock position-absolute z-0 input-icon"></i>
-                  <select
-                    className="form-control ps-5 text-font"
-                    id="shift"
-                    value=""
-                  >
-                    <option value="" className="text-muted">
-                      Select Shift
-                    </option>
-                    <option value="Shift A (06:00 - 14:00)">
-                      Shift A (06:00 - 14:00)
-                    </option>
-                    <option value="Shift B (14:00 - 22:00)">
-                      Shift B (14:00 - 22:00)
-                    </option>
-                    <option value="Shift C (22:00 - 06:00)">
-                      Shift C (22:00 - 06:00)
-                    </option>
-                  </select>
-                  <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
-                </div>
-              </div> */}
-              {/* <div className="col-3 d-flex flex-column form-group">
-                <label htmlFor="operator" className="form-label">
-                  Operator
-                </label>
-                <div className="position-relative w-100">
-                  <i className="fas fa-user position-absolute z-0 input-icon"></i>
-                  <select
-                    className="form-control ps-5 text-font"
-                    id="operator"
-                    value=""
-                  >
-                    <option value="" className="text-muted">
-                      Select Operator
-                    </option>
-                    <option value="John Smith">John Smith</option>
-                    <option value="Sarah Johnson">Sarah Johnson</option>
-                  </select>
-                  <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
-                </div>
-              </div> */}
             </div>
             {/* Material Usage Table Section */}
             <div className="margin-2">
@@ -191,7 +163,7 @@ const ProductionMaterialUsage = () => {
                       <th>Status</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="text-break">
                     {materials.length === 0 ? (
                       <tr className="no-data-row">
                         <td colSpan="7" className="no-data-cell">
@@ -411,7 +383,7 @@ const ProductionMaterialUsage = () => {
                       <th>Status</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="text-break">
                     <tr className="no-data-row">
                       <td colSpan="8" className="no-data-cell">
                         <div className="no-data-content">
