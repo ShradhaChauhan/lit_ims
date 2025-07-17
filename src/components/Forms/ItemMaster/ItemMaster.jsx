@@ -1146,7 +1146,7 @@ const ItemMaster = () => {
                 <th>Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="text-break">
               {loading ? (
                 <tr>
                   <td colSpan="12" className="text-center">

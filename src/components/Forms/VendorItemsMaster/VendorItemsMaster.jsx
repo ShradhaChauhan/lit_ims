@@ -1074,7 +1074,7 @@ const VendorItemsMaster = () => {
                 <th>Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="text-break">
               {filteredVendorItems.length === 0 ? (
                 <tr className="no-data-row">
                   <td colSpan="8" className="no-data-cell">

@@ -842,7 +842,7 @@ const BOMMaster = () => {
                       <th>Actions</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="text-break">
                     {isAddBomPart.map((bomPart, index) => {
                       const currentItem = formData.items.find(
                         (item) => item.id === bomPart.id
@@ -1068,7 +1068,7 @@ const BOMMaster = () => {
                 <th>Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="text-break">
               {filteredBoms.length === 0 ? (
                 <tr className="no-data-row">
                   <td colSpan="5" className="no-data-cell">
@@ -1304,7 +1304,7 @@ const BOMMaster = () => {
                               <th>Warehouse</th>
                             </tr>
                           </thead>
-                          <tbody>
+                          <tbody className="text-break">
                             {bomDetails.items &&
                               bomDetails.items.map((item, index) => (
                                 <tr key={index}>
@@ -1474,7 +1474,7 @@ const BOMMaster = () => {
                               <th>Actions</th>
                             </tr>
                           </thead>
-                          <tbody>
+                          <tbody className="text-break">
                             {bomDetails.items &&
                               bomDetails.items.map((item, index) => (
                                 <tr key={index}>

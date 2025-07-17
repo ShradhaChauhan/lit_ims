@@ -606,7 +606,7 @@ const PartMaster = () => {
                   <th>Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="text-break">
                 {parts.length === 0 ? (
                   <tr className="no-data-row">
                     <td colSpan="6" className="no-data-cell">

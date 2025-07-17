@@ -138,7 +138,7 @@ const WIPReturn = () => {
                       <th>Actions</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="text-break">
                     <tr className="no-data-row">
                       <td colSpan="7" className="no-data-cell">
                         <div className="no-data-content">
@@ -217,7 +217,7 @@ const WIPReturn = () => {
                       <th>Status</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="text-break">
                     <tr className="no-data-row">
                       <td colSpan="7" className="no-data-cell">
                         <div className="no-data-content">

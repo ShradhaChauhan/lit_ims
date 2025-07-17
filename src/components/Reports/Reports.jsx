@@ -109,7 +109,7 @@ const Reports = () => {
                 <th>Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="text-break">
               {reports.length === 0 ? (
                 <tr className="no-data-row">
                   <td colSpan="4" className="no-data-cell">
@@ -193,7 +193,7 @@ const Reports = () => {
                           <th>IQC Status</th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="text-break">
                         {warehouseDetails.length === 0 ? (
                           <tr className="no-data-row">
                             <td colSpan="5" className="no-data-cell">

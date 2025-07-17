@@ -648,7 +648,7 @@ const TypeMaster = () => {
                 <th>Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="text-break">
               {loading ? (
                 <tr className="no-data-row">
                   <td colSpan="5" className="no-data-cell">
