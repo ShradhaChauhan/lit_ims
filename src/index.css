@@ -1147,3 +1147,50 @@ select:invalid {
 .bg-gray {
     background-color: var(--background-color);
 } 
+
+/* Business partner dropdown styles */
+.input-icon-start {
+  top: 50%;
+  left: 15px;
+  transform: translateY(-50%);
+  z-index: 1;
+  color: var(--gray3);
+  pointer-events: none;
+}
+
+.input-icon-end {
+  top: 50%;
+  right: 15px;
+  transform: translateY(-50%);
+  z-index: 1;
+  color: var(--gray3);
+  pointer-events: none;
+}
+
+/* Optional: add padding to input for icons */
+.form-control.ps-5 {
+  padding-left: 2.5rem !important; /* space for left icon */
+  padding-right: 2.5rem !important; /* space for right icon */
+}
+
+/* Remove bullet points */
+.dropdown-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Optional: smoother dropdown item styling */
+.dropdown-item {
+  list-style-type: none;
+}
+
+.custom-dropdown {
+  z-index: 9999 !important;
+  position: absolute;
+}
+
+ul.dropdown-list li:hover {
+  background-color: var(--lightBlue1) !important;
+  cursor: pointer;
+}
