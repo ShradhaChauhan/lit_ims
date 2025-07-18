@@ -14,6 +14,95 @@ const ApproveItemsQuantity = () => {
   const [message, setMessage] = useState("");
   const [confirmState, setConfirmState] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState(null);
+  const [approvedItems, setApprovedItems] = useState([]);
+  const [filteredItems, setFilteredItems] = useState([]);
+  // Pagination states
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    itemsPerPage: 10,
+  });
+
+  // Calculate the display range for the pagination info
+  const getDisplayRange = () => {
+    const start = (pagination.currentPage - 1) * pagination.itemsPerPage + 1;
+    const end = Math.min(
+      start + approvedItems.length - 1,
+      pagination.totalItems
+    );
+
+    if (approvedItems.length === 0) {
+      return "0";
+    }
+
+    return `${start}-${end}`;
+  };
+
+  const handlePageChange = (newPage) => {
+    if (
+      newPage < 1 ||
+      newPage > pagination.totalPages ||
+      newPage === pagination.currentPage
+    ) {
+      return;
+    }
+
+    setPagination((prev) => ({
+      ...prev,
+      currentPage: newPage,
+    }));
+
+    // fetch reports will be called by the useEffect that depends on currentPage
+  };
+
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const totalPages = pagination.totalPages;
+    const currentPage = pagination.currentPage;
+
+    if (totalPages <= 5) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+
+    if (currentPage <= 3) {
+      return [1, 2, 3, 4, 5, "...", totalPages];
+    }
+
+    if (currentPage >= totalPages - 2) {
+      return [
+        1,
+        "...",
+        totalPages - 4,
+        totalPages - 3,
+        totalPages - 2,
+        totalPages - 1,
+        totalPages,
+      ];
+    }
+
+    return [
+      1,
+      "...",
+      currentPage - 1,
+      currentPage,
+      currentPage + 1,
+      "...",
+      totalPages,
+    ];
+  };
+
+  const handleItemsPerPageChange = (e) => {
+    const newItemsPerPage = parseInt(e.target.value);
+
+    setPagination((prev) => ({
+      ...prev,
+      itemsPerPage: newItemsPerPage,
+      currentPage: 1, // Reset to first page when changing items per page
+    }));
+
+    // fetchItems will be called by the useEffect that depends on itemsPerPage
+  };
 
   // Global function to clean up modal artifacts
   const cleanupModalArtifacts = () => {
@@ -216,6 +305,61 @@ const ApproveItemsQuantity = () => {
               ))}
             </tbody>
           </table>
+          {/* Pagination */}
+          <div className="pagination-container">
+            <div className="pagination-info">
+              Showing {getDisplayRange()} of {filteredItems.length} entries
+            </div>
+            <div className="pagination">
+              <button
+                className="btn-page"
+                disabled={pagination.currentPage === 1}
+                onClick={() => handlePageChange(pagination.currentPage - 1)}
+              >
+                <i className="fas fa-chevron-left"></i>
+              </button>
+
+              {getPageNumbers().map((page, index) =>
+                page === "..." ? (
+                  <span
+                    key={`ellipsis-${index}`}
+                    className="pagination-ellipsis"
+                  >
+                    ...
+                  </span>
+                ) : (
+                  <button
+                    key={page}
+                    className={`btn-page ${
+                      pagination.currentPage === page ? "active" : ""
+                    }`}
+                    onClick={() => handlePageChange(page)}
+                  >
+                    {page}
+                  </button>
+                )
+              )}
+
+              <button
+                className="btn-page"
+                disabled={pagination.currentPage === pagination.totalPages}
+                onClick={() => handlePageChange(pagination.currentPage + 1)}
+              >
+                <i className="fas fa-chevron-right"></i>
+              </button>
+            </div>
+            <div className="items-per-page">
+              <select
+                value={pagination.itemsPerPage}
+                onChange={handleItemsPerPageChange}
+              >
+                <option value="10">10 per page</option>
+                <option value="25">25 per page</option>
+                <option value="50">50 per page</option>
+                <option value="100">100 per page</option>
+              </select>
+            </div>
+          </div>
         </div>
 
         {/* Final Submit Button */}
