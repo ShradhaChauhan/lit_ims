@@ -7,93 +7,14 @@ const ProductionMaterialUsage = () => {
   const [materials, setMaterials] = useState([]);
   const [selectedWorkOrder, setSelectedWorkOrder] = useState("");
   const [workOrders, setWorkOrders] = useState([]);
+  const [recentRecords, setRecentRecords] = useState([]);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState(null);
 
-  const [records, setRecords] = useState([]);
-  const [filteredItems, setFilteredItems] = useState([]);
   // Pagination states
-  const [pagination, setPagination] = useState({
-    currentPage: 1,
-    totalPages: 1,
-    totalItems: 0,
-    itemsPerPage: 10,
-  });
-
-  // Calculate the display range for the pagination info
-  const getDisplayRange = () => {
-    const start = (pagination.currentPage - 1) * pagination.itemsPerPage + 1;
-    const end = Math.min(start + records.length - 1, pagination.totalItems);
-
-    if (records.length === 0) {
-      return "0";
-    }
-
-    return `${start}-${end}`;
-  };
-
-  const handlePageChange = (newPage) => {
-    if (
-      newPage < 1 ||
-      newPage > pagination.totalPages ||
-      newPage === pagination.currentPage
-    ) {
-      return;
-    }
-
-    setPagination((prev) => ({
-      ...prev,
-      currentPage: newPage,
-    }));
-
-    // fetch reports will be called by the useEffect that depends on currentPage
-  };
-
-  // Generate page numbers for pagination
-  const getPageNumbers = () => {
-    const totalPages = pagination.totalPages;
-    const currentPage = pagination.currentPage;
-
-    if (totalPages <= 5) {
-      return Array.from({ length: totalPages }, (_, i) => i + 1);
-    }
-
-    if (currentPage <= 3) {
-      return [1, 2, 3, 4, 5, "...", totalPages];
-    }
-
-    if (currentPage >= totalPages - 2) {
-      return [
-        1,
-        "...",
-        totalPages - 4,
-        totalPages - 3,
-        totalPages - 2,
-        totalPages - 1,
-        totalPages,
-      ];
-    }
-
-    return [
-      1,
-      "...",
-      currentPage - 1,
-      currentPage,
-      currentPage + 1,
-      "...",
-      totalPages,
-    ];
-  };
-
-  const handleItemsPerPageChange = (e) => {
-    const newItemsPerPage = parseInt(e.target.value);
-
-    setPagination((prev) => ({
-      ...prev,
-      itemsPerPage: newItemsPerPage,
-      currentPage: 1, // Reset to first page when changing items per page
-    }));
-
-    // fetchItems will be called by the useEffect that depends on itemsPerPage
-  };
+  const [currentPage, setCurrentPage] = useState(1);
+  const [recordsPerPage, setRecordsPerPage] = useState(10);
+  const [loading, setLoading] = useState(false);
 
   // Load materials when work order changes
   useEffect(() => {
@@ -158,35 +79,78 @@ const ProductionMaterialUsage = () => {
         setWorkOrders([]);
       });
   };
+  const fetchRecentRecords = () => {
+    api
+      .get("/api/production-usage/summary")
+      .then((response) => {
+        if (response.data.status && response.data.data) {
+          // Sort the records in descending order by id
+          const sortedRecords = [...response.data.data].sort(
+            (a, b) => b.id - a.id
+          );
+          setRecentRecords(sortedRecords);
+        } else {
+          toast.error(
+            response.data.message || "Failed to fetch recent records"
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching recent records:", error);
+        toast.error("Error loading recent records. Please try again.");
+      });
+  };
+
+  const handleViewDetails = (record) => {
+    api
+      .get(`/api/production-usage/${record.id}`)
+      .then((response) => {
+        if (response.data.status && response.data.data) {
+          setSelectedRecord(response.data.data);
+          setShowDetailsModal(true);
+        } else {
+          toast.error(
+            response.data.message || "Failed to fetch record details"
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching record details:", error);
+        toast.error("Error loading record details. Please try again.");
+      });
+  };
+
   useEffect(() => {
     fetchWorkOrders();
+    fetchRecentRecords();
   }, []);
 
   // Auto generate transaction number
   const generateTransactionNumber = () => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
-    const sequence = String(Math.floor(1 + Math.random() * 9999)).padStart(
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const randomNum = String(Math.floor(1 + Math.random() * 9999)).padStart(
       4,
       "0"
     );
-    return `PU${year}${month}${day}${sequence}`;
+    return `PU${year}${month}${day}${randomNum}`;
   };
 
   const [transactionNumber, setTransactionNumber] = useState(
     generateTransactionNumber()
   );
 
-  const handleSave = () => {
-    if (!selectedWorkOrder) {
-      toast.error("Please select a work order");
-      return;
-    }
+  const handleClear = () => {
+    setSelectedWorkOrder(""); // Reset work order selection
+    setMaterials([]); // Clear materials table
+    setTransactionNumber(generateTransactionNumber()); // Generate new transaction number
+  };
 
-    if (materials.length === 0) {
-      toast.error("No materials found to save");
+  const handleSave = () => {
+    if (!selectedWorkOrder || materials.length === 0) {
+      toast.error("Please select a work order and ensure materials are loaded");
       return;
     }
 
@@ -201,7 +165,10 @@ const ProductionMaterialUsage = () => {
         usedQty: material.usedQty,
         scrapQty: material.scrapQty,
         remainingQty: material.remainingQty,
-        status: material.status.toUpperCase(),
+        status:
+          material.status === "Consumed"
+            ? "USED"
+            : material.status.toUpperCase(),
       })),
     };
 
@@ -209,20 +176,24 @@ const ProductionMaterialUsage = () => {
       .post("/api/production-usage/save", payload)
       .then((response) => {
         if (response.data.status) {
-          toast.success("Production record saved successfully");
+          toast.success(
+            response.data.message || "Production usage saved successfully"
+          );
           // Reset form
           setSelectedWorkOrder("");
           setMaterials([]);
           setTransactionNumber(generateTransactionNumber());
+          // Refresh recent records
+          fetchRecentRecords();
         } else {
           toast.error(
-            response.data.message || "Failed to save production record"
+            response.data.message || "Failed to save production usage"
           );
         }
       })
       .catch((error) => {
-        console.error("Error saving production record:", error);
-        toast.error("Error saving production record. Please try again.");
+        console.error("Error saving production usage:", error);
+        toast.error("Error saving production usage. Please try again.");
       });
   };
   return (
@@ -504,7 +475,11 @@ const ProductionMaterialUsage = () => {
                 <i className="fa-solid fa-floppy-disk me-1"></i> Save Production
                 Record
               </button>
-              <button className="btn btn-secondary add-btn me-2" type="button">
+              <button
+                className="btn btn-secondary add-btn me-2"
+                type="button"
+                onClick={handleClear}
+              >
                 <i className="fa-solid fa-xmark me-1"></i> Clear
               </button>
             </div>
@@ -519,65 +494,113 @@ const ProductionMaterialUsage = () => {
                     <tr>
                       <th>Date</th>
                       <th>Work Order</th>
+                      <th>TRNO</th>
                       <th>Status</th>
                     </tr>
                   </thead>
                   <tbody className="text-break">
-                    <tr className="no-data-row">
-                      <td colSpan="3" className="no-data-cell">
-                        <div className="no-data-content">
-                          <i className="fas fa-clock-rotate-left no-data-icon"></i>
-                          <p className="no-data-text">No Recent Records</p>
-                        </div>
-                      </td>
-                    </tr>
+                    {recentRecords.length === 0 ? (
+                      <tr className="no-data-row">
+                        <td colSpan="4" className="no-data-cell">
+                          <div className="no-data-content">
+                            <i className="fas fa-clock-rotate-left no-data-icon"></i>
+                            <p className="no-data-text">No Recent Records</p>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      recentRecords
+                        .slice(
+                          (currentPage - 1) * recordsPerPage,
+                          currentPage * recordsPerPage
+                        )
+                        .map((record) => (
+                          <tr key={record.id}>
+                            <td className="ps-4">
+                              <div>
+                                <span>{record.usageDate}</span>
+                              </div>
+                            </td>
+                            <td className="ps-4">
+                              <div>
+                                <span>{record.workOrder}</span>
+                              </div>
+                            </td>
+                            <td className="ps-4">
+                              <div>
+                                <span>{record.transactionNumber}</span>
+                              </div>
+                            </td>
+                            <td className="ps-4 actions">
+                              <button
+                                type="button"
+                                className="btn-icon btn-primary"
+                                title="View Details"
+                                onClick={() => handleViewDetails(record)}
+                              >
+                                <i className="fas fa-eye"></i>
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                    )}
                   </tbody>
                 </table>
-                {/* Pagination */}
+              </div>
+              {/* Pagination */}
+              {recentRecords.length > 0 && (
                 <div className="pagination-container">
                   <div className="pagination-info">
-                    Showing {getDisplayRange()} of {filteredItems.length}{" "}
-                    entries
+                    Showing {(currentPage - 1) * recordsPerPage + 1}-
+                    {Math.min(
+                      currentPage * recordsPerPage,
+                      recentRecords.length
+                    )}{" "}
+                    of {recentRecords.length} entries
                   </div>
                   <div className="pagination">
                     <button
                       className="btn-page"
-                      disabled={pagination.currentPage === 1}
+                      disabled={currentPage === 1}
                       onClick={() =>
-                        handlePageChange(pagination.currentPage - 1)
+                        setCurrentPage((prev) => Math.max(prev - 1, 1))
                       }
                     >
                       <i className="fas fa-chevron-left"></i>
                     </button>
 
-                    {getPageNumbers().map((page, index) =>
-                      page === "..." ? (
-                        <span
-                          key={`ellipsis-${index}`}
-                          className="pagination-ellipsis"
-                        >
-                          ...
-                        </span>
-                      ) : (
-                        <button
-                          key={page}
-                          className={`btn-page ${
-                            pagination.currentPage === page ? "active" : ""
-                          }`}
-                          onClick={() => handlePageChange(page)}
-                        >
-                          {page}
-                        </button>
-                      )
-                    )}
+                    {Array.from(
+                      {
+                        length: Math.ceil(
+                          recentRecords.length / recordsPerPage
+                        ),
+                      },
+                      (_, i) => i + 1
+                    ).map((page) => (
+                      <button
+                        key={page}
+                        className={`btn-page ${
+                          currentPage === page ? "active" : ""
+                        }`}
+                        onClick={() => setCurrentPage(page)}
+                      >
+                        {page}
+                      </button>
+                    ))}
 
                     <button
                       className="btn-page"
                       disabled={
-                        pagination.currentPage === pagination.totalPages
+                        currentPage ===
+                        Math.ceil(recentRecords.length / recordsPerPage)
                       }
                       onClick={() =>
-                        handlePageChange(pagination.currentPage + 1)
+                        setCurrentPage((prev) =>
+                          Math.min(
+                            prev + 1,
+                            Math.ceil(recentRecords.length / recordsPerPage)
+                          )
+                        )
                       }
                     >
                       <i className="fas fa-chevron-right"></i>
@@ -585,8 +608,14 @@ const ProductionMaterialUsage = () => {
                   </div>
                   <div className="items-per-page">
                     <select
-                      value={pagination.itemsPerPage}
-                      onChange={handleItemsPerPageChange}
+                      value={recordsPerPage}
+                      onChange={(e) => {
+                        const newRecordsPerPage = Number(e.target.value);
+                        setRecordsPerPage(newRecordsPerPage);
+                        setCurrentPage(1); // Reset to first page when changing items per page
+                      }}
+                      disabled={loading}
+                      className="form-select form-select-sm"
                     >
                       <option value="10">10 per page</option>
                       <option value="25">25 per page</option>
@@ -595,11 +624,91 @@ const ProductionMaterialUsage = () => {
                     </select>
                   </div>
                 </div>
-              </div>
+              )}
             </div>{" "}
           </div>
         </form>
       </div>
+
+      {/* Details Modal */}
+      {showDetailsModal && selectedRecord && (
+        <>
+          <div className="modal show d-block" tabIndex="-1" role="dialog">
+            <div className="modal-dialog modal-lg" role="document">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">
+                    {" "}
+                    <i className="fas fa-circle-check me-2"></i>Production
+                    Material Usage Details
+                  </h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={() => setShowDetailsModal(false)}
+                    aria-label="Close"
+                  ></button>
+                </div>
+                <div className="modal-body">
+                  <div className="row mb-3">
+                    <div className="user-details-grid">
+                      <div className="detail-item">
+                        <strong>Transaction Number:</strong>{" "}
+                        <span>{selectedRecord.transactionNumber}</span>
+                      </div>
+                      <div className="detail-item">
+                        <strong>Work Order:</strong>{" "}
+                        <span>{selectedRecord.workOrder}</span>
+                      </div>
+
+                      <div className="detail-item">
+                        <strong>Usage Date:</strong>{" "}
+                        <span>{selectedRecord.usageDate}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="table-container">
+                    <div className="table-header">
+                      <h6>Material Usage Details</h6>
+                    </div>
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          <th className="ps-4">Batch Number</th>
+                          <th>Used Qty</th>
+                          <th>Scrap Qty</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-break">
+                        {selectedRecord.items.map((item, index) => (
+                          <tr key={index}>
+                            <td className="ps-4">{item.batchNumber}</td>
+                            <td>{item.usedQty}</td>
+                            <td>{item.scrapQty}</td>
+                            <td>{item.status}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-secondary add-btn"
+                    onClick={() => setShowDetailsModal(false)}
+                  >
+                    <i className="fa-solid fa-xmark me-1"></i> Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="modal-backdrop show"></div>
+        </>
+      )}
     </div>
   );
 };
