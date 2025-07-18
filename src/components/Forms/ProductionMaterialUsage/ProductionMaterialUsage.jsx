@@ -11,6 +11,11 @@ const ProductionMaterialUsage = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
 
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [recordsPerPage, setRecordsPerPage] = useState(10);
+  const [loading, setLoading] = useState(false);
+
   // Load materials when work order changes
   useEffect(() => {
     if (!selectedWorkOrder) {
@@ -79,7 +84,11 @@ const ProductionMaterialUsage = () => {
       .get("/api/production-usage/summary")
       .then((response) => {
         if (response.data.status && response.data.data) {
-          setRecentRecords(response.data.data);
+          // Sort the records in descending order by id
+          const sortedRecords = [...response.data.data].sort(
+            (a, b) => b.id - a.id
+          );
+          setRecentRecords(sortedRecords);
         } else {
           toast.error(
             response.data.message || "Failed to fetch recent records"
@@ -132,6 +141,12 @@ const ProductionMaterialUsage = () => {
   const [transactionNumber, setTransactionNumber] = useState(
     generateTransactionNumber()
   );
+
+  const handleClear = () => {
+    setSelectedWorkOrder(""); // Reset work order selection
+    setMaterials([]); // Clear materials table
+    setTransactionNumber(generateTransactionNumber()); // Generate new transaction number
+  };
 
   const handleSave = () => {
     if (!selectedWorkOrder || materials.length === 0) {
@@ -460,7 +475,11 @@ const ProductionMaterialUsage = () => {
                 <i className="fa-solid fa-floppy-disk me-1"></i> Save Production
                 Record
               </button>
-              <button className="btn btn-secondary add-btn me-2" type="button">
+              <button
+                className="btn btn-secondary add-btn me-2"
+                type="button"
+                onClick={handleClear}
+              >
                 <i className="fa-solid fa-xmark me-1"></i> Clear
               </button>
             </div>
@@ -490,39 +509,122 @@ const ProductionMaterialUsage = () => {
                         </td>
                       </tr>
                     ) : (
-                      recentRecords.map((record) => (
-                        <tr key={record.id}>
-                          <td className="ps-4">
-                            <div>
-                              <span>{record.usageDate}</span>
-                            </div>
-                          </td>
-                          <td className="ps-4">
-                            <div>
-                              <span>{record.workOrder}</span>
-                            </div>
-                          </td>
-                          <td className="ps-4">
-                            <div>
-                              <span>{record.transactionNumber}</span>
-                            </div>
-                          </td>
-                          <td className="ps-4 actions">
-                            <button
-                              type="button"
-                              className="btn-icon btn-primary"
-                              title="View Details"
-                              onClick={() => handleViewDetails(record)}
-                            >
-                              <i className="fas fa-eye"></i>
-                            </button>
-                          </td>
-                        </tr>
-                      ))
+                      recentRecords
+                        .slice(
+                          (currentPage - 1) * recordsPerPage,
+                          currentPage * recordsPerPage
+                        )
+                        .map((record) => (
+                          <tr key={record.id}>
+                            <td className="ps-4">
+                              <div>
+                                <span>{record.usageDate}</span>
+                              </div>
+                            </td>
+                            <td className="ps-4">
+                              <div>
+                                <span>{record.workOrder}</span>
+                              </div>
+                            </td>
+                            <td className="ps-4">
+                              <div>
+                                <span>{record.transactionNumber}</span>
+                              </div>
+                            </td>
+                            <td className="ps-4 actions">
+                              <button
+                                type="button"
+                                className="btn-icon btn-primary"
+                                title="View Details"
+                                onClick={() => handleViewDetails(record)}
+                              >
+                                <i className="fas fa-eye"></i>
+                              </button>
+                            </td>
+                          </tr>
+                        ))
                     )}
                   </tbody>
                 </table>
               </div>
+              {/* Pagination */}
+              {recentRecords.length > 0 && (
+                <div className="pagination-container">
+                  <div className="pagination-info">
+                    Showing {(currentPage - 1) * recordsPerPage + 1}-
+                    {Math.min(
+                      currentPage * recordsPerPage,
+                      recentRecords.length
+                    )}{" "}
+                    of {recentRecords.length} entries
+                  </div>
+                  <div className="pagination">
+                    <button
+                      className="btn-page"
+                      disabled={currentPage === 1}
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.max(prev - 1, 1))
+                      }
+                    >
+                      <i className="fas fa-chevron-left"></i>
+                    </button>
+
+                    {Array.from(
+                      {
+                        length: Math.ceil(
+                          recentRecords.length / recordsPerPage
+                        ),
+                      },
+                      (_, i) => i + 1
+                    ).map((page) => (
+                      <button
+                        key={page}
+                        className={`btn-page ${
+                          currentPage === page ? "active" : ""
+                        }`}
+                        onClick={() => setCurrentPage(page)}
+                      >
+                        {page}
+                      </button>
+                    ))}
+
+                    <button
+                      className="btn-page"
+                      disabled={
+                        currentPage ===
+                        Math.ceil(recentRecords.length / recordsPerPage)
+                      }
+                      onClick={() =>
+                        setCurrentPage((prev) =>
+                          Math.min(
+                            prev + 1,
+                            Math.ceil(recentRecords.length / recordsPerPage)
+                          )
+                        )
+                      }
+                    >
+                      <i className="fas fa-chevron-right"></i>
+                    </button>
+                  </div>
+                  <div className="items-per-page">
+                    <select
+                      value={recordsPerPage}
+                      onChange={(e) => {
+                        const newRecordsPerPage = Number(e.target.value);
+                        setRecordsPerPage(newRecordsPerPage);
+                        setCurrentPage(1); // Reset to first page when changing items per page
+                      }}
+                      disabled={loading}
+                      className="form-select form-select-sm"
+                    >
+                      <option value="10">10 per page</option>
+                      <option value="25">25 per page</option>
+                      <option value="50">50 per page</option>
+                      <option value="100">100 per page</option>
+                    </select>
+                  </div>
+                </div>
+              )}
             </div>{" "}
           </div>
         </form>
@@ -535,7 +637,11 @@ const ProductionMaterialUsage = () => {
             <div className="modal-dialog modal-lg" role="document">
               <div className="modal-content">
                 <div className="modal-header">
-                  <h5 className="modal-title">Production Usage Details</h5>
+                  <h5 className="modal-title">
+                    {" "}
+                    <i className="fas fa-circle-check me-2"></i>Production
+                    Material Usage Details
+                  </h5>
                   <button
                     type="button"
                     className="btn-close"
@@ -545,19 +651,20 @@ const ProductionMaterialUsage = () => {
                 </div>
                 <div className="modal-body">
                   <div className="row mb-3">
-                    <div className="col-md-6">
-                      <p>
+                    <div className="user-details-grid">
+                      <div className="detail-item">
                         <strong>Transaction Number:</strong>{" "}
-                        {selectedRecord.transactionNumber}
-                      </p>
-                      <p>
-                        <strong>Work Order:</strong> {selectedRecord.workOrder}
-                      </p>
-                    </div>
-                    <div className="col-md-6">
-                      <p>
-                        <strong>Usage Date:</strong> {selectedRecord.usageDate}
-                      </p>
+                        <span>{selectedRecord.transactionNumber}</span>
+                      </div>
+                      <div className="detail-item">
+                        <strong>Work Order:</strong>{" "}
+                        <span>{selectedRecord.workOrder}</span>
+                      </div>
+
+                      <div className="detail-item">
+                        <strong>Usage Date:</strong>{" "}
+                        <span>{selectedRecord.usageDate}</span>
+                      </div>
                     </div>
                   </div>
 
@@ -568,16 +675,16 @@ const ProductionMaterialUsage = () => {
                     <table className="table">
                       <thead>
                         <tr>
-                          <th>Batch Number</th>
+                          <th className="ps-4">Batch Number</th>
                           <th>Used Qty</th>
                           <th>Scrap Qty</th>
                           <th>Status</th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="text-break">
                         {selectedRecord.items.map((item, index) => (
                           <tr key={index}>
-                            <td>{item.batchNumber}</td>
+                            <td className="ps-4">{item.batchNumber}</td>
                             <td>{item.usedQty}</td>
                             <td>{item.scrapQty}</td>
                             <td>{item.status}</td>

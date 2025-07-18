@@ -146,7 +146,7 @@ const ActivityLogs = () => {
                 <th>Actions</th>
               </tr>
             </thead>
-            <tbody className="text-break">
+            <tbody>
               {filteredLogs.length === 0 ? (
                 <tr className="no-data-row">
                   <td colSpan="5" className="no-data-cell">
@@ -160,9 +160,11 @@ const ActivityLogs = () => {
                 currentLogs.map((log) => (
                   <tr key={log.id}>
                     <td className="checkbox-cell ps-4">{log.id ?? "-"}</td>
-                    <td className="ps-4">{log.details ?? "-"}</td>
-                    <td className="ps-4">{log.performedBy ?? "System"}</td>
-                    <td className="ps-4">
+                    <td className="ps-4 text-break">{log.details ?? "-"}</td>
+                    <td className="ps-4 text-break">
+                      {log.performedBy ?? "System"}
+                    </td>
+                    <td className="ps-4 text-break">
                       {log.timestamp
                         ? new Date(log.timestamp).toLocaleString()
                         : "-"}
@@ -186,13 +188,13 @@ const ActivityLogs = () => {
             </tbody>
           </table>
           {/* Pagination */}
-          <div className="pagination-container d-flex justify-content-between align-items-center mt-3">
-            <div>
+          <div className="pagination-container">
+            <div className="pagination-info">
               Showing {indexOfFirstLog + 1} to{" "}
               {Math.min(indexOfLastLog, filteredLogs.length)} of{" "}
               {filteredLogs.length} entries
             </div>
-            <div className="d-flex align-items-center gap-2">
+            <div className="pagination">
               <button
                 className="btn-page"
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
@@ -201,9 +203,7 @@ const ActivityLogs = () => {
                 <i className="fas fa-chevron-left"></i>
                 {/* &laquo; Prev */}
               </button>
-              <button className="btn btn-primary">
-                {currentPage} of {totalPages}
-              </button>
+              <button className="btn btn-primary">{currentPage}</button>
               <button
                 className="btn-page"
                 onClick={() =>
@@ -215,7 +215,7 @@ const ActivityLogs = () => {
                 {/* Next &raquo; */}
               </button>
             </div>
-            <div>
+            <div className="items-per-page">
               <select
                 className="form-select"
                 value={rowsPerPage}
