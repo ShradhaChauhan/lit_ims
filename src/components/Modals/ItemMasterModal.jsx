@@ -18,6 +18,11 @@ const ItemMasterModal = ({ item, onClose }) => {
       <div className="modal-body">
         <div className="user-details-grid">
           <div className="detail-item">
+            <strong>Group:</strong>
+            <span>{item?.groupName || "-"}</span>
+          </div>
+
+          <div className="detail-item">
             <strong>Name:</strong>
             <span>{item?.name || "-"}</span>
           </div>
@@ -30,21 +35,6 @@ const ItemMasterModal = ({ item, onClose }) => {
           <div className="detail-item">
             <strong>UOM:</strong>
             <span>{item?.uom || "-"}</span>
-          </div>
-
-          <div className="detail-item">
-            <strong>Type:</strong>
-            <span>{item?.type || "-"}</span>
-          </div>
-
-          <div className="detail-item">
-            <strong>Barcode:</strong>
-            <span>{item?.barcode || "-"}</span>
-          </div>
-
-          <div className="detail-item">
-            <strong>Group:</strong>
-            <span>{item?.groupName || "-"}</span>
           </div>
 
           <div className="detail-item">
@@ -72,6 +62,18 @@ const ItemMasterModal = ({ item, onClose }) => {
               {item?.status || "Inactive"}
             </span>
           </div>
+
+          <div className="detail-item">
+            <strong>Inventory Item:</strong>
+            <span>{item?.inventoryItem || "-"}</span>
+          </div>
+
+          {item?.iqc && (
+            <div className="detail-item">
+              <strong>IQC Required:</strong>
+              <span>{item?.iqc || "-"}</span>
+            </div>
+          )}
         </div>
       </div>
       <div className="modal-footer">

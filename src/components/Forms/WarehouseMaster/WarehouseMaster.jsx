@@ -437,6 +437,7 @@ const WarehouseMaster = () => {
     setFormData({
       name: "",
       code: "",
+      type: "",
       status: "active",
     });
     setIsChecked(true);
