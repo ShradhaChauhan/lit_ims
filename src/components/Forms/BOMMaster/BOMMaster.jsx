@@ -729,7 +729,7 @@ const BOMMaster = () => {
               <div className="row form-style">
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="bomName" className="form-label">
-                    BOM Name
+                    BOM Name <span className="text-danger fs-6">*</span>
                   </label>
                   <div className="position-relative w-100">
                     <i className="fas fa-file-alt position-absolute z-0 input-icon"></i>
@@ -750,7 +750,7 @@ const BOMMaster = () => {
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="bomCode" className="form-label">
-                    BOM Code
+                    BOM Code <span className="text-danger fs-6">*</span>
                   </label>
                   <div className="position-relative w-100">
                     <i className="fas fa-qrcode position-absolute z-0 input-icon"></i>
@@ -1374,7 +1374,7 @@ const BOMMaster = () => {
                       <div className="row form-style">
                         <div className="col-4 d-flex flex-column form-group">
                           <label htmlFor="editBomName" className="form-label">
-                            BOM Name
+                            BOM Name <span className="text-danger fs-6">*</span>
                           </label>
                           <div className="position-relative w-100">
                             <i className="fas fa-file-alt position-absolute z-0 input-icon"></i>
@@ -1397,7 +1397,7 @@ const BOMMaster = () => {
                         </div>
                         <div className="col-4 d-flex flex-column form-group">
                           <label htmlFor="editBomCode" className="form-label">
-                            BOM Code
+                            BOM Code <span className="text-danger fs-6">*</span>
                           </label>
                           <div className="position-relative w-100">
                             <i className="fas fa-qrcode position-absolute z-0 input-icon"></i>

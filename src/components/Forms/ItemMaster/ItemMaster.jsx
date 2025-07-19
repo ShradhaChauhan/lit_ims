@@ -1490,42 +1490,10 @@ const ItemMaster = () => {
                           <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                         </div>
                       </div>
-                      {/* <div className="col-4 d-flex flex-column form-group">
-                        <label htmlFor="group" className="form-label mb-0 ms-2">
-                          Group
-                        </label>
-                        <div className="position-relative w-100">
-                          <i className="fas fa-layer-group position-absolute z-0 input-icon"></i>
-                          <select
-                            className="form-control ps-5 ms-2 text-font"
-                            id="group"
-                            placeholder="Group"
-                            value={itemDetails.group}
-                            onChange={(e) =>
-                              setItemDetails({
-                                ...itemDetails,
-                                group: e.target.value,
-                              })
-                            }
-                          >
-                            <option
-                              value=""
-                              disabled
-                              hidden
-                              className="text-muted"
-                            >
-                              Select Group
-                            </option>
-                            <option value="capacitor">Capacitor</option>
-                            <option value="irLed">IR LED</option>
-                            <option value="spring">Spring</option>
-                          </select>
-                          <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
-                        </div>
-                      </div> */}
+
                       <div className="col-4 d-flex flex-column form-group ps-2">
                         <label htmlFor="name" className="form-label mb-0">
-                          Item Name
+                          Item Name <span className="text-danger fs-6">*</span>
                         </label>
                         <div className="position-relative w-100">
                           <i className="fas fa-box position-absolute z-0 input-icon"></i>
@@ -1546,7 +1514,7 @@ const ItemMaster = () => {
                       </div>
                       <div className="col-4 d-flex flex-column form-group">
                         <label htmlFor="code" className="form-label mb-0">
-                          Item Code
+                          Item Code <span className="text-danger fs-6">*</span>
                         </label>
                         <div className="position-relative w-100">
                           <i className="fas fa-qrcode position-absolute z-0 input-icon"></i>
@@ -1569,7 +1537,7 @@ const ItemMaster = () => {
                     <div className="row form-style">
                       <div className="col-4 d-flex flex-column form-group">
                         <label htmlFor="uom" className="form-label mb-0 ms-2">
-                          UOM
+                          UOM <span className="text-danger fs-6">*</span>
                         </label>
                         <div className="position-relative w-100">
                           <i className="fas fa-ruler position-absolute z-0 input-icon"></i>
@@ -1622,7 +1590,7 @@ const ItemMaster = () => {
                       </div>
                       <div className="col-4 d-flex flex-column form-group">
                         <label htmlFor="stQty" className="form-label mb-0">
-                          ST QTY
+                          ST QTY <span className="text-danger fs-6">*</span>
                         </label>
                         <div className="position-relative w-100">
                           <i className="fas fa-cubes position-absolute z-0 input-icon"></i>
@@ -1645,7 +1613,8 @@ const ItemMaster = () => {
                     <div className="row form-style">
                       <div className="col-4 d-flex flex-column form-group">
                         <label htmlFor="life" className="form-label mb-0  ms-2">
-                          Life (In Days)
+                          Life (In Days){" "}
+                          <span className="text-danger fs-6">*</span>
                         </label>
                         <div className="position-relative w-100">
                           <i className="fas fa-clock position-absolute z-0 input-icon"></i>

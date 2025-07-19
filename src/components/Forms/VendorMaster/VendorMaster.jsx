@@ -730,7 +730,7 @@ const VendorMaster = () => {
               <div className="row form-style">
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="type" className="form-label ms-2">
-                    Type
+                    Type <span className="text-danger fs-6">*</span>
                   </label>
                   <div className="position-relative w-100">
                     <i className="fas fa-user-tag position-absolute ps-2 z-0 input-icon"></i>
@@ -756,7 +756,7 @@ const VendorMaster = () => {
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="name" className="form-label  ms-2">
-                    Name
+                    Name <span className="text-danger fs-6">*</span>
                   </label>
                   <div className="position-relative w-100 ms-2">
                     <i className="fas fa-user position-absolute z-0 input-icon"></i>
@@ -777,7 +777,7 @@ const VendorMaster = () => {
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="mobile" className="form-label  ms-2">
-                    Mobile
+                    Mobile <span className="text-danger fs-6">*</span>
                   </label>
                   <div className="position-relative w-100">
                     <i className="fas fa-phone position-absolute ps-2 z-0 input-icon"></i>
@@ -801,7 +801,7 @@ const VendorMaster = () => {
               <div className="row form-style">
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="email" className="form-label  ms-2">
-                    Email
+                    Email <span className="text-danger fs-6">*</span>
                   </label>
                   <div className="position-relative w-100">
                     <i className="fa-solid fa-envelope ps-2 position-absolute z-0 input-icon"></i>
@@ -822,7 +822,7 @@ const VendorMaster = () => {
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="country" className="form-label  ms-2">
-                    Country
+                    Country <span className="text-danger fs-6">*</span>
                   </label>
                   <div className="position-relative w-100" ref={countryRef}>
                     {/* Left-side icon inside input */}
@@ -868,13 +868,13 @@ const VendorMaster = () => {
                     {/* Right-side dropdown arrow */}
                     <i className="fa-solid fa-angle-down position-absolute input-icon-end"></i>
                   </div>
-                  {errors.city && (
+                  {errors.country && (
                     <span className="error-message ms-2">{errors.country}</span>
                   )}
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="state" className="form-label  ms-2">
-                    State
+                    State <span className="text-danger fs-6">*</span>
                   </label>
                   <div className="position-relative w-100" ref={stateRef}>
                     {/* Left-side icon inside input */}
@@ -934,7 +934,7 @@ const VendorMaster = () => {
               <div className="row form-style">
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="city" className="form-label  ms-2">
-                    City
+                    City <span className="text-danger fs-6">*</span>
                   </label>
                   <div className="position-relative w-100" ref={cityRef}>
                     <i className="fas fa-city position-absolute ps-2 z-0 input-icon-start"></i>
@@ -985,7 +985,7 @@ const VendorMaster = () => {
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="pincode" className="form-label  ms-2">
-                    Pincode
+                    Pincode <span className="text-danger fs-6">*</span>
                   </label>
                   <div className="position-relative w-100">
                     <i className="fa-solid fa-map-pin ps-2 position-absolute z-0 input-icon"></i>
@@ -1007,7 +1007,7 @@ const VendorMaster = () => {
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="address" className="form-label  ms-2">
-                    Address
+                    Address <span className="text-danger fs-6">*</span>
                   </label>
                   <div className="position-relative w-100">
                     <i className="fas fa-map-marker-alt ps-2 position-absolute z-0 input-icon"></i>
@@ -1484,7 +1484,7 @@ const VendorMaster = () => {
                       <div className="row form-style">
                         <div className="col-4 d-flex flex-column form-group">
                           <label htmlFor="type" className="form-label ms-2">
-                            Type
+                            Type <span className="text-danger fs-6">*</span>
                           </label>
                           <div className="position-relative w-100">
                             <i className="fas fa-user-tag position-absolute z-0 input-icon"></i>
@@ -1520,7 +1520,7 @@ const VendorMaster = () => {
                         </div>
                         <div className="col-4 d-flex flex-column form-group">
                           <label htmlFor="name" className="form-label ms-2">
-                            Name
+                            Name <span className="text-danger fs-6">*</span>
                           </label>
                           <div className="position-relative w-100 ms-2">
                             <i className="fas fa-user position-absolute ps-2 z-0 input-icon"></i>
@@ -1546,7 +1546,7 @@ const VendorMaster = () => {
                         </div>
                         <div className="col-4 d-flex flex-column form-group">
                           <label htmlFor="mobile" className="form-label ms-2">
-                            Mobile
+                            Mobile <span className="text-danger fs-6">*</span>
                           </label>
                           <div className="position-relative w-100">
                             <i className="fas fa-phone position-absolute ps-2 z-0 input-icon"></i>
@@ -1574,7 +1574,7 @@ const VendorMaster = () => {
                       <div className="row form-style">
                         <div className="col-4 d-flex flex-column form-group">
                           <label htmlFor="email" className="form-label ms-2">
-                            Email
+                            Email <span className="text-danger fs-6">*</span>
                           </label>
                           <div className="position-relative w-100">
                             <i className="fa-solid fa-envelope ps-2 position-absolute z-0 input-icon"></i>
@@ -1600,7 +1600,7 @@ const VendorMaster = () => {
                         </div>
                         <div className="col-4 d-flex flex-column form-group">
                           <label htmlFor="city" className="form-label ms-2">
-                            City
+                            City <span className="text-danger fs-6">*</span>
                           </label>
                           <div className="position-relative w-100">
                             <i className="fas fa-city position-absolute ps-2 z-0 input-icon"></i>
@@ -1626,7 +1626,7 @@ const VendorMaster = () => {
                         </div>
                         <div className="col-4 d-flex flex-column form-group">
                           <label htmlFor="state" className="form-label ms-2">
-                            State
+                            State <span className="text-danger fs-6">*</span>
                           </label>
                           <div className="position-relative w-100">
                             <i className="fa-solid fa-location-crosshairs ps-2 position-absolute z-0 input-icon"></i>
@@ -1654,7 +1654,7 @@ const VendorMaster = () => {
                       <div className="row form-style">
                         <div className="col-4 d-flex flex-column form-group">
                           <label htmlFor="pincode" className="form-label ms-2">
-                            Pincode
+                            Pincode <span className="text-danger fs-6">*</span>
                           </label>
                           <div className="position-relative w-100">
                             <i className="fa-solid fa-map-pin ps-2 position-absolute z-0 input-icon"></i>
@@ -1681,7 +1681,7 @@ const VendorMaster = () => {
                         </div>
                         <div className="col-4 d-flex flex-column form-group">
                           <label htmlFor="address" className="form-label ms-2">
-                            Address
+                            Address <span className="text-danger fs-6">*</span>
                           </label>
                           <div className="position-relative w-100">
                             <i className="fas fa-map-marker-alt ps-2 position-absolute z-0 input-icon"></i>

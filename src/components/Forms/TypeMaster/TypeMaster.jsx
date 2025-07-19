@@ -510,7 +510,7 @@ const TypeMaster = () => {
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="name" className="form-label">
-                    Name
+                    Name <span className="text-danger fs-6">*</span>
                   </label>
                   <div className="position-relative w-100">
                     <i className="fas fa-font position-absolute z-0 input-icon"></i>
@@ -926,7 +926,7 @@ const TypeMaster = () => {
                       </div>
                       <div className="col-4 d-flex flex-column form-group">
                         <label htmlFor="name" className="form-label">
-                          Name
+                          Name <span className="text-danger fs-6">*</span>
                         </label>
                         <div className="position-relative w-100">
                           <i className="fas fa-font position-absolute z-0 input-icon"></i>

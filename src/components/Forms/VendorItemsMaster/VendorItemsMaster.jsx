@@ -790,12 +790,6 @@ const VendorItemsMaster = () => {
             <i className="fas fa-filter me-2"></i>
             Reset Filters
           </button>
-          {/* <button 
-            className="btn btn-secondary"
-            onClick={resetFilters}
-          >
-            <i className="fas fa-undo-alt me-1"></i>Reset Filters
-          </button> */}
         </div>
       </div>
 
@@ -822,7 +816,7 @@ const VendorItemsMaster = () => {
               <div className="row form-style">
                 <div className="col-3 d-flex flex-column form-group">
                   <label htmlFor="vendor" className="form-label ms-2">
-                    Vendor
+                    Vendor <span className="text-danger fs-6">*</span>
                   </label>
                   <div className="position-relative w-100">
                     <i className="fas fa-user-tie position-absolute z-0 input-icon"></i>
@@ -851,7 +845,7 @@ const VendorItemsMaster = () => {
                 </div>
                 <div className="col-3 d-flex flex-column form-group">
                   <label htmlFor="item" className="form-label ms-2">
-                    Item
+                    Item <span className="text-danger fs-6">*</span>
                   </label>
                   <div className="position-relative w-100">
                     <i className="fas fa-box position-absolute z-0 input-icon"></i>
@@ -880,7 +874,7 @@ const VendorItemsMaster = () => {
                 </div>
                 <div className="col-3 d-flex flex-column form-group">
                   <label htmlFor="leadTime" className="form-label">
-                    Lead Time (Days)
+                    Lead Time (Days) <span className="text-danger fs-6">*</span>
                   </label>
                   <div className="position-relative w-100">
                     <i className="fas fa-clock position-absolute z-0 input-icon"></i>
@@ -902,7 +896,7 @@ const VendorItemsMaster = () => {
                 </div>
                 <div className="col-3 d-flex flex-column form-group">
                   <label htmlFor="minOrderQty" className="form-label">
-                    Std Qty
+                    Std Qty <span className="text-danger fs-6">*</span>
                   </label>
                   <div className="position-relative w-100">
                     <i className="fas fa-cubes position-absolute z-0 input-icon"></i>
@@ -1340,7 +1334,7 @@ const VendorItemsMaster = () => {
                   <div className="row form-style">
                     <div className="col-3 d-flex flex-column form-group">
                       <label htmlFor="vendor" className="form-label ms-2">
-                        Vendor
+                        Vendor <span className="text-danger fs-6">*</span>
                       </label>
                       <div className="position-relative w-100">
                         <i className="fas fa-user-tag position-absolute z-0 input-icon"></i>
@@ -1378,7 +1372,7 @@ const VendorItemsMaster = () => {
                     </div>
                     <div className="col-3 d-flex flex-column form-group">
                       <label htmlFor="item" className="form-label ms-2">
-                        Item
+                        Item <span className="text-danger fs-6">*</span>
                       </label>
                       <div className="position-relative w-100">
                         <i className="fas fa-box position-absolute z-0 input-icon"></i>
@@ -1416,7 +1410,8 @@ const VendorItemsMaster = () => {
                     </div>
                     <div className="col-3 d-flex flex-column form-group">
                       <label htmlFor="leadTime" className="form-label">
-                        Lead Time (Days)
+                        Lead Time (Days){" "}
+                        <span className="text-danger fs-6">*</span>
                       </label>
                       <div className="position-relative w-100">
                         <i className="fas fa-clock position-absolute z-0 input-icon"></i>
@@ -1437,7 +1432,7 @@ const VendorItemsMaster = () => {
                     </div>
                     <div className="col-3 d-flex flex-column form-group">
                       <label htmlFor="minOrderQty" className="form-label">
-                        Std Qty
+                        Std Qty <span className="text-danger fs-6">*</span>
                       </label>
                       <div className="position-relative w-100">
                         <i className="fas fa-cubes position-absolute z-0 input-icon"></i>
