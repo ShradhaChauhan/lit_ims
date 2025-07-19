@@ -250,9 +250,13 @@ const ApproveItemsQuantity = () => {
                 <th>Item Name</th>
                 <th>Item Code</th>
                 <th>Std Qty</th>
-                <th>New Qty</th>
+                <th>Received Qty</th>
                 <th>Requested By</th>
+                <th>Pending At</th>
                 <th>Reason</th>
+                <th>Date</th>
+                <th>Timestamp</th>
+                <th>Document Type</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -262,9 +266,13 @@ const ApproveItemsQuantity = () => {
                   <td className="ps-4">{val.itemName}</td>
                   <td className="ps-4">{val.itemCode}</td>
                   <td className="ps-4">{val.oldQty}</td>
-                  <td className="ps-4">{val.requestedQty}</td>
+                  <td className="ps-4">{val.receivedQty}</td>
                   <td className="ps-4">{val.requestedBy}</td>
+                  <td className="ps-4">{val.pendingAt}</td>
                   <td className="ps-4">{val.reason}</td>
+                  <td className="ps-4">{val.Date}</td>
+                  <td className="ps-4">{val.timestamp}</td>
+                  <td className="ps-4">{val.documentType}</td>
                   <td className="ps-4">
                     <div className="d-flex gap-2">
                       <button
