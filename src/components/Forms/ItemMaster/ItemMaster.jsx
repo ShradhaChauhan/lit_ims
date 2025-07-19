@@ -51,6 +51,8 @@ const ItemMaster = () => {
     price: "",
     stQty: "",
     life: "",
+    inventoryItem: "",
+    iqc: false,
     status: "active",
   });
 
@@ -375,6 +377,8 @@ const ItemMaster = () => {
         price: formData.price,
         stQty: formData.stQty,
         life: formData.life,
+        inventoryItem: formData.inventoryItem || false,
+        iqc: formData.iqc,
         status: formData.status,
       };
 
@@ -529,15 +533,15 @@ const ItemMaster = () => {
   const handleReset = (e) => {
     e.preventDefault();
     setFormData({
+      groupName: "",
       name: "",
       code: "",
       uom: "",
-      type: "",
-      barcode: "",
-      groupName: "",
       price: "",
       stQty: "",
       life: "",
+      inventoryItem: "",
+      iqc: false,
       status: "active",
     });
     setIsChecked(true);
@@ -786,9 +790,39 @@ const ItemMaster = () => {
           >
             <div className="form-grid border-bottom pt-0">
               <div className="row form-style">
+                <div className="col-4 d-flex flex-column form-group">
+                  <label htmlFor="groupName" className="form-label mb-0 ms-2">
+                    Group <span className="text-danger fs-6">*</span>
+                  </label>
+                  <div className="position-relative w-100">
+                    <i className="fas fa-layer-group position-absolute z-0 input-icon"></i>
+                    <select
+                      className="form-control ps-5 ms-2 text-font"
+                      id="groupName"
+                      placeholder="Group"
+                      value={formData.groupName}
+                      onChange={(e) =>
+                        setFormData({ ...formData, groupName: e.target.value })
+                      }
+                    >
+                      <option value="" disabled hidden className="text-muted">
+                        Select Group
+                      </option>
+                      {groups.map((group) => (
+                        <option key={group.id} value={group.name}>
+                          {group.name}
+                        </option>
+                      ))}
+                    </select>
+                    <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                  </div>
+                  {errors.groupName && (
+                    <span className="error-message">{errors.groupName}</span>
+                  )}
+                </div>
                 <div className="col-4 d-flex flex-column form-group ps-2">
                   <label htmlFor="name" className="form-label mb-0">
-                    Item Name
+                    Item Name <span className="text-danger fs-6">*</span>
                   </label>
                   <div className="position-relative w-100">
                     <i className="fas fa-box position-absolute z-0 input-icon"></i>
@@ -809,7 +843,7 @@ const ItemMaster = () => {
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="code" className="form-label mb-0">
-                    Item Code
+                    Item Code <span className="text-danger fs-6">*</span>
                   </label>
                   <div className="position-relative w-100">
                     <i className="fas fa-qrcode position-absolute z-0 input-icon"></i>
@@ -833,36 +867,9 @@ const ItemMaster = () => {
                     <span className="error-message">{errors.code}</span>
                   )}
                 </div>
-                <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="uom" className="form-label mb-0 ms-2">
-                    UOM
-                  </label>
-                  <div className="position-relative w-100">
-                    <i className="fas fa-ruler position-absolute z-0 input-icon"></i>
-                    <select
-                      className="form-control ps-5 ms-2 text-font"
-                      id="uom"
-                      placeholder="UOM"
-                      value={formData.uom}
-                      onChange={(e) =>
-                        setFormData({ ...formData, uom: e.target.value })
-                      }
-                    >
-                      <option value="" disabled hidden className="text-muted">
-                        Select UOM
-                      </option>
-                      <option value="pcs">Pcs</option>
-                      <option value="Kg">Kg</option>
-                    </select>
-                    <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
-                  </div>
-                  {errors.uom && (
-                    <span className="error-message">{errors.uom}</span>
-                  )}
-                </div>
               </div>
               <div className="row form-style">
-                <div className="col-4 d-flex flex-column form-group ps-2">
+                {/* <div className="col-4 d-flex flex-column form-group ps-2">
                   <label htmlFor="type" className="form-label mb-0">
                     Type
                   </label>
@@ -891,8 +898,8 @@ const ItemMaster = () => {
                   {errors.type && (
                     <span className="error-message">{errors.type}</span>
                   )}
-                </div>
-                <div className="col-4 d-flex flex-column form-group">
+                </div> */}
+                {/* <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="barcode" className="form-label mb-0">
                     Barcode
                   </label>
@@ -912,39 +919,34 @@ const ItemMaster = () => {
                   {errors.barcode && (
                     <span className="error-message">{errors.barcode}</span>
                   )}
-                </div>
+                </div> */}
                 <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="groupName" className="form-label mb-0 ms-2">
-                    Group
+                  <label htmlFor="uom" className="form-label mb-0 ms-2">
+                    UOM <span className="text-danger fs-6">*</span>
                   </label>
                   <div className="position-relative w-100">
-                    <i className="fas fa-layer-group position-absolute z-0 input-icon"></i>
+                    <i className="fas fa-ruler position-absolute z-0 input-icon"></i>
                     <select
                       className="form-control ps-5 ms-2 text-font"
-                      id="groupName"
-                      placeholder="Group"
-                      value={formData.groupName}
+                      id="uom"
+                      placeholder="UOM"
+                      value={formData.uom}
                       onChange={(e) =>
-                        setFormData({ ...formData, groupName: e.target.value })
+                        setFormData({ ...formData, uom: e.target.value })
                       }
                     >
                       <option value="" disabled hidden className="text-muted">
-                        Select Group
+                        Select UOM
                       </option>
-                      {groups.map((group) => (
-                        <option key={group.id} value={group.name}>
-                          {group.name}
-                        </option>
-                      ))}
+                      <option value="pcs">Pcs</option>
+                      <option value="Kg">Kg</option>
                     </select>
                     <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                   </div>
-                  {errors.groupName && (
-                    <span className="error-message">{errors.groupName}</span>
+                  {errors.uom && (
+                    <span className="error-message">{errors.uom}</span>
                   )}
                 </div>
-              </div>
-              <div className="row form-style">
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="price" className="form-label mb-0">
                     Price
@@ -968,7 +970,8 @@ const ItemMaster = () => {
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="stQty" className="form-label mb-0">
-                    ST QTY
+                    Standard Quantity{" "}
+                    <span className="text-danger fs-6">*</span>
                   </label>
                   <div className="position-relative w-100">
                     <i className="fas fa-cubes position-absolute z-0 input-icon"></i>
@@ -987,9 +990,11 @@ const ItemMaster = () => {
                     <span className="error-message">{errors.stQty}</span>
                   )}
                 </div>
+              </div>
+              <div className="row form-style">
                 <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="life" className="form-label mb-0  ms-2">
-                    Life (In Days)
+                  <label htmlFor="life" className="form-label ms-2">
+                    Life (In Days) <span className="text-danger fs-6">*</span>
                   </label>
                   <div className="position-relative w-100">
                     <i className="fas fa-clock position-absolute z-0 input-icon"></i>
@@ -1008,8 +1013,6 @@ const ItemMaster = () => {
                     <span className="error-message">{errors.life}</span>
                   )}
                 </div>
-              </div>
-              <div className="row form-style">
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="status" className="form-label">
                     Status
@@ -1061,7 +1064,62 @@ const ItemMaster = () => {
                     <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                   </div>
                 </div>
+                <div className="col-4 d-flex flex-column form-group">
+                  <label className="form-label ms-2" htmlFor="inventoryItem">
+                    Inventory Item
+                  </label>
+                  <div className="position-relative w-100">
+                    {formData.inventoryItem === "true" && (
+                      <i className="fas fa-square-check position-absolute z-0 input-icon"></i>
+                    )}
+                    {formData.inventoryItem === "false" && (
+                      <i className="fas fa-square-xmark position-absolute z-0 input-icon"></i>
+                    )}
+                    {formData.inventoryItem === "" && (
+                      <i className="fas fa-square position-absolute z-0 input-icon"></i>
+                    )}
+                    <select
+                      className="form-control ps-5 ms-2 text-font"
+                      id="yesNoSelect"
+                      value={formData.inventoryItem}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          inventoryItem: e.target.value,
+                        })
+                      }
+                    >
+                      <option value="">Select an option</option>
+                      <option value="true">Yes</option>
+                      <option value="false">No</option>
+                    </select>
+                    <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                  </div>
+                </div>
               </div>
+              {formData.inventoryItem === "true" && (
+                <div className="row form-style">
+                  <div className="col-4 d-flex flex-column form-group">
+                    <div className="d-flex align-items-center gap-2">
+                      <label className="form-label ms-2 mt-2" htmlFor="iqc">
+                        IQC Required
+                      </label>
+                      <input
+                        className="form-check-input ms-2"
+                        type="checkbox"
+                        id="iqc"
+                        checked={formData.iqc}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            iqc: e.target.checked,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="form-actions">
               <button
@@ -1416,6 +1474,39 @@ const ItemMaster = () => {
                 >
                   <div className="form-grid pt-0">
                     <div className="row form-style">
+                      <div className="col-4 d-flex flex-column form-group">
+                        <label htmlFor="group" className="form-label mb-0 ms-2">
+                          Group
+                        </label>
+                        <div className="position-relative w-100">
+                          <i className="fas fa-layer-group position-absolute z-0 input-icon"></i>
+                          <select
+                            className="form-control ps-5 ms-2 text-font"
+                            id="group"
+                            placeholder="Group"
+                            value={itemDetails.group}
+                            onChange={(e) =>
+                              setItemDetails({
+                                ...itemDetails,
+                                group: e.target.value,
+                              })
+                            }
+                          >
+                            <option
+                              value=""
+                              disabled
+                              hidden
+                              className="text-muted"
+                            >
+                              Select Group
+                            </option>
+                            <option value="capacitor">Capacitor</option>
+                            <option value="irLed">IR LED</option>
+                            <option value="spring">Spring</option>
+                          </select>
+                          <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                        </div>
+                      </div>
                       <div className="col-4 d-flex flex-column form-group ps-2">
                         <label htmlFor="name" className="form-label mb-0">
                           Item Name
@@ -1458,6 +1549,8 @@ const ItemMaster = () => {
                           />
                         </div>
                       </div>
+                    </div>
+                    <div className="row form-style">
                       <div className="col-4 d-flex flex-column form-group">
                         <label htmlFor="uom" className="form-label mb-0 ms-2">
                           UOM
@@ -1490,97 +1583,6 @@ const ItemMaster = () => {
                           <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                         </div>
                       </div>
-                    </div>
-                    <div className="row form-style">
-                      <div className="col-4 d-flex flex-column form-group ps-2">
-                        <label htmlFor="type" className="form-label mb-0">
-                          Type
-                        </label>
-                        <div className="position-relative w-100">
-                          <i className="fas fa-tags position-absolute z-0 input-icon"></i>
-                          <select
-                            className="form-control ps-5 text-font"
-                            id="type"
-                            placeholder="Type"
-                            value={itemDetails.type}
-                            onChange={(e) =>
-                              setItemDetails({
-                                ...itemDetails,
-                                type: e.target.value,
-                              })
-                            }
-                          >
-                            <option
-                              value=""
-                              disabled
-                              hidden
-                              className="text-muted"
-                            >
-                              Select Type Name
-                            </option>
-                            <option value="a">A Type</option>
-                            <option value="b">B Type</option>
-                            <option value="c">C Type</option>
-                          </select>
-                          <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
-                        </div>
-                      </div>
-                      <div className="col-4 d-flex flex-column form-group">
-                        <label htmlFor="barcode" className="form-label mb-0">
-                          Barcode
-                        </label>
-                        <div className="position-relative w-100">
-                          <i className="fas fa-qrcode position-absolute z-0 input-icon"></i>
-                          <input
-                            type="text"
-                            className="form-control ps-5 text-font"
-                            id="barcode"
-                            placeholder="Enter barcode"
-                            value={itemDetails.barcode}
-                            onChange={(e) =>
-                              setItemDetails({
-                                ...itemDetails,
-                                barcode: e.target.value,
-                              })
-                            }
-                          />
-                        </div>
-                      </div>
-                      <div className="col-4 d-flex flex-column form-group">
-                        <label htmlFor="group" className="form-label mb-0 ms-2">
-                          Group
-                        </label>
-                        <div className="position-relative w-100">
-                          <i className="fas fa-layer-group position-absolute z-0 input-icon"></i>
-                          <select
-                            className="form-control ps-5 ms-2 text-font"
-                            id="group"
-                            placeholder="Group"
-                            value={itemDetails.group}
-                            onChange={(e) =>
-                              setItemDetails({
-                                ...itemDetails,
-                                group: e.target.value,
-                              })
-                            }
-                          >
-                            <option
-                              value=""
-                              disabled
-                              hidden
-                              className="text-muted"
-                            >
-                              Select Group
-                            </option>
-                            <option value="capacitor">Capacitor</option>
-                            <option value="irLed">IR LED</option>
-                            <option value="spring">Spring</option>
-                          </select>
-                          <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="row form-style">
                       <div className="col-4 d-flex flex-column form-group">
                         <label htmlFor="price" className="form-label mb-0">
                           Price
@@ -1623,6 +1625,8 @@ const ItemMaster = () => {
                           />
                         </div>
                       </div>
+                    </div>
+                    <div className="row form-style">
                       <div className="col-4 d-flex flex-column form-group">
                         <label htmlFor="life" className="form-label mb-0  ms-2">
                           Life (In Days)
@@ -1644,8 +1648,6 @@ const ItemMaster = () => {
                           />
                         </div>
                       </div>
-                    </div>
-                    <div className="row form-style">
                       <div className="col-4 d-flex flex-column form-group">
                         <label htmlFor="status" className="form-label">
                           Status
@@ -1699,7 +1701,68 @@ const ItemMaster = () => {
                           <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                         </div>
                       </div>
+                      <div className="col-4 d-flex flex-column form-group">
+                        <label
+                          className="form-label ms-2"
+                          htmlFor="inventoryItem"
+                        >
+                          Inventory Item
+                        </label>
+                        <div className="position-relative w-100">
+                          {itemDetails.inventoryItem === "true" && (
+                            <i className="fas fa-square-check position-absolute z-0 input-icon"></i>
+                          )}
+                          {itemDetails.inventoryItem === "false" && (
+                            <i className="fas fa-square-xmark position-absolute z-0 input-icon"></i>
+                          )}
+                          {itemDetails.inventoryItem === "" && (
+                            <i className="fas fa-square position-absolute z-0 input-icon"></i>
+                          )}
+                          <select
+                            className="form-control ps-5 ms-2 text-font"
+                            id="yesNoSelect"
+                            value={itemDetails.inventoryItem}
+                            onChange={(e) =>
+                              setItemDetails({
+                                ...formData,
+                                itemDetails: e.target.value,
+                              })
+                            }
+                          >
+                            <option value="">Select an option</option>
+                            <option value="true">Yes</option>
+                            <option value="false">No</option>
+                          </select>
+                          <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                        </div>
+                      </div>
                     </div>
+                    {formData.inventoryItem === "true" && (
+                      <div className="row form-style">
+                        <div className="col-4 d-flex flex-column form-group">
+                          <div className="d-flex align-items-center gap-2">
+                            <label
+                              className="form-label ms-2 mt-2"
+                              htmlFor="iqc"
+                            >
+                              IQC Required
+                            </label>
+                            <input
+                              className="form-check-input ms-2"
+                              type="checkbox"
+                              id="iqc"
+                              checked={itemDetails.iqc}
+                              onChange={(e) =>
+                                setItemDetails({
+                                  ...formData,
+                                  itemDetails: e.target.checked,
+                                })
+                              }
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </form>
               </div>

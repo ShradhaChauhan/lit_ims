@@ -16,6 +16,7 @@ const GroupMaster = () => {
     id: "",
     trno: "",
     name: "",
+    code: "",
     status: "",
   });
   const [selectedGroups, setSelectedGroups] = useState([]);
@@ -24,6 +25,7 @@ const GroupMaster = () => {
   const [isChecked, setIsChecked] = useState(true);
   const [formData, setFormData] = useState({
     name: "",
+    code: "",
     status: "active",
   });
   const [loading, setLoading] = useState(false);
@@ -266,6 +268,7 @@ const GroupMaster = () => {
 
     const finalData = {
       name: formData.name,
+      code: formData.code,
       status: formData.status,
     };
 
@@ -275,6 +278,7 @@ const GroupMaster = () => {
       toast.success("Group added successfully");
       setFormData({
         name: "",
+        code: "",
         status: "active",
       });
       setIsChecked(true);
@@ -295,6 +299,9 @@ const GroupMaster = () => {
     if (!data.name.trim()) {
       errors.name = "Group name is required";
     }
+    if (!data.code.trim()) {
+      errors.code = "Code is required";
+    }
 
     return errors;
   };
@@ -306,6 +313,7 @@ const GroupMaster = () => {
 
     const finalData = {
       name: groupDetails.name,
+      code: groupDetails.code,
       status: groupDetails.status,
     };
 
@@ -399,6 +407,7 @@ const GroupMaster = () => {
     e.preventDefault();
     setFormData({
       name: "",
+      code: "",
       status: "active",
     });
     setStatus("active");
@@ -565,7 +574,7 @@ const GroupMaster = () => {
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="name" className="form-label">
-                    Name
+                    Name <span className="text-danger fs-6">*</span>
                   </label>
                   <div className="position-relative w-100">
                     <i className="fas fa-user position-absolute z-0 input-icon"></i>
@@ -585,54 +594,77 @@ const GroupMaster = () => {
                   )}
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="status" className="form-label">
-                    Status
+                  <label htmlFor="code" className="form-label">
+                    Name <span className="text-danger fs-6">*</span>
                   </label>
                   <div className="position-relative w-100">
-                    <div className="form-check form-switch position-absolute z-0 input-icon mt-1 padding-left-2">
-                      <input
-                        className="form-check-input text-font switch-style"
-                        type="checkbox"
-                        role="switch"
-                        id="switchCheckChecked"
-                        checked={isChecked}
+                    <i className="fas fa-user position-absolute z-0 input-icon"></i>
+                    <input
+                      type="text"
+                      className="form-control ps-5 text-font"
+                      id="code"
+                      placeholder="Enter code"
+                      value={formData.code}
+                      onChange={(e) =>
+                        setFormData({ ...formData, code: e.target.value })
+                      }
+                    />
+                  </div>
+                  {errors.name && (
+                    <span className="error-message">{errors.code}</span>
+                  )}
+                </div>
+                <div className="row form-style">
+                  <div className="col-4 d-flex flex-column form-group">
+                    <label htmlFor="status" className="form-label">
+                      Status
+                    </label>
+                    <div className="position-relative w-100">
+                      <div className="form-check form-switch position-absolute z-0 input-icon mt-1 padding-left-2">
+                        <input
+                          className="form-check-input text-font switch-style"
+                          type="checkbox"
+                          role="switch"
+                          id="switchCheckChecked"
+                          checked={isChecked}
+                          onChange={(e) => {
+                            const newStatus = e.target.checked
+                              ? "active"
+                              : "inactive";
+                            setIsChecked(e.target.checked);
+                            setStatus(newStatus);
+                            setFormData({
+                              ...formData,
+                              status: newStatus,
+                            });
+                          }}
+                        />
+
+                        <label
+                          className="form-check-label"
+                          htmlFor="switchCheckChecked"
+                        ></label>
+                      </div>
+                      <select
+                        className="form-control text-font switch-padding"
+                        id="status"
+                        value={status}
                         onChange={(e) => {
-                          const newStatus = e.target.checked
-                            ? "active"
-                            : "inactive";
-                          setIsChecked(e.target.checked);
+                          const newStatus = e.target.value;
                           setStatus(newStatus);
-                          setFormData({
-                            ...formData,
+                          setIsChecked(newStatus === "active");
+
+                          setFormData((prev) => ({
+                            ...prev,
                             status: newStatus,
-                          });
+                          }));
                         }}
-                      />
-
-                      <label
-                        className="form-check-label"
-                        htmlFor="switchCheckChecked"
-                      ></label>
+                      >
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                      </select>
+                      <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                     </div>
-                    <select
-                      className="form-control text-font switch-padding"
-                      id="status"
-                      value={status}
-                      onChange={(e) => {
-                        const newStatus = e.target.value;
-                        setStatus(newStatus);
-                        setIsChecked(newStatus === "active");
-
-                        setFormData((prev) => ({
-                          ...prev,
-                          status: newStatus,
-                        }));
-                      }}
-                    >
-                      <option value="active">Active</option>
-                      <option value="inactive">Inactive</option>
-                    </select>
-                    <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                   </div>
                 </div>
               </div>
@@ -943,6 +975,12 @@ const GroupMaster = () => {
                     <strong>Name:</strong>
                     <span>{groupDetails.name}</span>
                   </div>
+
+                  <div className="detail-item">
+                    <strong>Code:</strong>
+                    <span>{groupDetails.code}</span>
+                  </div>
+
                   <div className="detail-item">
                     <strong>Status:</strong>
                     <span
@@ -1027,7 +1065,7 @@ const GroupMaster = () => {
                       </div>
                       <div className="col-4 d-flex flex-column form-group">
                         <label htmlFor="name" className="form-label">
-                          Name
+                          Name <span className="text-danger fs-6">*</span>
                         </label>
                         <div className="position-relative w-100">
                           <i className="fas fa-user position-absolute z-0 input-icon"></i>
@@ -1041,6 +1079,27 @@ const GroupMaster = () => {
                               setGroupDetails({
                                 ...groupDetails,
                                 name: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                      </div>
+                      <div className="col-4 d-flex flex-column form-group">
+                        <label htmlFor="code" className="form-label">
+                          Code <span className="text-danger fs-6">*</span>
+                        </label>
+                        <div className="position-relative w-100">
+                          <i className="fas fa-user position-absolute z-0 input-icon"></i>
+                          <input
+                            type="text"
+                            className="form-control ps-5 text-font"
+                            id="code"
+                            placeholder="Enter code"
+                            value={groupDetails.code}
+                            onChange={(e) =>
+                              setGroupDetails({
+                                ...groupDetails,
+                                code: e.target.value,
                               })
                             }
                           />
