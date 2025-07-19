@@ -27,6 +27,7 @@ const WarehouseMaster = () => {
     trno: "",
     name: "",
     code: "",
+    type: "",
     status: "active",
   });
   const [isShowWarehouseDetails, setIsShowWarehouseDetails] = useState(false);
@@ -36,6 +37,7 @@ const WarehouseMaster = () => {
     trno: "",
     name: "",
     code: "",
+    type: "",
     status: "",
   });
   const [warehouses, setWarehouses] = useState([]);
@@ -229,6 +231,7 @@ const WarehouseMaster = () => {
             trno: response.data.data.trno,
             name: response.data.data.name,
             code: response.data.data.code,
+            type: response.data.data.type,
             status: response.data.data.status,
           });
           setIsShowWarehouseDetails(true);
@@ -269,11 +272,13 @@ const WarehouseMaster = () => {
       .then((response) => {
         if (response.data && response.data.status) {
           const warehouseData = response.data.data;
+          console.log(warehouseData);
           setWarehouseDetails({
             id: warehouseData.id,
             trno: warehouseData.trno,
             name: warehouseData.name,
             code: warehouseData.code,
+            type: warehouseData.type,
             status: warehouseData.status,
           });
           setIsEditWarehouseDetails(true);
@@ -316,6 +321,7 @@ const WarehouseMaster = () => {
       id: warehouseDetails.id,
       name: warehouseDetails.name,
       code: warehouseDetails.code,
+      type: warehouseDetails.type,
       status: warehouseDetails.status,
     };
 
@@ -383,6 +389,7 @@ const WarehouseMaster = () => {
       const finalData = {
         name: formData.name,
         code: formData.code,
+        type: formData.type,
         status: formData.status,
       };
 
@@ -406,7 +413,9 @@ const WarehouseMaster = () => {
           }
         })
         .catch((error) => {
-          toast.error("Error in adding warehouse. Please try again.");
+          toast.error(
+            error.message || "Error in adding warehouse. Please try again."
+          );
           console.error("Error adding warehouse:", error);
         });
     }
@@ -604,7 +613,7 @@ const WarehouseMaster = () => {
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="name" className="form-label">
-                    Name
+                    Name <span className="text-danger fs-6">*</span>
                   </label>
                   <div className="position-relative w-100">
                     <i className="fas fa-font position-absolute z-0 input-icon"></i>
@@ -625,7 +634,7 @@ const WarehouseMaster = () => {
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="code" className="form-label">
-                    Code
+                    Code <span className="text-danger fs-6">*</span>
                   </label>
                   <div className="position-relative w-100">
                     <i className="fas fa-qrcode position-absolute z-0 input-icon"></i>
@@ -646,6 +655,34 @@ const WarehouseMaster = () => {
                 </div>
               </div>
               <div className="row form-style">
+                <div className="col-4 d-flex flex-column form-group">
+                  <label htmlFor="type" className="form-label">
+                    Type <span className="text-danger fs-6">*</span>
+                  </label>
+                  <div className="position-relative w-100">
+                    <i className="fas fa-layer-group position-absolute z-0 input-icon"></i>
+                    <select
+                      className="form-control text-font switch-padding"
+                      id="type"
+                      value={formData.type}
+                      onChange={(e) =>
+                        setFormData({ ...formData, type: e.target.value })
+                      }
+                    >
+                      <option value="" className="text-muted">
+                        Select Type
+                      </option>
+                      <option value="IQC">IQC</option>
+                      <option value="WIP">WIP</option>
+                      <option value="STR">STR</option>
+                      <option value="REJ">REJ</option>
+                    </select>
+                    <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                  </div>
+                  {errors.code && (
+                    <span className="error-message">{errors.type}</span>
+                  )}
+                </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="status" className="form-label">
                     Status
@@ -971,6 +1008,11 @@ const WarehouseMaster = () => {
                   </div>
 
                   <div className="detail-item">
+                    <strong>Type:</strong>
+                    <span>{warehouseDetails.type}</span>
+                  </div>
+
+                  <div className="detail-item">
                     <strong>Status:</strong>
                     <span
                       className={`badge status ${warehouseDetails.status?.toLowerCase()} w-50`}
@@ -1109,6 +1151,31 @@ const WarehouseMaster = () => {
                         </div>
                       </div>
                       <div className="row form-style">
+                        <div className="col-4 d-flex flex-column form-group">
+                          <label htmlFor="type" className="form-label">
+                            Type
+                          </label>
+                          <div className="position-relative w-100">
+                            <i className="fas fa-layer-group position-absolute z-0 input-icon"></i>
+                            <select
+                              className="form-control text-font switch-padding"
+                              id="type"
+                              value={warehouseDetails.type}
+                              onChange={(e) =>
+                                setWarehouseDetails({
+                                  ...warehouseDetails,
+                                  type: e.target.value,
+                                })
+                              }
+                            >
+                              <option value="">Select Type</option>
+                              <option value="IQC">IQC</option>
+                              <option value="WIP">WIP</option>
+                              <option value="STR">STR</option>
+                              <option value="REJ">REJ</option>
+                            </select>
+                          </div>
+                        </div>
                         <div className="col-4 d-flex flex-column form-group">
                           <label htmlFor="status" className="form-label">
                             Status

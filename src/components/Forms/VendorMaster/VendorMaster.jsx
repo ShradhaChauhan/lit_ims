@@ -19,6 +19,29 @@ const VendorMaster = () => {
   const [selectAll, setSelectAll] = useState(false);
   const [status, setStatus] = useState("active");
   const [isChecked, setIsChecked] = useState(true);
+  const countryRef = useRef(null);
+  const stateRef = useRef(null);
+  const cityRef = useRef(null);
+
+  // Dropdown should hide on click of outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (countryRef.current && !countryRef.current.contains(event.target)) {
+        setShowCountryDropdown(false);
+      }
+      if (stateRef.current && !stateRef.current.contains(event.target)) {
+        setShowStateDropdown(false);
+      }
+      if (cityRef.current && !cityRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Confirm modal states
   const [message, setMesssage] = useState("");
@@ -27,6 +50,24 @@ const VendorMaster = () => {
   const [partnerIdState, setPartnerIdState] = useState("");
   const [isConfirmModal, setIsConfirmModal] = useState(false);
   const [confirmModal, setConfirmModal] = useState(null);
+
+  // Country list
+  const [countryList, setCountryList] = useState([]);
+  const [selectedCountry, setSelectedCountry] = useState(null);
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+  const [countryId, setCountryId] = useState("");
+
+  // State list
+  const [stateList, setStateList] = useState([]);
+  const [selectedState, setSelectedState] = useState(null);
+  const [showStateDropdown, setShowStateDropdown] = useState(false);
+  const [stateId, setStateId] = useState("");
+
+  // City
+  const [query, setQuery] = useState("");
+  const [cityList, setCityList] = useState([]);
+  const [selectedCity, setSelectedCity] = useState(null);
+  const [showDropdown, setShowDropdown] = useState(false);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -40,6 +81,7 @@ const VendorMaster = () => {
     email: "",
     city: "",
     state: "",
+    country: "",
     pincode: "",
     address: "",
     status: "active",
@@ -53,6 +95,77 @@ const VendorMaster = () => {
   const [typeFilter, setTypeFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [filteredVendors, setFilteredVendors] = useState([]);
+
+  // City
+  useEffect(() => {
+    const fetchCities = async () => {
+      try {
+        const res = await api.get(`/api/location/cities?stateId=${stateId}`);
+        setCityList(res.data.data);
+        console.log("Cities fetched:", res.data.data);
+      } catch (err) {
+        console.error("Error fetching cities:", err);
+      }
+    };
+
+    const timeout = setTimeout(fetchCities, 300); // debounce
+    return () => clearTimeout(timeout);
+  }, [selectedState]);
+
+  const handleSelect = (city) => {
+    setSelectedCity(city);
+    setQuery(city.name);
+    setFormData({ ...formData, city: city.name });
+    setShowDropdown(false);
+  };
+
+  // Country
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        const response = await api.get("/api/location/countries");
+        setCountryList(response.data.data);
+        console.log(response.data.data);
+      } catch (err) {
+        console.error("Error fetching states:", err);
+      }
+    };
+
+    const timeout = setTimeout(fetchCountries, 300);
+    return () => clearTimeout(timeout);
+  }, []);
+
+  const handleCountrySelect = (country) => {
+    setSelectedCountry(country);
+    setFormData({ ...formData, country: country.name });
+    setShowCountryDropdown(false);
+    setCountryId(country.id);
+  };
+
+  // State
+  useEffect(() => {
+    const fetchStates = async () => {
+      try {
+        const response = await api.get(
+          `/api/location/states?countryId=${countryId}`
+        );
+        setStateList(response.data.data);
+        console.log(response.data.data);
+      } catch (err) {
+        console.error("Error fetching states:", err);
+      }
+    };
+
+    const timeout = setTimeout(fetchStates, 300); // debounce
+    return () => clearTimeout(timeout);
+  }, [selectedCountry]);
+
+  const handleStateSelect = (state) => {
+    setSelectedState(state);
+    setFormData({ ...formData, state: state.name });
+    setShowStateDropdown(false);
+    setStateId(state.id);
+  };
 
   // Confirm useEffect for confirm modal
   useEffect(() => {
@@ -300,6 +413,7 @@ const VendorMaster = () => {
       errors.mobile = "Mobile number must be 10 digits";
     if (data.email && !/\S+@\S+\.\S+/.test(data.email))
       errors.email = "Email is not valid";
+    if (!data.country) errors.country = "Country is required";
     if (!data.city) errors.city = "City is required";
     if (!data.state) errors.state = "State is required";
     if (!data.pincode) errors.pincode = "Pincode is required";
@@ -619,7 +733,7 @@ const VendorMaster = () => {
                     Type
                   </label>
                   <div className="position-relative w-100">
-                    <i className="fas fa-user-tag position-absolute z-0 input-icon"></i>
+                    <i className="fas fa-user-tag position-absolute ps-2 z-0 input-icon"></i>
                     <select
                       className="form-control ps-5 ms-2 text-font"
                       id="type"
@@ -645,7 +759,7 @@ const VendorMaster = () => {
                     Name
                   </label>
                   <div className="position-relative w-100 ms-2">
-                    <i className="fas fa-user position-absolute ps-2 z-0 input-icon"></i>
+                    <i className="fas fa-user position-absolute z-0 input-icon"></i>
                     <input
                       type="text"
                       className="form-control ps-5 text-font"
@@ -707,42 +821,110 @@ const VendorMaster = () => {
                   )}
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="city" className="form-label  ms-2">
-                    City
+                  <label htmlFor="country" className="form-label  ms-2">
+                    Country
                   </label>
-                  <div className="position-relative w-100">
-                    <i className="fas fa-city position-absolute ps-2 z-0 input-icon"></i>
+                  <div className="position-relative w-100" ref={countryRef}>
+                    {/* Left-side icon inside input */}
+                    <i className="fas fa-earth-americas position-absolute input-icon-start ps-2"></i>
+
+                    {/* Input */}
                     <input
+                      id="country"
                       type="text"
                       className="form-control ps-5 ms-2 text-font"
-                      id="city"
-                      placeholder="Enter city"
-                      value={formData.city}
-                      onChange={(e) =>
-                        setFormData({ ...formData, city: e.target.value })
-                      }
+                      value={formData.country}
+                      onChange={(e) => {
+                        setShowCountryDropdown(true);
+                        setFormData({ ...formData, country: e.target.value });
+                      }}
+                      placeholder="Search country"
                     />
+
+                    {/* Dropdown */}
+                    {showCountryDropdown &&
+                      formData.country.trim() !== "" &&
+                      countryList.length > 0 && (
+                        <ul
+                          className="position-absolute w-100 bg-white border mt-1 rounded shadow text-font dropdown-list py-2"
+                          style={{
+                            maxHeight: "200px",
+                            overflowY: "auto",
+                            zIndex: 1050,
+                          }}
+                        >
+                          {countryList.map((country, index) => (
+                            <li
+                              key={index}
+                              onClick={() => handleCountrySelect(country)}
+                              className="dropdown-item px-3 py-2"
+                            >
+                              {country.name}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+
+                    {/* Right-side dropdown arrow */}
+                    <i className="fa-solid fa-angle-down position-absolute input-icon-end"></i>
                   </div>
                   {errors.city && (
-                    <span className="error-message ms-2">{errors.city}</span>
+                    <span className="error-message ms-2">{errors.country}</span>
                   )}
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="state" className="form-label  ms-2">
                     State
                   </label>
-                  <div className="position-relative w-100">
-                    <i className="fa-solid fa-location-crosshairs ps-2 position-absolute z-0 input-icon"></i>
+                  <div className="position-relative w-100" ref={stateRef}>
+                    {/* Left-side icon inside input */}
+                    <i className="fas fa-location-dot position-absolute input-icon-start ps-2"></i>
+
+                    {/* Input */}
                     <input
+                      id="state"
                       type="text"
                       className="form-control ps-5 ms-2 text-font"
-                      id="state"
-                      placeholder="Enter state"
                       value={formData.state}
-                      onChange={(e) =>
-                        setFormData({ ...formData, state: e.target.value })
-                      }
+                      onChange={(e) => {
+                        setShowStateDropdown(true);
+                        setFormData({ ...formData, state: e.target.value });
+                      }}
+                      placeholder="Search state"
                     />
+
+                    {/* Dropdown */}
+                    {showStateDropdown &&
+                      formData.state.trim() !== "" &&
+                      stateList.length > 0 && (
+                        <ul
+                          className="position-absolute w-100 bg-white border mt-1 rounded shadow text-font dropdown-list py-2"
+                          style={{
+                            maxHeight: "200px",
+                            overflowY: "auto",
+                            zIndex: 1050,
+                          }}
+                        >
+                          {stateList
+                            .filter((state) =>
+                              state.name
+                                .toLowerCase()
+                                .includes(formData.state.toLowerCase())
+                            )
+                            .map((state, index) => (
+                              <li
+                                key={index}
+                                onClick={() => handleStateSelect(state)}
+                                className="dropdown-item px-3 py-2"
+                              >
+                                {state.name}
+                              </li>
+                            ))}
+                        </ul>
+                      )}
+
+                    {/* Right-side dropdown arrow */}
+                    <i className="fa-solid fa-angle-down position-absolute input-icon-end"></i>
                   </div>
                   {errors.state && (
                     <span className="error-message ms-2">{errors.state}</span>
@@ -750,6 +932,57 @@ const VendorMaster = () => {
                 </div>
               </div>
               <div className="row form-style">
+                <div className="col-4 d-flex flex-column form-group">
+                  <label htmlFor="city" className="form-label  ms-2">
+                    City
+                  </label>
+                  <div className="position-relative w-100" ref={cityRef}>
+                    <i className="fas fa-city position-absolute ps-2 z-0 input-icon-start"></i>
+                    <input
+                      type="text"
+                      className="form-control ps-5 ms-2 text-font"
+                      value={query}
+                      onChange={(e) => {
+                        setQuery(e.target.value);
+                        setShowDropdown(true);
+                        setFormData({ ...formData, city: e.target.value });
+                      }}
+                      placeholder="Search city"
+                    />
+
+                    {showDropdown && cityList.length > 0 && (
+                      <ul
+                        className="position-absolute w-100 bg-white border mt-1 rounded shadow text-font dropdown-list py-2"
+                        style={{
+                          maxHeight: "200px",
+                          overflowY: "auto",
+                          zIndex: 1050,
+                        }}
+                      >
+                        {cityList
+                          .filter((city) =>
+                            city.name
+                              .toLowerCase()
+                              .includes(formData.city.toLowerCase())
+                          )
+                          .map((city, index) => (
+                            <li
+                              key={index}
+                              onClick={() => handleSelect(city)}
+                              className="dropdown-item px-3 py-2"
+                              style={{ cursor: "pointer" }}
+                            >
+                              {city.name}
+                            </li>
+                          ))}
+                      </ul>
+                    )}
+                    <i className="fa-solid fa-angle-down position-absolute down-arrow-icon input-icon-end"></i>
+                  </div>
+                  {errors.city && (
+                    <span className="error-message ms-2">{errors.city}</span>
+                  )}
+                </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="pincode" className="form-label  ms-2">
                     Pincode
@@ -793,6 +1026,8 @@ const VendorMaster = () => {
                     <span className="error-message ms-2">{errors.address}</span>
                   )}
                 </div>
+              </div>
+              <div className="row form-style">
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="status" className="form-label ms-2">
                     Status

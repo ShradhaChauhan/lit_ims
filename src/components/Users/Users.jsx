@@ -1835,7 +1835,7 @@ const Users = () => {
                         placeholder="Select branches..."
                       />
 
-                      <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                      {/* <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i> */}
                     </div>
                     {errors.branch && (
                       <span className="error-message">{errors.branch}</span>
