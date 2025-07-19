@@ -47,7 +47,7 @@ const ItemMaster = () => {
     uom: "",
     type: "",
     barcode: "",
-    groupCode: "",
+    groupName: "",
     price: "",
     stQty: "",
     life: "",
@@ -189,7 +189,7 @@ const ItemMaster = () => {
 
     // Apply group filter
     if (selectedGroup) {
-      result = result.filter((item) => item.groupCode === selectedGroup);
+      result = result.filter((item) => item.groupName === selectedGroup);
     }
 
     // Apply type filter
@@ -365,15 +365,15 @@ const ItemMaster = () => {
     e.preventDefault();
     const newErrors = validateForm(formData);
     setErrors(newErrors);
-
+    console.log(errors);
     if (Object.keys(newErrors).length === 0) {
       const finalData = {
         name: formData.name,
-        code: formData.code,
+        code: formData.groupName + formData.code,
         uom: formData.uom,
         type: formData.type,
         barcode: formData.barcode,
-        groupCode: formData.groupCode,
+        groupName: formData.groupName,
         price: formData.price,
         stQty: formData.stQty,
         life: formData.life,
@@ -382,7 +382,7 @@ const ItemMaster = () => {
         status: formData.status,
       };
 
-      console.log("Submitting add item form");
+      console.log("Submitting add item form: " + finalData);
 
       api
         .post("/api/items/add", finalData)
@@ -412,8 +412,6 @@ const ItemMaster = () => {
   const validateForm = (data) => {
     const errors = {};
 
-    console.log(data.code);
-
     if (!data.name?.trim()) {
       errors.name = "Item name is required";
     }
@@ -430,18 +428,8 @@ const ItemMaster = () => {
       errors.uom = "UOM is required";
     }
 
-    if (!data.type) {
-      errors.type = "Type is required";
-    }
-
-    if (!data.barcode) {
-      errors.barcode = "Barcode is required";
-    } else if (!/^\d+$/.test(data.barcode)) {
-      errors.barcode = "Barcode must only be in digits";
-    }
-
-    if (!data.groupCode) {
-      errors.groupCode = "Group is required";
+    if (!data.groupName) {
+      errors.groupName = "Group is required";
     }
 
     if (!data.price) {
@@ -533,7 +521,7 @@ const ItemMaster = () => {
   const handleReset = (e) => {
     e.preventDefault();
     setFormData({
-      groupCode: "",
+      groupName: "",
       name: "",
       code: "",
       uom: "",
@@ -588,9 +576,9 @@ const ItemMaster = () => {
     if (Object.keys(newErrors).length === 0) {
       const finalData = {
         name: itemDetails.name,
-        code: itemDetails.code,
+        code: itemDetails.groupName + itemDetails.code,
         uom: itemDetails.uom,
-        groupCode: itemDetails.groupCode,
+        groupName: itemDetails.groupName,
         status: itemDetails.status || "active",
         price: itemDetails.price || null,
         stQty: parseInt(itemDetails.stQty) || 0,
@@ -789,33 +777,33 @@ const ItemMaster = () => {
             <div className="form-grid border-bottom pt-0">
               <div className="row form-style">
                 <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="groupCode" className="form-label mb-0 ms-2">
+                  <label htmlFor="groupName" className="form-label mb-0 ms-2">
                     Group <span className="text-danger fs-6">*</span>
                   </label>
                   <div className="position-relative w-100">
                     <i className="fas fa-layer-group position-absolute z-0 input-icon"></i>
                     <select
                       className="form-control ps-5 ms-2 text-font"
-                      id="groupCode"
+                      id="groupName"
                       placeholder="Group"
-                      value={formData.groupCode}
+                      value={formData.groupName}
                       onChange={(e) =>
-                        setFormData({ ...formData, groupCode: e.target.value })
+                        setFormData({ ...formData, groupName: e.target.value })
                       }
                     >
                       <option value="" disabled hidden className="text-muted">
                         Select Group
                       </option>
                       {groups.map((group) => (
-                        <option key={group.id} value={group.code}>
-                          {group.code}
+                        <option key={group.id} value={group.groupCode}>
+                          {group.name} - {group.groupCode}
                         </option>
                       ))}
                     </select>
                     <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                   </div>
-                  {errors.groupCode && (
-                    <span className="error-message">{errors.groupCode}</span>
+                  {errors.groupName && (
+                    <span className="error-message">{errors.groupName}</span>
                   )}
                 </div>
                 <div className="col-4 d-flex flex-column form-group ps-2">
@@ -856,7 +844,10 @@ const ItemMaster = () => {
                       onChange={(e) => {
                         const digitsOnly = e.target.value.replace(/\D/g, "");
                         if (digitsOnly.length <= 6) {
-                          setFormData({ ...formData, code: digitsOnly });
+                          setFormData({
+                            ...formData,
+                            code: digitsOnly,
+                          });
                         }
                       }}
                     />
@@ -1084,6 +1075,7 @@ const ItemMaster = () => {
                         setFormData({
                           ...formData,
                           inventoryItem: e.target.value,
+                          iqc: true,
                         })
                       }
                     >
@@ -1186,6 +1178,7 @@ const ItemMaster = () => {
                 <th className="checkbox-cell">
                   <input type="checkbox" id="select-all-header" disabled />
                 </th>
+                <th>Group</th>
                 <th>
                   Name <i className="fas fa-sort color-gray ms-2"></i>
                 </th>
@@ -1193,9 +1186,6 @@ const ItemMaster = () => {
                   Code <i className="fas fa-sort color-gray ms-2"></i>
                 </th>
                 <th>UOM</th>
-                <th>Type</th>
-                <th>Barcode</th>
-                <th>Group</th>
                 <th>ST Qty</th>
                 <th>Life</th>
                 <th>Status</th>
@@ -1238,6 +1228,11 @@ const ItemMaster = () => {
                     </td>
                     <td className="ps-4">
                       <div>
+                        <span>{item.groupName}</span>
+                      </div>
+                    </td>
+                    <td className="ps-4">
+                      <div>
                         <span>{item.name}</span>
                       </div>
                     </td>
@@ -1249,21 +1244,6 @@ const ItemMaster = () => {
                     <td className="ps-4">
                       <div>
                         <span>{item.uom}</span>
-                      </div>
-                    </td>
-                    <td className="ps-4">
-                      <div>
-                        <span>{item.type}</span>
-                      </div>
-                    </td>
-                    <td className="ps-4">
-                      <div>
-                        <span>{item.barcode}</span>
-                      </div>
-                    </td>
-                    <td className="ps-4">
-                      <div>
-                        <span>{item.groupCode}</span>
                       </div>
                     </td>
                     <td className="ps-4">{item.stQty}</td>
@@ -1474,7 +1454,7 @@ const ItemMaster = () => {
                     <div className="row form-style">
                       <div className="col-4 d-flex flex-column form-group">
                         <label
-                          htmlFor="groupCode"
+                          htmlFor="groupName"
                           className="form-label mb-0 ms-2"
                         >
                           Group <span className="text-danger fs-6">*</span>
@@ -1483,13 +1463,13 @@ const ItemMaster = () => {
                           <i className="fas fa-layer-group position-absolute z-0 input-icon"></i>
                           <select
                             className="form-control ps-5 ms-2 text-font"
-                            id="groupCode"
+                            id="groupName"
                             placeholder="Group"
-                            value={itemDetails.groupCode}
+                            value={itemDetails.groupName}
                             onChange={(e) =>
                               setItemDetails({
                                 ...itemDetails,
-                                groupCode: e.target.value,
+                                groupName: e.target.value,
                               })
                             }
                           >
@@ -1502,8 +1482,8 @@ const ItemMaster = () => {
                               Select Group
                             </option>
                             {groups.map((group) => (
-                              <option key={group.id} value={group.code}>
-                                {group.code}
+                              <option key={group.id} value={group.groupCode}>
+                                {group.name} - {group.groupCode}
                               </option>
                             ))}
                           </select>

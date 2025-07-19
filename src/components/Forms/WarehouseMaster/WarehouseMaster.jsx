@@ -787,15 +787,10 @@ const WarehouseMaster = () => {
                 <th className="checkbox-cell">
                   <input type="checkbox" id="select-all-header" disabled />
                 </th>
-                <th>
-                  TRNO <i className="fas fa-sort color-gray ms-2"></i>
-                </th>
-                <th>
-                  Code <i className="fas fa-sort color-gray ms-2"></i>
-                </th>
-                <th>
-                  Name <i className="fas fa-sort color-gray ms-2"></i>
-                </th>
+                <th>TRNO</th>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Type</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -852,6 +847,11 @@ const WarehouseMaster = () => {
                     <td className="ps-4">
                       <div>
                         <span>{warehouse.name}</span>
+                      </div>
+                    </td>
+                    <td className="ps-4">
+                      <div>
+                        <span>{warehouse.type}</span>
                       </div>
                     </td>
                     <td className="ps-4">
