@@ -538,7 +538,7 @@ const MaterialIncoming = () => {
             <div className="row form-style">
               <div className="col-4 d-flex flex-column form-group">
                 <label htmlFor="receiptMode" className="form-label ms-2">
-                  Receipt Mode
+                  Receipt Mode <span className="text-danger fs-6">*</span>
                 </label>
                 <div className="position-relative w-100">
                   <i className="fas fa-right-left ms-2 position-absolute z-0 input-icon"></i>
@@ -565,7 +565,7 @@ const MaterialIncoming = () => {
               </div>
               <div className="col-4 d-flex flex-column form-group">
                 <label htmlFor="vendorName" className="form-label ms-2">
-                  Vendor Name
+                  Vendor Name <span className="text-danger fs-6">*</span>
                 </label>
                 <div className="position-relative w-100">
                   <i className="fas fa-building ms-2 position-absolute z-0 input-icon"></i>
@@ -634,7 +634,7 @@ const MaterialIncoming = () => {
             <div className="row">
               <div className="col-12 d-flex flex-column form-group">
                 <label htmlFor="item" className="form-label ms-2">
-                  Select Item
+                  Select Item <span className="text-danger fs-6">*</span>
                 </label>
                 <div className="position-relative w-100">
                   <i className="fas fa-box position-absolute ms-2 z-0 input-icon"></i>
@@ -684,7 +684,7 @@ const MaterialIncoming = () => {
             <div className="row">
               <div className="col-12 d-flex flex-column form-group">
                 <label htmlFor="item" className="form-label ms-2">
-                  Scan Barcode
+                  Scan Barcode <span className="text-danger fs-6">*</span>
                 </label>
                 <div className="position-relative w-100">
                   <i className="fas fa-qrcode position-absolute ms-2 z-0 input-icon"></i>
@@ -712,7 +712,7 @@ const MaterialIncoming = () => {
             <div className="row">
               <div className="col-3 d-flex flex-column form-group">
                 <label htmlFor="quantity" className="form-label ms-2">
-                  Quantity
+                  Quantity <span className="text-danger fs-6">*</span>
                 </label>
 
                 <div className="d-flex align-items-center justify-content-between gap-2">

@@ -428,7 +428,8 @@ const IssueProduction = () => {
                       htmlFor="requisitionType"
                       className="form-label ms-2"
                     >
-                      Requisition Number
+                      Requisition Number{" "}
+                      <span className="text-danger fs-6">*</span>
                     </label>
                     <div className="position-relative w-100">
                       <i className="fas fa-file-invoice ms-2 position-absolute z-0 input-icon"></i>
@@ -451,7 +452,7 @@ const IssueProduction = () => {
                   </div>
                   <div className="col-6 d-flex flex-column form-group">
                     <label htmlFor="scanBatch" className="form-label ms-2">
-                      Scan Batch
+                      Scan Batch <span className="text-danger fs-6">*</span>
                     </label>
                     <div className="position-relative w-100">
                       <i className="fas fa-barcode ms-2 position-absolute z-0 input-icon"></i>

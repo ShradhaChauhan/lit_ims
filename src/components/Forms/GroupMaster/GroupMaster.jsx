@@ -16,7 +16,7 @@ const GroupMaster = () => {
     id: "",
     trno: "",
     name: "",
-    code: "",
+    groupCode: "",
     status: "",
   });
   const [selectedGroups, setSelectedGroups] = useState([]);
@@ -25,7 +25,7 @@ const GroupMaster = () => {
   const [isChecked, setIsChecked] = useState(true);
   const [formData, setFormData] = useState({
     name: "",
-    code: "",
+    groupCode: "",
     status: "active",
   });
   const [loading, setLoading] = useState(false);
@@ -268,7 +268,7 @@ const GroupMaster = () => {
 
     const finalData = {
       name: formData.name,
-      code: formData.code,
+      groupCode: formData.groupCode,
       status: formData.status,
     };
 
@@ -278,7 +278,7 @@ const GroupMaster = () => {
       toast.success("Group added successfully");
       setFormData({
         name: "",
-        code: "",
+        groupCode: "",
         status: "active",
       });
       setIsChecked(true);
@@ -299,8 +299,8 @@ const GroupMaster = () => {
     if (!data.name.trim()) {
       errors.name = "Group name is required";
     }
-    if (!data.code.trim()) {
-      errors.code = "Code is required";
+    if (!data.groupCode.trim()) {
+      errors.groupCode = "Code is required";
     }
 
     return errors;
@@ -313,7 +313,7 @@ const GroupMaster = () => {
 
     const finalData = {
       name: groupDetails.name,
-      code: groupDetails.code,
+      groupCode: groupDetails.groupCode,
       status: groupDetails.status,
     };
 
@@ -407,7 +407,7 @@ const GroupMaster = () => {
     e.preventDefault();
     setFormData({
       name: "",
-      code: "",
+      groupCode: "",
       status: "active",
     });
     setStatus("active");
@@ -594,24 +594,24 @@ const GroupMaster = () => {
                   )}
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="code" className="form-label">
-                    Name <span className="text-danger fs-6">*</span>
+                  <label htmlFor="groupCode" className="form-label">
+                    Code <span className="text-danger fs-6">*</span>
                   </label>
                   <div className="position-relative w-100">
                     <i className="fas fa-user position-absolute z-0 input-icon"></i>
                     <input
                       type="text"
                       className="form-control ps-5 text-font"
-                      id="code"
+                      id="groupCode"
                       placeholder="Enter code"
-                      value={formData.code}
+                      value={formData.groupCode}
                       onChange={(e) =>
-                        setFormData({ ...formData, code: e.target.value })
+                        setFormData({ ...formData, groupCode: e.target.value })
                       }
                     />
                   </div>
                   {errors.name && (
-                    <span className="error-message">{errors.code}</span>
+                    <span className="error-message">{errors.groupCode}</span>
                   )}
                 </div>
                 <div className="row form-style">
@@ -978,7 +978,7 @@ const GroupMaster = () => {
 
                   <div className="detail-item">
                     <strong>Code:</strong>
-                    <span>{groupDetails.code}</span>
+                    <span>{groupDetails.groupCode}</span>
                   </div>
 
                   <div className="detail-item">
@@ -1085,7 +1085,7 @@ const GroupMaster = () => {
                         </div>
                       </div>
                       <div className="col-4 d-flex flex-column form-group">
-                        <label htmlFor="code" className="form-label">
+                        <label htmlFor="groupCode" className="form-label">
                           Code <span className="text-danger fs-6">*</span>
                         </label>
                         <div className="position-relative w-100">
@@ -1093,13 +1093,13 @@ const GroupMaster = () => {
                           <input
                             type="text"
                             className="form-control ps-5 text-font"
-                            id="code"
+                            id="groupCode"
                             placeholder="Enter code"
-                            value={groupDetails.code}
+                            value={groupDetails.groupCode}
                             onChange={(e) =>
                               setGroupDetails({
                                 ...groupDetails,
-                                code: e.target.value,
+                                groupCode: e.target.value,
                               })
                             }
                           />

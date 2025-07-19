@@ -50,8 +50,45 @@ const SideBar = () => {
   const menuItems = [
     {
       icon: "fas fa-user",
-      path: "users",
-      label: "Users",
+      path: "Administrations",
+      label: "Administrations",
+      submenu: [
+        {
+          label: "Users",
+          compName: "Users",
+          newPath: "users",
+          path: "Administrations / Users",
+          icon: "fas fa-user-group",
+        },
+        {
+          label: "Role Management",
+          compName: "RoleManagement",
+          newPath: "role-management",
+          path: "Administrations / Role Management",
+          icon: "fas fa-tag",
+        },
+        {
+          label: "System Settings",
+          compName: "SystemSettings",
+          newPath: "system-settings",
+          path: "Administrations / System Settings",
+          icon: "fas fa-gears",
+        },
+        {
+          label: "Audit Logs",
+          compName: "AuditLogs",
+          newPath: "warehouse-master",
+          path: "Administrations / Audit Logs",
+          icon: "fas fa-newspaper",
+        },
+        {
+          label: "Approve Items Quantity",
+          compName: "ApproveItemsQuantity",
+          newPath: "approve-items-quantity",
+          path: "Administrations / Approve Items Quantity",
+          icon: "fas fa-thumbs-up",
+        },
+      ],
     },
     {
       icon: "fas fa-database",
@@ -129,13 +166,6 @@ const SideBar = () => {
           icon: "fas fa-truck-ramp-box",
         },
         {
-          label: "Approve Items Quantity",
-          compName: "ApproveItemsQuantity",
-          newPath: "approve-items-quantity",
-          path: "Transactions / Approve Items Quantity",
-          icon: "fas fa-thumbs-up",
-        },
-        {
           label: "Incoming Quality Control",
           compName: "IncomingQC",
           newPath: "incoming-qc",
@@ -181,8 +211,31 @@ const SideBar = () => {
     },
     {
       icon: "fas fa-chart-pie",
-      path: "inventory-audit-report",
-      label: "Inventory Audit Report",
+      path: "reports",
+      label: "Reports",
+      submenu: [
+        {
+          label: "Inventory Audit Report",
+          compName: "InventoryAuditReport",
+          newPath: "inventory-audit-report",
+          path: "Reports / Inventory Audit Report",
+          icon: "fas fa-chart-area",
+        },
+        {
+          label: "Transaction Reports",
+          compName: "TransactionReports",
+          newPath: "transactions-reports",
+          path: "Reports / Transaction Reports",
+          icon: "fas fa-chart-line",
+        },
+        {
+          label: "Production Reports",
+          compName: "ProductionReports",
+          newPath: "production-reports",
+          path: "Reports / Production Reports",
+          icon: "fas fa-chart-bar",
+        },
+      ],
     },
     {
       icon: "fa-solid fa-star",

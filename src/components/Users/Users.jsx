@@ -451,43 +451,38 @@ const Users = () => {
   const transactions = [
     {
       id: 1,
-      name: "Incoming",
-      type: "incoming",
+      name: "Material Incoming",
+      type: "materialIncoming",
     },
     {
       id: 2,
-      name: "Incoming Reprint",
-      type: "incomingReprint",
+      name: "IQC",
+      type: "iqc",
     },
     {
       id: 3,
-      name: "IQC Check",
-      type: "iqcCheck",
+      name: "Material Issue Request",
+      type: "materialIssueRequest",
     },
     {
       id: 4,
-      name: "Requisition",
-      type: "requisition",
+      name: "Issue to Production",
+      type: "issuetoProduction",
     },
     {
       id: 5,
-      name: "Issue Production",
-      type: "issueProduction",
+      name: "Production Floor Receipt",
+      type: "productionFloorReceipt",
     },
     {
       id: 6,
-      name: "Requisition Receipt",
-      type: "requisitionReceipt",
+      name: "Production Material Usage",
+      type: "productionMaterialUsage",
     },
     {
       id: 7,
-      name: "Production",
-      type: "production",
-    },
-    {
-      id: 8,
-      name: "WIP",
-      type: "wip",
+      name: "WIP Return",
+      type: "wipReturn",
     },
   ];
   const reports = [
@@ -527,6 +522,11 @@ const Users = () => {
       id: 4,
       name: "Audit Logs",
       type: "auditLogs",
+    },
+    {
+      id: 5,
+      name: "Approve Items Quantity",
+      type: "approveItemsQuantity",
     },
   ];
   const modules = [
@@ -653,21 +653,34 @@ const Users = () => {
   const handleMasterViewAllChange = (e) => {
     const checked = e.target.checked;
     setIsAllMastersViewChecked(checked);
-    const updatedPermissions = {};
+
+    const updatedViewPermissions = {};
     masters.forEach((item) => {
-      updatedPermissions[item.type] = checked;
+      updatedViewPermissions[item.type] = checked;
     });
-    setMasterViewPermissions(updatedPermissions);
+    setMasterViewPermissions(updatedViewPermissions);
   };
 
   const handleMasterEditAllChange = (e) => {
     const checked = e.target.checked;
     setIsAllMastersEditChecked(checked);
-    const updatedPermissions = {};
+
+    const updatedEditPermissions = {};
+    const updatedViewPermissions = { ...masterViewPermissions };
+
     masters.forEach((item) => {
-      updatedPermissions[item.type] = checked;
+      updatedEditPermissions[item.type] = checked;
+      if (checked) {
+        // Auto-check view if enabling edit
+        updatedViewPermissions[item.type] = true;
+      }
     });
-    setMasterEditPermissions(updatedPermissions);
+
+    setMasterEditPermissions(updatedEditPermissions);
+    setMasterViewPermissions(updatedViewPermissions);
+
+    const allViewChecked = masters.every((m) => updatedViewPermissions[m.type]);
+    setIsAllMastersViewChecked(allViewChecked);
   };
 
   const handleSingleMasterViewChange = (type) => {
@@ -687,19 +700,41 @@ const Users = () => {
   };
 
   const handleSingleMasterEditChange = (type) => {
-    console.log(
-      `Changing master edit permission for ${type} to ${!masterEditPermissions[
-        type
-      ]}`
+    const isEditing = !masterEditPermissions[type];
+
+    setMasterEditPermissions((prev) => ({
+      ...prev,
+      [type]: isEditing,
+    }));
+
+    // Auto-check view if enabling edit
+    if (isEditing && !masterViewPermissions[type]) {
+      setMasterViewPermissions((prev) => ({
+        ...prev,
+        [type]: true,
+      }));
+    }
+
+    const allEditChecked = masters.every(
+      (m) => m.type in masterEditPermissions && masterEditPermissions[m.type]
     );
-    const updatedPermissions = {
-      ...masterEditPermissions,
-      [type]: !masterEditPermissions[type],
-    };
-    setMasterEditPermissions(updatedPermissions);
-    // Check if all masters are now checked
-    const allChecked = masters.every((item) => updatedPermissions[item.type]);
-    setIsAllMastersEditChecked(allChecked);
+    setIsAllMastersEditChecked(allEditChecked);
+  };
+
+  const handleSingleTransactionEditChange = (type) => {
+    const isEditing = !transactionEditPermissions[type];
+
+    setTransactionEditPermissions((prev) => ({
+      ...prev,
+      [type]: isEditing,
+    }));
+
+    if (isEditing && !transactionViewPermissions[type]) {
+      setTransactionViewPermissions((prev) => ({
+        ...prev,
+        [type]: true,
+      }));
+    }
   };
 
   const handleTransactionViewAllChange = (e) => {
@@ -715,11 +750,40 @@ const Users = () => {
   const handleTransactionEditAllChange = (e) => {
     const checked = e.target.checked;
     setIsAllTransactionsEditChecked(checked);
-    const updatedPermissions = {};
+
+    const updatedEditPermissions = {};
+    const updatedViewPermissions = { ...transactionViewPermissions };
+
     transactions.forEach((item) => {
-      updatedPermissions[item.type] = checked;
+      updatedEditPermissions[item.type] = checked;
+      if (checked) {
+        updatedViewPermissions[item.type] = true;
+      }
     });
-    setTransactionEditPermissions(updatedPermissions);
+
+    setTransactionEditPermissions(updatedEditPermissions);
+    setTransactionViewPermissions(updatedViewPermissions);
+
+    const allViewChecked = transactions.every(
+      (t) => updatedViewPermissions[t.type]
+    );
+    setIsAllTransactionsViewChecked(allViewChecked);
+  };
+
+  const handleSingleReportEditChange = (type) => {
+    const isEditing = !reportEditPermissions[type];
+
+    setReportEditPermissions((prev) => ({
+      ...prev,
+      [type]: isEditing,
+    }));
+
+    if (isEditing && !reportViewPermissions[type]) {
+      setReportViewPermissions((prev) => ({
+        ...prev,
+        [type]: true,
+      }));
+    }
   };
 
   const handleReportViewAllChange = (e) => {
@@ -735,11 +799,38 @@ const Users = () => {
   const handleReportEditAllChange = (e) => {
     const checked = e.target.checked;
     setIsAllReportsEditChecked(checked);
-    const updatedPermissions = {};
+
+    const updatedEditPermissions = {};
+    const updatedViewPermissions = { ...reportViewPermissions };
+
     reports.forEach((item) => {
-      updatedPermissions[item.type] = checked;
+      updatedEditPermissions[item.type] = checked;
+      if (checked) {
+        updatedViewPermissions[item.type] = true;
+      }
     });
-    setReportEditPermissions(updatedPermissions);
+
+    setReportEditPermissions(updatedEditPermissions);
+    setReportViewPermissions(updatedViewPermissions);
+
+    const allViewChecked = reports.every((r) => updatedViewPermissions[r.type]);
+    setIsAllReportsViewChecked(allViewChecked);
+  };
+
+  const handleSingleAdminEditChange = (type) => {
+    const isEditing = !adminEditPermissions[type];
+
+    setAdminEditPermissions((prev) => ({
+      ...prev,
+      [type]: isEditing,
+    }));
+
+    if (isEditing && !adminViewPermissions[type]) {
+      setAdminViewPermissions((prev) => ({
+        ...prev,
+        [type]: true,
+      }));
+    }
   };
 
   const handleAdministrationViewAllChange = (e) => {
@@ -755,11 +846,24 @@ const Users = () => {
   const handleAdministrationEditAllChange = (e) => {
     const checked = e.target.checked;
     setIsAllAdministrationsEditChecked(checked);
-    const updatedPermissions = {};
+
+    const updatedEditPermissions = {};
+    const updatedViewPermissions = { ...adminViewPermissions };
+
     administrations.forEach((item) => {
-      updatedPermissions[item.type] = checked;
+      updatedEditPermissions[item.type] = checked;
+      if (checked) {
+        updatedViewPermissions[item.type] = true;
+      }
     });
-    setAdminEditPermissions(updatedPermissions);
+
+    setAdminEditPermissions(updatedEditPermissions);
+    setAdminViewPermissions(updatedViewPermissions);
+
+    const allViewChecked = administrations.every(
+      (a) => updatedViewPermissions[a.type]
+    );
+    setIsAllAdministrationsViewChecked(allViewChecked);
   };
 
   const handleUserCheckboxChange = (userId) => {
@@ -1615,7 +1719,7 @@ const Users = () => {
                 <div className="row">
                   <div className="col-4 d-flex flex-column form-group">
                     <label htmlFor="userId" className="form-label">
-                      Full name
+                      Full name <span className="text-danger fs-6">*</span>
                     </label>
                     <div className="position-relative w-100">
                       <i className="fas fa-user position-absolute z-0 input-icon"></i>
@@ -1636,7 +1740,7 @@ const Users = () => {
                   </div>
                   <div className="col-4 d-flex flex-column form-group">
                     <label htmlFor="email" className="form-label">
-                      Email
+                      Email <span className="text-danger fs-6">*</span>
                     </label>
                     <div className="position-relative w-100">
                       <i className="fa-solid fa-envelope position-absolute z-0 input-icon"></i>
@@ -1658,7 +1762,7 @@ const Users = () => {
                   </div>
                   <div className="col-4 d-flex flex-column form-group">
                     <label htmlFor="pass" className="form-label">
-                      Password
+                      Password <span className="text-danger fs-6">*</span>
                     </label>
                     <div className="position-relative w-100">
                       <i className="fas fa-lock position-absolute z-0 input-icon"></i>
@@ -1682,7 +1786,8 @@ const Users = () => {
                 <div className="row">
                   <div className="col-4 d-flex flex-column form-group">
                     <label htmlFor="cnfpass" className="form-label">
-                      Confirm Password
+                      Confirm Password{" "}
+                      <span className="text-danger fs-6">*</span>
                     </label>
                     <div className="position-relative w-100">
                       <i className="fas fa-lock position-absolute z-0 input-icon"></i>
@@ -1709,7 +1814,7 @@ const Users = () => {
                   </div>
                   <div className="col-4 d-flex flex-column form-group">
                     <label htmlFor="role" className="form-label">
-                      Role
+                      Role <span className="text-danger fs-6">*</span>
                     </label>
                     <div className="position-relative w-100">
                       <i className="fas fa-user-tag position-absolute z-0 input-icon"></i>
@@ -1736,7 +1841,7 @@ const Users = () => {
                   </div>
                   <div className="col-4 d-flex flex-column form-group">
                     <label htmlFor="department" className="form-label">
-                      Department
+                      Department <span className="text-danger fs-6">*</span>
                     </label>
                     <div className="position-relative w-100">
                       <i className="fa-solid fa-building position-absolute z-0 input-icon"></i>
@@ -1818,7 +1923,7 @@ const Users = () => {
                   </div>
                   <div className="col-4 d-flex flex-column form-group">
                     <label htmlFor="branch" className="form-label">
-                      Branch
+                      Branch <span className="text-danger fs-6">*</span>
                     </label>
                     <div className="position-relative w-100">
                       <i className="fa-solid fa-sitemap position-absolute z-0 input-icon"></i>
@@ -2008,11 +2113,9 @@ const Users = () => {
                                       ]
                                     }
                                     onChange={() =>
-                                      setTransactionEditPermissions((prev) => ({
-                                        ...prev,
-                                        [transaction.type]:
-                                          !prev[transaction.type],
-                                      }))
+                                      handleSingleTransactionEditChange(
+                                        transaction.type
+                                      )
                                     }
                                   />
                                   <i className="fas fa-edit permission-icon success"></i>
@@ -2096,10 +2199,7 @@ const Users = () => {
                                       !!reportEditPermissions[report.type]
                                     }
                                     onChange={() =>
-                                      setReportEditPermissions((prev) => ({
-                                        ...prev,
-                                        [report.type]: !prev[report.type],
-                                      }))
+                                      handleSingleReportEditChange(report.type)
                                     }
                                   />
                                   <i className="fas fa-edit permission-icon success"></i>
@@ -2188,11 +2288,9 @@ const Users = () => {
                                       ]
                                     }
                                     onChange={() =>
-                                      setAdminEditPermissions((prev) => ({
-                                        ...prev,
-                                        [administration.type]:
-                                          !prev[administration.type],
-                                      }))
+                                      handleSingleAdminEditChange(
+                                        administration.type
+                                      )
                                     }
                                   />
                                   <i className="fas fa-edit permission-icon success"></i>
@@ -2709,7 +2807,8 @@ const Users = () => {
                         <div className="row">
                           <div className="col-4 d-flex flex-column form-group">
                             <label htmlFor="userId" className="form-label">
-                              Full name
+                              Full Name{" "}
+                              <span className="text-danger fs-6">*</span>
                             </label>
                             <div className="position-relative w-100">
                               <i className="fas fa-user position-absolute z-0 input-icon"></i>
@@ -2730,7 +2829,7 @@ const Users = () => {
                           </div>
                           <div className="col-4 d-flex flex-column form-group">
                             <label htmlFor="email" className="form-label">
-                              Email
+                              Email <span className="text-danger fs-6">*</span>
                             </label>
                             <div className="position-relative w-100">
                               <i className="fa-solid fa-envelope position-absolute z-0 input-icon"></i>
@@ -2752,7 +2851,8 @@ const Users = () => {
                           </div>
                           <div className="col-4 d-flex flex-column form-group">
                             <label htmlFor="pass" className="form-label">
-                              Password
+                              Password{" "}
+                              <span className="text-danger fs-6">*</span>
                             </label>
                             <div className="position-relative w-100">
                               <i className="fas fa-lock position-absolute z-0 input-icon"></i>
@@ -2781,7 +2881,8 @@ const Users = () => {
                         <div className="row">
                           <div className="col-4 d-flex flex-column form-group">
                             <label htmlFor="cnfpass" className="form-label">
-                              Confirm Password
+                              Confirm Password{" "}
+                              <span className="text-danger fs-6">*</span>
                             </label>
                             <div className="position-relative w-100">
                               <i className="fas fa-lock position-absolute z-0 input-icon"></i>
@@ -2808,7 +2909,7 @@ const Users = () => {
                           </div>
                           <div className="col-4 d-flex flex-column form-group">
                             <label htmlFor="role" className="form-label">
-                              Role
+                              Role <span className="text-danger fs-6">*</span>
                             </label>
                             <div className="position-relative w-100">
                               <i className="fas fa-user-tag position-absolute z-0 input-icon"></i>
@@ -2840,7 +2941,8 @@ const Users = () => {
                           </div>
                           <div className="col-4 d-flex flex-column form-group">
                             <label htmlFor="department" className="form-label">
-                              Department
+                              Department{" "}
+                              <span className="text-danger fs-6">*</span>
                             </label>
                             <div className="position-relative w-100">
                               <i className="fa-solid fa-building position-absolute z-0 input-icon"></i>
@@ -2925,7 +3027,7 @@ const Users = () => {
                           </div>
                           <div className="col-4 d-flex flex-column form-group">
                             <label htmlFor="branch" className="form-label">
-                              Branch
+                              Branch <span className="text-danger fs-6">*</span>
                             </label>
                             <div className="position-relative w-100">
                               <i className="fa-solid fa-sitemap position-absolute z-0 input-icon"></i>

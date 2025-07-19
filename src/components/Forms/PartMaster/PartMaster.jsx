@@ -409,7 +409,7 @@ const PartMaster = () => {
               <div className="row form-style">
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="name" className="form-label">
-                    Name
+                    Name <span className="text-danger fs-6">*</span>
                   </label>
                   <div className="position-relative w-100">
                     <i className="fas fa-font position-absolute z-0 input-icon"></i>
@@ -430,7 +430,7 @@ const PartMaster = () => {
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="code" className="form-label">
-                    Code
+                    Code <span className="text-danger fs-6">*</span>
                   </label>
                   <div className="position-relative w-100">
                     <i className="fas fa-qrcode position-absolute z-0 input-icon"></i>
@@ -456,7 +456,7 @@ const PartMaster = () => {
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="uom" className="form-label">
-                    UOM
+                    UOM <span className="text-danger fs-6">*</span>
                   </label>
                   <div className="position-relative w-100">
                     <i className="fas fa-ruler position-absolute z-0 input-icon"></i>
@@ -857,7 +857,7 @@ const PartMaster = () => {
                     <div className="row form-style">
                       <div className="col-4 d-flex flex-column form-group">
                         <label htmlFor="name" className="form-label">
-                          Name
+                          Name <span className="text-danger fs-6">*</span>
                         </label>
                         <div className="position-relative w-100">
                           <i className="fas fa-font position-absolute z-0 input-icon"></i>
@@ -875,7 +875,7 @@ const PartMaster = () => {
                       </div>
                       <div className="col-4 d-flex flex-column form-group">
                         <label htmlFor="code" className="form-label">
-                          Code
+                          Code <span className="text-danger fs-6">*</span>
                         </label>
                         <div className="position-relative w-100">
                           <i className="fas fa-qrcode position-absolute z-0 input-icon"></i>
@@ -893,7 +893,7 @@ const PartMaster = () => {
                       </div>
                       <div className="col-4 d-flex flex-column form-group">
                         <label htmlFor="uom" className="form-label">
-                          UOM
+                          UOM <span className="text-danger fs-6">*</span>
                         </label>
                         <div className="position-relative w-100">
                           <i className="fas fa-ruler position-absolute z-0 input-icon"></i>

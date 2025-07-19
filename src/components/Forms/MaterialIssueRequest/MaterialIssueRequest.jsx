@@ -443,7 +443,7 @@ const MaterialIssueRequest = () => {
               {/* Requisition Type */}
               <div className={`${fieldClass} form-group`}>
                 <label htmlFor="requisitionType" className="form-label ms-2">
-                  Requisition Type
+                  Requisition Type <span className="text-danger fs-6">*</span>
                 </label>
                 <div className="position-relative w-100">
                   <i className="fas fa-rectangle-list ms-2 position-absolute z-0 input-icon margin-top-8"></i>
@@ -475,7 +475,7 @@ const MaterialIssueRequest = () => {
               {isCompleteBOM && !isBOMAdded && (
                 <div className={`${fieldClass} form-group`}>
                   <label htmlFor="selectBOM" className="form-label ms-2">
-                    Select BOM
+                    Select BOM <span className="text-danger fs-6">*</span>
                   </label>
                   <div className="position-relative w-100">
                     <i className="fas fa-sitemap ms-2 position-absolute z-0 input-icon margin-top-8"></i>
@@ -500,7 +500,7 @@ const MaterialIssueRequest = () => {
               {isIndividualItems && (
                 <div className={`${fieldClass} form-group`}>
                   <label htmlFor="selectItem" className="form-label ms-2">
-                    Select Item
+                    Select Item <span className="text-danger fs-6">*</span>
                   </label>
                   <div className="position-relative w-100">
                     <i className="fas fa-box ms-2 position-absolute z-0 input-icon margin-top-8"></i>
@@ -524,7 +524,7 @@ const MaterialIssueRequest = () => {
               {/* Quantity */}
               <div className={`${fieldClass} form-group`}>
                 <label htmlFor="quantity" className="form-label ms-2">
-                  Quantity
+                  Quantity <span className="text-danger fs-6">*</span>
                 </label>
                 <div className="position-relative w-100">
                   <i className="fas fa-calculator ms-2 position-absolute z-0 input-icon margin-top-8"></i>

@@ -135,7 +135,7 @@ const WIPReturn = () => {
             <div className="row form-style">
               <div className="col-3 d-flex flex-column form-group">
                 <label htmlFor="workOrder" className="form-label">
-                  Work Order
+                  Work Order <span className="text-danger fs-6">*</span>
                 </label>
                 <div className="position-relative w-100">
                   <i className="fas fa-file-lines position-absolute z-0 input-icon"></i>
@@ -151,27 +151,9 @@ const WIPReturn = () => {
                   <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                 </div>
               </div>
-              {/* <div className="col-3 d-flex flex-column form-group">
-                <label htmlFor="productionLine" className="form-label">
-                  Production Line
-                </label>
-                <div className="position-relative w-100">
-                  <i className="fas fa-gears position-absolute z-0 input-icon"></i>
-                  <select
-                    className="form-control ps-5 text-font"
-                    id="productionLine"
-                    value=""
-                  >
-                    <option value="" className="text-muted">
-                      Select Line
-                    </option>
-                  </select>
-                  <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
-                </div>
-              </div> */}
               <div className="col-3 d-flex flex-column form-group">
                 <label htmlFor="shift" className="form-label">
-                  Return Type
+                  Return Type <span className="text-danger fs-6">*</span>
                 </label>
                 <div className="position-relative w-100">
                   <i className="fas fa-tags position-absolute z-0 input-icon"></i>
@@ -198,7 +180,7 @@ const WIPReturn = () => {
               </div>
               <div className="col-3 d-flex flex-column form-group">
                 <label htmlFor="operator" className="form-label">
-                  Return Date
+                  Return Date <span className="text-danger fs-6">*</span>
                 </label>
                 <div className="position-relative w-100">
                   <i className="fas fa-calendar position-absolute z-0 input-icon"></i>

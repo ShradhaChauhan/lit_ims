@@ -233,7 +233,7 @@ const ProductionMaterialUsage = () => {
             <div className="row form-style">
               <div className="col-3 d-flex flex-column form-group">
                 <label htmlFor="workOrder" className="form-label">
-                  Work Order
+                  Work Order <span className="text-danger fs-6">*</span>
                 </label>
                 <div className="position-relative w-100">
                   <i className="fas fa-file-lines position-absolute z-0 input-icon"></i>
