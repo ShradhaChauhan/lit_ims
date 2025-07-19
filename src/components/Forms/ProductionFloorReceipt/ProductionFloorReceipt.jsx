@@ -380,7 +380,7 @@ const ProductionFloorReceipt = () => {
             <div className="row form-style">
               <div className="col-3 d-flex flex-column form-group">
                 <label htmlFor="issueNumber" className="form-label">
-                  Issue Number
+                  Issue Number <span className="text-danger fs-6">*</span>
                 </label>
                 <div className="position-relative w-100">
                   <i className="fas fa-dolly position-absolute z-0 input-icon"></i>
@@ -409,7 +409,7 @@ const ProductionFloorReceipt = () => {
               </div>
               <div className="col-3 d-flex flex-column form-group">
                 <label htmlFor="issueDate" className="form-label">
-                  Issue Date
+                  Issue Date <span className="text-danger fs-6">*</span>
                 </label>
                 <div className="position-relative w-100">
                   <i className="fas fa-calendar position-absolute z-0 input-icon"></i>
@@ -425,7 +425,7 @@ const ProductionFloorReceipt = () => {
               </div>
               <div className="col-3 d-flex flex-column form-group">
                 <label htmlFor="requisitionNumber" className="form-label">
-                  Requisition Number
+                  Requisition Number <span className="text-danger fs-6">*</span>
                 </label>
                 <div className="position-relative w-100">
                   <i className="fas fa-file-invoice position-absolute z-0 input-icon"></i>
@@ -441,7 +441,7 @@ const ProductionFloorReceipt = () => {
               </div>
               <div className="col-3 d-flex flex-column form-group">
                 <label htmlFor="receiptDate" className="form-label">
-                  Receipt Date
+                  Receipt Date <span className="text-danger fs-6">*</span>
                 </label>
                 <div className="position-relative w-100">
                   <i className="fas fa-calendar position-absolute z-0 input-icon"></i>

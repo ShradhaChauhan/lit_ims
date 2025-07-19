@@ -369,7 +369,8 @@ const IncomingQC = () => {
             <div className="row form-style">
               <div className="col-12 d-flex flex-column form-group">
                 <label htmlFor="scanBatch" className="form-label">
-                  Scan or Enter Batch Number
+                  Scan or Enter Batch Number{" "}
+                  <span className="text-danger fs-6">*</span>
                 </label>
                 <div className="search-box">
                   <i className="fas fa-barcode position-absolute z-0 input-icon"></i>
