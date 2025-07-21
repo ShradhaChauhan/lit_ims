@@ -412,7 +412,7 @@ const LandingPage = () => {
           </Link>
           <Link to="/issue-to-production" className="quick-link">
             <i className="fas fa-dolly"></i>
-            <span>Issue to Production</span>
+            <span>Material Issue Transfer</span>
           </Link>
           <Link to="/inventory-audit-report" className="quick-link">
             <i className="fas fa-chart-bar"></i>

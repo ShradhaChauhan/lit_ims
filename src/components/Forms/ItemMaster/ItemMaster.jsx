@@ -1075,7 +1075,6 @@ const ItemMaster = () => {
                         setFormData({
                           ...formData,
                           inventoryItem: e.target.value,
-                          iqc: true,
                         })
                       }
                     >
@@ -1709,8 +1708,8 @@ const ItemMaster = () => {
                             value={itemDetails.inventoryItem}
                             onChange={(e) =>
                               setItemDetails({
-                                ...formData,
-                                itemDetails: e.target.value,
+                                ...itemDetails,
+                                inventoryItem: e.target.value,
                               })
                             }
                           >
@@ -1722,7 +1721,7 @@ const ItemMaster = () => {
                         </div>
                       </div>
                     </div>
-                    {formData.inventoryItem === "true" && (
+                    {itemDetails.inventoryItem === "true" && (
                       <div className="row form-style">
                         <div className="col-4 d-flex flex-column form-group">
                           <div className="d-flex align-items-center gap-2">
@@ -1739,8 +1738,8 @@ const ItemMaster = () => {
                               checked={itemDetails.iqc}
                               onChange={(e) =>
                                 setItemDetails({
-                                  ...formData,
-                                  itemDetails: e.target.checked,
+                                  ...itemDetails,
+                                  iqc: e.target.checked,
                                 })
                               }
                             />

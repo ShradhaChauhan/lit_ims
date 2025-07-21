@@ -49,6 +49,11 @@ const SideBar = () => {
 
   const menuItems = [
     {
+      icon: "fa-solid fa-house",
+      path: "dashboard",
+      label: "Dashboard",
+    },
+    {
       icon: "fas fa-user-tie",
       path: "Administrations",
       label: "Administrations",
@@ -404,7 +409,7 @@ const SideBar = () => {
         ))}
       </ul>
 
-      {!isCollapsed && (
+      {!isCollapsed ? (
         <div className="ms-2">
           <div className="user-profile">
             <div className="profile-info" title="John Doe">
@@ -426,6 +431,10 @@ const SideBar = () => {
             </button>
           </div>
         </div>
+      ) : (
+        <button onClick={handleLogout} className="nav-link menuListItem fs-6">
+          <i className="fas fa-sign-out-alt"></i>
+        </button>
       )}
     </div>
   );
