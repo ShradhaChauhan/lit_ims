@@ -1,6 +1,9 @@
 import { Modal } from "bootstrap";
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
+import api from "../../services/api";
+import { useMemo } from "react";
 
 const Reports = () => {
   const [isShowDetails, setIsShowDetails] = useState(false);
@@ -8,9 +11,21 @@ const Reports = () => {
   const [isShowTransactionDetails, setIsShowTransactionDetails] =
     useState(false);
   const [filteredItems, setFilteredItems] = useState([]);
+  const [warehouses, setWarehouses] = useState([]);
   const reportModalRef = useRef(null);
   const itemModalRef = useRef(null);
   const transactionModalRef = useRef(null);
+  // Serach and filter states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState("");
+  const [selectedIQCStatus, setSelectedIQCStatus] = useState("");
+
+  // Sorting state
+  const [sortConfig, setSortConfig] = useState({
+    key: null, // 'name', 'code', or 'type'
+    direction: null, // 'asc' or 'desc'
+  });
+
   const [reports, setReports] = useState([
     {
       warehouseName: "Moulding Shop Floor",
@@ -29,6 +44,70 @@ const Reports = () => {
     totalItems: 0,
     itemsPerPage: 10,
   });
+
+  // Sort warehouses based on sortConfig
+  const handleSort = (key) => {
+    setSortConfig((prev) => {
+      if (prev.key === key) {
+        // Toggle direction
+        return {
+          key,
+          direction: prev.direction === "asc" ? "desc" : "asc",
+        };
+      } else {
+        // Set default to ascending
+        return {
+          key,
+          direction: "asc",
+        };
+      }
+    });
+  };
+
+  // Filtered warehouses based on search query
+  const filteredWarehouses = useMemo(() => {
+    let result = warehouses.filter((w) => {
+      const query = searchQuery.toLowerCase();
+      const matchesSearch =
+        w.name?.toLowerCase().includes(query) ||
+        w.code?.toLowerCase().includes(query) ||
+        w.type?.toLowerCase().includes(query);
+
+      const matchesLocation = selectedLocation
+        ? w.location === selectedLocation
+        : true;
+
+      const matchesIQCStatus = selectedIQCStatus
+        ? w.iqcStatus === selectedIQCStatus
+        : true;
+
+      return matchesSearch && matchesLocation && matchesIQCStatus;
+    });
+
+    // Apply sort
+    if (sortConfig.key) {
+      result.sort((a, b) => {
+        const aVal = a[sortConfig.key]?.toLowerCase?.() || "";
+        const bVal = b[sortConfig.key]?.toLowerCase?.() || "";
+
+        if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
+        if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return result;
+  }, [
+    warehouses,
+    searchQuery,
+    selectedLocation,
+    selectedIQCStatus,
+    sortConfig,
+  ]);
+
+  useEffect(() => {
+    setFilteredItems(filteredWarehouses);
+  }, [filteredWarehouses]);
 
   const [warehouseDetails, setWarehouseDetails] = useState([
     {
@@ -99,6 +178,35 @@ const Reports = () => {
     },
   ]);
 
+  // Fetch warehouse list
+  const fetchWarehouses = () => {
+    api
+      .get("/api/warehouses")
+      .then((response) => {
+        console.log("Warehouses response:", response.data);
+        if (response.data && response.data.status) {
+          setWarehouses(response.data.data || []);
+        } else {
+          console.error(
+            "Error fetching warehouses:",
+            response.data.message || "Unknown error"
+          );
+          toast.error(
+            "Error in fetching warehouses. Please refresh the page and try again"
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching warehouses:", error);
+        toast.error("Error in fetching warehouses. Please try again");
+      });
+  };
+
+  useEffect(() => {
+    fetchWarehouses();
+  }, []);
+
+  // Modal effects
   useEffect(() => {
     if (isShowDetails && reportModalRef.current) {
       const bsModal = new Modal(reportModalRef.current, {
@@ -244,22 +352,21 @@ const Reports = () => {
           <input
             type="text"
             className="form-control vendor-search-bar"
-            placeholder="Search by warehouse..."
+            placeholder="Search by warehouse name, code, type..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
         <div className="filter-options">
-          <select className="filter-select">
-            <option value="">All Locations</option>
-            <option value="W1">W1</option>
-            <option value="W2">W2</option>
-          </select>
-          <select className="filter-select">
-            <option value="">IQC Status</option>
-            <option value="Ok">Ok</option>
-            <option value="Not Ok">Not Ok</option>
-          </select>
-
-          <button className="filter-select">
+          <button
+            className="filter-select"
+            onClick={() => {
+              setSearchQuery("");
+              setSelectedLocation("");
+              setSelectedIQCStatus("");
+              setSortConfig({ key: null, direction: null });
+            }}
+          >
             <i className="fas fa-filter me-2"></i>
             Reset Filters
           </button>
@@ -271,13 +378,48 @@ const Reports = () => {
           <table>
             <thead>
               <tr>
-                <th>Warehouse Name</th>
-                <th>Warehouse Code</th>
+                <th
+                  onClick={() => handleSort("name")}
+                  style={{ cursor: "pointer" }}
+                >
+                  Warehouse Name{" "}
+                  {sortConfig.key === "name" &&
+                    (sortConfig.direction === "asc" ? (
+                      <i className="fa-solid fa-sort-up"></i>
+                    ) : (
+                      <i className="fa-solid fa-sort-down"></i>
+                    ))}
+                </th>
+                <th
+                  onClick={() => handleSort("code")}
+                  style={{ cursor: "pointer" }}
+                >
+                  Warehouse Code{" "}
+                  {sortConfig.key === "code" &&
+                    (sortConfig.direction === "asc" ? (
+                      <i className="fa-solid fa-sort-up"></i>
+                    ) : (
+                      <i className="fa-solid fa-sort-down"></i>
+                    ))}
+                </th>
+                <th
+                  onClick={() => handleSort("type")}
+                  style={{ cursor: "pointer" }}
+                >
+                  Warehouse Type{" "}
+                  {sortConfig.key === "type" &&
+                    (sortConfig.direction === "asc" ? (
+                      <i className="fa-solid fa-sort-up"></i>
+                    ) : (
+                      <i className="fa-solid fa-sort-down"></i>
+                    ))}
+                </th>
                 <th>Actions</th>
               </tr>
             </thead>
+
             <tbody className="text-break">
-              {reports.length === 0 ? (
+              {filteredWarehouses.length === 0 ? (
                 <tr className="no-data-row">
                   <td colSpan="4" className="no-data-cell">
                     <div className="no-data-content">
@@ -287,18 +429,11 @@ const Reports = () => {
                   </td>
                 </tr>
               ) : (
-                reports.map((report) => (
-                  <tr key={report.id}>
-                    <td className="ps-4">
-                      <div>
-                        <span>{report.warehouseName}</span>
-                      </div>
-                    </td>
-                    <td className="ps-4">
-                      <div>
-                        <span>{report.warehouseCode}</span>
-                      </div>
-                    </td>
+                filteredWarehouses.map((w) => (
+                  <tr key={w.id}>
+                    <td className="ps-4">{w.name}</td>
+                    <td className="ps-4">{w.code}</td>
+                    <td className="ps-4">{w.type}</td>
                     <td className="actions ps-4">
                       <button
                         className="btn-icon btn-primary"
