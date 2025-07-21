@@ -209,9 +209,14 @@ const MaterialIncoming = () => {
           const newItem = {
             itemName: batchData.itemName,
             itemCode: batchData.itemCode,
-            warehouse: batchData.warehouseName || formData.warehouse,
+            warehouse: batchData.batchNo
+              ? batchData.warehouseName
+              : findStoreWarehouseName(),
+            warehouseId: batchData.batchNo
+              ? batchData.warehouseId
+              : findStoreWarehouseId(),
             quantity: isStdQty ? batchData.quantity : formData.quantity,
-            batchNo: batchData.batchNo,
+            batchNo: batchData.batchNo || "",
             vendorCode: formData.code || batchData.vendorCode,
             vendorName: formData.vendorName || batchData.vendorName,
           };
@@ -243,13 +248,20 @@ const MaterialIncoming = () => {
           warehouse: formData.warehouse,
         });
 
-        const response = await api.post(
-          `/api/receipt/generate-batch?vendorCode=${formData.code}&itemCode=${formData.itemCode}&quantity=${formData.quantity}`
-        );
+        try {
+          const response = await api.post(
+            `/api/receipt/generate-batch?vendorCode=${formData.code}&itemCode=${formData.itemCode}&quantity=${formData.quantity}`
+          );
 
-        if (response.data) {
-          const batchNo = response.data;
-          console.log("Generated batch:", batchNo);
+          let batchNo = "";
+          if (response.data) {
+            batchNo = response.data;
+            console.log("Generated batch:", batchNo);
+          } else {
+            console.warn(
+              "No batch number returned from API, proceeding with empty batch"
+            );
+          }
 
           const newItem = {
             itemName: formData.itemName,
@@ -258,7 +270,8 @@ const MaterialIncoming = () => {
             batchNo: batchNo,
             vendorCode: formData.code,
             vendorName: formData.vendorName,
-            warehouse: formData.warehouse,
+            warehouse: batchNo ? "" : findStoreWarehouseName(),
+            warehouseId: batchNo ? "" : findStoreWarehouseId(),
           };
 
           setReceiptList((prev) => [...prev, newItem]);
@@ -274,8 +287,34 @@ const MaterialIncoming = () => {
             quantity: "",
             warehouse: "",
           }));
-        } else {
-          toast.error("Failed to generate batch number");
+        } catch (error) {
+          // Even if batch generation fails, still add the item with empty batch
+          console.warn("Failed to generate batch number:", error);
+
+          const newItem = {
+            itemName: formData.itemName,
+            itemCode: formData.itemCode,
+            quantity: formData.quantity,
+            batchNo: "",
+            vendorCode: formData.code,
+            vendorName: formData.vendorName,
+            warehouse: findStoreWarehouseName(),
+            warehouseId: findStoreWarehouseId(),
+          };
+
+          setReceiptList((prev) => [...prev, newItem]);
+          toast.success("Item added with no batch number");
+
+          // Reset item selection but keep vendor information
+          setVendorItem("");
+          setFormData((prev) => ({
+            ...prev,
+            vendorItem: "",
+            itemName: "",
+            itemCode: "",
+            quantity: "",
+            warehouse: "",
+          }));
         }
       } else {
         toast.error("Please select a receipt mode first");
@@ -334,9 +373,15 @@ const MaterialIncoming = () => {
         itemName: batchData.itemName,
         itemCode: batchData.itemCode,
         quantity: formData.quantity, // Use the modified quantity
-        batchNo: batchData.batchNo,
+        batchNo: batchData.batchNo || "",
         vendorCode: formData.code || batchData.vendorCode,
         vendorName: formData.vendorName || batchData.vendorName,
+        warehouse: batchData.batchNo
+          ? batchData.warehouseName
+          : findStoreWarehouseName(),
+        warehouseId: batchData.batchNo
+          ? batchData.warehouseId
+          : findStoreWarehouseId(),
       };
 
       // Do NOT add to receipt list since we're saving directly to DB
@@ -402,8 +447,12 @@ const MaterialIncoming = () => {
         mode: mode,
         vendor: firstItem.vendorName || formData.vendorName,
         vendorCode: firstItem.vendorCode || formData.code,
-        warehouse: firstItem.warehouse || formData.warehouse,
-        items: receiptList,
+        items: receiptList.map((item) => ({
+          ...item,
+          // If batchNo is empty, use Store warehouse as default
+          warehouseId: item.batchNo ? item.warehouseId : findStoreWarehouseId(),
+          warehouse: item.batchNo ? item.warehouse : findStoreWarehouseName(),
+        })),
       };
 
       console.log("Submitting receipt data:", payload);
@@ -526,6 +575,22 @@ const MaterialIncoming = () => {
       toast.error("Unable to fetch vendor name");
       console.error(error);
     }
+  };
+
+  // Function to find Store warehouse ID
+  const findStoreWarehouseId = () => {
+    const storeWarehouse = warehouses.find(
+      (w) => w.name === "Store" || w.type === "STR"
+    );
+    return storeWarehouse ? storeWarehouse.id : "";
+  };
+
+  // Function to find Store warehouse name
+  const findStoreWarehouseName = () => {
+    const storeWarehouse = warehouses.find(
+      (w) => w.name === "Store" || w.type === "STR"
+    );
+    return storeWarehouse ? storeWarehouse.name : "";
   };
   return (
     <div>
@@ -743,7 +808,7 @@ const MaterialIncoming = () => {
           )}
           <div>
             <div className="row">
-              <div className="col-3 d-flex flex-column form-group">
+              {/* <div className="col-3 d-flex flex-column form-group">
                 <label htmlFor="item" className="form-label ms-2">
                   Select Warehouse <span className="text-danger fs-6">*</span>
                 </label>
@@ -781,7 +846,7 @@ const MaterialIncoming = () => {
                   </select>
                   <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                 </div>
-              </div>
+              </div> */}
               <div className="col-3 d-flex flex-column form-group">
                 <label htmlFor="quantity" className="form-label ms-2">
                   Quantity <span className="text-danger fs-6">*</span>
@@ -844,13 +909,14 @@ const MaterialIncoming = () => {
                         <th>Item Code</th>
                         <th>Quantity</th>
                         <th>Batch No</th>
+                        <th>Warehouse</th>
                         <th>Actions</th>
                       </tr>
                     </thead>
                     <tbody className="text-break">
                       {receiptList.length === 0 ? (
                         <tr className="no-data-row">
-                          <td colSpan="5" className="no-data-cell">
+                          <td colSpan="6" className="no-data-cell">
                             <div className="no-data-content">
                               <i className="fas fa-box-open no-data-icon"></i>
                               <p className="no-data-text">No Items Added</p>
@@ -868,6 +934,39 @@ const MaterialIncoming = () => {
                             <td className="ps-4">{receipt.quantity}</td>
                             <td className="ps-4 text-break">
                               {receipt.batchNo}
+                            </td>
+                            <td className="ps-4">
+                              <select
+                                className="form-select"
+                                value={
+                                  receipt.warehouseId
+                                    ? `${receipt.warehouseId}|${receipt.warehouse}`
+                                    : ""
+                                }
+                                onChange={(e) => {
+                                  const selectedValue = e.target.value;
+                                  if (selectedValue) {
+                                    const [selectedId, selectedName] =
+                                      selectedValue.split("|");
+                                    const updatedList = [...receiptList];
+                                    updatedList[index].warehouse = selectedName;
+                                    updatedList[index].warehouseId = selectedId;
+                                    setReceiptList(updatedList);
+                                  }
+                                }}
+                              >
+                                <option value="" disabled>
+                                  Select Warehouse
+                                </option>
+                                {warehouses.map((w) => (
+                                  <option
+                                    key={w.id}
+                                    value={`${w.id}|${w.name}`}
+                                  >
+                                    {w.name}
+                                  </option>
+                                ))}
+                              </select>
                             </td>
                             <td className="actions ps-3">
                               <button
@@ -1013,6 +1112,10 @@ const MaterialIncoming = () => {
                   <div className="detail-item">
                     <strong>Batch No:</strong>
                     <span>{currentReceipt.batchNo}</span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Warehouse:</strong>
+                    <span>{currentReceipt.warehouse || "Not specified"}</span>
                   </div>
                 </div>
               </div>

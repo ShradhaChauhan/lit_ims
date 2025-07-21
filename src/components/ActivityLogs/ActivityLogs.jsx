@@ -1,15 +1,30 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { debounce } from "lodash";
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../../services/api";
 import "./ActivityLogs.css";
+import { Modal } from "bootstrap";
 
 const ActivityLogs = () => {
   const [logs, setLogs] = useState([]);
   const [inputValue, setInputValue] = useState("");
+  const [isShowLogDetails, setIsShowLogDetails] = useState(false);
+  const [logDetails, setLogDetails] = useState(null);
+  const logModalRef = useRef(null);
+  useEffect(() => {
+    if (isShowLogDetails && logModalRef.current) {
+      const bsModal = new Modal(logModalRef.current, {
+        backdrop: "static",
+      });
+      bsModal.show();
 
+      logModalRef.current.addEventListener("hidden.bs.modal", () =>
+        setIsShowLogDetails(false)
+      );
+    }
+  }, [isShowLogDetails]);
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -72,6 +87,13 @@ const ActivityLogs = () => {
       debounced.cancel();
     };
   }, [inputValue]);
+
+  const handleViewDetails = (log, e) => {
+    e.preventDefault();
+    console.log(log);
+    setLogDetails(log);
+    setIsShowLogDetails(true);
+  };
 
   return (
     <div>
@@ -143,7 +165,9 @@ const ActivityLogs = () => {
                 <th>Details</th>
                 <th>Performed By</th>
                 <th>Time</th>
+                <th>IP Address</th>
                 <th>Actions</th>
+                <th>View Details</th>
               </tr>
             </thead>
             <tbody>
@@ -169,8 +193,9 @@ const ActivityLogs = () => {
                         ? new Date(log.timestamp).toLocaleString()
                         : "-"}
                     </td>
+                    <td className="ps-4 text-break">{log.ipAddress ?? "-"}</td>
                     <td
-                      className={`badge text-center ${
+                      className={`badge text-center ms-3 ${
                         log.action === "CREATE"
                           ? "create"
                           : log.action === "VIEW"
@@ -181,6 +206,15 @@ const ActivityLogs = () => {
                       } w-25 mt-3 ms-2`}
                     >
                       {log.action ?? "-"}
+                    </td>
+                    <td className="ps-5">
+                      <button
+                        className="btn-icon btn-primary"
+                        title="View Details"
+                        onClick={(e) => handleViewDetails(log, e)}
+                      >
+                        <i className="fas fa-eye"></i>
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -233,6 +267,72 @@ const ActivityLogs = () => {
           </div>
         </div>
       </div>
+      {/* View Item Details Modal */}
+      {/* View Receipt Details Modal */}
+      {isShowLogDetails && (
+        <div
+          className="modal fade modal-lg"
+          ref={logModalRef}
+          id="logDetailModal"
+          tabIndex="-1"
+        >
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  <i className="fas fa-circle-info me-2"></i>Transaction Details
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body">
+                <div className="user-details-grid">
+                  <div className="detail-item">
+                    <strong>Module:</strong>
+                    <span>{logDetails.entityName}</span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Module Id:</strong>
+                    <span>{logDetails.entityId}</span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Performed By:</strong>
+                    <span>{logDetails.performedBy}</span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>IP Address:</strong>
+                    <span>{logDetails.ipAddress}</span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Details:</strong>
+                    <span>{logDetails.details}</span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Time:</strong>
+                    <span>{logDetails.timestamp}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary add-btn"
+                  data-bs-dismiss="modal"
+                  onClick={() => {
+                    document.activeElement?.blur();
+                  }}
+                >
+                  <i className="fas fa-xmark me-2"></i>Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
