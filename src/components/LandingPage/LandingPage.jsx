@@ -24,7 +24,7 @@ import { toast } from "react-toastify";
 // Sample data - replace with actual API calls in production
 const inventoryStatusData = [
   { name: "In Stock", value: 65, color: "#4CAF50" },
-  { name: "Low Stock", value: 25, color: "#FFC107" },
+  { name: "Low Stock", value: 0, color: "#FFC107" },
   { name: "Out of Stock", value: 10, color: "#F44336" },
 ];
 
@@ -162,7 +162,7 @@ const LandingPage = () => {
     setInventorySummary({
       totalItems: 1245,
       totalValue: 567890,
-      lowStockItems: 28,
+      lowStockItems: 0,
       recentTransactions: 156,
     });
   };
@@ -189,15 +189,17 @@ const LandingPage = () => {
 
       {/* Summary Cards */}
       <div className="summary-cards">
-        <div className="summary-card">
-          <div className="card-icon blue">
-            <i className="fas fa-box"></i>
+        <Link to="/item-master" className="text-decoration-none">
+          <div className="summary-card">
+            <div className="card-icon blue">
+              <i className="fas fa-box"></i>
+            </div>
+            <div className="card-content">
+              <h3>{inventorySummary.totalItems}</h3>
+              <p>Total Items</p>
+            </div>
           </div>
-          <div className="card-content">
-            <h3>{inventorySummary.totalItems}</h3>
-            <p>Total Items</p>
-          </div>
-        </div>
+        </Link>
         <div className="summary-card">
           <div className="card-icon green">
             <i className="fas fa-dollar-sign"></i>
@@ -216,15 +218,17 @@ const LandingPage = () => {
             <p>Low Stock Items</p>
           </div>
         </div>
-        <div className="summary-card">
-          <div className="card-icon purple">
-            <i className="fas fa-exchange-alt"></i>
+        <Link to="/activity-logs" className="text-decoration-none">
+          <div className="summary-card">
+            <div className="card-icon purple">
+              <i className="fas fa-exchange-alt"></i>
+            </div>
+            <div className="card-content">
+              <h3>{inventorySummary.recentTransactions}</h3>
+              <p>Recent Transactions</p>
+            </div>
           </div>
-          <div className="card-content">
-            <h3>{inventorySummary.recentTransactions}</h3>
-            <p>Recent Transactions</p>
-          </div>
-        </div>
+        </Link>
       </div>
 
       {/* Enhanced Quality Check Status */}
