@@ -29,6 +29,21 @@ const Reports = () => {
     direction: null,
   });
 
+  // Item Report Modal Search and Filter states
+  const [modalItemSearchQuery, setModalItemSearchQuery] = useState("");
+  const [modalItemSortConfig, setModalItemSortConfig] = useState({
+    key: null,
+    direction: null,
+  });
+
+  // Transaction Report Modal Search and Filter states
+  const [modalTransactionSearchQuery, setModalTransactionSearchQuery] =
+    useState("");
+  const [modalTransactionSortConfig, setModalTransactionSortConfig] = useState({
+    key: null,
+    direction: null,
+  });
+
   // Sorting state
   const [sortConfig, setSortConfig] = useState({
     key: null, // 'name', 'code', or 'type'
@@ -137,53 +152,7 @@ const Reports = () => {
     },
   ]);
 
-  // Item modal filtering and sorting
-  const filteredWarehouseDetails = useMemo(() => {
-    let filtered = [...warehouseDetail];
-
-    if (modalSearchQuery) {
-      const query = modalSearchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (item) =>
-          item.itemName?.toLowerCase().includes(query) ||
-          item.itemCode?.toLowerCase().includes(query) ||
-          item.uom?.toLowerCase?.().includes(query)
-      );
-    }
-
-    if (modalSortConfig.key) {
-      filtered.sort((a, b) => {
-        const aVal = a[modalSortConfig.key];
-        const bVal = b[modalSortConfig.key];
-
-        if (typeof aVal === "string") {
-          return modalSortConfig.direction === "asc"
-            ? aVal.localeCompare(bVal)
-            : bVal.localeCompare(aVal);
-        } else {
-          return modalSortConfig.direction === "asc"
-            ? aVal - bVal
-            : bVal - aVal;
-        }
-      });
-    }
-
-    return filtered;
-  }, [warehouseDetails, modalSearchQuery, modalSortConfig]);
-
-  const handleModalSort = (key) => {
-    setModalSortConfig((prev) => {
-      if (prev.key === key) {
-        return {
-          key,
-          direction: prev.direction === "asc" ? "desc" : "asc",
-        };
-      }
-      return { key, direction: "asc" };
-    });
-  };
-
-  const [itemDetails, setItemDetails] = useState([
+  const [itemDetail, setItemDetail] = useState([
     {
       id: 1,
       itemCode: "10021256",
@@ -238,6 +207,151 @@ const Reports = () => {
       totalPrice: "600.00",
     },
   ]);
+
+  // Item modal filtering and sorting
+  const filteredWarehouseDetails = useMemo(() => {
+    let filtered = [...warehouseDetail];
+
+    if (modalSearchQuery) {
+      const query = modalSearchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (item) =>
+          item.itemName?.toLowerCase().includes(query) ||
+          item.itemCode?.toLowerCase().includes(query) ||
+          item.uom?.toLowerCase?.().includes(query)
+      );
+    }
+
+    if (modalSortConfig.key) {
+      filtered.sort((a, b) => {
+        const aVal = a[modalSortConfig.key];
+        const bVal = b[modalSortConfig.key];
+
+        if (typeof aVal === "string") {
+          return modalSortConfig.direction === "asc"
+            ? aVal.localeCompare(bVal)
+            : bVal.localeCompare(aVal);
+        } else {
+          return modalSortConfig.direction === "asc"
+            ? aVal - bVal
+            : bVal - aVal;
+        }
+      });
+    }
+
+    return filtered;
+  }, [warehouseDetails, modalSearchQuery, modalSortConfig]);
+
+  const handleModalSort = (key) => {
+    setModalSortConfig((prev) => {
+      if (prev.key === key) {
+        return {
+          key,
+          direction: prev.direction === "asc" ? "desc" : "asc",
+        };
+      }
+      return { key, direction: "asc" };
+    });
+  };
+
+  // Item Report modal filtering and sorting
+  const filteredItemsDetails = useMemo(() => {
+    let filtered = [...itemDetail];
+
+    if (modalItemSearchQuery) {
+      const query = modalItemSearchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (item) =>
+          item.itemName?.toLowerCase().includes(query) ||
+          item.itemCode?.toLowerCase().includes(query) ||
+          item.transferFrom?.toLowerCase?.().includes(query) ||
+          item.transferTo?.toLowerCase?.().includes(query)
+      );
+    }
+
+    if (modalItemSortConfig.key) {
+      filtered.sort((a, b) => {
+        const aVal = a[modalItemSortConfig.key];
+        const bVal = b[modalItemSortConfig.key];
+
+        if (typeof aVal === "string") {
+          return modalItemSortConfig.direction === "asc"
+            ? aVal.localeCompare(bVal)
+            : bVal.localeCompare(aVal);
+        } else {
+          return modalItemSortConfig.direction === "asc"
+            ? aVal - bVal
+            : bVal - aVal;
+        }
+      });
+    }
+
+    return filtered;
+  }, [itemDetail, modalItemSearchQuery, modalItemSortConfig]);
+
+  const handleModalItemSort = (key) => {
+    setModalItemSortConfig((prev) => {
+      if (prev.key === key) {
+        return {
+          key,
+          direction: prev.direction === "asc" ? "desc" : "asc",
+        };
+      }
+      return { key, direction: "asc" };
+    });
+  };
+
+  // Transaction Report modal filtering and sorting
+  const filteredTransactionDetails = useMemo(() => {
+    let filtered = [...transactionDetails];
+
+    if (modalTransactionSearchQuery) {
+      const query = modalTransactionSearchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (item) =>
+          item.orderNo?.toLowerCase().includes(query) ||
+          item.seriesNo?.toLowerCase().includes(query) ||
+          item.type?.toLowerCase().includes(query) ||
+          item.itemName?.toLowerCase().includes(query) ||
+          item.itemCode?.toLowerCase().includes(query)
+      );
+    }
+
+    if (modalTransactionSortConfig.key) {
+      filtered.sort((a, b) => {
+        const aVal = a[modalTransactionSortConfig.key];
+        const bVal = b[modalTransactionSortConfig.key];
+
+        if (typeof aVal === "string") {
+          return modalTransactionSortConfig.direction === "asc"
+            ? aVal.localeCompare(bVal)
+            : bVal.localeCompare(aVal);
+        } else {
+          return modalTransactionSortConfig.direction === "asc"
+            ? aVal - bVal
+            : bVal - aVal;
+        }
+      });
+    }
+
+    return filtered;
+  }, [
+    transactionDetails,
+    modalTransactionSearchQuery,
+    modalTransactionSortConfig,
+  ]);
+
+  const handleModalTransactionSort = (key) => {
+    setModalTransactionSortConfig((prev) => {
+      if (prev.key === key) {
+        return {
+          key,
+          direction: prev.direction === "asc" ? "desc" : "asc",
+        };
+      }
+      return { key, direction: "asc" };
+    });
+  };
 
   // Fetch warehouse list
   const fetchWarehouses = () => {
@@ -633,7 +747,11 @@ const Reports = () => {
                           >
                             Item Name{" "}
                             {modalSortConfig.key === "itemName" &&
-                              (modalSortConfig.direction === "asc" ? "↑" : "↓")}
+                              (modalSortConfig.direction === "asc" ? (
+                                <i className="fa-solid fa-sort-up"></i>
+                              ) : (
+                                <i className="fa-solid fa-sort-down"></i>
+                              ))}
                           </th>
                           <th
                             onClick={() => handleModalSort("itemCode")}
@@ -641,7 +759,11 @@ const Reports = () => {
                           >
                             Item Code{" "}
                             {modalSortConfig.key === "itemCode" &&
-                              (modalSortConfig.direction === "asc" ? "↑" : "↓")}
+                              (modalSortConfig.direction === "asc" ? (
+                                <i className="fa-solid fa-sort-up"></i>
+                              ) : (
+                                <i className="fa-solid fa-sort-down"></i>
+                              ))}
                           </th>
                           <th
                             onClick={() => handleModalSort("quantity")}
@@ -649,7 +771,11 @@ const Reports = () => {
                           >
                             Quantity{" "}
                             {modalSortConfig.key === "quantity" &&
-                              (modalSortConfig.direction === "asc" ? "↑" : "↓")}
+                              (modalSortConfig.direction === "asc" ? (
+                                <i className="fa-solid fa-sort-up"></i>
+                              ) : (
+                                <i className="fa-solid fa-sort-down"></i>
+                              ))}
                           </th>
                           <th
                             onClick={() => handleModalSort("cumulativeValue")}
@@ -657,7 +783,11 @@ const Reports = () => {
                           >
                             Cumulative Value{" "}
                             {modalSortConfig.key === "cumulativeValue" &&
-                              (modalSortConfig.direction === "asc" ? "↑" : "↓")}
+                              (modalSortConfig.direction === "asc" ? (
+                                <i className="fa-solid fa-sort-up"></i>
+                              ) : (
+                                <i className="fa-solid fa-sort-down"></i>
+                              ))}
                           </th>
                           <th>Actions</th>
                         </tr>
@@ -757,25 +887,165 @@ const Reports = () => {
                 ></button>
               </div>
               <div className="modal-body">
+                {/* Search and Filter Section */}
+                <div className="search-filter-container mx-2">
+                  <div className="search-box">
+                    <i className="fas fa-search position-absolute z-0 input-icon"></i>
+                    <input
+                      type="text"
+                      className="form-control mb-2"
+                      placeholder="Search by item name, code, or UOM"
+                      value={modalItemSearchQuery}
+                      onChange={(e) => setModalItemSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  <div className="filter-options">
+                    <button
+                      className="filter-select"
+                      onClick={() => {
+                        setModalItemSearchQuery("");
+                        setModalItemSortConfig({ key: null, direction: null });
+                      }}
+                    >
+                      <i className="fas fa-filter me-2"></i>
+                      Reset Filters
+                    </button>
+                  </div>
+                </div>
                 <div className="margin-2 mx-2">
                   <div className="table-container">
                     <table>
                       <thead>
                         <tr>
-                          <th>Item Code</th>
-                          <th>Item Name</th>
-                          <th>Transferred From</th>
-                          <th>Transferred To</th>
-                          <th>TRNO</th>
-                          <th>Quantity</th>
-                          <th>Unit Price</th>
-                          <th>Total Price</th>
-                          <th>Cumulative Quantity</th>
-                          <th>Cumulative Value</th>
+                          <th
+                            onClick={() => handleModalItemSort("trno")}
+                            style={{ cursor: "pointer" }}
+                          >
+                            TRNO{" "}
+                            {modalItemSortConfig.key === "trno" &&
+                              (modalItemSortConfig.direction === "asc" ? (
+                                <i className="fa-solid fa-sort-up"></i>
+                              ) : (
+                                <i className="fa-solid fa-sort-down"></i>
+                              ))}
+                          </th>
+                          <th
+                            onClick={() => handleModalItemSort("itemCode")}
+                            style={{ cursor: "pointer" }}
+                          >
+                            Item Code{" "}
+                            {modalItemSortConfig.key === "itemCode" &&
+                              (modalItemSortConfig.direction === "asc" ? (
+                                <i className="fa-solid fa-sort-up"></i>
+                              ) : (
+                                <i className="fa-solid fa-sort-down"></i>
+                              ))}
+                          </th>
+                          <th
+                            onClick={() => handleModalItemSort("itemName")}
+                            style={{ cursor: "pointer" }}
+                          >
+                            Item Name{" "}
+                            {modalItemSortConfig.key === "itemName" &&
+                              (modalItemSortConfig.direction === "asc" ? (
+                                <i className="fa-solid fa-sort-up"></i>
+                              ) : (
+                                <i className="fa-solid fa-sort-down"></i>
+                              ))}
+                          </th>
+                          <th
+                            onClick={() => handleModalItemSort("transferFrom")}
+                            style={{ cursor: "pointer" }}
+                          >
+                            Transferred From{" "}
+                            {modalItemSortConfig.key === "transferFrom" &&
+                              (modalItemSortConfig.direction === "asc" ? (
+                                <i className="fa-solid fa-sort-up"></i>
+                              ) : (
+                                <i className="fa-solid fa-sort-down"></i>
+                              ))}
+                          </th>
+                          <th
+                            onClick={() => handleModalItemSort("transferTo")}
+                            style={{ cursor: "pointer" }}
+                          >
+                            Transferred To{" "}
+                            {modalItemSortConfig.key === "transferTo" &&
+                              (modalItemSortConfig.direction === "asc" ? (
+                                <i className="fa-solid fa-sort-up"></i>
+                              ) : (
+                                <i className="fa-solid fa-sort-down"></i>
+                              ))}
+                          </th>
+                          <th
+                            onClick={() => handleModalItemSort("quantity")}
+                            style={{ cursor: "pointer" }}
+                          >
+                            Quantity{" "}
+                            {modalItemSortConfig.key === "quantity" &&
+                              (modalItemSortConfig.direction === "asc" ? (
+                                <i className="fa-solid fa-sort-up"></i>
+                              ) : (
+                                <i className="fa-solid fa-sort-down"></i>
+                              ))}
+                          </th>
+                          <th
+                            onClick={() => handleModalItemSort("unitPrice")}
+                            style={{ cursor: "pointer" }}
+                          >
+                            Unit Price{" "}
+                            {modalItemSortConfig.key === "unitPrice" &&
+                              (modalItemSortConfig.direction === "asc" ? (
+                                <i className="fa-solid fa-sort-up"></i>
+                              ) : (
+                                <i className="fa-solid fa-sort-down"></i>
+                              ))}
+                          </th>
+                          <th
+                            onClick={() => handleModalItemSort("totalPrice")}
+                            style={{ cursor: "pointer" }}
+                          >
+                            Total Price{" "}
+                            {modalItemSortConfig.key === "totalPrice" &&
+                              (modalItemSortConfig.direction === "asc" ? (
+                                <i className="fa-solid fa-sort-up"></i>
+                              ) : (
+                                <i className="fa-solid fa-sort-down"></i>
+                              ))}
+                          </th>
+                          <th
+                            onClick={() =>
+                              handleModalItemSort("cumulativeQuantity")
+                            }
+                            style={{ cursor: "pointer" }}
+                          >
+                            Cumulative Quantity{" "}
+                            {modalItemSortConfig.key === "cumulativeQuantity" &&
+                              (modalItemSortConfig.direction === "asc" ? (
+                                <i className="fa-solid fa-sort-up"></i>
+                              ) : (
+                                <i className="fa-solid fa-sort-down"></i>
+                              ))}
+                          </th>
+                          <th
+                            onClick={() =>
+                              handleModalItemSort("cumulativeValue")
+                            }
+                            style={{ cursor: "pointer" }}
+                          >
+                            Cumulative Value{" "}
+                            {modalItemSortConfig.key === "cumulativeValue" &&
+                              (modalItemSortConfig.direction === "asc" ? (
+                                <i className="fa-solid fa-sort-up"></i>
+                              ) : (
+                                <i className="fa-solid fa-sort-down"></i>
+                              ))}
+                          </th>
+                          <th>Actions</th>
                         </tr>
                       </thead>
                       <tbody className="text-break">
-                        {itemDetails.length === 0 ? (
+                        {filteredItemsDetails.length === 0 ? (
                           <tr className="no-data-row">
                             <td colSpan="5" className="no-data-cell">
                               <div className="no-data-content">
@@ -785,8 +1055,13 @@ const Reports = () => {
                             </td>
                           </tr>
                         ) : (
-                          itemDetails.map((item) => (
+                          filteredItemsDetails.map((item) => (
                             <tr key={item.id}>
+                              <td className="ps-4">
+                                <div>
+                                  <span>{item.trno}</span>
+                                </div>
+                              </td>
                               <td className="ps-4">
                                 <div>
                                   <span>{item.itemCode}</span>
@@ -807,20 +1082,7 @@ const Reports = () => {
                                   <span>{item.transferTo}</span>
                                 </div>
                               </td>
-                              <td className="ps-4">
-                                <div>
-                                  <span>{item.trno}</span>
-                                  <button
-                                    className="btn-icon btn-primary"
-                                    title="View Details"
-                                    onClick={() =>
-                                      setIsShowTransactionDetails(true)
-                                    }
-                                  >
-                                    <i className="fas fa-eye"></i>
-                                  </button>
-                                </div>
-                              </td>
+
                               <td className="ps-4">
                                 <div>
                                   <span>{item.quantity}</span>
@@ -846,10 +1108,16 @@ const Reports = () => {
                                   <span>{item.cumulativeValue}</span>
                                 </div>
                               </td>
-                              <td className="ps-4">
-                                <div>
-                                  <span>{item.cumulativeValue}</span>
-                                </div>
+                              <td className="actions ps-4">
+                                <button
+                                  className="btn-icon btn-primary"
+                                  title="View Details"
+                                  onClick={() =>
+                                    setIsShowTransactionDetails(true)
+                                  }
+                                >
+                                  <i className="fas fa-eye"></i>
+                                </button>
                               </td>
                             </tr>
                           ))
@@ -898,24 +1166,176 @@ const Reports = () => {
                 ></button>
               </div>
               <div className="modal-body">
+                {/* Search and Filter Section */}
+                <div className="search-filter-container mx-2">
+                  <div className="search-box">
+                    <i className="fas fa-search position-absolute z-0 input-icon"></i>
+                    <input
+                      type="text"
+                      className="form-control mb-2"
+                      placeholder="Search by transaction by order no., series no., type, item code, item name..."
+                      value={modalTransactionSearchQuery}
+                      onChange={(e) =>
+                        setModalTransactionSearchQuery(e.target.value)
+                      }
+                    />
+                  </div>
+                  <div className="filter-options">
+                    <button
+                      className="filter-select"
+                      onClick={() => {
+                        setModalTransactionSearchQuery("");
+                        setModalTransactionSortConfig({
+                          key: null,
+                          direction: null,
+                        });
+                      }}
+                    >
+                      <i className="fas fa-filter me-2"></i>
+                      Reset Filters
+                    </button>
+                  </div>
+                </div>
                 <div className="margin-2 mx-2">
                   <div className="table-container">
                     <table>
                       <thead>
                         <tr>
-                          <th>Order No.</th>
-                          <th>Series No.</th>
-                          <th>Type</th>
-                          <th>Item Code</th>
-                          <th>Item Name</th>
-                          <th>Status</th>
-                          <th>Quantity</th>
-                          <th>Unit Price</th>
-                          <th>Total Price</th>
+                          <th
+                            onClick={() =>
+                              handleModalTransactionSort("orderNo")
+                            }
+                            style={{ cursor: "pointer" }}
+                          >
+                            Order No.{" "}
+                            {modalTransactionSortConfig.key === "orderNo" &&
+                              (modalTransactionSortConfig.direction ===
+                              "asc" ? (
+                                <i className="fa-solid fa-sort-up"></i>
+                              ) : (
+                                <i className="fa-solid fa-sort-down"></i>
+                              ))}
+                          </th>
+                          <th
+                            onClick={() =>
+                              handleModalTransactionSort("seriesNo")
+                            }
+                            style={{ cursor: "pointer" }}
+                          >
+                            Series No.{" "}
+                            {modalTransactionSortConfig.key === "seriesNo" &&
+                              (modalTransactionSortConfig.direction ===
+                              "asc" ? (
+                                <i className="fa-solid fa-sort-up"></i>
+                              ) : (
+                                <i className="fa-solid fa-sort-down"></i>
+                              ))}
+                          </th>
+                          <th
+                            onClick={() => handleModalTransactionSort("type")}
+                            style={{ cursor: "pointer" }}
+                          >
+                            Type{" "}
+                            {modalTransactionSortConfig.key === "type" &&
+                              (modalTransactionSortConfig.direction ===
+                              "asc" ? (
+                                <i className="fa-solid fa-sort-up"></i>
+                              ) : (
+                                <i className="fa-solid fa-sort-down"></i>
+                              ))}
+                          </th>
+                          <th
+                            onClick={() =>
+                              handleModalTransactionSort("itemCode")
+                            }
+                            style={{ cursor: "pointer" }}
+                          >
+                            Item Code{" "}
+                            {modalTransactionSortConfig.key === "itemCode" &&
+                              (modalTransactionSortConfig.direction ===
+                              "asc" ? (
+                                <i className="fa-solid fa-sort-up"></i>
+                              ) : (
+                                <i className="fa-solid fa-sort-down"></i>
+                              ))}
+                          </th>
+                          <th
+                            onClick={() =>
+                              handleModalTransactionSort("itemName")
+                            }
+                            style={{ cursor: "pointer" }}
+                          >
+                            Item Name{" "}
+                            {modalTransactionSortConfig.key === "itemName" &&
+                              (modalTransactionSortConfig.direction ===
+                              "asc" ? (
+                                <i className="fa-solid fa-sort-up"></i>
+                              ) : (
+                                <i className="fa-solid fa-sort-down"></i>
+                              ))}
+                          </th>
+                          <th
+                            onClick={() => handleModalTransactionSort("status")}
+                            style={{ cursor: "pointer" }}
+                          >
+                            Status{" "}
+                            {modalTransactionSortConfig.key === "status" &&
+                              (modalTransactionSortConfig.direction ===
+                              "asc" ? (
+                                <i className="fa-solid fa-sort-up"></i>
+                              ) : (
+                                <i className="fa-solid fa-sort-down"></i>
+                              ))}
+                          </th>
+                          <th
+                            onClick={() =>
+                              handleModalTransactionSort("quantity")
+                            }
+                            style={{ cursor: "pointer" }}
+                          >
+                            Quantity{" "}
+                            {modalTransactionSortConfig.key === "quantity" &&
+                              (modalTransactionSortConfig.direction ===
+                              "asc" ? (
+                                <i className="fa-solid fa-sort-up"></i>
+                              ) : (
+                                <i className="fa-solid fa-sort-down"></i>
+                              ))}
+                          </th>
+                          <th
+                            onClick={() =>
+                              handleModalTransactionSort("unitPrice")
+                            }
+                            style={{ cursor: "pointer" }}
+                          >
+                            Unit Price{" "}
+                            {modalTransactionSortConfig.key === "unitPrice" &&
+                              (modalTransactionSortConfig.direction ===
+                              "asc" ? (
+                                <i className="fa-solid fa-sort-up"></i>
+                              ) : (
+                                <i className="fa-solid fa-sort-down"></i>
+                              ))}
+                          </th>
+                          <th
+                            onClick={() =>
+                              handleModalTransactionSort("totalPrice")
+                            }
+                            style={{ cursor: "pointer" }}
+                          >
+                            Total Price{" "}
+                            {modalTransactionSortConfig.key === "totalPrice" &&
+                              (modalTransactionSortConfig.direction ===
+                              "asc" ? (
+                                <i className="fa-solid fa-sort-up"></i>
+                              ) : (
+                                <i className="fa-solid fa-sort-down"></i>
+                              ))}
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="text-break">
-                        {itemDetails.length === 0 ? (
+                        {filteredTransactionDetails.length === 0 ? (
                           <tr className="no-data-row">
                             <td colSpan="5" className="no-data-cell">
                               <div className="no-data-content">
@@ -927,7 +1347,7 @@ const Reports = () => {
                             </td>
                           </tr>
                         ) : (
-                          transactionDetails.map((tr) => (
+                          filteredTransactionDetails.map((tr) => (
                             <tr key={tr.id}>
                               <td className="ps-4">
                                 <div>
