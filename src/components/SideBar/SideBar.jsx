@@ -60,27 +60,27 @@ const SideBar = () => {
           path: "Administrations / Users",
           icon: "fas fa-user-group",
         },
-        {
-          label: "Role Management",
-          compName: "RoleManagement",
-          newPath: "role-management",
-          path: "Administrations / Role Management",
-          icon: "fas fa-tag",
-        },
-        {
-          label: "System Settings",
-          compName: "SystemSettings",
-          newPath: "system-settings",
-          path: "Administrations / System Settings",
-          icon: "fas fa-gears",
-        },
-        {
-          label: "Audit Logs",
-          compName: "AuditLogs",
-          newPath: "warehouse-master",
-          path: "Administrations / Audit Logs",
-          icon: "fas fa-newspaper",
-        },
+        // {
+        //   label: "Role Management",
+        //   compName: "RoleManagement",
+        //   newPath: "role-management",
+        //   path: "Administrations / Role Management",
+        //   icon: "fas fa-tag",
+        // },
+        // {
+        //   label: "System Settings",
+        //   compName: "SystemSettings",
+        //   newPath: "system-settings",
+        //   path: "Administrations / System Settings",
+        //   icon: "fas fa-gears",
+        // },
+        // {
+        //   label: "Audit Logs",
+        //   compName: "AuditLogs",
+        //   newPath: "warehouse-master",
+        //   path: "Administrations / Audit Logs",
+        //   icon: "fas fa-newspaper",
+        // },
         {
           label: "Approve Items Quantity",
           compName: "ApproveItemsQuantity",
@@ -221,20 +221,20 @@ const SideBar = () => {
           path: "Reports / Inventory Audit Report",
           icon: "fas fa-chart-area",
         },
-        {
-          label: "Transaction Reports",
-          compName: "TransactionReports",
-          newPath: "transactions-reports",
-          path: "Reports / Transaction Reports",
-          icon: "fas fa-chart-line",
-        },
-        {
-          label: "Production Reports",
-          compName: "ProductionReports",
-          newPath: "production-reports",
-          path: "Reports / Production Reports",
-          icon: "fas fa-chart-bar",
-        },
+        // {
+        //   label: "Transaction Reports",
+        //   compName: "TransactionReports",
+        //   newPath: "transactions-reports",
+        //   path: "Reports / Transaction Reports",
+        //   icon: "fas fa-chart-line",
+        // },
+        // {
+        //   label: "Production Reports",
+        //   compName: "ProductionReports",
+        //   newPath: "production-reports",
+        //   path: "Reports / Production Reports",
+        //   icon: "fas fa-chart-bar",
+        // },
       ],
     },
     {
@@ -409,14 +409,16 @@ const SideBar = () => {
           <div className="user-profile">
             <div className="profile-info" title="John Doe">
               <img
-                src="https://ui-avatars.com/api/?name=John+Doe&background=2563eb&color=fff"
+                src={`https://ui-avatars.com/api/?name=${localStorage.getItem(
+                  "rememberedUsername"
+                )}&background=2563eb&color=fff`}
                 alt="Profile"
               />
               <div className="user-details">
                 <p className="m-0 text-white">
-                  Hi, <span>John Doe</span>
+                  Hi, <span>{localStorage.getItem("rememberedUsername")}</span>
                 </p>
-                <small>Administrator</small>
+                <small>Admin</small>
               </div>
             </div>
             <button onClick={handleLogout} className="btn logout">

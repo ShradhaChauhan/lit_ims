@@ -12,6 +12,7 @@ const Reports = () => {
     useState(false);
   const [filteredItems, setFilteredItems] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
+  const [viewItemsData, setViewItemsData] = useState(null);
   const reportModalRef = useRef(null);
   const itemModalRef = useRef(null);
   const transactionModalRef = useRef(null);
@@ -19,6 +20,13 @@ const Reports = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedIQCStatus, setSelectedIQCStatus] = useState("");
+
+  // Item Modal Search and Filter states
+  const [modalSearchQuery, setModalSearchQuery] = useState("");
+  const [modalSortConfig, setModalSortConfig] = useState({
+    key: null,
+    direction: null,
+  });
 
   // Sorting state
   const [sortConfig, setSortConfig] = useState({
@@ -109,8 +117,54 @@ const Reports = () => {
     setFilteredItems(filteredWarehouses);
   }, [filteredWarehouses]);
 
+  // Item modal filtering and sorting
+  const filteredModalItems = useMemo(() => {
+    let items = [...(viewItemsData?.items || [])];
+
+    // Search
+    if (modalSearchQuery) {
+      const query = modalSearchQuery.toLowerCase();
+      items = items.filter(
+        (item) =>
+          item.itemName?.toLowerCase().includes(query) ||
+          item.itemCode?.toLowerCase().includes(query)
+      );
+    }
+
+    // Sort
+    if (modalSortConfig.key) {
+      items.sort((a, b) => {
+        const aVal = a[modalSortConfig.key]?.toLowerCase?.() || "";
+        const bVal = b[modalSortConfig.key]?.toLowerCase?.() || "";
+
+        if (aVal < bVal) return modalSortConfig.direction === "asc" ? -1 : 1;
+        if (aVal > bVal) return modalSortConfig.direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return items;
+  }, [viewItemsData, modalSearchQuery, modalSortConfig]);
+
+  const handleModalSort = (key) => {
+    setModalSortConfig((prev) => {
+      if (prev.key === key) {
+        return {
+          key,
+          direction: prev.direction === "asc" ? "desc" : "asc",
+        };
+      } else {
+        return {
+          key,
+          direction: "asc",
+        };
+      }
+    });
+  };
+
   const [warehouseDetails, setWarehouseDetails] = useState([
     {
+      id: 1,
       cumulativeValue: "1000",
       itemCode: "10021256",
       itemName: "Item 1",
@@ -118,6 +172,7 @@ const Reports = () => {
       iqcStatus: "Ok",
     },
     {
+      id: 2,
       cumulativeValue: "1500",
       itemCode: "10054322",
       itemName: "Item 2",
@@ -128,6 +183,7 @@ const Reports = () => {
 
   const [itemDetails, setItemDetails] = useState([
     {
+      id: 1,
       itemCode: "10021256",
       itemName: "Item 1",
       transferFrom: "WIP1",
@@ -140,6 +196,7 @@ const Reports = () => {
       cumulativeValue: "1000",
     },
     {
+      id: 2,
       itemCode: "10021200",
       itemName: "Item 2",
       transferFrom: "STR",
@@ -155,6 +212,7 @@ const Reports = () => {
 
   const [transactionDetails, setTransactionDetails] = useState([
     {
+      id: 1,
       orderNo: "10021256",
       seriesNo: "TR12345",
       type: "Transfer",
@@ -166,6 +224,7 @@ const Reports = () => {
       totalPrice: "1000.00",
     },
     {
+      id: 2,
       orderNo: "10021100",
       seriesNo: "TR12289",
       type: "Transfer",
@@ -218,6 +277,13 @@ const Reports = () => {
       reportModalRef.current.addEventListener("hidden.bs.modal", () =>
         setIsShowDetails(false)
       );
+    }
+  }, [isShowDetails]);
+
+  useEffect(() => {
+    if (!isShowDetails) {
+      setModalSearchQuery("");
+      setModalSortConfig({ key: null, direction: null });
     }
   }, [isShowDetails]);
 
@@ -352,7 +418,7 @@ const Reports = () => {
           <input
             type="text"
             className="form-control vendor-search-bar"
-            placeholder="Search by warehouse name, code, type..."
+            placeholder="Search by warehouse by name, code, type..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -530,14 +596,61 @@ const Reports = () => {
               </div>
               <div className="modal-body">
                 <div className="margin-2 mx-2">
+                  {/* Search and Filter Section */}
+                  <div className="search-filter-container mx-2">
+                    <div className="search-box">
+                      <i className="fas fa-search position-absolute z-0 input-icon"></i>
+                      <input
+                        type="text"
+                        className="form-control mb-2"
+                        placeholder="Search by item name, code, or UOM"
+                        value={modalSearchQuery}
+                        onChange={(e) => setModalSearchQuery(e.target.value)}
+                      />
+                    </div>
+                    <div className="filter-options">
+                      <button className="filter-select">
+                        <i className="fas fa-filter me-2"></i>
+                        Reset Filters
+                      </button>
+                    </div>
+                  </div>
                   <div className="table-container">
                     <table>
                       <thead>
                         <tr>
-                          <th>Item Code</th>
-                          <th>Item Name</th>
-                          <th>Quantity</th>
-                          <th>Cumulative Value</th>
+                          <th
+                            onClick={() => handleModalSort("itemName")}
+                            style={{ cursor: "pointer" }}
+                          >
+                            Item Name{" "}
+                            {modalSortConfig.key === "itemName" &&
+                              (modalSortConfig.direction === "asc" ? "↑" : "↓")}
+                          </th>
+                          <th
+                            onClick={() => handleModalSort("itemCode")}
+                            style={{ cursor: "pointer" }}
+                          >
+                            Item Code{" "}
+                            {modalSortConfig.key === "itemCode" &&
+                              (modalSortConfig.direction === "asc" ? "↑" : "↓")}
+                          </th>
+                          <th
+                            onClick={() => handleModalSort("quantity")}
+                            style={{ cursor: "pointer" }}
+                          >
+                            Quantity{" "}
+                            {modalSortConfig.key === "quantity" &&
+                              (modalSortConfig.direction === "asc" ? "↑" : "↓")}
+                          </th>
+                          <th
+                            onClick={() => handleModalSort("cumulativeValue")}
+                            style={{ cursor: "pointer" }}
+                          >
+                            Cumulative Value{" "}
+                            {modalSortConfig.key === "cumulativeValue" &&
+                              (modalSortConfig.direction === "asc" ? "↑" : "↓")}
+                          </th>
                           <th>Actions</th>
                         </tr>
                       </thead>
@@ -546,11 +659,9 @@ const Reports = () => {
                           <tr className="no-data-row">
                             <td colSpan="5" className="no-data-cell">
                               <div className="no-data-content">
-                                <i className="fas fa-cogs no-data-icon"></i>
-                                <p className="no-data-text">No parts found</p>
-                                <p className="no-data-subtext">
-                                  Click the "Add New Part" button to create your
-                                  first part
+                                <i className="fas fa-box no-data-icon"></i>
+                                <p className="no-data-text">
+                                  No warehouses found
                                 </p>
                               </div>
                             </td>
@@ -582,7 +693,11 @@ const Reports = () => {
                                 <button
                                   className="btn-icon btn-primary"
                                   title="View Details"
-                                  onClick={() => setIsShowItemDetails(true)}
+                                  onClick={() => {
+                                    setIsShowItemDetails(true);
+                                    setViewItemsData(warehouseDetail); // or however you're getting the warehouse's data
+                                    setIsShowDetails(true); // show the modal
+                                  }}
                                 >
                                   <i className="fas fa-eye"></i>
                                 </button>
@@ -656,12 +771,8 @@ const Reports = () => {
                           <tr className="no-data-row">
                             <td colSpan="5" className="no-data-cell">
                               <div className="no-data-content">
-                                <i className="fas fa-cogs no-data-icon"></i>
-                                <p className="no-data-text">No parts found</p>
-                                <p className="no-data-subtext">
-                                  Click the "Add New Part" button to create your
-                                  first part
-                                </p>
+                                <i className="fas fa-box-open no-data-icon"></i>
+                                <p className="no-data-text">No items found</p>
                               </div>
                             </td>
                           </tr>
@@ -800,11 +911,9 @@ const Reports = () => {
                           <tr className="no-data-row">
                             <td colSpan="5" className="no-data-cell">
                               <div className="no-data-content">
-                                <i className="fas fa-cogs no-data-icon"></i>
-                                <p className="no-data-text">No parts found</p>
-                                <p className="no-data-subtext">
-                                  Click the "Add New Part" button to create your
-                                  first part
+                                <i className="fas fa-receipt no-data-icon"></i>
+                                <p className="no-data-text">
+                                  No item transaction found
                                 </p>
                               </div>
                             </td>
