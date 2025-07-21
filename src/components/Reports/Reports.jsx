@@ -4,20 +4,21 @@ import { Link } from "react-router-dom";
 
 const Reports = () => {
   const [isShowDetails, setIsShowDetails] = useState(false);
+  const [isShowItemDetails, setIsShowItemDetails] = useState(false);
+  const [isShowTransactionDetails, setIsShowTransactionDetails] =
+    useState(false);
   const [filteredItems, setFilteredItems] = useState([]);
   const reportModalRef = useRef(null);
+  const itemModalRef = useRef(null);
+  const transactionModalRef = useRef(null);
   const [reports, setReports] = useState([
     {
-      location: "IQC",
       warehouseName: "Moulding Shop Floor",
       warehouseCode: "ADP-11",
-      branch: "LIT INDIA PVT LTD UNIT-II",
     },
     {
-      location: "IQC",
       warehouseName: "FG",
       warehouseCode: "ANT-11",
-      branch: "LIT INDIA PVT LTD UNIT-II",
     },
   ]);
 
@@ -31,20 +32,73 @@ const Reports = () => {
 
   const [warehouseDetails, setWarehouseDetails] = useState([
     {
-      location: "R1",
+      cumulativeValue: "1000",
       itemCode: "10021256",
       itemName: "Item 1",
       quantity: 100,
       iqcStatus: "Ok",
     },
     {
-      location: "R2",
+      cumulativeValue: "1500",
       itemCode: "10054322",
       itemName: "Item 2",
       quantity: 500,
       iqcStatus: "Not Ok",
     },
   ]);
+
+  const [itemDetails, setItemDetails] = useState([
+    {
+      itemCode: "10021256",
+      itemName: "Item 1",
+      transferFrom: "WIP1",
+      transferTo: "STR",
+      trno: "TR12345",
+      quantity: 100,
+      unitPrice: "10.00",
+      totalPrice: "1000.00",
+      cumulativeQuantity: 100,
+      cumulativeValue: "1000",
+    },
+    {
+      itemCode: "10021200",
+      itemName: "Item 2",
+      transferFrom: "STR",
+      transferTo: "WIP2",
+      trno: "TR12200",
+      quantity: 100,
+      unitPrice: "10.00",
+      totalPrice: "1000.00",
+      cumulativeQuantity: 100,
+      cumulativeValue: "1000",
+    },
+  ]);
+
+  const [transactionDetails, setTransactionDetails] = useState([
+    {
+      orderNo: "10021256",
+      seriesNo: "TR12345",
+      type: "Transfer",
+      itemCode: "10021256",
+      itemName: "Item 1",
+      status: "Completed",
+      quantity: 100,
+      unitPrice: "10.00",
+      totalPrice: "1000.00",
+    },
+    {
+      orderNo: "10021100",
+      seriesNo: "TR12289",
+      type: "Transfer",
+      itemCode: "10021100",
+      itemName: "Item 1",
+      status: "Completed",
+      quantity: 200,
+      unitPrice: "10.00",
+      totalPrice: "2000.00",
+    },
+  ]);
+
   useEffect(() => {
     if (isShowDetails && reportModalRef.current) {
       const bsModal = new Modal(reportModalRef.current, {
@@ -58,6 +112,34 @@ const Reports = () => {
       );
     }
   }, [isShowDetails]);
+
+  useEffect(() => {
+    if (isShowItemDetails && itemModalRef.current) {
+      const bsModal = new Modal(itemModalRef.current, {
+        backdrop: "static",
+      });
+      bsModal.show();
+
+      // Optional: hide modal state when it's closed
+      itemModalRef.current.addEventListener("hidden.bs.modal", () =>
+        setIsShowItemDetails(false)
+      );
+    }
+  }, [isShowItemDetails]);
+
+  useEffect(() => {
+    if (isShowTransactionDetails && transactionModalRef.current) {
+      const bsModal = new Modal(transactionModalRef.current, {
+        backdrop: "static",
+      });
+      bsModal.show();
+
+      // Optional: hide modal state when it's closed
+      transactionModalRef.current.addEventListener("hidden.bs.modal", () =>
+        setIsShowTransactionDetails(false)
+      );
+    }
+  }, [isShowTransactionDetails]);
 
   // Calculate the display range for the pagination info
   const getDisplayRange = () => {
@@ -189,10 +271,8 @@ const Reports = () => {
           <table>
             <thead>
               <tr>
-                <th>Location</th>
                 <th>Warehouse Name</th>
                 <th>Warehouse Code</th>
-                <th>Branch</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -211,22 +291,12 @@ const Reports = () => {
                   <tr key={report.id}>
                     <td className="ps-4">
                       <div>
-                        <span>{report.location}</span>
-                      </div>
-                    </td>
-                    <td className="ps-4">
-                      <div>
                         <span>{report.warehouseName}</span>
                       </div>
                     </td>
                     <td className="ps-4">
                       <div>
                         <span>{report.warehouseCode}</span>
-                      </div>
-                    </td>
-                    <td className="ps-4">
-                      <div>
-                        <span>{report.branch}</span>
                       </div>
                     </td>
                     <td className="actions ps-4">
@@ -301,7 +371,7 @@ const Reports = () => {
           </div>
         </div>
       </div>
-      {/* View Part Details Modal */}
+      {/* View Warehouse Items Modal */}
       {isShowDetails && (
         <div
           className="modal fade modal-lg"
@@ -314,7 +384,7 @@ const Reports = () => {
               <div className="modal-header">
                 <h5 className="modal-title">
                   <i className="fas fa-circle-info me-2"></i>
-                  View Stock Details
+                  View Items in Warehouse
                 </h5>
                 <button
                   type="button"
@@ -329,11 +399,11 @@ const Reports = () => {
                     <table>
                       <thead>
                         <tr>
-                          <th>Location</th>
                           <th>Item Code</th>
                           <th>Item Name</th>
                           <th>Quantity</th>
-                          <th>IQC Status</th>
+                          <th>Cumulative Value</th>
+                          <th>Actions</th>
                         </tr>
                       </thead>
                       <tbody className="text-break">
@@ -355,11 +425,6 @@ const Reports = () => {
                             <tr key={warehouseDetail.id}>
                               <td className="ps-4">
                                 <div>
-                                  <span>{warehouseDetail.location}</span>
-                                </div>
-                              </td>
-                              <td className="ps-4">
-                                <div>
                                   <span>{warehouseDetail.itemCode}</span>
                                 </div>
                               </td>
@@ -373,17 +438,288 @@ const Reports = () => {
                                   <span>{warehouseDetail.quantity}</span>
                                 </div>
                               </td>
-                              <td className="ps-3">
+                              <td className="ps-4">
                                 <div>
-                                  <span
-                                    className={`badge status ${
-                                      warehouseDetail.iqcStatus === "Ok"
-                                        ? "active"
-                                        : "inactive"
-                                    }`}
+                                  <span>{warehouseDetail.cumulativeValue}</span>
+                                </div>
+                              </td>
+                              <td className="actions ps-4">
+                                <button
+                                  className="btn-icon btn-primary"
+                                  title="View Details"
+                                  onClick={() => setIsShowItemDetails(true)}
+                                >
+                                  <i className="fas fa-eye"></i>
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary add-btn"
+                  data-bs-dismiss="modal"
+                  onClick={() => {
+                    document.activeElement?.blur();
+                  }}
+                >
+                  <i className="fas fa-xmark me-2"></i>Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* View Items Report Modal */}
+      {isShowItemDetails && (
+        <div
+          className="modal fade modal-xl"
+          ref={itemModalRef}
+          id="itemDetailModal"
+          tabIndex="-1"
+        >
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  <i className="fas fa-circle-info me-2"></i>
+                  View Item Report
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body">
+                <div className="margin-2 mx-2">
+                  <div className="table-container">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Item Code</th>
+                          <th>Item Name</th>
+                          <th>Transferred From</th>
+                          <th>Transferred To</th>
+                          <th>TRNO</th>
+                          <th>Quantity</th>
+                          <th>Unit Price</th>
+                          <th>Total Price</th>
+                          <th>Cumulative Quantity</th>
+                          <th>Cumulative Value</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-break">
+                        {itemDetails.length === 0 ? (
+                          <tr className="no-data-row">
+                            <td colSpan="5" className="no-data-cell">
+                              <div className="no-data-content">
+                                <i className="fas fa-cogs no-data-icon"></i>
+                                <p className="no-data-text">No parts found</p>
+                                <p className="no-data-subtext">
+                                  Click the "Add New Part" button to create your
+                                  first part
+                                </p>
+                              </div>
+                            </td>
+                          </tr>
+                        ) : (
+                          itemDetails.map((item) => (
+                            <tr key={item.id}>
+                              <td className="ps-4">
+                                <div>
+                                  <span>{item.itemCode}</span>
+                                </div>
+                              </td>
+                              <td className="ps-4">
+                                <div>
+                                  <span>{item.itemName}</span>
+                                </div>
+                              </td>
+                              <td className="ps-4">
+                                <div>
+                                  <span>{item.transferFrom}</span>
+                                </div>
+                              </td>
+                              <td className="ps-4">
+                                <div>
+                                  <span>{item.transferTo}</span>
+                                </div>
+                              </td>
+                              <td className="ps-4">
+                                <div>
+                                  <span>{item.trno}</span>
+                                  <button
+                                    className="btn-icon btn-primary"
+                                    title="View Details"
+                                    onClick={() =>
+                                      setIsShowTransactionDetails(true)
+                                    }
                                   >
-                                    {warehouseDetail.iqcStatus}
-                                  </span>
+                                    <i className="fas fa-eye"></i>
+                                  </button>
+                                </div>
+                              </td>
+                              <td className="ps-4">
+                                <div>
+                                  <span>{item.quantity}</span>
+                                </div>
+                              </td>
+                              <td className="ps-4">
+                                <div>
+                                  <span>{item.unitPrice}</span>
+                                </div>
+                              </td>
+                              <td className="ps-4">
+                                <div>
+                                  <span>{item.totalPrice}</span>
+                                </div>
+                              </td>
+                              <td className="ps-4">
+                                <div>
+                                  <span>{item.cumulativeQuantity}</span>
+                                </div>
+                              </td>
+                              <td className="ps-4">
+                                <div>
+                                  <span>{item.cumulativeValue}</span>
+                                </div>
+                              </td>
+                              <td className="ps-4">
+                                <div>
+                                  <span>{item.cumulativeValue}</span>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary add-btn"
+                  data-bs-dismiss="modal"
+                  onClick={() => {
+                    document.activeElement?.blur();
+                  }}
+                >
+                  <i className="fas fa-xmark me-2"></i>Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* View Transactions Report Modal */}
+      {isShowTransactionDetails && (
+        <div
+          className="modal fade modal-xl"
+          ref={transactionModalRef}
+          id="transactionDetailModal"
+          tabIndex="-1"
+        >
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  <i className="fas fa-circle-info me-2"></i>
+                  View Transaction Report
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body">
+                <div className="margin-2 mx-2">
+                  <div className="table-container">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Order No.</th>
+                          <th>Series No.</th>
+                          <th>Type</th>
+                          <th>Item Code</th>
+                          <th>Item Name</th>
+                          <th>Status</th>
+                          <th>Quantity</th>
+                          <th>Unit Price</th>
+                          <th>Total Price</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-break">
+                        {itemDetails.length === 0 ? (
+                          <tr className="no-data-row">
+                            <td colSpan="5" className="no-data-cell">
+                              <div className="no-data-content">
+                                <i className="fas fa-cogs no-data-icon"></i>
+                                <p className="no-data-text">No parts found</p>
+                                <p className="no-data-subtext">
+                                  Click the "Add New Part" button to create your
+                                  first part
+                                </p>
+                              </div>
+                            </td>
+                          </tr>
+                        ) : (
+                          transactionDetails.map((tr) => (
+                            <tr key={tr.id}>
+                              <td className="ps-4">
+                                <div>
+                                  <span>{tr.orderNo}</span>
+                                </div>
+                              </td>
+                              <td className="ps-4">
+                                <div>
+                                  <span>{tr.seriesNo}</span>
+                                </div>
+                              </td>
+                              <td className="ps-4">
+                                <div>
+                                  <span>{tr.type}</span>
+                                </div>
+                              </td>
+                              <td className="ps-4">
+                                <div>
+                                  <span>{tr.itemCode}</span>
+                                </div>
+                              </td>
+                              <td className="ps-4">
+                                <div>
+                                  <span>{tr.itemName}</span>
+                                </div>
+                              </td>
+                              <td className="ps-4">
+                                <div>
+                                  <span>{tr.status}</span>
+                                </div>
+                              </td>
+                              <td className="ps-4">
+                                <div>
+                                  <span>{tr.quantity}</span>
+                                </div>
+                              </td>
+                              <td className="ps-4">
+                                <div>
+                                  <span>{tr.unitPrice}</span>
+                                </div>
+                              </td>
+                              <td className="ps-4">
+                                <div>
+                                  <span>{tr.totalPrice}</span>
                                 </div>
                               </td>
                             </tr>

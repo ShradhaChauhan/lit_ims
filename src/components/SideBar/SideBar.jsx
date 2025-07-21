@@ -180,14 +180,14 @@ const SideBar = () => {
           icon: "fas fa-file-invoice",
         },
         {
-          label: "Issue to Production",
+          label: "Material Issue Transfer",
           compName: "IssueProduction",
           newPath: "issue-to-production",
-          path: "Transactions / Issue to Production",
+          path: "Transactions / Material Issue Transfer",
           icon: "fas fa-dolly",
         },
         {
-          label: "Production Floor Receipt",
+          label: "Material Receipt",
           compName: "ProductionFloorReceipt",
           newPath: "production-floor-receipt",
           path: "Transactions /Production Floor Receipt",

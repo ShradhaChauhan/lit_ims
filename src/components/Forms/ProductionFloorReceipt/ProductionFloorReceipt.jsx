@@ -355,15 +355,13 @@ const ProductionFloorReceipt = () => {
       <nav className="navbar bg-light border-body" data-bs-theme="light">
         <div className="container-fluid">
           <div className="mt-4">
-            <h3 className="nav-header header-style">
-              Production Floor Receipt
-            </h3>
+            <h3 className="nav-header header-style">Material Receipt</h3>
             <p className="breadcrumb">
               <Link to="/dashboard">
                 <i className="fas fa-home text-8"></i>
               </Link>{" "}
               <span className="ms-1 mt-1 text-small-gray">
-                / Transactions / Production Floor Receipt
+                / Transactions / Material Receipt
               </span>
             </p>
           </div>
