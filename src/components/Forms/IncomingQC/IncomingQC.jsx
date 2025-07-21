@@ -18,6 +18,8 @@ const IncomingQC = () => {
   const [defectCategory, setDefectCategory] = useState("");
   const [remarks, setRemarks] = useState("");
   const qcRef = useRef(null);
+  const [selectedWarehouse, setSelectedWarehouse] = useState("");
+  const [warehouses, setWarehouses] = useState([]);
 
   // select QC to be deleted
   const [selectedItems, setSelectedItems] = useState([]);
@@ -144,7 +146,19 @@ const IncomingQC = () => {
   // Initial data fetch
   useEffect(() => {
     fetchPendingQC();
+    fetchWarehouses();
   }, []);
+
+  // Fetch warehouses from API
+  const fetchWarehouses = async () => {
+    try {
+      const response = await api.get("/api/warehouses/store-and-rej");
+      setWarehouses(response.data.data);
+    } catch (error) {
+      toast.error("Error in fetching warehouses");
+      console.error("Error fetching warehouses:", error);
+    }
+  };
 
   // Fetch pass/fail IQC from API
   const fetchPassFailQC = async () => {
@@ -259,17 +273,24 @@ const IncomingQC = () => {
   // Submit button function
   const handlePassBatch = async (e) => {
     e.preventDefault();
+    if (!selectedWarehouse) {
+      toast.error("Please select a warehouse");
+      return;
+    }
     try {
       const data = {
         id: batchDetails[0].id,
         qcStatus: isFail ? "FAIL" : "PASS",
         defectCategory: defectCategory,
         remarks: remarks,
+        warehouseId: selectedWarehouse,
       };
       console.log(data);
       const response = await api.put("/api/receipt/qc-status/update", data);
       fetchPassFailQC();
       fetchPendingQC();
+      setIsPass("");
+      setIsFail(false);
       toast.success("Batch details are passed successfully");
       setIsShowQualityCheckForm(false);
     } catch (error) {
@@ -509,6 +530,37 @@ const IncomingQC = () => {
                 </div>
               </div>
             </div>
+
+            <div className="mt-3">
+              <label
+                htmlFor="warehouse"
+                className="form-label mb-0 text-8 font-weight py-2"
+              >
+                Select Warehouse <span className="text-danger fs-6">*</span>
+              </label>
+              <div className="position-relative w-100">
+                <i className="fas fa-warehouse position-absolute z-0 input-icon"></i>
+                <select
+                  className="form-control ps-5 text-font"
+                  id="warehouse"
+                  placeholder="Select warehouse"
+                  value={selectedWarehouse}
+                  onChange={(e) => setSelectedWarehouse(e.target.value)}
+                  required
+                >
+                  <option value="" disabled hidden className="text-muted">
+                    Select warehouse
+                  </option>
+                  {warehouses.map((warehouse) => (
+                    <option key={warehouse.id} value={warehouse.id}>
+                      {warehouse.name}
+                    </option>
+                  ))}
+                </select>
+                <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+              </div>
+            </div>
+
             {isFail && (
               <div>
                 <label
