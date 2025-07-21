@@ -555,7 +555,7 @@ const Users = () => {
     typeMaster: "Type Master",
     groupMaster: "Group Master",
     partMaster: "Part Master",
-    incoming: "Incoming",
+    incoming: "Store Material Inward",
     incomingMaster: "Incoming Reprint",
     iqc: "IQC",
     requisition: "Requisition",
