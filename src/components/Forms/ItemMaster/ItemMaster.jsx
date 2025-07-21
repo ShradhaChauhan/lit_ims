@@ -369,7 +369,7 @@ const ItemMaster = () => {
     if (Object.keys(newErrors).length === 0) {
       const finalData = {
         name: formData.name,
-        code: formData.groupName + formData.code,
+        code: formData.code,
         uom: formData.uom,
         type: formData.type,
         barcode: formData.barcode,
@@ -576,7 +576,7 @@ const ItemMaster = () => {
     if (Object.keys(newErrors).length === 0) {
       const finalData = {
         name: itemDetails.name,
-        code: itemDetails.groupName + itemDetails.code,
+        code: itemDetails.code,
         uom: itemDetails.uom,
         groupName: itemDetails.groupName,
         status: itemDetails.status || "active",

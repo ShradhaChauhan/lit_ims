@@ -1641,6 +1641,10 @@ const Users = () => {
     };
   }, []);
 
+  // Role based access
+  const { getPermission } = useContext(AppContext);
+  const { canView, canEdit } = getPermission("User Management");
+
   return (
     <div>
       {/* Header section */}

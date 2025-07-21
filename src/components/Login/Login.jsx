@@ -18,7 +18,8 @@ const LoginPage = () => {
   const [branches, setBranches] = useState([]);
   const [error, setError] = useState("");
   const [responseUsername, setResponseUsername] = useState("");
-  const { setIsAuthenticated } = useContext(AppContext);
+  const { setIsAuthenticated, setPermissions, setRole } =
+    useContext(AppContext);
 
   const handleVerify = async (e) => {
     if (e?.preventDefault) e.preventDefault();
@@ -37,6 +38,8 @@ const LoginPage = () => {
         setBranches(response.data.data.branches);
         setResponseUsername(response.data.data.username);
         setBranch(""); // Clear any previous branch selection
+        localStorage.setItem("role", response.data.data.username);
+        setRole(response.data.data.username);
       } else {
         setError("No branches found for this user.");
       }
@@ -62,25 +65,24 @@ const LoginPage = () => {
         },
       });
 
+      const { token, permissions } = response.data.data;
+
+      // Store permissions and token
+      localStorage.setItem("token", token);
+      localStorage.setItem("permissions", JSON.stringify(permissions));
+      setPermissions(permissions);
+      setIsAuthenticated(true);
+
       if (rememberMe) {
         localStorage.setItem("rememberedUsername", username);
       } else {
         localStorage.removeItem("rememberedUsername");
       }
 
-      console.log("Login Response:", response);
-      // setIsAuthenticated(true);
-      // Navigate to dashboard after successful login
       toast.success("Login successful");
-      navigate("/dashboard");
-
-      console.log("Login Response:", response);
-
-      // Navigate to dashboard after successful login
       navigate("/dashboard");
     } catch (err) {
       setIsAuthenticated(false);
-      console.error(err);
       console.error(err);
       setError("Login failed. Please contact support.");
     }

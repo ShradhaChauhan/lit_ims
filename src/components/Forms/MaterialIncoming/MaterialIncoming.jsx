@@ -18,6 +18,8 @@ const MaterialIncoming = () => {
   const [vendors, setVendors] = useState([]);
   const [vendorItem, setVendorItem] = useState("");
   const [vendorItems, setVendorItems] = useState([]);
+  const [warehouses, setWarehouses] = useState([]);
+  const [warehouse, setWarehouse] = useState("");
   const [loading, setLoading] = useState(false);
   const [isShowReceiptDetails, setIsShowReceiptDetails] = useState(false);
   const [currentReceipt, setCurrentReceipt] = useState(null);
@@ -36,6 +38,7 @@ const MaterialIncoming = () => {
     quantity: "",
     itemCode: "",
     itemName: "",
+    warehouse: "",
     batchno: "",
   });
 
@@ -52,6 +55,7 @@ const MaterialIncoming = () => {
       itemCode: "",
       itemName: "",
       batchno: "",
+      warehouse: "",
     });
     setMode("");
     setVendor("");
@@ -116,6 +120,28 @@ const MaterialIncoming = () => {
   useEffect(() => {
     getVendorsList();
   }, []);
+
+  useEffect(() => {
+    getWarehouses();
+  }, []);
+
+  const getWarehouses = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/api/warehouses/store-and-iqc");
+      if (response.data && response.data.data) {
+        setWarehouses(response.data.data);
+      } else {
+        toast.error("No warehouses found or invalid response format");
+        console.error("Invalid warehouses response:", response);
+      }
+    } catch (error) {
+      toast.error(error.response.data.message);
+      console.error(error.response.data.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const validateForm = (data) => {
     const errors = {};
@@ -183,6 +209,7 @@ const MaterialIncoming = () => {
           const newItem = {
             itemName: batchData.itemName,
             itemCode: batchData.itemCode,
+            warehouse: batchData.warehouseName || formData.warehouse,
             quantity: isStdQty ? batchData.quantity : formData.quantity,
             batchNo: batchData.batchNo,
             vendorCode: formData.code || batchData.vendorCode,
@@ -213,6 +240,7 @@ const MaterialIncoming = () => {
           vendorCode: formData.code,
           itemCode: formData.itemCode,
           quantity: formData.quantity,
+          warehouse: formData.warehouse,
         });
 
         const response = await api.post(
@@ -230,6 +258,7 @@ const MaterialIncoming = () => {
             batchNo: batchNo,
             vendorCode: formData.code,
             vendorName: formData.vendorName,
+            warehouse: formData.warehouse,
           };
 
           setReceiptList((prev) => [...prev, newItem]);
@@ -243,6 +272,7 @@ const MaterialIncoming = () => {
             itemName: "",
             itemCode: "",
             quantity: "",
+            warehouse: "",
           }));
         } else {
           toast.error("Failed to generate batch number");
@@ -372,6 +402,7 @@ const MaterialIncoming = () => {
         mode: mode,
         vendor: firstItem.vendorName || formData.vendorName,
         vendorCode: firstItem.vendorCode || formData.code,
+        warehouse: firstItem.warehouse || formData.warehouse,
         items: receiptList,
       };
 
@@ -457,6 +488,7 @@ const MaterialIncoming = () => {
       vendor: "",
       vendorName: "",
       quantity: "",
+      warehouse: "",
       batchno: "",
     }));
 
@@ -483,6 +515,7 @@ const MaterialIncoming = () => {
           barcode: batchno,
           quantity: batchData.quantity,
           itemCode: batchData.itemCode,
+          warehouse: batchData.warehouseName,
           itemName: batchData.itemName,
         });
         console.log("Batch verified:", batchData);
@@ -710,6 +743,45 @@ const MaterialIncoming = () => {
           )}
           <div>
             <div className="row">
+              <div className="col-3 d-flex flex-column form-group">
+                <label htmlFor="item" className="form-label ms-2">
+                  Select Warehouse <span className="text-danger fs-6">*</span>
+                </label>
+                <div className="position-relative w-100">
+                  <i className="fas fa-box position-absolute ms-2 z-0 input-icon"></i>
+                  <select
+                    className="form-control ps-5 ms-1 text-font"
+                    id="item"
+                    value={warehouse}
+                    onChange={(e) => {
+                      {
+                        const selectedId = parseInt(e.target.value); // dropdown value is string, convert to number
+                        const selectedWarehouse = warehouses.find(
+                          (w) => w.id === selectedId
+                        );
+
+                        if (selectedWarehouse) {
+                          setWarehouse(selectedId);
+                          setFormData((prev) => ({
+                            ...prev,
+                            warehouse: selectedWarehouse.warehouseName || "",
+                          }));
+                        }
+                      }
+                    }}
+                  >
+                    <option value="" disabled hidden className="text-muted">
+                      Select Item
+                    </option>
+                    {warehouses.map((w) => (
+                      <option key={w.id} value={w.id}>
+                        {w.warehouseName}
+                      </option>
+                    ))}
+                  </select>
+                  <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                </div>
+              </div>
               <div className="col-3 d-flex flex-column form-group">
                 <label htmlFor="quantity" className="form-label ms-2">
                   Quantity <span className="text-danger fs-6">*</span>

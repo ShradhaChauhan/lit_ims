@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../../../services/api";
+import { AppContext } from "../../../context/AppContext";
 
 const ProductionFloorReceipt = () => {
   const [issueNumber, setIssueNumber] = useState("");
@@ -341,6 +342,12 @@ const ProductionFloorReceipt = () => {
     }
   };
 
+  // Role based access
+  const { getPermission } = useContext(AppContext);
+  const { canView, canEdit } = getPermission("Production Floor Receipt");
+
+  if (!canView) return <p>Access Denied</p>;
+
   return (
     <div>
       {" "}
@@ -363,279 +370,288 @@ const ProductionFloorReceipt = () => {
         </div>
       </nav>
       {/* Form Section */}
-      <div className="table-form-container mx-2 mb-3">
-        <div className="form-header">
-          <h2>
-            <i className="fas fa-circle-check"></i> Material Receipt
-            Confirmation
-          </h2>
-          <p>
-            Receipt #: <strong>{transactionNumber}</strong>
-          </p>
-        </div>
-        {/* Form Fields */}
-        <form autoComplete="off" className="padding-2">
-          <div className="form-grid pt-0">
-            {/* Input fields section */}
-            <div className="row form-style">
-              <div className="col-3 d-flex flex-column form-group">
-                <label htmlFor="issueNumber" className="form-label">
-                  Issue Number <span className="text-danger fs-6">*</span>
-                </label>
-                <div className="position-relative w-100">
-                  <i className="fas fa-dolly position-absolute z-0 input-icon"></i>
-                  <select
-                    className="form-control ps-5 text-font"
-                    id="issueNumber"
-                    value={issueNumber}
-                    onChange={handleIssueNumberChange}
-                  >
-                    <option value="" disabled hidden className="text-muted">
-                      Select Issue Transaction
-                    </option>
-                    {issueNoList.length === 0 && (
-                      <option value="NaN" disabled>
-                        Nothing to issue
+      {canEdit && (
+        <div className="table-form-container mx-2 mb-3">
+          <div className="form-header">
+            <h2>
+              <i className="fas fa-circle-check"></i> Material Receipt
+              Confirmation
+            </h2>
+            <p>
+              Receipt #: <strong>{transactionNumber}</strong>
+            </p>
+          </div>
+          {/* Form Fields */}
+          <form autoComplete="off" className="padding-2">
+            <div className="form-grid pt-0">
+              {/* Input fields section */}
+              <div className="row form-style">
+                <div className="col-3 d-flex flex-column form-group">
+                  <label htmlFor="issueNumber" className="form-label">
+                    Issue Number <span className="text-danger fs-6">*</span>
+                  </label>
+                  <div className="position-relative w-100">
+                    <i className="fas fa-dolly position-absolute z-0 input-icon"></i>
+                    <select
+                      className="form-control ps-5 text-font"
+                      id="issueNumber"
+                      value={issueNumber}
+                      onChange={handleIssueNumberChange}
+                    >
+                      <option value="" disabled hidden className="text-muted">
+                        Select Issue Transaction
                       </option>
-                    )}
-                    {issueNoList.map((issueNo) => (
-                      <option key={issueNo.issueNo} value={issueNo.issueNo}>
-                        {issueNo.issueNo}
-                      </option>
-                    ))}
-                  </select>
-                  <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
-                </div>
-              </div>
-              <div className="col-3 d-flex flex-column form-group">
-                <label htmlFor="issueDate" className="form-label">
-                  Issue Date <span className="text-danger fs-6">*</span>
-                </label>
-                <div className="position-relative w-100">
-                  <i className="fas fa-calendar position-absolute z-0 input-icon"></i>
-                  <input
-                    type="date"
-                    className="form-control ps-5 text-font"
-                    id="issueDate"
-                    value={issueSummary.issueDate}
-                    placeholder="Issue Date"
-                    disabled
-                  />
-                </div>
-              </div>
-              <div className="col-3 d-flex flex-column form-group">
-                <label htmlFor="requisitionNumber" className="form-label">
-                  Requisition Number <span className="text-danger fs-6">*</span>
-                </label>
-                <div className="position-relative w-100">
-                  <i className="fas fa-file-invoice position-absolute z-0 input-icon"></i>
-                  <input
-                    type="text"
-                    className="form-control ps-5 text-font"
-                    id="requisitionNumber"
-                    value={issueSummary.requisitionNumber}
-                    placeholder="Requisition Number"
-                    disabled
-                  />
-                </div>
-              </div>
-              <div className="col-3 d-flex flex-column form-group">
-                <label htmlFor="receiptDate" className="form-label">
-                  Receipt Date <span className="text-danger fs-6">*</span>
-                </label>
-                <div className="position-relative w-100">
-                  <i className="fas fa-calendar position-absolute z-0 input-icon"></i>
-                  <input
-                    type="date"
-                    className="form-control ps-5 text-font"
-                    id="receiptDate"
-                    value={issueSummary.receiptDate}
-                    onChange={(e) =>
-                      setIssueSummary({
-                        ...issueSummary,
-                        receiptDate: e.target.value,
-                      })
-                    }
-                    placeholder="Receipt Date"
-                  />
-                </div>
-              </div>
-            </div>
-            {/* Issued Items Table Section */}
-            <div className="margin-2">
-              <div className="table-container">
-                <div className="table-header">
-                  <h6>Issued Items</h6>
-                  <div className="selected-count">
-                    <input
-                      type="checkbox"
-                      id="select-all"
-                      checked={selectAll}
-                      onChange={handleSelectAllChange}
-                    />
-                    <label htmlFor="select-all">
-                      {selectedIssueNo.length} Selected
-                    </label>
+                      {issueNoList.length === 0 && (
+                        <option value="NaN" disabled>
+                          Nothing to issue
+                        </option>
+                      )}
+                      {issueNoList.map((issueNo) => (
+                        <option key={issueNo.issueNo} value={issueNo.issueNo}>
+                          {issueNo.issueNo}
+                        </option>
+                      ))}
+                    </select>
+                    <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                   </div>
                 </div>
-                <table>
-                  <thead>
-                    <tr>
-                      <th className="checkbox-cell ps-4">
-                        <input
-                          type="checkbox"
-                          id="select-all-header"
-                          disabled
-                        />
-                      </th>
-                      <th>Item Name</th>
-                      <th>Batch Numbers</th>
-                      <th>Issued Qty</th>
-                      <th>Received Qty</th>
-                      <th>Variance</th>
-                      <th>Notes</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-break">
-                    {issuedItems.length === 0 ? (
-                      <tr className="no-data-row">
-                        <td colSpan="7" className="no-data-cell">
-                          <div className="no-data-content">
-                            <i className="fas fa-boxes-stacked no-data-icon"></i>
-                            <p className="no-data-text">No Items to Receive</p>
-                            <p className="no-data-subtext">
-                              Select an issue transaction to view items
-                            </p>
-                          </div>
-                        </td>
+                <div className="col-3 d-flex flex-column form-group">
+                  <label htmlFor="issueDate" className="form-label">
+                    Issue Date <span className="text-danger fs-6">*</span>
+                  </label>
+                  <div className="position-relative w-100">
+                    <i className="fas fa-calendar position-absolute z-0 input-icon"></i>
+                    <input
+                      type="date"
+                      className="form-control ps-5 text-font"
+                      id="issueDate"
+                      value={issueSummary.issueDate}
+                      placeholder="Issue Date"
+                      disabled
+                    />
+                  </div>
+                </div>
+                <div className="col-3 d-flex flex-column form-group">
+                  <label htmlFor="requisitionNumber" className="form-label">
+                    Requisition Number{" "}
+                    <span className="text-danger fs-6">*</span>
+                  </label>
+                  <div className="position-relative w-100">
+                    <i className="fas fa-file-invoice position-absolute z-0 input-icon"></i>
+                    <input
+                      type="text"
+                      className="form-control ps-5 text-font"
+                      id="requisitionNumber"
+                      value={issueSummary.requisitionNumber}
+                      placeholder="Requisition Number"
+                      disabled
+                    />
+                  </div>
+                </div>
+                <div className="col-3 d-flex flex-column form-group">
+                  <label htmlFor="receiptDate" className="form-label">
+                    Receipt Date <span className="text-danger fs-6">*</span>
+                  </label>
+                  <div className="position-relative w-100">
+                    <i className="fas fa-calendar position-absolute z-0 input-icon"></i>
+                    <input
+                      type="date"
+                      className="form-control ps-5 text-font"
+                      id="receiptDate"
+                      value={issueSummary.receiptDate}
+                      onChange={(e) =>
+                        setIssueSummary({
+                          ...issueSummary,
+                          receiptDate: e.target.value,
+                        })
+                      }
+                      placeholder="Receipt Date"
+                    />
+                  </div>
+                </div>
+              </div>
+              {/* Issued Items Table Section */}
+              <div className="margin-2">
+                <div className="table-container">
+                  <div className="table-header">
+                    <h6>Issued Items</h6>
+                    <div className="selected-count">
+                      <input
+                        type="checkbox"
+                        id="select-all"
+                        checked={selectAll}
+                        onChange={handleSelectAllChange}
+                      />
+                      <label htmlFor="select-all">
+                        {selectedIssueNo.length} Selected
+                      </label>
+                    </div>
+                  </div>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th className="checkbox-cell ps-4">
+                          <input
+                            type="checkbox"
+                            id="select-all-header"
+                            disabled
+                          />
+                        </th>
+                        <th>Item Name</th>
+                        <th>Batch Numbers</th>
+                        <th>Issued Qty</th>
+                        <th>Received Qty</th>
+                        <th>Variance</th>
+                        <th>Notes</th>
                       </tr>
-                    ) : (
-                      issuedItems.map((issuedItem) => (
-                        <tr key={issuedItem.id}>
-                          <td className="checkbox-cell ps-4">
-                            <input
-                              type="checkbox"
-                              checked={selectedIssueNo.includes(issuedItem.id)}
-                              onChange={() =>
-                                handleIssueNoCheckboxChange(issuedItem.id)
-                              }
-                            />
-                          </td>
-                          <td className="ps-4">
-                            <div>
-                              <span>{issuedItem.itemName}</span>
-                            </div>
-                          </td>
-                          <td className="ps-4">
-                            <div>
-                              <span>{issuedItem.batchNumber}</span>
-                            </div>
-                          </td>
-                          <td className="ps-4">
-                            <div>
-                              <span>{issuedItem.issuedQty}</span>
-                            </div>
-                          </td>
-                          <td className="ps-4">
-                            <div className="position-relative w-100">
-                              <input
-                                type="number"
-                                className="form-control text-font"
-                                value={issuedItem.receivedQty}
-                                placeholder="Enter qty"
-                                onChange={(e) =>
-                                  handleReceivedQtyChange(
-                                    issuedItem.id,
-                                    e.target.value
-                                  )
-                                }
-                              />
-                            </div>
-                          </td>
-                          <td className="ps-4">
-                            <div>
-                              <span>{issuedItem.variance}</span>
-                            </div>
-                          </td>
-                          <td className="ps-4">
-                            <div className="position-relative w-100">
-                              <input
-                                type="text"
-                                className="form-control text-font"
-                                value={issuedItem.notes || ""}
-                                placeholder="Add notes"
-                                onChange={(e) =>
-                                  handleNotesChange(
-                                    issuedItem.id,
-                                    e.target.value
-                                  )
-                                }
-                              />
+                    </thead>
+                    <tbody className="text-break">
+                      {issuedItems.length === 0 ? (
+                        <tr className="no-data-row">
+                          <td colSpan="7" className="no-data-cell">
+                            <div className="no-data-content">
+                              <i className="fas fa-boxes-stacked no-data-icon"></i>
+                              <p className="no-data-text">
+                                No Items to Receive
+                              </p>
+                              <p className="no-data-subtext">
+                                Select an issue transaction to view items
+                              </p>
                             </div>
                           </td>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>{" "}
-            {/* Receipt Summary Table Section */}
-            <div className="margin-2">
-              <div className="table-container">
-                <div className="row form-style p-4">
-                  <h6 className="mb-2">Receipt Summary</h6>
+                      ) : (
+                        issuedItems.map((issuedItem) => (
+                          <tr key={issuedItem.id}>
+                            <td className="checkbox-cell ps-4">
+                              <input
+                                type="checkbox"
+                                checked={selectedIssueNo.includes(
+                                  issuedItem.id
+                                )}
+                                onChange={() =>
+                                  handleIssueNoCheckboxChange(issuedItem.id)
+                                }
+                              />
+                            </td>
+                            <td className="ps-4">
+                              <div>
+                                <span>{issuedItem.itemName}</span>
+                              </div>
+                            </td>
+                            <td className="ps-4">
+                              <div>
+                                <span>{issuedItem.batchNumber}</span>
+                              </div>
+                            </td>
+                            <td className="ps-4">
+                              <div>
+                                <span>{issuedItem.issuedQty}</span>
+                              </div>
+                            </td>
+                            <td className="ps-4">
+                              <div className="position-relative w-100">
+                                <input
+                                  type="number"
+                                  className="form-control text-font"
+                                  value={issuedItem.receivedQty}
+                                  placeholder="Enter qty"
+                                  onChange={(e) =>
+                                    handleReceivedQtyChange(
+                                      issuedItem.id,
+                                      e.target.value
+                                    )
+                                  }
+                                />
+                              </div>
+                            </td>
+                            <td className="ps-4">
+                              <div>
+                                <span>{issuedItem.variance}</span>
+                              </div>
+                            </td>
+                            <td className="ps-4">
+                              <div className="position-relative w-100">
+                                <input
+                                  type="text"
+                                  className="form-control text-font"
+                                  value={issuedItem.notes || ""}
+                                  placeholder="Add notes"
+                                  onChange={(e) =>
+                                    handleNotesChange(
+                                      issuedItem.id,
+                                      e.target.value
+                                    )
+                                  }
+                                />
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>{" "}
+              {/* Receipt Summary Table Section */}
+              <div className="margin-2">
+                <div className="table-container">
+                  <div className="row form-style p-4">
+                    <h6 className="mb-2">Receipt Summary</h6>
 
-                  <div className="col-4 d-flex flex-column text-font">
-                    <div className="row bg-gray font-weight me-2 p-3 d-flex align-items-center justify-content-between">
-                      <p className="col-6 font-gray mb-0">Total Items:</p>
-                      <p className="col-6 mb-0 text-end">
-                        {issuedItems.length}
-                      </p>
+                    <div className="col-4 d-flex flex-column text-font">
+                      <div className="row bg-gray font-weight me-2 p-3 d-flex align-items-center justify-content-between">
+                        <p className="col-6 font-gray mb-0">Total Items:</p>
+                        <p className="col-6 mb-0 text-end">
+                          {issuedItems.length}
+                        </p>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="col-4 d-flex flex-column text-font">
-                    <div className="row bg-gray font-weight me-2 p-3 d-flex align-items-center justify-content-between">
-                      <p className="col-6 font-gray mb-0">Selected Items:</p>
-                      <p className="col-6 mb-0 text-end">
-                        {selectedIssueNo.length}
-                      </p>
+                    <div className="col-4 d-flex flex-column text-font">
+                      <div className="row bg-gray font-weight me-2 p-3 d-flex align-items-center justify-content-between">
+                        <p className="col-6 font-gray mb-0">Selected Items:</p>
+                        <p className="col-6 mb-0 text-end">
+                          {selectedIssueNo.length}
+                        </p>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="col-4 d-flex flex-column text-font">
-                    <div className="row bg-gray font-weight me-2 p-3 d-flex align-items-center justify-content-between">
-                      <p className="col-6 font-gray mb-0">Pending Items:</p>
-                      <p className="col-6 mb-0 text-end">
-                        {issuedItems.length - selectedIssueNo.length}
-                      </p>
+                    <div className="col-4 d-flex flex-column text-font">
+                      <div className="row bg-gray font-weight me-2 p-3 d-flex align-items-center justify-content-between">
+                        <p className="col-6 font-gray mb-0">Pending Items:</p>
+                        <p className="col-6 mb-0 text-end">
+                          {issuedItems.length - selectedIssueNo.length}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
+              </div>{" "}
+              {/* Button Section */}
+              <div className="form-actions">
+                <button
+                  type="button"
+                  className="btn btn-primary add-btn"
+                  onClick={handleConfirmReceipt}
+                  disabled={selectedIssueNo.length === 0}
+                >
+                  <i className="fa-solid fa-floppy-disk me-1"></i> Confirm
+                  Receipt
+                </button>
+
+                <button
+                  className="btn btn-secondary add-btn me-2"
+                  type="button"
+                  onClick={handleReset}
+                >
+                  <i className="fa-solid fa-xmark me-1"></i> Cancel
+                </button>
               </div>
-            </div>{" "}
-            {/* Button Section */}
-            <div className="form-actions">
-              <button
-                type="button"
-                className="btn btn-primary add-btn"
-                onClick={handleConfirmReceipt}
-                disabled={selectedIssueNo.length === 0}
-              >
-                <i className="fa-solid fa-floppy-disk me-1"></i> Confirm Receipt
-              </button>
-              <button
-                className="btn btn-secondary add-btn me-2"
-                type="button"
-                onClick={handleReset}
-              >
-                <i className="fa-solid fa-xmark me-1"></i> Cancel
-              </button>
             </div>
-          </div>
-        </form>
-      </div>
+          </form>
+        </div>
+      )}
       {/* Recent Requests Table Section */}
       <div className="margin-2 mx-2">
         <div className="table-container">
