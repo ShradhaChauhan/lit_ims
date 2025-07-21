@@ -29,6 +29,7 @@ import ProductionMaterialUsage from "./components/Forms/ProductionMaterialUsage/
 import WIPReturn from "./components/Forms/WIPReturn/WIPReturn";
 import Users from "./components/Users/Users";
 import ApproveItemsQuantity from "./components/Forms/ApproveItemsQuantity/ApproveItemsQuantity";
+import ProtectedRoute from "./utils/ProtectedRoute";
 
 function App() {
   const { rightSideComponent, setRightSideComponent, isAuthenticated } =
@@ -64,8 +65,16 @@ function App() {
             {/* Content Area */}
             <div className="right-side-div bg-light flex-grow-1 overflow-auto">
               <Routes>
+                <Route
+                  path="/users"
+                  element={
+                    <ProtectedRoute pageName="User Management">
+                      <Users />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/users" element={<Users />} />
+                {/* <Route path="/users" element={<Users />} /> */}
                 <Route path="/business-partner" element={<VendorMaster />} />
                 <Route path="/item-master" element={<ItemMaster />} />
                 <Route path="/warehouse-master" element={<WarehouseMaster />} />

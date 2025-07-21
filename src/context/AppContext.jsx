@@ -18,11 +18,40 @@ const AppContextProvider = (props) => {
   const [branchDropdownValues, setBranchDropdownValues] = useState([{}]);
   const [isAddVendorItem, setIsAddVendorItem] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [role, setRole] = useState(null);
+  const [permissions, setPermissions] = useState([]);
+
+  const getPermission = (pageName) => {
+    return (
+      permissions.find((p) => p.pageName === pageName) || {
+        canView: false,
+        canEdit: false,
+      }
+    );
+  };
 
   // Sync changes to localStorage
   useEffect(() => {
     localStorage.setItem("isAuthenticated", isAuthenticated);
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    const storedPermissions = localStorage.getItem("permissions");
+    try {
+      if (storedPermissions) {
+        const parsedPermissions = JSON.parse(storedPermissions);
+        setPermissions(parsedPermissions);
+      }
+    } catch (e) {
+      console.error("Failed to parse stored permissions:", e);
+      localStorage.removeItem("permissions");
+    }
+  }, []);
+
+  useEffect(() => {
+    const storedRole = localStorage.getItem("role");
+    if (storedRole) setRole(storedRole);
+  }, []);
 
   const value = {
     rightSideComponent,
@@ -53,6 +82,11 @@ const AppContextProvider = (props) => {
     setIsAuthenticated,
     isAddVendorItem,
     setIsAddVendorItem,
+    permissions,
+    setPermissions,
+    getPermission,
+    role,
+    setRole,
   };
 
   return (

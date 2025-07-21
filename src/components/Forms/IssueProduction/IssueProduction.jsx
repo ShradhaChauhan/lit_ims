@@ -1,7 +1,8 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useContext } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../../../services/api";
+import { AppContext } from "../../../context/AppContext";
 
 const IssueProduction = () => {
   const navigate = useNavigate();
@@ -385,6 +386,12 @@ const IssueProduction = () => {
 
     toast.info("Form cleared successfully");
   };
+
+  // Role based access
+  const { getPermission } = useContext(AppContext);
+  const { canView, canEdit } = getPermission("Issue to Production");
+
+  if (!canView) return <p>Access Denied</p>;
 
   return (
     <div>

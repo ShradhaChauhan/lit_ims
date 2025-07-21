@@ -49,7 +49,7 @@ const SideBar = () => {
 
   const menuItems = [
     {
-      icon: "fas fa-user",
+      icon: "fas fa-user-tie",
       path: "Administrations",
       label: "Administrations",
       submenu: [
