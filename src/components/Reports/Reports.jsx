@@ -22,6 +22,7 @@ const Reports = () => {
   const [selectedIQCStatus, setSelectedIQCStatus] = useState("");
 
   // Item Modal Search and Filter states
+  const [warehouseDetails, setWarehouseDetails] = useState([]);
   const [modalSearchQuery, setModalSearchQuery] = useState("");
   const [modalSortConfig, setModalSortConfig] = useState({
     key: null,
@@ -117,52 +118,7 @@ const Reports = () => {
     setFilteredItems(filteredWarehouses);
   }, [filteredWarehouses]);
 
-  // Item modal filtering and sorting
-  const filteredModalItems = useMemo(() => {
-    let items = [...(viewItemsData?.items || [])];
-
-    // Search
-    if (modalSearchQuery) {
-      const query = modalSearchQuery.toLowerCase();
-      items = items.filter(
-        (item) =>
-          item.itemName?.toLowerCase().includes(query) ||
-          item.itemCode?.toLowerCase().includes(query)
-      );
-    }
-
-    // Sort
-    if (modalSortConfig.key) {
-      items.sort((a, b) => {
-        const aVal = a[modalSortConfig.key]?.toLowerCase?.() || "";
-        const bVal = b[modalSortConfig.key]?.toLowerCase?.() || "";
-
-        if (aVal < bVal) return modalSortConfig.direction === "asc" ? -1 : 1;
-        if (aVal > bVal) return modalSortConfig.direction === "asc" ? 1 : -1;
-        return 0;
-      });
-    }
-
-    return items;
-  }, [viewItemsData, modalSearchQuery, modalSortConfig]);
-
-  const handleModalSort = (key) => {
-    setModalSortConfig((prev) => {
-      if (prev.key === key) {
-        return {
-          key,
-          direction: prev.direction === "asc" ? "desc" : "asc",
-        };
-      } else {
-        return {
-          key,
-          direction: "asc",
-        };
-      }
-    });
-  };
-
-  const [warehouseDetails, setWarehouseDetails] = useState([
+  const [warehouseDetail, setWarehouseDetail] = useState([
     {
       id: 1,
       cumulativeValue: "1000",
@@ -180,6 +136,52 @@ const Reports = () => {
       iqcStatus: "Not Ok",
     },
   ]);
+
+  // Item modal filtering and sorting
+  const filteredWarehouseDetails = useMemo(() => {
+    let filtered = [...warehouseDetail];
+
+    if (modalSearchQuery) {
+      const query = modalSearchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (item) =>
+          item.itemName?.toLowerCase().includes(query) ||
+          item.itemCode?.toLowerCase().includes(query) ||
+          item.uom?.toLowerCase?.().includes(query)
+      );
+    }
+
+    if (modalSortConfig.key) {
+      filtered.sort((a, b) => {
+        const aVal = a[modalSortConfig.key];
+        const bVal = b[modalSortConfig.key];
+
+        if (typeof aVal === "string") {
+          return modalSortConfig.direction === "asc"
+            ? aVal.localeCompare(bVal)
+            : bVal.localeCompare(aVal);
+        } else {
+          return modalSortConfig.direction === "asc"
+            ? aVal - bVal
+            : bVal - aVal;
+        }
+      });
+    }
+
+    return filtered;
+  }, [warehouseDetails, modalSearchQuery, modalSortConfig]);
+
+  const handleModalSort = (key) => {
+    setModalSortConfig((prev) => {
+      if (prev.key === key) {
+        return {
+          key,
+          direction: prev.direction === "asc" ? "desc" : "asc",
+        };
+      }
+      return { key, direction: "asc" };
+    });
+  };
 
   const [itemDetails, setItemDetails] = useState([
     {
@@ -609,7 +611,13 @@ const Reports = () => {
                       />
                     </div>
                     <div className="filter-options">
-                      <button className="filter-select">
+                      <button
+                        className="filter-select"
+                        onClick={() => {
+                          setModalSearchQuery("");
+                          setModalSortConfig({ key: null, direction: null });
+                        }}
+                      >
                         <i className="fas fa-filter me-2"></i>
                         Reset Filters
                       </button>
@@ -655,7 +663,7 @@ const Reports = () => {
                         </tr>
                       </thead>
                       <tbody className="text-break">
-                        {warehouseDetails.length === 0 ? (
+                        {warehouseDetail.length === 0 ? (
                           <tr className="no-data-row">
                             <td colSpan="5" className="no-data-cell">
                               <div className="no-data-content">
@@ -667,7 +675,7 @@ const Reports = () => {
                             </td>
                           </tr>
                         ) : (
-                          warehouseDetails.map((warehouseDetail) => (
+                          filteredWarehouseDetails.map((warehouseDetail) => (
                             <tr key={warehouseDetail.id}>
                               <td className="ps-4">
                                 <div>
