@@ -195,7 +195,7 @@ const ActivityLogs = () => {
                     </td>
                     <td className="ps-4 text-break">{log.ipAddress ?? "-"}</td>
                     <td
-                      className={`badge text-center ms-3 ${
+                      className={`badge text-center ${
                         log.action === "CREATE"
                           ? "create"
                           : log.action === "VIEW"
@@ -203,10 +203,11 @@ const ActivityLogs = () => {
                           : log.action === "UPDATE"
                           ? "update"
                           : "delete"
-                      } w-25 mt-3 ms-2`}
+                      } px-2 py-1 mt-4 ms-3`}
                     >
                       {log.action ?? "-"}
                     </td>
+
                     <td className="ps-5">
                       <button
                         className="btn-icon btn-primary"

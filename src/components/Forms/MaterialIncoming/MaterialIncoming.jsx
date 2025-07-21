@@ -248,6 +248,30 @@ const MaterialIncoming = () => {
           warehouse: formData.warehouse,
         });
 
+        // Find the selected vendor item to get isInventory and isIqc values
+        const selectedItem = vendorItems.find(
+          (item) => item.id === parseInt(vendorItem)
+        );
+        console.log("Selected vendor item:", selectedItem);
+
+        let defaultWarehouse;
+        if (selectedItem) {
+          defaultWarehouse = getDefaultWarehouse(
+            selectedItem.isInventory,
+            selectedItem.isIqc
+          );
+          console.log(
+            "Default warehouse based on item properties:",
+            defaultWarehouse
+          );
+        } else {
+          defaultWarehouse = {
+            warehouseId: findStoreWarehouseId(),
+            warehouseName: findStoreWarehouseName(),
+          };
+          console.log("Fallback to store warehouse:", defaultWarehouse);
+        }
+
         try {
           const response = await api.post(
             `/api/receipt/generate-batch?vendorCode=${formData.code}&itemCode=${formData.itemCode}&quantity=${formData.quantity}`
@@ -270,10 +294,11 @@ const MaterialIncoming = () => {
             batchNo: batchNo,
             vendorCode: formData.code,
             vendorName: formData.vendorName,
-            warehouse: batchNo ? "" : findStoreWarehouseName(),
-            warehouseId: batchNo ? "" : findStoreWarehouseId(),
+            warehouse: defaultWarehouse.warehouseName,
+            warehouseId: defaultWarehouse.warehouseId,
           };
 
+          console.log("Adding new item with warehouse:", newItem);
           setReceiptList((prev) => [...prev, newItem]);
           toast.success("Item added successfully");
 
@@ -298,10 +323,11 @@ const MaterialIncoming = () => {
             batchNo: "",
             vendorCode: formData.code,
             vendorName: formData.vendorName,
-            warehouse: findStoreWarehouseName(),
-            warehouseId: findStoreWarehouseId(),
+            warehouse: defaultWarehouse.warehouseName,
+            warehouseId: defaultWarehouse.warehouseId,
           };
 
+          console.log("Adding new item with warehouse (after error):", newItem);
           setReceiptList((prev) => [...prev, newItem]);
           toast.success("Item added with no batch number");
 
@@ -447,12 +473,41 @@ const MaterialIncoming = () => {
         mode: mode,
         vendor: firstItem.vendorName || formData.vendorName,
         vendorCode: firstItem.vendorCode || formData.code,
-        items: receiptList.map((item) => ({
-          ...item,
-          // If batchNo is empty, use Store warehouse as default
-          warehouseId: item.batchNo ? item.warehouseId : findStoreWarehouseId(),
-          warehouse: item.batchNo ? item.warehouse : findStoreWarehouseName(),
-        })),
+        items: receiptList.map((item) => {
+          // Find the corresponding vendor item to get isInventory and isIqc values
+          const vendorItem = vendorItems.find(
+            (vi) => vi.itemCode === item.itemCode
+          );
+          let defaultWarehouse;
+
+          if (vendorItem) {
+            defaultWarehouse = getDefaultWarehouse(
+              vendorItem.isInventory,
+              vendorItem.isIqc
+            );
+          } else {
+            defaultWarehouse = {
+              warehouseId: findStoreWarehouseId(),
+              warehouseName: findStoreWarehouseName(),
+            };
+          }
+
+          // If warehouse is not set or empty, use the default warehouse
+          const warehouseId = item.warehouseId || defaultWarehouse.warehouseId;
+          const warehouse = item.warehouse || defaultWarehouse.warehouseName;
+
+          console.log(
+            `Item ${item.itemCode} using warehouse:`,
+            warehouse,
+            warehouseId
+          );
+
+          return {
+            ...item,
+            warehouseId: warehouseId,
+            warehouse: warehouse,
+          };
+        }),
       };
 
       console.log("Submitting receipt data:", payload);
@@ -591,6 +646,59 @@ const MaterialIncoming = () => {
       (w) => w.name === "Store" || w.type === "STR"
     );
     return storeWarehouse ? storeWarehouse.name : "";
+  };
+
+  // Function to find IQC warehouse ID
+  const findIqcWarehouseId = () => {
+    const iqcWarehouse = warehouses.find(
+      (w) => w.name === "IQC" || w.type === "IQC"
+    );
+    return iqcWarehouse ? iqcWarehouse.id : "";
+  };
+
+  // Function to find IQC warehouse name
+  const findIqcWarehouseName = () => {
+    const iqcWarehouse = warehouses.find(
+      (w) => w.name === "IQC" || w.type === "IQC"
+    );
+    return iqcWarehouse ? iqcWarehouse.name : "";
+  };
+
+  // Function to determine default warehouse based on isInventory and isIqc flags
+  const getDefaultWarehouse = (isInventory, isIqc) => {
+    console.log(
+      "Getting default warehouse for isInventory:",
+      isInventory,
+      "isIqc:",
+      isIqc
+    );
+    console.log("Available warehouses:", warehouses);
+
+    if (isInventory && isIqc) {
+      const warehouseId = findIqcWarehouseId();
+      const warehouseName = findIqcWarehouseName();
+      console.log("Selected IQC warehouse:", warehouseId, warehouseName);
+      return {
+        warehouseId: warehouseId,
+        warehouseName: warehouseName,
+      };
+    } else if (isInventory && !isIqc) {
+      const warehouseId = findStoreWarehouseId();
+      const warehouseName = findStoreWarehouseName();
+      console.log("Selected Store warehouse:", warehouseId, warehouseName);
+      return {
+        warehouseId: warehouseId,
+        warehouseName: warehouseName,
+      };
+    } else {
+      const warehouseId = findStoreWarehouseId();
+      const warehouseName = findStoreWarehouseName();
+      console.log("Default Store warehouse:", warehouseId, warehouseName);
+      return {
+        warehouseId: warehouseId,
+        warehouseName: warehouseName,
+      };
+    }
   };
   return (
     <div>
