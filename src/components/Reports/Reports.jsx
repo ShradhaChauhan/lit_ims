@@ -159,6 +159,7 @@ const Reports = () => {
       itemName: "Item 1",
       transferFrom: "WIP1",
       transferTo: "STR",
+      date: "01-06-2025",
       trno: "TR12345",
       quantity: 10,
       unitPrice: "10.00",
@@ -169,9 +170,10 @@ const Reports = () => {
     {
       id: 2,
       itemCode: "10021200",
-      itemName: "Item 2",
+      itemName: "Item 1",
       transferFrom: "STR",
       transferTo: "WIP2",
+      date: "08-10-2025",
       trno: "TR12200",
       quantity: 10,
       unitPrice: "50.00",
@@ -186,25 +188,13 @@ const Reports = () => {
       id: 1,
       orderNo: "10021256",
       seriesNo: "TR12345",
-      type: "Transfer",
+      type: "Item",
       itemCode: "10021256",
       itemName: "Item 1",
       status: "Completed",
       quantity: 40,
       unitPrice: "10.00",
       totalPrice: "400.00",
-    },
-    {
-      id: 2,
-      orderNo: "10021100",
-      seriesNo: "TR12289",
-      type: "Transfer",
-      itemCode: "10021100",
-      itemName: "Item 1",
-      status: "Completed",
-      quantity: 60,
-      unitPrice: "10.00",
-      totalPrice: "600.00",
     },
   ]);
 
@@ -769,7 +759,7 @@ const Reports = () => {
                             onClick={() => handleModalSort("quantity")}
                             style={{ cursor: "pointer" }}
                           >
-                            Quantity{" "}
+                            Current Quantity{" "}
                             {modalSortConfig.key === "quantity" &&
                               (modalSortConfig.direction === "asc" ? (
                                 <i className="fa-solid fa-sort-up"></i>
@@ -781,7 +771,7 @@ const Reports = () => {
                             onClick={() => handleModalSort("cumulativeValue")}
                             style={{ cursor: "pointer" }}
                           >
-                            Cumulative Value{" "}
+                            Total Cost{" "}
                             {modalSortConfig.key === "cumulativeValue" &&
                               (modalSortConfig.direction === "asc" ? (
                                 <i className="fa-solid fa-sort-up"></i>
@@ -867,17 +857,17 @@ const Reports = () => {
       {/* View Items Report Modal */}
       {isShowItemDetails && (
         <div
-          className="modal fade modal-xl"
+          className="modal fade"
           ref={itemModalRef}
           id="itemDetailModal"
           tabIndex="-1"
         >
-          <div className="modal-dialog">
+          <div className="modal-dialog modal-fullscreen">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">
                   <i className="fas fa-circle-info me-2"></i>
-                  View Item Report
+                  Item History
                 </h5>
                 <button
                   type="button"
@@ -923,6 +913,18 @@ const Reports = () => {
                           >
                             TRNO{" "}
                             {modalItemSortConfig.key === "trno" &&
+                              (modalItemSortConfig.direction === "asc" ? (
+                                <i className="fa-solid fa-sort-up"></i>
+                              ) : (
+                                <i className="fa-solid fa-sort-down"></i>
+                              ))}
+                          </th>
+                          <th
+                            onClick={() => handleModalItemSort("date")}
+                            style={{ cursor: "pointer" }}
+                          >
+                            Date{" "}
+                            {modalItemSortConfig.key === "time" &&
                               (modalItemSortConfig.direction === "asc" ? (
                                 <i className="fa-solid fa-sort-up"></i>
                               ) : (
@@ -1064,6 +1066,11 @@ const Reports = () => {
                               </td>
                               <td className="ps-4">
                                 <div>
+                                  <span>{item.date}</span>
+                                </div>
+                              </td>
+                              <td className="ps-4">
+                                <div>
                                   <span>{item.itemCode}</span>
                                 </div>
                               </td>
@@ -1156,7 +1163,7 @@ const Reports = () => {
               <div className="modal-header">
                 <h5 className="modal-title">
                   <i className="fas fa-circle-info me-2"></i>
-                  View Transaction Report
+                  View Transaction Receipt
                 </h5>
                 <button
                   type="button"
