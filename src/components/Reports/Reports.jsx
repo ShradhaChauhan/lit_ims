@@ -759,7 +759,7 @@ const Reports = () => {
                             onClick={() => handleModalSort("quantity")}
                             style={{ cursor: "pointer" }}
                           >
-                            Current Quantity{" "}
+                            Stock{" "}
                             {modalSortConfig.key === "quantity" &&
                               (modalSortConfig.direction === "asc" ? (
                                 <i className="fa-solid fa-sort-up"></i>
