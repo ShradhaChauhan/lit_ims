@@ -23,9 +23,9 @@ import { toast } from "react-toastify";
 
 // Sample data - replace with actual API calls in production
 const inventoryStatusData = [
-  { name: "In Stock", value: 65, color: "#4CAF50" },
-  { name: "Low Stock", value: 0, color: "#FFC107" },
-  { name: "Out of Stock", value: 10, color: "#F44336" },
+  { name: "In Stock", value: 65, color: "#278dedff" },
+  { name: "Low Stock", value: 0, color: "#494b51ff" },
+  { name: "Out of Stock", value: 10, color: "#7c6dc0ff" },
 ];
 
 const monthlyInventoryData = [
@@ -75,9 +75,9 @@ const getQCDescription = (status) => {
 
 // Color mapping for QC status
 const QC_COLORS = {
-  Pass: "#2e7d32", // Green
-  Fail: "#d32f2f", // Red
-  Pending: "#f9a825", // Amber
+  Pass: "#278dedff", // Green
+  Fail: "#494b51ff", // Red
+  Pending: "#7c6dc0ff", // Amber
 };
 
 const LandingPage = () => {
@@ -201,7 +201,7 @@ const LandingPage = () => {
           </div>
         </Link>
         <div className="summary-card">
-          <div className="card-icon green">
+          <div className="card-icon blue">
             <i className="fas fa-dollar-sign"></i>
           </div>
           <div className="card-content">
@@ -210,7 +210,7 @@ const LandingPage = () => {
           </div>
         </div>
         <div className="summary-card">
-          <div className="card-icon orange">
+          <div className="card-icon blue">
             <i className="fas fa-exclamation-triangle"></i>
           </div>
           <div className="card-content">
@@ -220,7 +220,7 @@ const LandingPage = () => {
         </div>
         <Link to="/activity-logs" className="text-decoration-none">
           <div className="summary-card">
-            <div className="card-icon purple">
+            <div className="card-icon blue">
               <i className="fas fa-exchange-alt"></i>
             </div>
             <div className="card-content">
@@ -337,7 +337,7 @@ const LandingPage = () => {
                   cy="50%"
                   innerRadius={60}
                   outerRadius={80}
-                  fill="#8884d8"
+                  fill="#7c9dd3ff"
                   paddingAngle={5}
                   dataKey="value"
                   label
@@ -369,15 +369,15 @@ const LandingPage = () => {
                   type="monotone"
                   dataKey="inflow"
                   stackId="1"
-                  stroke="#8884d8"
-                  fill="#8884d8"
+                  stroke="#278dedff"
+                  fill="#278dedff"
                 />
                 <Area
                   type="monotone"
                   dataKey="outflow"
                   stackId="1"
-                  stroke="#82ca9d"
-                  fill="#82ca9d"
+                  stroke="#737576ff"
+                  fill="#737576ff"
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -399,7 +399,7 @@ const LandingPage = () => {
                 <YAxis dataKey="name" type="category" />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="quantity" fill="#26a69a" />
+                <Bar dataKey="quantity" fill="#278dedff" />
               </BarChart>
             </ResponsiveContainer>
           </div>

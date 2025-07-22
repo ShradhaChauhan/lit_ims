@@ -199,18 +199,18 @@
 }
 
 .qc-stat.pass {
-    background-color: rgba(46, 125, 50, 0.1);
-    border-left: 4px solid #2e7d32;
+    background-color: rgba(39, 141, 237, 0.1);
+    border-left: 4px solid #278dedff;
 }
 
 .qc-stat.fail {
-    background-color: rgba(211, 47, 47, 0.1);
-    border-left: 4px solid #d32f2f;
+    background-color: rgba(73, 75, 81, 0.1);
+    border-left: 4px solid #494b51ff;
 }
 
 .qc-stat.hold {
-    background-color: rgba(249, 168, 37, 0.1);
-    border-left: 4px solid #f9a825;
+    background-color: rgba(124, 109, 192, 0.1);
+    border-left: 4px solid #7c6dc0ff;
 }
 
 .stat-value {
