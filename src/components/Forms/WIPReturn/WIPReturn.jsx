@@ -1,7 +1,14 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
+import api from "../../../services/api";
 
 const WIPReturn = () => {
+  const [warehouseList, setWarehouseList] = useState([]);
+  const [order, setOrder] = useState("");
+  const [date, setDate] = useState("");
+  const [type, setType] = useState("");
+  const [warehouse, setWarehouse] = useState("");
   const [workOrders, setWorkOrders] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
   // Pagination states
@@ -11,6 +18,22 @@ const WIPReturn = () => {
     totalItems: 0,
     itemsPerPage: 10,
   });
+
+  const fetchWarehouseList = async () => {
+    try {
+      const response = await api.get("/api/warehouses/wip");
+      console.log("Warehouse list response:", response.data.data);
+      setWarehouseList(response.data.data);
+    } catch (error) {
+      console.error("Error fetching warehouse list:", error);
+      toast.error("Error fetching warehouse list");
+    }
+  };
+
+  useEffect(() => {
+    // Fetch warehouse list on component mount
+    fetchWarehouseList();
+  }, []);
 
   // Calculate the display range for the pagination info
   const getDisplayRange = () => {
@@ -138,17 +161,20 @@ const WIPReturn = () => {
                   Work Order <span className="text-danger fs-6">*</span>
                 </label>
                 <div className="position-relative w-100">
-                  <i className="fas fa-file-lines position-absolute z-0 input-icon"></i>
+                  <i className="fas fa-file-lines ms-2 position-absolute z-0 input-icon"></i>
                   <select
-                    className="form-control ps-5 text-font"
+                    className={`form-select ps-5 ms-2 text-font ${
+                      order === "" ? "text-muted" : ""
+                    }`}
                     id="workOrder"
-                    value=""
+                    value={order}
+                    onChange={(e) => setOrder(e.target.value)}
                   >
                     <option value="" className="text-muted">
                       Select Work Order
                     </option>
                   </select>
-                  <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                  {/* <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i> */}
                 </div>
               </div>
               <div className="col-3 d-flex flex-column form-group">
@@ -156,11 +182,14 @@ const WIPReturn = () => {
                   Return Type <span className="text-danger fs-6">*</span>
                 </label>
                 <div className="position-relative w-100">
-                  <i className="fas fa-tags position-absolute z-0 input-icon"></i>
+                  <i className="fas fa-tags ms-2 position-absolute z-0 input-icon"></i>
                   <select
-                    className="form-control ps-5 text-font"
+                    className={`form-select ps-5 ms-2 text-font ${
+                      type === "" ? "text-muted" : ""
+                    }`}
                     id="shift"
-                    value=""
+                    value={type}
+                    onChange={(e) => setType(e.target.value)}
                   >
                     <option value="" className="text-muted">
                       Select Type
@@ -175,17 +204,49 @@ const WIPReturn = () => {
                       Unused Material
                     </option>
                   </select>
-                  <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                  {/* <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i> */}
                 </div>
               </div>
               <div className="col-3 d-flex flex-column form-group">
-                <label htmlFor="operator" className="form-label">
+                <label htmlFor="date" className="form-label">
                   Return Date <span className="text-danger fs-6">*</span>
                 </label>
                 <div className="position-relative w-100">
-                  <i className="fas fa-calendar position-absolute z-0 input-icon"></i>
-                  <input type="date" className="form-control ps-5 text-font" />
-                  <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                  <i className="fas fa-calendar ms-2 position-absolute z-0 input-icon"></i>
+                  <input
+                    type="date"
+                    id="date"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    className={`form-select ps-5 ms-2 text-font ${
+                      date === "" ? "text-muted" : ""
+                    }`}
+                  />
+                </div>
+              </div>
+              <div className="col-3 d-flex flex-column form-group">
+                <label htmlFor="warehouse" className="form-label ms-1">
+                  Your Warehouse <span className="text-danger fs-6">*</span>
+                </label>
+                <div className="position-relative w-100">
+                  <i className="fas fa-warehouse ms-2 position-absolute z-0 input-icon text-font"></i>
+                  <select
+                    className={`form-select ps-5 ms-2 text-font ${
+                      warehouse === "" ? "text-muted" : ""
+                    }`}
+                    id="warehouse"
+                    value={warehouse}
+                    onChange={(e) => setWarehouse(e.target.value)}
+                  >
+                    <option value="" disabled hidden>
+                      Select Your Warehouse
+                    </option>
+                    {warehouseList.map((w) => (
+                      <option value={w.id} key={w.id}>
+                        {w.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </div>
