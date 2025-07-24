@@ -116,11 +116,13 @@ const MaterialIssueRequest = () => {
   const [bomList, setBomList] = useState([]);
   const [itemsList, setItemsList] = useState([]);
   const [recentRequests, setRecentRequests] = useState([]);
+  const [warehouseList, setWarehouseList] = useState([]);
+  const [warehouse, setWarehouse] = useState("");
 
   // Disable add to request button until all fields are filled
   const isFormValid =
-    (requisitionType === "complete bom" && bom && quantity) ||
-    (requisitionType === "individual items" && type && quantity);
+    (requisitionType === "complete bom" && bom && quantity && warehouse) ||
+    (requisitionType === "individual items" && type && quantity && warehouse);
 
   // Modal
   const [selectedItem, setSelectedItem] = useState(null);
@@ -134,6 +136,22 @@ const MaterialIssueRequest = () => {
     totalItems: 0,
     itemsPerPage: 10,
   });
+
+  const fetchWarehouseList = async () => {
+    try {
+      const response = await api.get("/api/warehouses/wip");
+      console.log("Warehouse list response:", response.data.data);
+      setWarehouseList(response.data.data);
+    } catch (error) {
+      console.error("Error fetching warehouse list:", error);
+      toast.error("Error fetching warehouse list");
+    }
+  };
+
+  useEffect(() => {
+    // Fetch warehouse list on component mount
+    fetchWarehouseList();
+  }, []);
 
   // Calculate the display range for the pagination info
   const getDisplayRange = () => {
@@ -310,6 +328,7 @@ const MaterialIssueRequest = () => {
         type: "BOM",
         code: selectedBOM.code,
         quantity,
+        warehouse,
         items: selectedBOM.items,
       };
 
@@ -317,6 +336,7 @@ const MaterialIssueRequest = () => {
       setIsBOMAdded(true);
       setBom("");
       setQuantity("");
+      setWarehouse("");
       setRequisitionType("");
     }
 
@@ -347,6 +367,7 @@ const MaterialIssueRequest = () => {
         type: "Item",
         code: selectedItem.code,
         uom: selectedItem.uom,
+        warehouse,
         quantity,
       };
 
@@ -361,6 +382,7 @@ const MaterialIssueRequest = () => {
       setType("");
       setQuantity("");
       setRequisitionType("");
+      setWarehouse("");
     }
   };
 
@@ -446,9 +468,11 @@ const MaterialIssueRequest = () => {
                   Requisition Type <span className="text-danger fs-6">*</span>
                 </label>
                 <div className="position-relative w-100">
-                  <i className="fas fa-rectangle-list ms-2 position-absolute z-0 input-icon margin-top-8"></i>
+                  <i className="fas fa-rectangle-list ms-2 position-absolute z-0 input-icon margin-top-8 text-font"></i>
                   <select
-                    className="form-control ps-5 ms-1 text-font"
+                    className={`form-select ps-5 ms-2 text-font ${
+                      requisitionType === "" ? "text-muted" : ""
+                    }`}
                     id="requisitionType"
                     value={requisitionType}
                     onChange={handleRequisitionChange}
@@ -466,8 +490,6 @@ const MaterialIssueRequest = () => {
                       <option value="individual items">Individual Items</option>
                     )}
                   </select>
-
-                  <i className="fa-solid fa-angle-down position-absolute down-arrow-icon margin-top-8"></i>
                 </div>
               </div>
 
@@ -478,9 +500,11 @@ const MaterialIssueRequest = () => {
                     Select BOM <span className="text-danger fs-6">*</span>
                   </label>
                   <div className="position-relative w-100">
-                    <i className="fas fa-sitemap ms-2 position-absolute z-0 input-icon margin-top-8"></i>
+                    <i className="fas fa-sitemap ms-2 position-absolute z-0 input-icon margin-top-8 text-font"></i>
                     <select
-                      className="form-control ps-5 ms-1 text-font"
+                      className={`form-select ps-5 ms-1 text-font ${
+                        bom === "" ? "text-muted" : ""
+                      }`}
                       id="selectBOM"
                       value={bom}
                       onChange={(e) => setBom(e.target.value)}
@@ -505,7 +529,9 @@ const MaterialIssueRequest = () => {
                   <div className="position-relative w-100">
                     <i className="fas fa-box ms-2 position-absolute z-0 input-icon margin-top-8"></i>
                     <select
-                      className="form-control ps-5 ms-1 text-font"
+                      className={`form-select ps-5 ms-1 text-font ${
+                        type === "" ? "text-muted" : ""
+                      }`}
                       id="selectItem"
                       value={type}
                       onChange={(e) => setType(e.target.value)}
@@ -523,11 +549,11 @@ const MaterialIssueRequest = () => {
 
               {/* Quantity */}
               <div className={`${fieldClass} form-group`}>
-                <label htmlFor="quantity" className="form-label ms-2">
+                <label htmlFor="quantity" className="form-label ms-1">
                   Quantity <span className="text-danger fs-6">*</span>
                 </label>
                 <div className="position-relative w-100">
-                  <i className="fas fa-calculator ms-2 position-absolute z-0 input-icon margin-top-8"></i>
+                  <i className="fas fa-calculator ms-2 position-absolute z-0 input-icon margin-top-8 text-font"></i>
                   <input
                     type="number"
                     className="form-control ps-5 ms-1 text-font"
@@ -539,12 +565,38 @@ const MaterialIssueRequest = () => {
                 </div>
               </div>
 
-              {/* Add Button */}
+              {/* Warehouse */}
+              <div className={`${fieldClass} form-group`}>
+                <label htmlFor="warehouse" className="form-label ms-1">
+                  Warehouse <span className="text-danger fs-6">*</span>
+                </label>
+                <div className="position-relative w-100">
+                  <i className="fas fa-warehouse ms-2 position-absolute z-0 input-icon margin-top-8 text-font"></i>
+                  <select
+                    className={`form-select ps-5 ms-2 text-font ${
+                      warehouse === "" ? "text-muted" : ""
+                    }`}
+                    id="warehouse"
+                    value={warehouse}
+                    onChange={(e) => setWarehouse(e.target.value)}
+                  >
+                    <option value="" disabled hidden>
+                      Select Warehouse
+                    </option>
+                    {warehouseList.map((w) => (
+                      <option value={w.id}>{w.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+            {/* Add Button */}
+            <div className="row">
               <div className={`${fieldClass} form-group`}>
                 <label className="form-label mb-4"></label>
                 <button
                   type="button"
-                  className="btn btn-primary text-8 px-3 fw-medium w-100 mt-4"
+                  className="btn btn-primary text-8 px-3 fw-medium mt-4 float-end"
                   onClick={handleAddRequest}
                   disabled={!isFormValid}
                 >
