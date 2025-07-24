@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../../../services/api";
 import { Modal } from "bootstrap";
+import "./IncomingQC.css";
 
 const IncomingQC = () => {
   const [isShowQualityCheckForm, setIsShowQualityCheckForm] = useState(false);
@@ -356,6 +357,9 @@ const IncomingQC = () => {
       });
   };
 
+  // Dynamically calculate widths
+  const fieldClass = isFail ? "flex-1" : "flex-1-3";
+
   return (
     <div>
       {/* Header section */}
@@ -381,7 +385,7 @@ const IncomingQC = () => {
       <div className="table-form-container mx-2 mb-4">
         <div className="form-header">
           <h2>
-            <i className="fas fa-barcode"></i> Scan Batch
+            <i className="fas fa-qrcode"></i> Scan Batch
           </h2>
         </div>
         {/* Form Fields */}
@@ -424,203 +428,244 @@ const IncomingQC = () => {
           <form autoComplete="off" className="padding-2">
             <div className="form-grid pt-0">
               <div className="row form-style">
-                <p className="text-8 font-weight p-0">Batch Details</p>
-                {Array.isArray(batchDetails) &&
-                  batchDetails.map((batch) => (
-                    <div className="batch-details" key={batch.id}>
-                      <div className="row px-2">
-                        <div>
-                          <strong className="text-8 text-gray">
-                            Batch No:
-                          </strong>
-                          <span className="text-8 float-end">
-                            {batch.batchNumber}
-                          </span>
+                <div className={`${isFail ? "col-md-4" : "col-md-8"}`}>
+                  <label className="text-8 font-weight p-0">
+                    Batch Details <span className="text-danger fs-6">*</span>
+                  </label>
+                  {Array.isArray(batchDetails) &&
+                    batchDetails.map((batch) => (
+                      <div className="batch-details" key={batch.id}>
+                        <div className="row px-2">
+                          <div>
+                            <strong className="text-8 text-gray">
+                              Batch No:
+                            </strong>
+                            <span className="text-8 float-end">
+                              {batch.batchNumber}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="row px-2">
+                          <div>
+                            <strong className="text-8 text-gray">
+                              Item Code:
+                            </strong>
+                            <span className="text-8 float-end">
+                              {batch.itemCode}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="row px-2">
+                          <div>
+                            <strong className="text-8 text-gray">
+                              Item Name:
+                            </strong>
+                            <span className="text-8 float-end">
+                              {batch.itemName}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="row px-2">
+                          <div>
+                            <strong className="text-8 text-gray">
+                              Quantity:
+                            </strong>
+                            <span className="text-8 float-end">
+                              {batch.quantity}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="row px-2">
+                          <div>
+                            <strong className="text-8 text-gray">
+                              Vendor:
+                            </strong>
+                            <span className="text-8 float-end">
+                              {batch.vendorName}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="row px-2">
+                          <div>
+                            <strong className="text-8 text-gray">
+                              Received:
+                            </strong>
+                            <span className="text-8 float-end">
+                              {batch.createdAt}
+                            </span>
+                          </div>
                         </div>
                       </div>
-
-                      <div className="row px-2">
-                        <div>
-                          <strong className="text-8 text-gray">
-                            Item Code:
-                          </strong>
-                          <span className="text-8 float-end">
-                            {batch.itemCode}
-                          </span>
-                        </div>
+                    ))}
+                  <div>
+                    <label className="text-8 font-weight p-0 mt-3">
+                      Quality Status <span className="text-danger fs-6">*</span>
+                    </label>
+                    <div className="row">
+                      <div className="col-6">
+                        <button
+                          type="button"
+                          className={`btn w-100 ${
+                            isPass === "PASS"
+                              ? "btn-success"
+                              : isFail
+                              ? "btn-secondary"
+                              : "btn-outline-success"
+                          }`}
+                          onClick={() => {
+                            setIsPass("PASS");
+                            setIsFail(false);
+                          }}
+                        >
+                          Pass (Alt + P)
+                        </button>
                       </div>
-
-                      <div className="row px-2">
-                        <div>
-                          <strong className="text-8 text-gray">
-                            Item Name:
-                          </strong>
-                          <span className="text-8 float-end">
-                            {batch.itemName}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="row px-2">
-                        <div>
-                          <strong className="text-8 text-gray">
-                            Quantity:
-                          </strong>
-                          <span className="text-8 float-end">
-                            {batch.quantity}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="row px-2">
-                        <div>
-                          <strong className="text-8 text-gray">Vendor:</strong>
-                          <span className="text-8 float-end">
-                            {batch.vendorName}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="row px-2">
-                        <div>
-                          <strong className="text-8 text-gray">
-                            Received:
-                          </strong>
-                          <span className="text-8 float-end">
-                            {batch.createdAt}
-                          </span>
-                        </div>
+                      <div className="col-6">
+                        <button
+                          type="button"
+                          className={`btn w-100 ${
+                            isFail
+                              ? "btn-danger"
+                              : isPass === "PASS"
+                              ? "btn-secondary"
+                              : "btn-outline-danger"
+                          }`}
+                          onClick={() => {
+                            setIsFail(true);
+                            setIsPass("");
+                          }}
+                        >
+                          Fail (Alt + F)
+                        </button>
                       </div>
                     </div>
-                  ))}
-              </div>
-            </div>
-            <div>
-              <p className="text-8 font-weight p-0">Quality Status</p>
-              <div className="row">
-                <div className="col-6">
-                  <button
-                    type="button"
-                    className={`btn w-100 ${
-                      isPass === "PASS" ? "btn-success" : "btn-outline-success"
-                    }`}
-                    ref={passRef}
-                    onClick={() => {
-                      setIsPass("PASS");
-                      setIsFail(false);
-                    }}
-                  >
-                    Pass (Alt + P)
-                  </button>
+                  </div>{" "}
                 </div>
-                <div className="col-6">
-                  <button
-                    type="button"
-                    className={`btn w-100 ${
-                      isFail ? "btn-danger" : "btn-outline-danger"
-                    }`}
-                    ref={failRef}
-                    onClick={() => {
-                      setIsFail(true);
-                      setIsPass("");
-                    }}
-                  >
-                    Fail (Alt + F)
-                  </button>
+                <div className={`${isFail ? "col-md-4" : "col-md-4"}`}>
+                  <div className="mt-3">
+                    <label
+                      htmlFor="warehouse"
+                      className="form-label mb-0 text-8 font-weight py-2"
+                    >
+                      Select Warehouse{" "}
+                      <span className="text-danger fs-6">*</span>
+                    </label>
+                    <div className="position-relative w-100">
+                      <i className="fas fa-warehouse position-absolute z-0 input-icon text-font"></i>
+                      <select
+                        className={`form-select ps-5 text-font ${
+                          selectedWarehouse ? "" : "text-secondary"
+                        }`}
+                        id="warehouse"
+                        placeholder="Select warehouse"
+                        value={selectedWarehouse}
+                        onChange={(e) => setSelectedWarehouse(e.target.value)}
+                        required
+                      >
+                        <option value="" disabled hidden className="text-muted">
+                          Select warehouse
+                        </option>
+                        {warehouses.map((warehouse) => (
+                          <option key={warehouse.id} value={warehouse.id}>
+                            {warehouse.name}
+                          </option>
+                        ))}
+                      </select>
+                      <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                    </div>
+                  </div>
+                </div>
+                <div className={`${fieldClass} form-group`}>
+                  {isFail && (
+                    <div>
+                      <label
+                        htmlFor="category"
+                        className="form-label mb-0 text-8 font-weight py-3"
+                      >
+                        Defect Category
+                      </label>
+                      <div className="position-relative w-100">
+                        <i
+                          className="fa-solid fa-triangle-exclamation position-absolute input-icon text-font"
+                          style={{
+                            top: "80%",
+                            left: "12px",
+                            transform: "translateY(-50%)",
+                            zIndex: "2",
+                          }}
+                        ></i>
+                        <select
+                          className={`form-select ps-5 text-font ${
+                            defectCategory ? "" : "text-secondary"
+                          }`}
+                          id="category"
+                          value={defectCategory}
+                          onChange={(e) => setDefectCategory(e.target.value)}
+                        >
+                          <option
+                            value=""
+                            disabled
+                            hidden
+                            className="text-muted"
+                          >
+                            Select defect category
+                          </option>
+                          <option value="Broken/Damaged">Broken/Damaged</option>
+                          <option value="Color Mismatch">Color Mismatch</option>
+                          <option value="Dimensional Issue">
+                            Dimensional Issue
+                          </option>
+                          <option value="Issue Label">Issue Label</option>
+                          <option value="Material Defect">
+                            Material Defect
+                          </option>
+                          <option value="Missing Components">
+                            Missing Components
+                          </option>
+                          <option value="Packaging Damage">
+                            Packaging Damage
+                          </option>
+                          <option value="Quality Below Spec">
+                            Quality Below Spec
+                          </option>
+                          <option value="Surface Defect">Surface Defect</option>
+                          <option value="Wrong Item">Wrong Item</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
+
+                  {isFail && (
+                    <div>
+                      <label
+                        htmlFor="remarks"
+                        className="form-label mb-0 text-8 font-weight py-3"
+                      >
+                        Remarks
+                      </label>
+                      <div className="position-relative w-100">
+                        <i
+                          className="fas fa-comment position-absolute input-icon text-font"
+                          style={{ top: "70%", left: "12px", zIndex: "2" }}
+                        ></i>
+                        <textarea
+                          className="form-control ps-5 text-font pt-3"
+                          id="remarks"
+                          placeholder="Enter additional remarks"
+                          onChange={(e) => setRemarks(e.target.value)}
+                        ></textarea>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
-            <div className="mt-3">
-              <label
-                htmlFor="warehouse"
-                className="form-label mb-0 text-8 font-weight py-2"
-              >
-                Select Warehouse <span className="text-danger fs-6">*</span>
-              </label>
-              <div className="position-relative w-100">
-                <i className="fas fa-warehouse position-absolute z-0 input-icon"></i>
-                <select
-                  className="form-control ps-5 text-font"
-                  id="warehouse"
-                  placeholder="Select warehouse"
-                  value={selectedWarehouse}
-                  onChange={(e) => setSelectedWarehouse(e.target.value)}
-                  required
-                >
-                  <option value="" disabled hidden className="text-muted">
-                    Select warehouse
-                  </option>
-                  {warehouses.map((warehouse) => (
-                    <option key={warehouse.id} value={warehouse.id}>
-                      {warehouse.name}
-                    </option>
-                  ))}
-                </select>
-                <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
-              </div>
-            </div>
-
-            {isFail && (
-              <div>
-                <label
-                  htmlFor="category"
-                  className="form-label mb-0 text-8 font-weight py-3"
-                >
-                  Defect Category
-                </label>
-                <div className="position-relative w-100">
-                  <i className="fa-solid fa-triangle-exclamation position-absolute z-0 input-icon"></i>
-                  <select
-                    className="form-control ps-5 text-font"
-                    id="category"
-                    placeholder="Select defect category"
-                    value={defectCategory}
-                    onChange={(e) => setDefectCategory(e.target.value)}
-                  >
-                    <option value="" disabled hidden className="text-muted">
-                      Select defect category
-                    </option>
-                    <option value="Broken/Damaged">Broken/Damaged</option>
-                    <option value="Color Mismatch">Color Mismatch</option>
-                    <option value="Dimensional Issue">Dimensional Issue</option>
-                    <option value="Issue Label">Issue Label</option>
-                    <option value="Material Defect">Material Defect</option>
-                    <option value="Missing Components">
-                      Missing Components
-                    </option>
-                    <option value="Packaging Damage">Packaging Damage</option>
-                    <option value="Quality Below Spec">
-                      Quality Below Spec
-                    </option>
-                    <option value="Surface Defect">Surface Defect</option>
-                    <option value="Wrong Item">Wrong Item</option>
-                  </select>
-                  <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
-                </div>
-              </div>
-            )}
-
-            {isFail && (
-              <div>
-                <label
-                  htmlFor="remarks"
-                  className="form-label mb-0 text-8 font-weight py-3"
-                >
-                  Remarks
-                </label>
-                <div className="position-relative w-100">
-                  <i className="fas fa-comment position-absolute z-0 input-icon"></i>
-                  <textarea
-                    type="text"
-                    className="form-control ps-5 text-font pt-3"
-                    id="remarks"
-                    placeholder="Enter additional remarks"
-                    onChange={(e) => setRemarks(e.target.value)}
-                  ></textarea>
-                </div>
-              </div>
-            )}
             <div className="form-actions">
               <button
                 type="button"
@@ -631,7 +676,7 @@ const IncomingQC = () => {
                 Check
               </button>
               <button
-                className="btn btn-danger add-btn"
+                className="btn btn-secondary add-btn"
                 type="button"
                 onClick={() => setIsShowQualityCheckForm(false)}
               >
@@ -674,12 +719,6 @@ const IncomingQC = () => {
           >
             <option value="" disabled hidden className="text-muted">
               All Item Types
-            </option>
-            <option value="abc"></option>
-          </select>
-          <select className="filter-select" id="vendorName" defaultValue="">
-            <option value="" disabled hidden className="text-muted">
-              All Warehouses
             </option>
             <option value="abc"></option>
           </select>
@@ -736,45 +775,33 @@ const IncomingQC = () => {
                   <th className="checkbox-cell">
                     <input type="checkbox" id="select-all-header" disabled />
                   </th>
-                  <th>
-                    Item Name <i className="fas fa-sort color-gray"></i>
-                  </th>
-                  <th>
-                    Item Code <i className="fas fa-sort color-gray"></i>
-                  </th>
-                  <th>
-                    Batch No <i className="fas fa-sort color-gray"></i>
-                  </th>
-                  <th>
-                    Vendor Name <i className="fas fa-sort color-gray"></i>
-                  </th>
-                  <th>
-                    Quantity <i className="fas fa-sort color-gray"></i>
-                  </th>
-                  <th>
-                    Received Date <i className="fas fa-sort color-gray"></i>
-                  </th>
+                  <th>Item Name</th>
+                  <th>Item Code</th>
+                  <th>Batch No</th>
+                  <th>Vendor Name</th>
+                  <th>Quantity</th>
+                  <th>Received Date</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody className="text-break">
                 {iqc.map((i) => (
                   <tr key={i.id}>
-                    <td className="checkbox-cell ps-4">
+                    <td className="checkbox-cell">
                       <input
                         type="checkbox"
                         checked={selectedItems.includes(i.id)}
                         onChange={() => handleItemCheckboxChange(i.id)}
                       />
                     </td>
-                    <td className="ps-4">{i.itemName}</td>
-                    <td className="ps-4">{i.itemCode}</td>
-                    <td className="ps-4 text-break">{i.batchNumber}</td>
-                    <td className="ps-4">{i.vendorName}</td>
-                    <td className="ps-4">{i.quantity}</td>
-                    <td className="ps-4">{i.createdAt}</td>
+                    <td>{i.itemName}</td>
+                    <td>{i.itemCode}</td>
+                    <td>{i.batchNumber}</td>
+                    <td>{i.vendorName}</td>
+                    <td>{i.quantity}</td>
+                    <td>{i.createdAt}</td>
                     {/* Mar 15, 2024, 09:30 AM */}
-                    <td className="actions ps-4">
+                    <td className="actions">
                       <a href="#qc">
                         <button
                           className="btn btn-primary"
@@ -842,37 +869,25 @@ const IncomingQC = () => {
             <table>
               <thead>
                 <tr>
-                  <th>
-                    Item Name <i className="fas fa-sort color-gray"></i>
-                  </th>
-                  <th>
-                    Item Code <i className="fas fa-sort color-gray"></i>
-                  </th>
-                  <th>
-                    Batch No <i className="fas fa-sort color-gray"></i>
-                  </th>
-                  <th>
-                    Vendor Name <i className="fas fa-sort color-gray"></i>
-                  </th>
-                  <th>
-                    Quantity <i className="fas fa-sort color-gray"></i>
-                  </th>
-                  <th>
-                    Received Date <i className="fas fa-sort color-gray"></i>
-                  </th>
+                  <th>Item Name</th>
+                  <th>Item Code</th>
+                  <th>Batch No</th>
+                  <th>Vendor Name</th>
+                  <th>Quantity</th>
+                  <th>Received Date</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody className="text-break">
                 {passFailQC.map((pfqc) => (
                   <tr key={pfqc.id}>
-                    <td className="ps-4">{pfqc.itemName}</td>
-                    <td className="ps-4">{pfqc.itemCode}</td>
-                    <td className="ps-4 text-break">{pfqc.batchNumber}</td>
-                    <td className="ps-4">{pfqc.vendorName}</td>
-                    <td className="ps-4">{pfqc.quantity}</td>
-                    <td className="ps-4">{pfqc.createdAt}</td>
-                    <td className="actions ps-4">
+                    <td>{pfqc.itemName}</td>
+                    <td>{pfqc.itemCode}</td>
+                    <td>{pfqc.batchNumber}</td>
+                    <td>{pfqc.vendorName}</td>
+                    <td>{pfqc.quantity}</td>
+                    <td>{pfqc.createdAt}</td>
+                    <td className="actions">
                       <span
                         className={`badge status ${
                           pfqc.status === "PASS" ? "active" : "inactive"

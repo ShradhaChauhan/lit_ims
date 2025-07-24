@@ -832,7 +832,9 @@ const MaterialIncoming = () => {
                 <div className="position-relative w-100">
                   <i className="fas fa-right-left ms-2 position-absolute z-0 input-icon"></i>
                   <select
-                    className="form-control ps-5 ms-1 text-font"
+                    className={`form-select ps-5 ms-1 text-font ${
+                      mode ? "" : "text-secondary"
+                    }`}
                     id="receiptMode"
                     value={mode}
                     onChange={(e) => {
@@ -847,7 +849,6 @@ const MaterialIncoming = () => {
                     <option value="scan">Scan</option>
                     <option value="manual">Manual</option>
                   </select>
-                  <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                 </div>
                 {errors.mode && (
                   <span className="error-message">{errors.mode}</span>
@@ -860,7 +861,9 @@ const MaterialIncoming = () => {
                 <div className="position-relative w-100">
                   <i className="fas fa-building ms-2 position-absolute z-0 input-icon"></i>
                   <select
-                    className="form-control ps-5 ms-1 text-font"
+                    className={`form-control ps-5 ms-1 text-font ${
+                      vendor ? "" : "text-secondary"
+                    }`}
                     id="vendorName"
                     disabled={mode === "scan"}
                     value={vendor}
@@ -929,7 +932,9 @@ const MaterialIncoming = () => {
                 <div className="position-relative w-100">
                   <i className="fas fa-box position-absolute ms-2 z-0 input-icon"></i>
                   <select
-                    className="form-control ps-5 ms-1 text-font"
+                    className={`form-select ps-5 ms-1 text-font ${
+                      vendorItem ? "" : "text-secondary"
+                    }`}
                     id="item"
                     value={vendorItem}
                     onChange={(e) => {
@@ -961,7 +966,6 @@ const MaterialIncoming = () => {
                       </option>
                     ))}
                   </select>
-                  <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                 </div>
               </div>
             ) : mode == "scan" ? (
@@ -1052,7 +1056,7 @@ const MaterialIncoming = () => {
                         <th>Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="text-break">
+                    <tbody>
                       {receiptList.length === 0 ? (
                         <tr className="no-data-row">
                           <td colSpan="6" className="no-data-cell">
@@ -1074,7 +1078,9 @@ const MaterialIncoming = () => {
                             <td>{receipt.batchNo}</td>
                             <td>
                               <select
-                                className="form-select text-font"
+                                className={`form-select text-font ${
+                                  receipt.warehouseId ? "" : "text-secondary"
+                                }`}
                                 value={
                                   receipt.warehouseId
                                     ? `${receipt.warehouseId}|${receipt.warehouse}`
@@ -1092,9 +1098,6 @@ const MaterialIncoming = () => {
                                   }
                                 }}
                               >
-                                <option value="" disabled>
-                                  Select Warehouse
-                                </option>
                                 {warehouses.map((w) => (
                                   <option
                                     key={w.id}

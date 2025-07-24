@@ -1822,7 +1822,9 @@ const Users = () => {
                     <div className="position-relative w-100">
                       <i className="fas fa-user-tag position-absolute z-0 input-icon"></i>
                       <select
-                        className="form-control ps-5 text-font"
+                        className={`form-select ps-5 text-font ${
+                          formData.role ? "" : "text-secondary"
+                        }`}
                         id="role"
                         value={formData.role}
                         onChange={(e) =>
@@ -1836,7 +1838,6 @@ const Users = () => {
                         {/* <option value="executive">Executive</option> */}
                         <option value="manager">Manager</option>
                       </select>
-                      <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                     </div>
                     {errors.role && (
                       <span className="error-message">{errors.role}</span>
@@ -1849,7 +1850,9 @@ const Users = () => {
                     <div className="position-relative w-100">
                       <i className="fa-solid fa-building position-absolute z-0 input-icon"></i>
                       <select
-                        className="form-select ps-5 text-font"
+                        className={`form-select ps-5 text-font ${
+                          formData.department ? "" : "text-secondary"
+                        }`}
                         id="department"
                         value={formData.department}
                         onChange={(e) =>
@@ -2922,7 +2925,9 @@ const Users = () => {
                             <div className="position-relative w-100">
                               <i className="fas fa-user-tag position-absolute z-0 input-icon"></i>
                               <select
-                                className="form-control ps-5 text-font"
+                                className={`form-select ps-5 text-font ${
+                                  userDetails.role ? "" : "text-secondary"
+                                }`}
                                 id="role"
                                 value={userDetails.role}
                                 onChange={(e) =>
@@ -2955,7 +2960,9 @@ const Users = () => {
                             <div className="position-relative w-100">
                               <i className="fa-solid fa-building position-absolute z-0 input-icon"></i>
                               <select
-                                className="form-control ps-5 text-font"
+                                className={`form-select ps-5 text-font ${
+                                  userDetails.department ? "" : "text-secondary"
+                                }`}
                                 id="department"
                                 value={userDetails.department}
                                 onChange={(e) =>

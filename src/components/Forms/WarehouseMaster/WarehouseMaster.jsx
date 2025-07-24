@@ -663,7 +663,9 @@ const WarehouseMaster = () => {
                   <div className="position-relative w-100">
                     <i className="fas fa-layer-group position-absolute z-0 input-icon"></i>
                     <select
-                      className="form-control text-font switch-padding"
+                      className={`form-select ps-5 text-font ${
+                        formData.type ? "" : "text-secondary"
+                      }`}
                       id="type"
                       value={formData.type}
                       onChange={(e) =>
@@ -678,7 +680,6 @@ const WarehouseMaster = () => {
                       <option value="STR">STR</option>
                       <option value="REJ">REJ</option>
                     </select>
-                    <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                   </div>
                   {errors.code && (
                     <span className="error-message">{errors.type}</span>

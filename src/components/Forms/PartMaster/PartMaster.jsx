@@ -461,7 +461,9 @@ const PartMaster = () => {
                   <div className="position-relative w-100">
                     <i className="fas fa-ruler position-absolute z-0 input-icon"></i>
                     <select
-                      className="form-control ps-5 text-font"
+                      className={`form-select ps-5 text-font ${
+                        formData.uom ? "" : "text-secondary"
+                      }`}
                       id="uom"
                       value={formData.uom}
                       onChange={(e) =>
@@ -478,7 +480,6 @@ const PartMaster = () => {
                       <option value="mtr">Meter (MTR)</option>
                       <option value="box">Box (BOX)</option>
                     </select>
-                    <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                   </div>
                   {errors.uom && (
                     <span className="error-message">{errors.uom}</span>
@@ -898,7 +899,9 @@ const PartMaster = () => {
                         <div className="position-relative w-100">
                           <i className="fas fa-ruler position-absolute z-0 input-icon"></i>
                           <select
-                            className="form-control ps-5 text-font"
+                            className={`form-select ps-5 text-font ${
+                              partDetails.uom ? "" : "text-secondary"
+                            }`}
                             id="uom"
                             value={partDetails.uom}
                             onChange={(e) =>
@@ -920,7 +923,6 @@ const PartMaster = () => {
                             <option value="mtr">Meter (MTR)</option>
                             <option value="box">Box (BOX)</option>
                           </select>
-                          <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                         </div>
                       </div>
                     </div>

@@ -38,11 +38,7 @@ const Dashboard = () => {
       ) : rightSideComponent === "/type-master" ? (
         <TypeMaster />
       ) : rightSideComponent === "/users" ? (
-        !canView ? (
-          <p>Access Denied</p>
-        ) : (
-          <Users />
-        )
+        <Users />
       ) : (
         <LandingPage />
       )}

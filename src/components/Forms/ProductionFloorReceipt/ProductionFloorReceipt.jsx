@@ -391,7 +391,9 @@ const ProductionFloorReceipt = () => {
                   <div className="position-relative w-100">
                     <i className="fas fa-dolly position-absolute z-0 input-icon"></i>
                     <select
-                      className="form-control ps-5 text-font"
+                      className={`form-select ps-5 text-font ${
+                        issueNumber ? "" : "text-secondary"
+                      }`}
                       id="issueNumber"
                       value={issueNumber}
                       onChange={handleIssueNumberChange}
@@ -410,7 +412,6 @@ const ProductionFloorReceipt = () => {
                         </option>
                       ))}
                     </select>
-                    <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                   </div>
                 </div>
                 <div className="col-3 d-flex flex-column form-group">
