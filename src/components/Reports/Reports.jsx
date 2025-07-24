@@ -133,24 +133,7 @@ const Reports = () => {
     setFilteredItems(filteredWarehouses);
   }, [filteredWarehouses]);
 
-  const [warehouseDetail, setWarehouseDetail] = useState([
-    {
-      id: 1,
-      cumulativeValue: "1000",
-      itemCode: "10021256",
-      itemName: "Item 1",
-      quantity: 100,
-      iqcStatus: "Ok",
-    },
-    {
-      id: 2,
-      cumulativeValue: "5000",
-      itemCode: "10054322",
-      itemName: "Item 2",
-      quantity: 500,
-      iqcStatus: "Not Ok",
-    },
-  ]);
+  const [warehouseDetail, setWarehouseDetail] = useState([]);
 
   const [itemDetail, setItemDetail] = useState([
     {
@@ -198,6 +181,33 @@ const Reports = () => {
     },
   ]);
 
+  // Fetch Items in warehouse
+  const fetchWarehouseItems = async (warehouseId) => {
+    try {
+      setIsShowDetails(false); // close modal if open
+      setWarehouseDetail([]); // clear old data
+
+      const response = await api.get(`/api/inventory/warehouse/${warehouseId}`);
+      const data = response.data.data;
+
+      setWarehouseDetail(data);
+
+      // Open modal after data is set
+      setTimeout(() => {
+        setIsShowDetails(true);
+      }, 50); // give React enough time to re-render
+    } catch (error) {
+      toast.error("Error in fetching types");
+      console.error("Error fetching types:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (warehouseDetail.length > 0) {
+      setIsShowDetails(true);
+    }
+  }, [warehouseDetail]);
+
   // Item modal filtering and sorting
   const filteredWarehouseDetails = useMemo(() => {
     let filtered = [...warehouseDetail];
@@ -230,7 +240,7 @@ const Reports = () => {
     }
 
     return filtered;
-  }, [warehouseDetails, modalSearchQuery, modalSortConfig]);
+  }, [warehouseDetail, modalSearchQuery, modalSortConfig]);
 
   const handleModalSort = (key) => {
     setModalSortConfig((prev) => {
@@ -610,7 +620,7 @@ const Reports = () => {
                       <button
                         className="btn-icon btn-primary"
                         title="View Details"
-                        onClick={() => setIsShowDetails(true)}
+                        onClick={() => fetchWarehouseItems(w.id)}
                       >
                         <i className="fas fa-eye"></i>
                       </button>
@@ -783,7 +793,7 @@ const Reports = () => {
                         </tr>
                       </thead>
                       <tbody className="text-break">
-                        {warehouseDetail.length === 0 ? (
+                        {filteredWarehouseDetails.length === 0 ? (
                           <tr className="no-data-row">
                             <td colSpan="5" className="no-data-cell">
                               <div className="no-data-content">
@@ -795,43 +805,46 @@ const Reports = () => {
                             </td>
                           </tr>
                         ) : (
-                          filteredWarehouseDetails.map((warehouseDetail) => (
-                            <tr key={warehouseDetail.id}>
-                              <td className="ps-4">
-                                <div>
-                                  <span>{warehouseDetail.itemCode}</span>
-                                </div>
-                              </td>
-                              <td className="ps-4">
-                                <div>
-                                  <span>{warehouseDetail.itemName}</span>
-                                </div>
-                              </td>
-                              <td className="ps-4">
-                                <div>
-                                  <span>{warehouseDetail.quantity}</span>
-                                </div>
-                              </td>
-                              <td className="ps-4">
-                                <div>
-                                  <span>{warehouseDetail.cumulativeValue}</span>
-                                </div>
-                              </td>
-                              <td className="actions ps-4">
-                                <button
-                                  className="btn-icon btn-primary"
-                                  title="View Details"
-                                  onClick={() => {
-                                    setIsShowItemDetails(true);
-                                    setViewItemsData(warehouseDetail); // or however you're getting the warehouse's data
-                                    setIsShowDetails(true); // show the modal
-                                  }}
-                                >
-                                  <i className="fas fa-eye"></i>
-                                </button>
-                              </td>
-                            </tr>
-                          ))
+                          filteredWarehouseDetails.map(
+                            (warehouseDetail, index) => (
+                              <tr key={index}>
+                                <td className="ps-4">
+                                  <div>
+                                    <span>{warehouseDetail.itemCode}</span>
+                                  </div>
+                                </td>
+                                <td className="ps-4">
+                                  <div>
+                                    <span>{warehouseDetail.itemName}</span>
+                                  </div>
+                                </td>
+                                <td className="ps-4">
+                                  <div>
+                                    <span>{warehouseDetail.quantity}</span>
+                                  </div>
+                                </td>
+                                <td className="ps-4">
+                                  <div>
+                                    <span>-</span>
+                                  </div>
+                                </td>
+                                <td className="actions ps-4">
+                                  <button
+                                    className="btn-icon btn-primary"
+                                    title="View Details"
+                                    onClick={() => {
+                                      console.log(warehouseDetail.id);
+                                      setIsShowItemDetails(true);
+                                      setViewItemsData(warehouseDetail);
+                                      setIsShowDetails(true);
+                                    }}
+                                  >
+                                    <i className="fas fa-eye"></i>
+                                  </button>
+                                </td>
+                              </tr>
+                            )
+                          )
                         )}
                       </tbody>
                     </table>
