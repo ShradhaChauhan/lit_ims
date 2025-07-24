@@ -803,7 +803,7 @@ const MaterialIncoming = () => {
       </nav>
 
       {/* Search and Filter Section */}
-      <div className="search-filter-container mx-2">
+      {/* <div className="search-filter-container mx-2">
         <div className="search-box">
           <i className="fas fa-search position-absolute z-0 input-icon"></i>
           <input
@@ -812,7 +812,7 @@ const MaterialIncoming = () => {
             placeholder="Search by incoming materials..."
           />
         </div>
-      </div>
+      </div> */}
 
       {/* Form Section */}
       <div className="table-form-container mx-2">

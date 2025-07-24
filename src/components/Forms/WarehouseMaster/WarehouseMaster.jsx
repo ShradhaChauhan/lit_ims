@@ -555,7 +555,7 @@ const WarehouseMaster = () => {
           <input
             type="text"
             className="form-control vendor-search-bar"
-            placeholder="Search by TRNO, name or code..."
+            placeholder="Search by transaction no, name or code..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />

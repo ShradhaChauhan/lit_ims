@@ -2447,15 +2447,9 @@ const Users = () => {
                 <th className="checkbox-cell">
                   <input type="checkbox" id="select-all" disabled />
                 </th>
-                <th>
-                  User <i className="fas fa-sort color-gray"></i>
-                </th>
-                <th>
-                  Role <i className="fas fa-sort color-gray"></i>
-                </th>
-                <th>
-                  Email <i className="fas fa-sort color-gray"></i>
-                </th>
+                <th>User</th>
+                <th>Role</th>
+                <th>Email</th>
                 <th>Last Login</th>
                 <th>Status</th>
                 <th>Actions</th>

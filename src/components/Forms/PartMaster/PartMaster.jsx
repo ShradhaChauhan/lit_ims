@@ -594,15 +594,9 @@ const PartMaster = () => {
                   <th className="checkbox-cell ps-4">
                     <input type="checkbox" id="select-all-header" disabled />
                   </th>
-                  <th>
-                    Code <i className="fas fa-sort color-gray ms-2"></i>
-                  </th>
-                  <th>
-                    Name <i className="fas fa-sort color-gray ms-2"></i>
-                  </th>
-                  <th>
-                    UOM <i className="fas fa-sort color-gray ms-2"></i>
-                  </th>
+                  <th>Code</th>
+                  <th>Name</th>
+                  <th>UOM</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>

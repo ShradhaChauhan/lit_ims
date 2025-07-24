@@ -667,30 +667,6 @@ const BOMMaster = () => {
         <div className="filter-options">
           <select
             className="filter-select"
-            value={selectedPart}
-            onChange={(e) => setSelectedPart(e.target.value)}
-          >
-            <option value="">All Parts</option>
-            {items.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </select>
-          <select
-            className="filter-select"
-            value={selectedWarehouse}
-            onChange={(e) => setSelectedWarehouse(e.target.value)}
-          >
-            <option value="">All Warehouses</option>
-            {warehouses.map((warehouse) => (
-              <option key={warehouse.id} value={warehouse.id}>
-                {warehouse.name}
-              </option>
-            ))}
-          </select>
-          <select
-            className="filter-select"
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
           >
@@ -1058,12 +1034,8 @@ const BOMMaster = () => {
                 <th className="checkbox-cell">
                   <input type="checkbox" id="select-all" disabled />
                 </th>
-                <th>
-                  Name <i className="fas fa-sort color-gray ms-2"></i>
-                </th>
-                <th>
-                  Code <i className="fas fa-sort color-gray ms-2"></i>
-                </th>
+                <th>Name</th>
+                <th>Code</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -1098,17 +1070,17 @@ const BOMMaster = () => {
                         <span>{bom.name}</span>
                       </div>
                     </td>
-                    <td>
+                    <td className="ps-4">
                       <div>
                         <span>{bom.code}</span>
                       </div>
                     </td>
-                    <td>
+                    <td className="ps-4">
                       <span className={`badge status ${bom.status}`}>
                         {bom.status}
                       </span>
                     </td>
-                    <td className="actions">
+                    <td className="actions ps-3">
                       <button
                         className="btn-icon btn-primary"
                         title="View Details"

@@ -1057,12 +1057,8 @@ const VendorItemsMaster = () => {
                 <th className="checkbox-cell">
                   <input type="checkbox" id="select-all" disabled />
                 </th>
-                <th>
-                  Vendor <i className="fas fa-sort color-gray ms-2"></i>
-                </th>
-                <th>
-                  Item <i className="fas fa-sort color-gray ms-2"></i>
-                </th>
+                <th>Vendor</th>
+                <th>Item</th>
                 <th>Lead Time</th>
                 <th>Std Qty</th>
                 <th>Price</th>

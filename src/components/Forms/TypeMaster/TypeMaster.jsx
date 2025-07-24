@@ -638,12 +638,8 @@ const TypeMaster = () => {
                 <th className="checkbox-cell">
                   <input type="checkbox" disabled />
                 </th>
-                <th>
-                  TRNO <i className="fas fa-sort color-gray ms-2"></i>
-                </th>
-                <th>
-                  Name <i className="fas fa-sort color-gray ms-2"></i>
-                </th>
+                <th>TRNO</th>
+                <th>Name</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>

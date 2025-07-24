@@ -87,8 +87,7 @@ const IncomingQC = () => {
           iqc.itemCode?.toLowerCase().includes(query) ||
           iqc.batchNumber?.toLowerCase().includes(query) ||
           iqc.vendorName?.toLowerCase().includes(query) ||
-          iqc.vendorCode?.toLowerCase().includes(query) ||
-          iqc.quantity?.toLowerCase().includes(query)
+          iqc.vendorCode?.toLowerCase().includes(query)
       );
     }
 
@@ -114,16 +113,6 @@ const IncomingQC = () => {
   // Handle search input change
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
-  };
-
-  // Handle type filter change
-  const handleVendorFilterChange = (e) => {
-    setVendorFilter(e.target.value);
-  };
-
-  // Handle status filter change
-  const handleTypeFilterChange = (e) => {
-    setTypeFilter(e.target.value);
   };
 
   // Reset all filters
@@ -694,34 +683,12 @@ const IncomingQC = () => {
           <input
             type="text"
             className="form-control vendor-search-bar"
-            placeholder="Search pending items..."
+            placeholder="Search pending items by item name, code, batch no, vendor name..."
             value={searchQuery}
             onChange={handleSearchChange}
           />
         </div>
         <div className="filter-options">
-          <select
-            className="filter-select"
-            id="item"
-            value={vendorFilter}
-            onChange={handleVendorFilterChange}
-          >
-            <option value="" disabled hidden className="text-muted">
-              All Vendors
-            </option>
-            <option value="v1"></option>
-          </select>
-          <select
-            className="filter-select"
-            id="vendorName"
-            value={typeFilter}
-            onChange={handleTypeFilterChange}
-          >
-            <option value="" disabled hidden className="text-muted">
-              All Item Types
-            </option>
-            <option value="abc"></option>
-          </select>
           <button className="filter-select" onClick={handleResetFilters}>
             <i className="fas fa-filter me-2"></i>
             Reset Filters
@@ -785,43 +752,54 @@ const IncomingQC = () => {
                 </tr>
               </thead>
               <tbody className="text-break">
-                {iqc.map((i) => (
-                  <tr key={i.id}>
-                    <td className="checkbox-cell">
-                      <input
-                        type="checkbox"
-                        checked={selectedItems.includes(i.id)}
-                        onChange={() => handleItemCheckboxChange(i.id)}
-                      />
-                    </td>
-                    <td>{i.itemName}</td>
-                    <td>{i.itemCode}</td>
-                    <td>{i.batchNumber}</td>
-                    <td>{i.vendorName}</td>
-                    <td>{i.quantity}</td>
-                    <td>{i.createdAt}</td>
-                    {/* Mar 15, 2024, 09:30 AM */}
-                    <td className="actions">
-                      <a href="#qc">
-                        <button
-                          className="btn btn-primary"
-                          style={{ fontSize: "0.7rem" }}
-                          onClick={() => {
-                            handleSearchBatchNo(i.batchNumber);
-                            setTimeout(() => {
-                              qcRef.current?.scrollIntoView({
-                                behavior: "smooth",
-                              });
-                            }, 100); // delay to wait for form render
-                          }}
-                        >
-                          <i className="fa-solid fa-clipboard-check me-1"></i>{" "}
-                          Start QC
-                        </button>
-                      </a>
-                    </td>
-                  </tr>
-                ))}
+                {iqc
+                  .filter((i) => {
+                    const search = searchQuery.toLowerCase();
+                    const matchSearch =
+                      i.itemName.toLowerCase().includes(search) ||
+                      i.itemCode.toLowerCase().includes(search) ||
+                      i.batchNumber.toLowerCase().includes(search) ||
+                      i.vendorName.toLowerCase().includes(search);
+
+                    return matchSearch;
+                  })
+                  .map((i) => (
+                    <tr key={i.id}>
+                      <td className="checkbox-cell">
+                        <input
+                          type="checkbox"
+                          checked={selectedItems.includes(i.id)}
+                          onChange={() => handleItemCheckboxChange(i.id)}
+                        />
+                      </td>
+                      <td>{i.itemName}</td>
+                      <td>{i.itemCode}</td>
+                      <td>{i.batchNumber}</td>
+                      <td>{i.vendorName}</td>
+                      <td>{i.quantity}</td>
+                      <td>{i.createdAt}</td>
+                      {/* Mar 15, 2024, 09:30 AM */}
+                      <td className="actions">
+                        <a href="#qc">
+                          <button
+                            className="btn btn-primary"
+                            style={{ fontSize: "0.7rem" }}
+                            onClick={() => {
+                              handleSearchBatchNo(i.batchNumber);
+                              setTimeout(() => {
+                                qcRef.current?.scrollIntoView({
+                                  behavior: "smooth",
+                                });
+                              }, 100); // delay to wait for form render
+                            }}
+                          >
+                            <i className="fa-solid fa-clipboard-check me-1"></i>{" "}
+                            Start QC
+                          </button>
+                        </a>
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
