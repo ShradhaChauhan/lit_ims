@@ -821,7 +821,9 @@ const VendorItemsMaster = () => {
                   <div className="position-relative w-100">
                     <i className="fas fa-user-tie position-absolute z-0 input-icon"></i>
                     <select
-                      className="form-control ps-5 ms-2 text-font"
+                      className={`form-select ps-5 text-font ${
+                        formData.vendor ? "" : "text-secondary"
+                      }`}
                       id="vendor"
                       value={formData.vendor}
                       onChange={(e) =>
@@ -837,7 +839,6 @@ const VendorItemsMaster = () => {
                         </option>
                       ))}
                     </select>
-                    <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                   </div>
                   {errors.vendor && (
                     <span className="error-message ms-2">{errors.vendor}</span>
@@ -850,7 +851,9 @@ const VendorItemsMaster = () => {
                   <div className="position-relative w-100">
                     <i className="fas fa-box position-absolute z-0 input-icon"></i>
                     <select
-                      className="form-control ps-5 ms-2 text-font"
+                      className={`form-select ps-5 text-font ${
+                        formData.item ? "" : "text-secondary"
+                      }`}
                       id="item"
                       value={formData.item}
                       onChange={(e) =>
@@ -866,7 +869,6 @@ const VendorItemsMaster = () => {
                         </option>
                       ))}
                     </select>
-                    <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                   </div>
                   {errors.item && (
                     <span className="error-message ms-2">{errors.item}</span>

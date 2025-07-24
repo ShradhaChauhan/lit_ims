@@ -65,14 +65,7 @@ function App() {
             {/* Content Area */}
             <div className="right-side-div bg-light flex-grow-1 overflow-auto">
               <Routes>
-                <Route
-                  path="/users"
-                  element={
-                    <ProtectedRoute pageName="User Management">
-                      <Users />
-                    </ProtectedRoute>
-                  }
-                />
+                <Route path="/users" element={<Users />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 {/* <Route path="/users" element={<Users />} /> */}
                 <Route path="/business-partner" element={<VendorMaster />} />

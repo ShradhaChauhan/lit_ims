@@ -441,7 +441,9 @@ const IssueProduction = () => {
                     <div className="position-relative w-100">
                       <i className="fas fa-file-invoice ms-2 position-absolute z-0 input-icon"></i>
                       <select
-                        className="form-control ps-5 ms-1 text-font"
+                        className={`form-select ps-5 ms-1 text-font ${
+                          selectedRequisition ? "" : "text-secondary"
+                        }`}
                         id="requisitionType"
                         value={selectedRequisition}
                         onChange={handleRequisitionChange}
@@ -453,8 +455,6 @@ const IssueProduction = () => {
                           </option>
                         ))}
                       </select>
-
-                      <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                     </div>
                   </div>
                   <div className="col-6 d-flex flex-column form-group">

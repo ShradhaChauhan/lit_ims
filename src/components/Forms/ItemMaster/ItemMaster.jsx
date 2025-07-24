@@ -1054,21 +1054,23 @@ const ItemMaster = () => {
                   </div>
                 </div>
                 <div className="col-4 d-flex flex-column form-group">
-                  <label className="form-label ms-2" htmlFor="inventoryItem">
+                  <label className="form-label" htmlFor="inventoryItem">
                     Inventory Item
                   </label>
                   <div className="position-relative w-100">
                     {formData.inventoryItem === "true" && (
-                      <i className="fas fa-square-check position-absolute z-0 input-icon"></i>
+                      <i className="fas fa-square-check position-absolute z-0 input-icon ms-2"></i>
                     )}
                     {formData.inventoryItem === "false" && (
-                      <i className="fas fa-square-xmark position-absolute z-0 input-icon"></i>
+                      <i className="fas fa-square-xmark position-absolute z-0 input-icon ms-2"></i>
                     )}
                     {formData.inventoryItem === "" && (
-                      <i className="fas fa-square position-absolute z-0 input-icon"></i>
+                      <i className="fas fa-square position-absolute z-0 input-icon ms-2"></i>
                     )}
                     <select
-                      className="form-control ps-5 ms-2 text-font"
+                      className={`form-select ps-5 text-font ${
+                        formData.inventoryItem ? "" : "text-secondary"
+                      }`}
                       id="yesNoSelect"
                       value={formData.inventoryItem}
                       onChange={(e) =>
@@ -1082,7 +1084,6 @@ const ItemMaster = () => {
                       <option value="true">Yes</option>
                       <option value="false">No</option>
                     </select>
-                    <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                   </div>
                 </div>
               </div>
@@ -1686,24 +1687,23 @@ const ItemMaster = () => {
                         </div>
                       </div>
                       <div className="col-4 d-flex flex-column form-group">
-                        <label
-                          className="form-label ms-2"
-                          htmlFor="inventoryItem"
-                        >
+                        <label className="form-label" htmlFor="inventoryItem">
                           Inventory Item
                         </label>
                         <div className="position-relative w-100">
                           {itemDetails.inventoryItem === "true" && (
-                            <i className="fas fa-square-check position-absolute z-0 input-icon"></i>
+                            <i className="fas fa-square-check position-absolute z-0 input-icon ms-2"></i>
                           )}
                           {itemDetails.inventoryItem === "false" && (
-                            <i className="fas fa-square-xmark position-absolute z-0 input-icon"></i>
+                            <i className="fas fa-square-xmark position-absolute z-0 input-icon ms-2"></i>
                           )}
                           {itemDetails.inventoryItem === "" && (
-                            <i className="fas fa-square position-absolute z-0 input-icon"></i>
+                            <i className="fas fa-square position-absolute z-0 input-icon ms-2"></i>
                           )}
                           <select
-                            className="form-control ps-5 ms-2 text-font"
+                            className={`form-select ps-5 text-font ${
+                              itemDetails.inventoryItem ? "" : "text-secondary"
+                            }`}
                             id="yesNoSelect"
                             value={itemDetails.inventoryItem}
                             onChange={(e) =>

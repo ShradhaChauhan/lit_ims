@@ -328,6 +328,7 @@ const MaterialIssueRequest = () => {
         type: "BOM",
         code: selectedBOM.code,
         quantity,
+        warehouse,
         items: selectedBOM.items,
       };
 
@@ -335,6 +336,7 @@ const MaterialIssueRequest = () => {
       setIsBOMAdded(true);
       setBom("");
       setQuantity("");
+      setWarehouse("");
       setRequisitionType("");
     }
 
@@ -365,6 +367,7 @@ const MaterialIssueRequest = () => {
         type: "Item",
         code: selectedItem.code,
         uom: selectedItem.uom,
+        warehouse,
         quantity,
       };
 
@@ -379,6 +382,7 @@ const MaterialIssueRequest = () => {
       setType("");
       setQuantity("");
       setRequisitionType("");
+      setWarehouse("");
     }
   };
 

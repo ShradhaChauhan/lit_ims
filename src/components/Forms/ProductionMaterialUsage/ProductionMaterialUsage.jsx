@@ -238,7 +238,9 @@ const ProductionMaterialUsage = () => {
                 <div className="position-relative w-100">
                   <i className="fas fa-file-lines position-absolute z-0 input-icon"></i>
                   <select
-                    className="form-control ps-5 text-font"
+                    className={`form-select ps-5 text-font ${
+                      selectedWorkOrder ? "" : "text-secondary"
+                    }`}
                     id="workOrder"
                     value={selectedWorkOrder}
                     onChange={(e) => setSelectedWorkOrder(e.target.value)}
@@ -252,7 +254,6 @@ const ProductionMaterialUsage = () => {
                       </option>
                     ))}
                   </select>
-                  <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                 </div>
               </div>
             </div>
