@@ -355,13 +355,63 @@ const MaterialIncoming = () => {
     }
   };
 
-  const handleAddToApproveItemsQuantity = async () => {
+  const handleAddToApproveItemsQuantity = async (batchData = null, requestedQuantity = null) => {
     try {
+      let warehouseId;
+      let batchNo;
+      let qty;
+      
+      // If batch data is provided, use it directly
+      if (batchData) {
+        batchNo = batchData.batchNo;
+        qty = requestedQuantity || formData.quantity;
+        
+        // Determine warehouse ID from the provided batch data
+        if (batchData.warehouseId) {
+          warehouseId = batchData.warehouseId;
+        } else {
+          // Use the getDefaultWarehouse function
+          const defaultWarehouse = getDefaultWarehouse(
+            batchData.isInventory,
+            batchData.isIqc
+          );
+          warehouseId = defaultWarehouse.warehouseId;
+        }
+      } else {
+        // Fall back to the old method of verifying the batch
+        batchNo = formData.barcode;
+        qty = formData.quantity;
+        
+        // Verify the batch to get the warehouse information
+        const verifyResponse = await api.get(
+          `/api/receipt/verify-batch?batchNo=${batchNo}`
+        );
+        
+        if (!verifyResponse.data || !verifyResponse.data.status) {
+          throw new Error("Failed to verify batch information");
+        }
+        
+        const fetchedBatchData = verifyResponse.data.data;
+        
+        // Determine the warehouse ID
+        if (fetchedBatchData.warehouseId) {
+          warehouseId = fetchedBatchData.warehouseId;
+        } else {
+          const defaultWarehouse = getDefaultWarehouse(
+            fetchedBatchData.isInventory,
+            fetchedBatchData.isIqc
+          );
+          warehouseId = defaultWarehouse.warehouseId;
+        }
+      }
+      
       const data = {
-        batchNo: formData.barcode,
-        requestedQty: formData.quantity,
+        batchNo: batchNo,
+        requestedQty: qty,
         reason: reason,
+        warehouseId: warehouseId
       };
+      
       console.log("Sending approval request:", data);
       const response = await api.post("/api/stock-adjustments/requests", data);
       console.log("Approval request response:", response.data);
@@ -393,6 +443,21 @@ const MaterialIncoming = () => {
       }
 
       const batchData = verifyResponse.data.data;
+      
+      // Determine the warehouse ID and name based on isInventory and isIqc flags
+      let warehouseId, warehouseName;
+      if (batchData.warehouseId) {
+        warehouseId = batchData.warehouseId;
+        warehouseName = batchData.warehouseName;
+      } else {
+        // Use the getDefaultWarehouse function to determine the warehouse based on flags
+        const defaultWarehouse = getDefaultWarehouse(
+          batchData.isInventory,
+          batchData.isIqc
+        );
+        warehouseId = defaultWarehouse.warehouseId;
+        warehouseName = defaultWarehouse.warehouseName;
+      }
 
       // Create new item with the updated quantity
       const newItem = {
@@ -402,12 +467,8 @@ const MaterialIncoming = () => {
         batchNo: batchData.batchNo || "",
         vendorCode: formData.code || batchData.vendorCode,
         vendorName: formData.vendorName || batchData.vendorName,
-        warehouse: batchData.batchNo
-          ? batchData.warehouseName
-          : findStoreWarehouseName(),
-        warehouseId: batchData.batchNo
-          ? batchData.warehouseId
-          : findStoreWarehouseId(),
+        warehouse: warehouseName,
+        warehouseId: warehouseId,
       };
 
       // Do NOT add to receipt list since we're saving directly to DB
@@ -431,7 +492,8 @@ const MaterialIncoming = () => {
         );
 
         // Send request for approval (resource blocking)
-        await handleAddToApproveItemsQuantity();
+        // Pass the batch data and requested quantity to avoid re-verification
+        await handleAddToApproveItemsQuantity(batchData, formData.quantity);
         toast.success(
           "Material receipt added successfully with quantity change request"
         );
@@ -610,6 +672,22 @@ const MaterialIncoming = () => {
 
       if (response.data && response.data.status) {
         const batchData = response.data.data;
+        
+        // Determine the warehouse ID and name based on isInventory and isIqc flags
+        let warehouseId, warehouseName;
+        if (batchData.warehouseId) {
+          warehouseId = batchData.warehouseId;
+          warehouseName = batchData.warehouseName;
+        } else {
+          // Use the getDefaultWarehouse function to determine the warehouse based on flags
+          const defaultWarehouse = getDefaultWarehouse(
+            batchData.isInventory,
+            batchData.isIqc
+          );
+          warehouseId = defaultWarehouse.warehouseId;
+          warehouseName = defaultWarehouse.warehouseName;
+        }
+        
         setVendor(batchData.vendorName);
         setFormData({
           ...formData,
@@ -619,7 +697,8 @@ const MaterialIncoming = () => {
           barcode: batchno,
           quantity: batchData.quantity,
           itemCode: batchData.itemCode,
-          warehouse: batchData.warehouseName,
+          warehouse: warehouseName,
+          warehouseId: warehouseId,
           itemName: batchData.itemName,
         });
         console.log("Batch verified:", batchData);
