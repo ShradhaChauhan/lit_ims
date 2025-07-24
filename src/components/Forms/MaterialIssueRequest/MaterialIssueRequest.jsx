@@ -585,7 +585,9 @@ const MaterialIssueRequest = () => {
                       Select Warehouse
                     </option>
                     {warehouseList.map((w) => (
-                      <option value={w.id}>{w.name}</option>
+                      <option key={w.id} value={w.id}>
+                        {w.name}
+                      </option>
                     ))}
                   </select>
                 </div>
