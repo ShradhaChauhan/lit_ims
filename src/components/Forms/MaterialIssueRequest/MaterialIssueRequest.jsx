@@ -69,6 +69,7 @@ const MaterialIssueRequest = () => {
         code: item.code,
         type: item.type.toLowerCase(),
         quantity: Number(item.quantity),
+        warehouse: Number(item.warehouse),
       }));
 
       const payload = {
