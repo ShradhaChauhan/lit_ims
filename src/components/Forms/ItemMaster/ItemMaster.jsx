@@ -710,36 +710,12 @@ const ItemMaster = () => {
           <input
             type="text"
             className="form-control vendor-search-bar"
-            placeholder="Search by items..."
+            placeholder="Search by item name, code..."
             value={searchQuery}
             onChange={handleSearch}
           />
         </div>
         <div className="filter-options">
-          <select
-            className="filter-select"
-            value={selectedGroup}
-            onChange={handleGroupFilter}
-          >
-            <option value="">All Groups</option>
-            {groups.map((group) => (
-              <option key={group.id} value={group.name}>
-                {group.name}
-              </option>
-            ))}
-          </select>
-          <select
-            className="filter-select"
-            value={selectedType}
-            onChange={handleTypeFilter}
-          >
-            <option value="">All Types</option>
-            {types.map((type) => (
-              <option key={type.id} value={type.name}>
-                {type.name}
-              </option>
-            ))}
-          </select>
           <select
             className="filter-select"
             value={selectedStatus}
@@ -1178,13 +1154,8 @@ const ItemMaster = () => {
                 <th className="checkbox-cell">
                   <input type="checkbox" id="select-all-header" disabled />
                 </th>
-                <th>Group</th>
-                <th>
-                  Name <i className="fas fa-sort color-gray ms-2"></i>
-                </th>
-                <th>
-                  Code <i className="fas fa-sort color-gray ms-2"></i>
-                </th>
+                <th>Name</th>
+                <th>Code</th>
                 <th>UOM</th>
                 <th>ST Qty</th>
                 <th>Life</th>
@@ -1225,11 +1196,6 @@ const ItemMaster = () => {
                         checked={selectedItems.includes(item.id)}
                         onChange={() => handleItemCheckboxChange(item.id)}
                       />
-                    </td>
-                    <td className="ps-4">
-                      <div>
-                        <span>{item.groupName}</span>
-                      </div>
                     </td>
                     <td className="ps-4">
                       <div>

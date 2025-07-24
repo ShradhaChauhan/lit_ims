@@ -1142,23 +1142,12 @@ const VendorMaster = () => {
                   <th className="checkbox-cell">
                     <input type="checkbox" id="select-all-header" disabled />
                   </th>
-                  <th>
-                    Partner Code <i className="fas fa-sort color-gray ms-2"></i>
-                  </th>
-                  <th>
-                    Name <i className="fas fa-sort color-gray ms-2"></i>
-                  </th>
-                  <th>
-                    Type <i className="fas fa-sort color-gray ms-2"></i>
-                  </th>
-                  <th>
-                    Email <i className="fas fa-sort color-gray ms-2"></i>
-                  </th>
+                  <th>Partner Code</th>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Email</th>
                   <th>Mobile</th>
-                  <th>
-                    City <i className="fas fa-sort color-gray ms-2"></i>
-                  </th>
-                  {/* <th>Pincode</th> */}
+                  <th>City</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>

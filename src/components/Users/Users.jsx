@@ -8,10 +8,19 @@ import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 
 const Users = () => {
+  // Search filter states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterRole, setFilterRole] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+
   const [selectedOptions, setSelectedOptions] = useState([]);
   const [errors, setErrors] = useState({});
   const userModalRef = useRef(null);
   const userEditModalRef = useRef(null);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterRole, filterStatus]);
 
   const {
     isAddUser,
@@ -1644,6 +1653,13 @@ const Users = () => {
   const { getPermission } = useContext(AppContext);
   const { canView, canEdit } = getPermission("User Management");
 
+  // Reset all filters
+  const handleResetFilters = () => {
+    setSearchTerm("");
+    setFilterRole("");
+    setFilterStatus("");
+  };
+
   return (
     <div>
       {/* Header section */}
@@ -1681,23 +1697,37 @@ const Users = () => {
               className="form-control search-bar-style"
               id="search"
               placeholder="Search users by name, email, or role..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
         </div>
         <div className="filter-options">
-          <select className="filter-select">
+          <select
+            className="filter-select"
+            value={filterRole}
+            onChange={(e) => setFilterRole(e.target.value)}
+          >
             <option value="">All Roles</option>
-            <option value="active">Admin</option>
-            <option value="inactive">Manager</option>
+            <option value="Admin">Admin</option>
+            <option value="Manager">Manager</option>
           </select>
         </div>
         <div className="filter-options">
-          <select className="filter-select">
+          <select
+            className="filter-select"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+          >
             <option value="">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
           </select>
         </div>
+        <button className="filter-select" onClick={handleResetFilters}>
+          <i className="fas fa-filter me-2"></i>
+          Reset Filters
+        </button>
       </div>
       {/* Form Section */}
       {isAddUser && (
@@ -2417,15 +2447,9 @@ const Users = () => {
                 <th className="checkbox-cell">
                   <input type="checkbox" id="select-all" disabled />
                 </th>
-                <th>
-                  User <i className="fas fa-sort color-gray"></i>
-                </th>
-                <th>
-                  Role <i className="fas fa-sort color-gray"></i>
-                </th>
-                <th>
-                  Email <i className="fas fa-sort color-gray"></i>
-                </th>
+                <th>User</th>
+                <th>Role</th>
+                <th>Email</th>
                 <th>Last Login</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -2445,71 +2469,89 @@ const Users = () => {
                   </td>
                 </tr>
               ) : (
-                users.map((user) => (
-                  <tr key={user.id}>
-                    <td className="checkbox-cell ps-4">
-                      <input
-                        type="checkbox"
-                        checked={selectedUsers.includes(user.id)}
-                        onChange={() => handleUserCheckboxChange(user.id)}
-                      />
-                    </td>
-                    <td className="ps-4">
-                      <div className="user-info">
-                        <img src={user.img} alt={user.name} />
-                        <span>{user.name}</span>
-                      </div>
-                    </td>
-                    <td className="ps-4">
-                      <span className={`badge ${user.role.toLowerCase()}`}>
-                        {user.role}
-                      </span>
-                    </td>
-                    <td className="ps-4">{user.email}</td>
-                    <td className="ps-4">{user.time}</td>
-                    <td className="ps-4">
-                      <span
-                        className={`badge status ${user.status.toLowerCase()}`}
-                      >
-                        {user.status}
-                      </span>
-                    </td>
-                    <td className="actions">
-                      <button
-                        className="btn-icon btn-primary"
-                        title="View Details"
-                        onClick={(e) => handleViewDetails(user, e)}
-                      >
-                        <i className="fas fa-eye"></i>
-                      </button>
-                      <button
-                        className="btn-icon btn-success"
-                        title="Edit"
-                        onClick={(e) => handleEditDetails(user, e)}
-                      >
-                        <i className="fas fa-edit"></i>
-                      </button>
-                      <button
-                        className="btn-icon btn-danger"
-                        title="Delete"
-                        onClick={() => {
-                          setUserIdState(user.id);
-                          setConfirmType("single");
-                          handleShowConfirm("single");
-                        }}
-                        disabled={deleteLoading}
-                      >
-                        <i
-                          className={
-                            deleteLoading
-                              ? "fas fa-spinner fa-spin"
-                              : "fas fa-trash"
-                          }
-                        ></i>
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                users
+                  .filter((user) => {
+                    const search = searchTerm.toLowerCase();
+                    const matchSearch =
+                      user.name.toLowerCase().includes(search) ||
+                      user.email.toLowerCase().includes(search) ||
+                      user.role.toLowerCase().includes(search);
+
+                    const matchRole =
+                      filterRole === "" ||
+                      user.role.toLowerCase() === filterRole.toLowerCase();
+
+                    const matchStatus =
+                      filterStatus === "" ||
+                      user.status.toLowerCase() === filterStatus.toLowerCase();
+
+                    return matchSearch && matchRole && matchStatus;
+                  })
+                  .map((user) => (
+                    <tr key={user.id}>
+                      <td className="checkbox-cell ps-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedUsers.includes(user.id)}
+                          onChange={() => handleUserCheckboxChange(user.id)}
+                        />
+                      </td>
+                      <td className="ps-4">
+                        <div className="user-info">
+                          <img src={user.img} alt={user.name} />
+                          <span>{user.name}</span>
+                        </div>
+                      </td>
+                      <td className="ps-4">
+                        <span className={`badge ${user.role.toLowerCase()}`}>
+                          {user.role}
+                        </span>
+                      </td>
+                      <td className="ps-4">{user.email}</td>
+                      <td className="ps-4">{user.time}</td>
+                      <td className="ps-4">
+                        <span
+                          className={`badge status ${user.status.toLowerCase()}`}
+                        >
+                          {user.status}
+                        </span>
+                      </td>
+                      <td className="actions">
+                        <button
+                          className="btn-icon btn-primary"
+                          title="View Details"
+                          onClick={(e) => handleViewDetails(user, e)}
+                        >
+                          <i className="fas fa-eye"></i>
+                        </button>
+                        <button
+                          className="btn-icon btn-success"
+                          title="Edit"
+                          onClick={(e) => handleEditDetails(user, e)}
+                        >
+                          <i className="fas fa-edit"></i>
+                        </button>
+                        <button
+                          className="btn-icon btn-danger"
+                          title="Delete"
+                          onClick={() => {
+                            setUserIdState(user.id);
+                            setConfirmType("single");
+                            handleShowConfirm("single");
+                          }}
+                          disabled={deleteLoading}
+                        >
+                          <i
+                            className={
+                              deleteLoading
+                                ? "fas fa-spinner fa-spin"
+                                : "fas fa-trash"
+                            }
+                          ></i>
+                        </button>
+                      </td>
+                    </tr>
+                  ))
               )}
             </tbody>
           </table>

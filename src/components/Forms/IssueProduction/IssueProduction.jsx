@@ -13,6 +13,11 @@ const IssueProduction = () => {
   const [batchNumber, setBatchNumber] = useState("");
   const [scannedBatches, setScannedBatches] = useState([]);
   const [allItemsFulfilled, setAllItemsFulfilled] = useState(false);
+  const [type, setType] = useState({
+    type: "item",
+    parentBomCode: null,
+    parentBomName: null,
+  });
 
   // Auto generate issue number
   const generateIssueNumber = () => {
@@ -99,17 +104,26 @@ const IssueProduction = () => {
         `/api/requisitions/${requisitionNumber}/items/full`
       );
       if (response.data.status) {
-        const formattedItems = response.data.data.map((item, index) => ({
-          id: index + 1,
-          itemName: item.name,
-          code: item.code,
-          requestedQty: item.quantityRequested,
-          standardQty: item.stQuantity,
-          issuedQty: 0,
-          variance: 0,
-          status: "Pending",
-        }));
+        console.log(response.data.data[0].items);
+        const formattedItems = response.data.data[0].items.map(
+          (item, index) => ({
+            id: index + 1,
+            itemName: item.name,
+            code: item.code,
+            requestedQty: item.quantityRequested,
+            standardQty: item.stQuantity,
+            issuedQty: 0,
+            variance: 0,
+            status: "Pending",
+          })
+        );
+
         setRequestedItems(formattedItems);
+        setType({
+          type: response.data.data[0].type,
+          parentBomCode: response.data.data[0].parentBomCode,
+          parentBomName: response.data.data[0].parentBomName,
+        });
       }
     } catch (error) {
       toast.error("Error fetching requisition items");
@@ -486,7 +500,15 @@ const IssueProduction = () => {
             <div className="margin-2 mx-2">
               <div className="table-container">
                 <div className="table-header">
-                  <h6>Requested Items</h6>
+                  <h6>
+                    {type.type === "item"
+                      ? "Individual Items"
+                      : "(" +
+                        type.parentBomName +
+                        " - " +
+                        type.parentBomCode +
+                        ") - BOM Items"}
+                  </h6>
                 </div>
                 <table>
                   <thead>
