@@ -1849,7 +1849,7 @@ const Users = () => {
                     <div className="position-relative w-100">
                       <i className="fa-solid fa-building position-absolute z-0 input-icon"></i>
                       <select
-                        className="form-control ps-5 text-font"
+                        className="form-select ps-5 text-font"
                         id="department"
                         value={formData.department}
                         onChange={(e) =>
@@ -1859,13 +1859,18 @@ const Users = () => {
                           })
                         }
                       >
-                        <option value="" disabled hidden className="text-muted">
+                        <option
+                          value=""
+                          disabled
+                          hidden
+                          style={{ color: "#6c757d !important" }}
+                        >
                           Select Department
                         </option>
                         <option value="production">Production</option>
                         <option value="store">Store</option>
                       </select>
-                      <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                      {/* <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i> */}
                     </div>
                     {errors.department && (
                       <span className="error-message">{errors.department}</span>
@@ -1925,13 +1930,13 @@ const Users = () => {
                     </div>
                   </div>
                   <div className="col-4 d-flex flex-column form-group">
-                    <label htmlFor="branch" className="form-label">
+                    <label htmlFor="branch" className="form-label mb-0">
                       Branch <span className="text-danger fs-6">*</span>
                     </label>
                     <div className="position-relative w-100">
                       <i className="fa-solid fa-sitemap position-absolute z-0 input-icon"></i>
                       <Select
-                        className="form-control ps-5 text-font"
+                        className="form-control p-0 text-font border-0"
                         options={branchDropdownValues}
                         isMulti
                         id="branch"

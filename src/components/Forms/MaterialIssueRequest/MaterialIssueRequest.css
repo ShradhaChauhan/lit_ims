@@ -9,9 +9,12 @@
 }
 
 .margin-top-8 {
-    margin-top: 0.8rem !important;
+    margin-top: 0.95rem !important;
 }
 
+.text-muted {
+  color: #6c757d !important; /* Bootstrap muted gray */
+}
 
 .btn-style {
     padding: 0.5rem 1.2rem !important;

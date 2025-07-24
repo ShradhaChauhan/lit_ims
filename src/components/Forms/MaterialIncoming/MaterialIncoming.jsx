@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../../../services/api";
+import "./MaterialIncoming.css";
 
 const MaterialIncoming = () => {
   const modalRef = useRef(null);
@@ -355,17 +356,20 @@ const MaterialIncoming = () => {
     }
   };
 
-  const handleAddToApproveItemsQuantity = async (batchData = null, requestedQuantity = null) => {
+  const handleAddToApproveItemsQuantity = async (
+    batchData = null,
+    requestedQuantity = null
+  ) => {
     try {
       let warehouseId;
       let batchNo;
       let qty;
-      
+
       // If batch data is provided, use it directly
       if (batchData) {
         batchNo = batchData.batchNo;
         qty = requestedQuantity || formData.quantity;
-        
+
         // Determine warehouse ID from the provided batch data
         if (batchData.warehouseId) {
           warehouseId = batchData.warehouseId;
@@ -381,18 +385,18 @@ const MaterialIncoming = () => {
         // Fall back to the old method of verifying the batch
         batchNo = formData.barcode;
         qty = formData.quantity;
-        
+
         // Verify the batch to get the warehouse information
         const verifyResponse = await api.get(
           `/api/receipt/verify-batch?batchNo=${batchNo}`
         );
-        
+
         if (!verifyResponse.data || !verifyResponse.data.status) {
           throw new Error("Failed to verify batch information");
         }
-        
+
         const fetchedBatchData = verifyResponse.data.data;
-        
+
         // Determine the warehouse ID
         if (fetchedBatchData.warehouseId) {
           warehouseId = fetchedBatchData.warehouseId;
@@ -404,14 +408,14 @@ const MaterialIncoming = () => {
           warehouseId = defaultWarehouse.warehouseId;
         }
       }
-      
+
       const data = {
         batchNo: batchNo,
         requestedQty: qty,
         reason: reason,
-        warehouseId: warehouseId
+        warehouseId: warehouseId,
       };
-      
+
       console.log("Sending approval request:", data);
       const response = await api.post("/api/stock-adjustments/requests", data);
       console.log("Approval request response:", response.data);
@@ -443,7 +447,7 @@ const MaterialIncoming = () => {
       }
 
       const batchData = verifyResponse.data.data;
-      
+
       // Determine the warehouse ID and name based on isInventory and isIqc flags
       let warehouseId, warehouseName;
       if (batchData.warehouseId) {
@@ -672,7 +676,7 @@ const MaterialIncoming = () => {
 
       if (response.data && response.data.status) {
         const batchData = response.data.data;
-        
+
         // Determine the warehouse ID and name based on isInventory and isIqc flags
         let warehouseId, warehouseName;
         if (batchData.warehouseId) {
@@ -687,7 +691,7 @@ const MaterialIncoming = () => {
           warehouseId = defaultWarehouse.warehouseId;
           warehouseName = defaultWarehouse.warehouseName;
         }
-        
+
         setVendor(batchData.vendorName);
         setFormData({
           ...formData,
@@ -819,7 +823,7 @@ const MaterialIncoming = () => {
         </div>
         {/* Form Fields */}
         <form autoComplete="off" className="padding-2">
-          <div className="form-grid pt-0">
+          <div className="form-grid pt-0 mb-0">
             <div className="row form-style">
               <div className="col-4 d-flex flex-column form-group">
                 <label htmlFor="receiptMode" className="form-label ms-2">
@@ -833,6 +837,7 @@ const MaterialIncoming = () => {
                     value={mode}
                     onChange={(e) => {
                       setMode(e.target.value);
+                      setVendorItem("");
                       handleModeChange();
                     }}
                   >
@@ -915,9 +920,9 @@ const MaterialIncoming = () => {
               </div>
             </div>
           </div>
-          {mode == "manual" ? (
-            <div className="row">
-              <div className="col-12 d-flex flex-column form-group">
+          <div className="row">
+            {mode == "manual" ? (
+              <div className="col-8 d-flex flex-column form-group">
                 <label htmlFor="item" className="form-label ms-2">
                   Select Item <span className="text-danger fs-6">*</span>
                 </label>
@@ -929,19 +934,17 @@ const MaterialIncoming = () => {
                     value={vendorItem}
                     onChange={(e) => {
                       {
-                        // setFormData({ ...formData, item: e.target.value });
-                        // console.log(e);
-                        const selectedId = parseInt(e.target.value); // dropdown value is string, convert to number
+                        const selectedId = parseInt(e.target.value);
                         const selectedItem = vendorItems.find(
                           (v) => v.id === selectedId
                         );
 
                         if (selectedItem) {
-                          setVendorItem(selectedId); // vendor state for dropdown
+                          setVendorItem(selectedId);
                           setFormData((prev) => ({
                             ...prev,
-                            vendorItem: selectedId, // Save vendor id (or name if preferred)
-                            quantity: selectedItem.quantity || "", // Auto-fill vendor code
+                            vendorItem: selectedId,
+                            quantity: selectedItem.quantity || "",
                             itemCode: selectedItem.itemCode,
                             itemName: selectedItem.itemName,
                           }));
@@ -960,14 +963,9 @@ const MaterialIncoming = () => {
                   </select>
                   <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                 </div>
-                {/* {errors.item && (
-                  <span className="error-message">{errors.item}</span>
-                )} */}
               </div>
-            </div>
-          ) : mode == "scan" ? (
-            <div className="row">
-              <div className="col-12 d-flex flex-column form-group">
+            ) : mode == "scan" ? (
+              <div className="col-8 d-flex flex-column form-group">
                 <label htmlFor="item" className="form-label ms-2">
                   Scan Barcode <span className="text-danger fs-6">*</span>
                 </label>
@@ -981,95 +979,49 @@ const MaterialIncoming = () => {
                     placeholder="Scan QR code"
                     onChange={(e) => {
                       setFormData({ ...formData, barcode: e.target.value });
-                      // const input = e.target.value;
-                      // const vcode = input.substring(2, 8);
-                      // console.log(vcode);
                       handleFetchVendorByCode(e.target.value);
                     }}
                   />
                 </div>
               </div>
+            ) : (
+              ""
+            )}
+            <div className="col-4 d-flex flex-column form-group">
+              <label htmlFor="quantity" className="form-label ms-2">
+                Quantity <span className="text-danger fs-6">*</span>
+              </label>
+
+              <div className="d-flex align-items-center justify-content-between gap-2">
+                <div className="position-relative w-100">
+                  <i className="fas fa-calculator position-absolute ms-2 z-0 input-icon"></i>
+                  <input
+                    type="text"
+                    className="form-control ps-5 text-font"
+                    id="quantity"
+                    placeholder="Quantity"
+                    value={formData.quantity}
+                    onChange={(e) =>
+                      setFormData({ ...formData, quantity: e.target.value })
+                    }
+                    disabled={mode === "scan" && isStdQty}
+                  />
+                </div>
+                <input
+                  className="form-check-input mt-0"
+                  type="checkbox"
+                  id="isStdQtyManual"
+                  checked={!isStdQty}
+                  onChange={(e) => setIsStdQty(!e.target.checked)}
+                />
+              </div>
             </div>
-          ) : (
-            ""
-          )}
+          </div>
           <div>
             <div className="row">
-              {/* <div className="col-3 d-flex flex-column form-group">
-                <label htmlFor="item" className="form-label ms-2">
-                  Select Warehouse <span className="text-danger fs-6">*</span>
-                </label>
-                <div className="position-relative w-100">
-                  <i className="fas fa-box position-absolute ms-2 z-0 input-icon"></i>
-                  <select
-                    className="form-control ps-5 ms-1 text-font"
-                    id="item"
-                    value={warehouse}
-                    onChange={(e) => {
-                      {
-                        const selectedId = parseInt(e.target.value); // dropdown value is string, convert to number
-                        const selectedWarehouse = warehouses.find(
-                          (w) => w.id === selectedId
-                        );
-
-                        if (selectedWarehouse) {
-                          setWarehouse(selectedId);
-                          setFormData((prev) => ({
-                            ...prev,
-                            warehouse: selectedWarehouse.warehouseName || "",
-                          }));
-                        }
-                      }
-                    }}
-                  >
-                    <option value="" disabled hidden className="text-muted">
-                      Select Item
-                    </option>
-                    {warehouses.map((w) => (
-                      <option key={w.id} value={w.id}>
-                        {w.warehouseName}
-                      </option>
-                    ))}
-                  </select>
-                  <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
-                </div>
-              </div> */}
-              <div className="col-3 d-flex flex-column form-group">
-                <label htmlFor="quantity" className="form-label ms-2">
-                  Quantity <span className="text-danger fs-6">*</span>
-                </label>
-
-                <div className="d-flex align-items-center justify-content-between gap-2">
-                  <div className="position-relative w-100">
-                    <i className="fas fa-calculator position-absolute ms-2 z-0 input-icon"></i>
-                    <input
-                      type="text"
-                      className="form-control ps-5 text-font"
-                      id="quantity"
-                      placeholder="Quantity"
-                      value={formData.quantity}
-                      onChange={(e) =>
-                        setFormData({ ...formData, quantity: e.target.value })
-                      }
-                      disabled={mode === "scan" && isStdQty}
-                    />
-                  </div>
-                  {mode === "scan" && (
-                    <input
-                      className="form-check-input mt-0"
-                      type="checkbox"
-                      id="isStdQtyManual"
-                      checked={!isStdQty}
-                      onChange={(e) => setIsStdQty(!e.target.checked)}
-                    />
-                  )}
-                </div>
-              </div>
-
               <div className="col-3 d-flex flex-column form-group">
                 <button
                   className="btn btn-primary text-8 px-3 fw-medium mx-2"
-                  style={{ marginTop: "2.1rem" }}
                   onClick={(e) => {
                     e.preventDefault();
                     handleAddReceiptItem(e);
@@ -1116,15 +1068,13 @@ const MaterialIncoming = () => {
                       ) : (
                         receiptList.map((receipt, index) => (
                           <tr key={index}>
-                            <td className="ps-4">{receipt.itemName}</td>
-                            <td className="ps-4">{receipt.itemCode}</td>
-                            <td className="ps-4">{receipt.quantity}</td>
-                            <td className="ps-4 text-break">
-                              {receipt.batchNo}
-                            </td>
-                            <td className="ps-4">
+                            <td>{receipt.itemName}</td>
+                            <td>{receipt.itemCode}</td>
+                            <td>{receipt.quantity}</td>
+                            <td>{receipt.batchNo}</td>
+                            <td>
                               <select
-                                className="form-select"
+                                className="form-select text-font"
                                 value={
                                   receipt.warehouseId
                                     ? `${receipt.warehouseId}|${receipt.warehouse}`
