@@ -36,6 +36,7 @@ const MaterialIssueRequest = () => {
     setType("");
     setQuantity("");
     setIsBOMAdded(false);
+    setWarehouse("");
 
     // Reset available items from the original items list
     const itemNames = itemsList.map((item) => ({
@@ -61,7 +62,7 @@ const MaterialIssueRequest = () => {
     try {
       // Determine type based on the first item
       const requestType = request[0].type === "BOM" ? "bom" : "items";
-
+      console.log("Warehouse: " + warehouse);
       // Format data for API
       const formattedItems = request.map((item) => ({
         id: item.id,
@@ -69,12 +70,12 @@ const MaterialIssueRequest = () => {
         code: item.code,
         type: item.type.toLowerCase(),
         quantity: Number(item.quantity),
-        warehouse: Number(item.warehouse),
       }));
 
       const payload = {
         transactionNumber,
         type: requestType,
+        warehouseId: Number(warehouse),
         items: formattedItems,
       };
 
@@ -337,7 +338,6 @@ const MaterialIssueRequest = () => {
       setIsBOMAdded(true);
       setBom("");
       setQuantity("");
-      setWarehouse("");
       setRequisitionType("");
     }
 
@@ -383,7 +383,6 @@ const MaterialIssueRequest = () => {
       setType("");
       setQuantity("");
       setRequisitionType("");
-      setWarehouse("");
     }
   };
 
