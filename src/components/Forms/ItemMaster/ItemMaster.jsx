@@ -5,6 +5,7 @@ import api from "../../../services/api";
 import { Link } from "react-router-dom";
 import { Modal } from "bootstrap";
 import { toast } from "react-toastify";
+import exportToExcel from "../../../utils/exportToExcel";
 
 const ItemMaster = () => {
   const [errors, setErrors] = useState({});
@@ -1122,7 +1123,17 @@ const ItemMaster = () => {
               </label>
             </div>
             <div className="bulk-actions">
-              <button className="btn-action">
+              <button
+                className="btn-action"
+                onClick={() => {
+                  console.log(selectedItems);
+                  const rowData = getPaginatedItems().filter((row) =>
+                    selectedItems.includes(row.id)
+                  );
+                  console.log(rowData);
+                  exportToExcel(rowData, "ItemMaster");
+                }}
+              >
                 <i className="fas fa-file-export"></i>
                 Export Selected
               </button>
