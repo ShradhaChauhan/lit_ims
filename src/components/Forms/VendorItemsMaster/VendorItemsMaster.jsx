@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { Modal } from "bootstrap";
 import api from "../../../services/api";
 import { toast } from "react-toastify";
+import exportToExcel from "../../../utils/exportToExcel";
 
 const VendorItemsMaster = () => {
   const [vendorItems, setVendorItems] = useState([]);
@@ -1035,7 +1036,17 @@ const VendorItemsMaster = () => {
               </label>
             </div>
             <div className="bulk-actions">
-              <button className="btn-action">
+              <button
+                className="btn-action"
+                onClick={() => {
+                  console.log(selectedVendorItems);
+                  const rowData = filteredVendorItems.filter((row) =>
+                    selectedVendorItems.includes(row.id)
+                  );
+                  console.log(rowData);
+                  exportToExcel(rowData, "VendorItems");
+                }}
+              >
                 <i className="fas fa-file-export"></i>
                 Export Selected
               </button>

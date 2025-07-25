@@ -9,6 +9,7 @@ const ProductionFloorReceipt = () => {
   const [issueNoList, setIssueNoList] = useState([]);
   const [issuedItems, setIssuedItems] = useState([]);
   const [selectedIssueNo, setSelectedIssueNo] = useState([]);
+  const [recentReceipts, setRecentReceipts] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [issueSummary, setIssueSummary] = useState({
     requisitionNumber: "",
@@ -112,6 +113,22 @@ const ProductionFloorReceipt = () => {
   const [transactionNumber, setTransactionNumber] = useState(
     generateTransactionNumber()
   );
+
+  // Fetch Recent Receipts
+  const fetchRecentReceipts = async () => {
+    try {
+      const response = await api.get("/api/production-receipt/table");
+      console.log(response.data.data);
+      setRecentReceipts(response.data.data);
+    } catch (error) {
+      toast.error("Error in fetching recent receipts");
+      console.error("Error fetching recent receipts:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchRecentReceipts();
+  }, []);
 
   // Fetch issue number list
   const fetchIssueNoList = async () => {
@@ -668,14 +685,57 @@ const ProductionFloorReceipt = () => {
               </tr>
             </thead>
             <tbody>
-              <tr className="no-data-row">
-                <td colSpan="5" className="no-data-cell">
-                  <div className="no-data-content">
-                    <i className="fas fa-clock-rotate-left no-data-icon"></i>
-                    <p className="no-data-text">No Recent Receipts</p>
-                  </div>
-                </td>
-              </tr>
+              {recentReceipts.length > 0 ? (
+                recentReceipts.map((r, index) => (
+                  <tr key={index}>
+                    <td className="ps-4">
+                      <div>
+                        <span>{r.transactionNumber}</span>
+                      </div>
+                    </td>
+                    <td className="ps-4">
+                      <div>
+                        <span>{r.receiptDate}</span>
+                      </div>
+                    </td>
+                    <td className="ps-4">
+                      <div>
+                        <span>{r.type}</span>
+                      </div>
+                    </td>
+                    <td className="ps-4">
+                      <ul className="mb-0 ps-3">
+                        {r.items.map((item, index) => (
+                          <li key={index}>
+                            {item.itemName} ({item.itemCode})
+                          </li>
+                        ))}
+                      </ul>
+                    </td>
+
+                    <td className="ps-3">
+                      <span
+                        className={`badge status ${
+                          r.status.toLowerCase() === "completed"
+                            ? "active"
+                            : "inactive"
+                        }`}
+                      >
+                        {r.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr className="no-data-row">
+                  <td colSpan="5" className="no-data-cell">
+                    <div className="no-data-content">
+                      <i className="fas fa-clock-rotate-left no-data-icon"></i>
+                      <p className="no-data-text">No Recent Receipts</p>
+                    </div>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
           {/* Pagination */}

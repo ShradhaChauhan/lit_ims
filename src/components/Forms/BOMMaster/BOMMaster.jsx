@@ -4,6 +4,7 @@ import api from "../../../services/api";
 import { Link } from "react-router-dom";
 import { Modal } from "bootstrap";
 import { toast } from "react-toastify";
+import exportToExcel from "../../../utils/exportToExcel";
 
 const BOMMaster = () => {
   const [errors, setErrors] = useState({});
@@ -1011,7 +1012,17 @@ const BOMMaster = () => {
               <label htmlFor="select-all">{selectedBoms.length} Selected</label>
             </div>
             <div className="bulk-actions">
-              <button className="btn-action">
+              <button
+                className="btn-action"
+                onClick={() => {
+                  console.log(selectedBoms);
+                  const rowData = filteredBoms.filter((row) =>
+                    selectedBoms.includes(row.id)
+                  );
+                  console.log(rowData);
+                  exportToExcel(rowData, "BOM");
+                }}
+              >
                 <i className="fas fa-file-export"></i>
                 Export Selected
               </button>
