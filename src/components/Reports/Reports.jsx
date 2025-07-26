@@ -149,6 +149,7 @@ const Reports = () => {
       totalPrice: "100.00",
       cumulativeQuantity: 100,
       cumulativeValue: "1000",
+      status: "Complete",
     },
     {
       id: 2,
@@ -163,6 +164,7 @@ const Reports = () => {
       totalPrice: "500.00",
       cumulativeQuantity: 500,
       cumulativeValue: "5000",
+      status: "Complete",
     },
   ]);
 
@@ -1129,15 +1131,9 @@ const Reports = () => {
                                 </div>
                               </td>
                               <td className="actions ps-4">
-                                <button
-                                  className="btn-icon btn-primary"
-                                  title="View Details"
-                                  onClick={() =>
-                                    setIsShowTransactionDetails(true)
-                                  }
-                                >
-                                  <i className="fas fa-eye"></i>
-                                </button>
+                                <div>
+                                  <span>{item.status}</span>
+                                </div>
                               </td>
                             </tr>
                           ))
@@ -1164,7 +1160,7 @@ const Reports = () => {
         </div>
       )}
       {/* View Transactions Report Modal */}
-      {isShowTransactionDetails && (
+      {/* {isShowTransactionDetails && (
         <div
           className="modal fade modal-xl"
           ref={transactionModalRef}
@@ -1186,7 +1182,6 @@ const Reports = () => {
                 ></button>
               </div>
               <div className="modal-body">
-                {/* Search and Filter Section */}
                 <div className="search-filter-container mx-2">
                   <div className="search-box">
                     <i className="fas fa-search position-absolute z-0 input-icon"></i>
@@ -1437,7 +1432,7 @@ const Reports = () => {
             </div>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 };

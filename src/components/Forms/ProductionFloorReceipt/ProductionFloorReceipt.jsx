@@ -339,6 +339,7 @@ const ProductionFloorReceipt = () => {
       handleReset(e);
       // Refresh the issue number list
       fetchIssueNoList();
+      fetchRecentReceipts();
     } catch (error) {
       let errorMessage = "Failed to confirm the receipt. Please try again.";
 

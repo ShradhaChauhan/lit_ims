@@ -11,6 +11,10 @@ const WIPReturn = () => {
   const [warehouse, setWarehouse] = useState("");
   const [workOrders, setWorkOrders] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
+  const [recentReceipts, setRecentReceipts] = useState([]);
+  const [returnItems, setReturnItems] = useState([]);
+  const [returnQty, setReturnQty] = useState("");
+  const [reason, setReason] = useState("");
   // Pagination states
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -45,6 +49,36 @@ const WIPReturn = () => {
     }
 
     return `${start}-${end}`;
+  };
+
+  // Fetch Recent Receipts
+  const fetchRecentReceipts = async () => {
+    try {
+      const response = await api.get("/api/production-receipt/receipts");
+      console.log(response.data.data);
+      setRecentReceipts(response.data.data);
+    } catch (error) {
+      toast.error("Error in fetching recent receipts");
+      console.error("Error fetching recent receipts:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchRecentReceipts();
+  }, []);
+
+  const getReceiptItems = async (id) => {
+    try {
+      console.log("id: " + id);
+      const response = await api.get(
+        `/api/production-receipt/receipts/${id}/items`
+      );
+      console.log(response.data.data);
+      setReturnItems(response.data.data);
+    } catch (error) {
+      toast.error("Error in fetching receipt items");
+      console.error("Error fetching receipt items:", error);
+    }
   };
 
   const handlePageChange = (newPage) => {
@@ -122,6 +156,23 @@ const WIPReturn = () => {
   const [transactionNumber, setTransactionNumber] = useState(
     generateTransactionNumber()
   );
+
+  const deleteReturnItem = (itemCode) => {
+    const updatedItems = returnItems.filter(
+      (item) => item.itemCode !== itemCode
+    );
+    setReturnItems(updatedItems);
+  };
+
+  const processReturn = async () => {
+    try {
+      // Call api for approval here
+    } catch (error) {
+      toast.error("Error in sending request for approval");
+      console.error(error);
+    }
+  };
+
   return (
     <div>
       {" "}
@@ -168,11 +219,19 @@ const WIPReturn = () => {
                     }`}
                     id="workOrder"
                     value={order}
-                    onChange={(e) => setOrder(e.target.value)}
+                    onChange={(e) => {
+                      setOrder(e.target.value);
+                      getReceiptItems(e.target.value);
+                    }}
                   >
                     <option value="" className="text-muted">
                       Select Work Order
                     </option>
+                    {recentReceipts.map((r, index) => (
+                      <option key={index} value={r.id}>
+                        {r.transactionNumber}
+                      </option>
+                    ))}
                   </select>
                   {/* <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i> */}
                 </div>
@@ -268,59 +327,100 @@ const WIPReturn = () => {
                     </tr>
                   </thead>
                   <tbody className="text-break">
-                    <tr className="no-data-row">
-                      <td colSpan="6" className="no-data-cell">
-                        <div className="no-data-content">
-                          <i className="fas fa-rotate-left no-data-icon"></i>
-                          <p className="no-data-text">No Items Added</p>
-                          <p className="no-data-subtext">
-                            Select a work order to add return items
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
+                    {returnItems.length === 0 ? (
+                      <tr className="no-data-row">
+                        <td colSpan="6" className="no-data-cell">
+                          <div className="no-data-content">
+                            <i className="fas fa-rotate-left no-data-icon"></i>
+                            <p className="no-data-text">No Items Added</p>
+                            <p className="no-data-subtext">
+                              Select a work order to add return items
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      returnItems.map((r, index) => (
+                        <tr key={index}>
+                          <td className="ps-4">
+                            <div>
+                              <input
+                                type="text"
+                                className="form-control text-font w-100"
+                                disabled
+                                value={r.itemName}
+                              />
+                            </div>
+                          </td>
+                          <td className="ps-4">
+                            <div>
+                              <input
+                                type="text"
+                                className="form-control text-font w-100"
+                                disabled
+                                value={r.batchNumber}
+                              />
+                            </div>
+                          </td>
+                          <td className="ps-4">
+                            <div>
+                              <input
+                                type="text"
+                                className="form-control text-font w-100"
+                                disabled
+                                value={r.receivedQuantity}
+                              />
+                            </div>
+                          </td>
+                          <td className="ps-4">
+                            <div>
+                              <input
+                                type="text"
+                                className="form-control text-font w-100"
+                                value={returnQty}
+                                placeholder="Return Qty"
+                                onChange={(e) => setReturnQty(e.target.value)}
+                              />
+                            </div>
+                          </td>
+                          <td className="ps-4">
+                            <div>
+                              <input
+                                type="text"
+                                className="form-control text-font w-100"
+                                placeholder="Reason"
+                                value={reason}
+                                onChange={(e) => setReason(e.target.value)}
+                              />
+                            </div>
+                          </td>
+                          <td className="actions ps-4">
+                            <button
+                              type="button"
+                              className="btn-icon btn-danger"
+                              title="View Details"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                deleteReturnItem(r.itemCode);
+                              }}
+                            >
+                              <i className="fas fa-trash"></i>
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
             </div>{" "}
-            {/* Return Summary Table Section */}
-            {/* <div className="margin-2">
-              <div className="table-container">
-                <div className="row form-style p-4">
-                  <h6 className="mb-2">Return Summary</h6>
-
-                  <div className="col-3 d-flex flex-column text-font">
-                    <div className="row bg-gray font-weight me-2 p-3 d-flex align-items-center justify-content-between">
-                      <p className="col-6 font-gray mb-0">Total Items:</p>
-                      <p className="col-6 mb-0 text-end">0</p>
-                    </div>
-                  </div>
-
-                  <div className="col-3 d-flex flex-column text-font">
-                    <div className="row bg-gray font-weight me-2 p-3 d-flex align-items-center justify-content-between">
-                      <p className="col-6 font-gray mb-0">Reusable Items:</p>
-                      <p className="col-6 mb-0 text-end">0</p>
-                    </div>
-                  </div>
-
-                  <div className="col-3 d-flex flex-column text-font">
-                    <div className="row bg-gray font-weight me-2 p-3 d-flex align-items-center justify-content-between">
-                      <p className="col-6 font-gray mb-0">Scrap Items:</p>
-                      <p className="col-6 mb-0 text-end">0</p>
-                    </div>
-                  </div>
-                  <div className="col-3 d-flex flex-column text-font">
-                    <div className="row bg-gray font-weight me-2 p-3 d-flex align-items-center justify-content-between">
-                      <p className="col-6 font-gray mb-0">Return Value:</p>
-                      <p className="col-6 mb-0 text-end">$0.00</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>{" "} */}
             {/* Button Section */}
             <div className="form-actions">
-              <button type="button" className="btn btn-primary add-btn">
+              <button
+                type="button"
+                className="btn btn-primary add-btn"
+                // onClick={processReturn()}
+              >
                 <i className="fa-solid fa-floppy-disk me-1"></i> Process Return
                 Record
               </button>
