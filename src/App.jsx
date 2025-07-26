@@ -1,14 +1,13 @@
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Login from "./components/Login/Login";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Link, useNavigate } from "react-router-dom";
 import Dashboard from "./components/Dashboard/Dashboard";
 import ItemMaster from "./components/Forms/ItemMaster/ItemMaster";
 import VendorMaster from "./components/Forms/VendorMaster/VendorMaster";
 import { useContext } from "react";
 import { AppContext } from "./context/AppContext";
 import SideBar from "./components/SideBar/SideBar";
-// import Navbar from "./components/Navbar/Navbar";
 import { useLocation } from "react-router-dom";
 import WarehouseMaster from "./components/Forms/WarehouseMaster/WarehouseMaster";
 import BOMMaster from "./components/Forms/BOMMaster/BOMMaster";
@@ -30,6 +29,7 @@ import WIPReturn from "./components/Forms/WIPReturn/WIPReturn";
 import Users from "./components/Users/Users";
 import ApproveItemsQuantity from "./components/Forms/ApproveItemsQuantity/ApproveItemsQuantity";
 import ProtectedRoute from "./utils/ProtectedRoute";
+import Unauthorized from "./components/Unauthorized/Unauthorized";
 
 function App() {
   const { rightSideComponent, setRightSideComponent, isAuthenticated } =
@@ -65,48 +65,200 @@ function App() {
             {/* Content Area */}
             <div className="right-side-div bg-light flex-grow-1 overflow-auto">
               <Routes>
-                <Route path="/users" element={<Users />} />
+                <Route path="/unauthorized" element={<Unauthorized />} />
                 <Route path="/dashboard" element={<Dashboard />} />
-                {/* <Route path="/users" element={<Users />} /> */}
-                <Route path="/business-partner" element={<VendorMaster />} />
-                <Route path="/item-master" element={<ItemMaster />} />
-                <Route path="/warehouse-master" element={<WarehouseMaster />} />
-                <Route path="/bom-master" element={<BOMMaster />} />
-                <Route path="/type-master" element={<TypeMaster />} />
-                <Route path="/group-master" element={<GroupMaster />} />
-                <Route path="/part-master" element={<PartMaster />} />
+                <Route
+                  path="/users"
+                  element={
+                    <ProtectedRoute page="User Management">
+                      <Users />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/business-partner"
+                  element={
+                    <ProtectedRoute page="Vendor Master">
+                      <VendorMaster />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/item-master"
+                  element={
+                    <ProtectedRoute page="Item Master">
+                      <ItemMaster />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/warehouse-master"
+                  element={
+                    <ProtectedRoute page="Warehouse Master">
+                      <WarehouseMaster />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/bom-master"
+                  element={
+                    <ProtectedRoute page="BOM Master">
+                      <BOMMaster />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/type-master"
+                  element={
+                    <ProtectedRoute page="Type Master">
+                      <TypeMaster />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/group-master"
+                  element={
+                    <ProtectedRoute page="Group Master">
+                      <GroupMaster />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/part-master"
+                  element={
+                    <ProtectedRoute page="Part Master">
+                      <PartMaster />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route
                   path="/vendor-items-master"
-                  element={<VendorItemsMaster />}
+                  element={
+                    <ProtectedRoute page="Vendor Item Master">
+                      <VendorItemsMaster />
+                    </ProtectedRoute>
+                  }
                 />
                 <Route
                   path="/material-incoming"
-                  element={<MaterialIncoming />}
+                  element={
+                    <ProtectedRoute page="Material Incoming">
+                      <MaterialIncoming />
+                    </ProtectedRoute>
+                  }
                 />
-                <Route path="/incoming-qc" element={<IncomingQC />} />
+                <Route
+                  path="/incoming-qc"
+                  element={
+                    <ProtectedRoute page="IQC">
+                      <IncomingQC />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route
                   path="/material-issue-request"
-                  element={<MaterialIssueRequest />}
+                  element={
+                    <ProtectedRoute page="Material Issue Request">
+                      <MaterialIssueRequest />
+                    </ProtectedRoute>
+                  }
                 />
                 <Route
                   path="/issue-to-production"
-                  element={<IssueProduction />}
+                  element={
+                    <ProtectedRoute page="Issue to Production">
+                      <IssueProduction />
+                    </ProtectedRoute>
+                  }
                 />
                 <Route
                   path="/production-floor-receipt"
-                  element={<ProductionFloorReceipt />}
+                  element={
+                    <ProtectedRoute page="Production Floor Receipt">
+                      <ProductionFloorReceipt />
+                    </ProtectedRoute>
+                  }
                 />
-                <Route path="/inventory-audit-report" element={<Reports />} />
-                <Route path="/activity-logs" element={<ActivityLogs />} />
+                <Route
+                  path="/inventory-audit-report"
+                  element={
+                    <ProtectedRoute page="Inventory Audit Reports">
+                      <Reports />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/activity-logs"
+                  element={
+                    <ProtectedRoute page="Audit Logs">
+                      <ActivityLogs />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route
                   path="/production-material-usage"
-                  element={<ProductionMaterialUsage />}
+                  element={
+                    <ProtectedRoute page="Production Material Usage">
+                      <ProductionMaterialUsage />
+                    </ProtectedRoute>
+                  }
                 />
-                <Route path="/wip-return" element={<WIPReturn />} />
+                <Route
+                  path="/wip-return"
+                  element={
+                    <ProtectedRoute page="WIP Return">
+                      <WIPReturn />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route
                   path="/approve-items-quantity"
-                  element={<ApproveItemsQuantity />}
+                  element={
+                    <ProtectedRoute page="Approve Items Quantity">
+                      <ApproveItemsQuantity />
+                    </ProtectedRoute>
+                  }
                 />
+                {/* <Route path="/users" element={<Users />} /> */}
+                {/* <Route path="/business-partner" element={<VendorMaster />} /> */}
+                {/* <Route path="/item-master" element={<ItemMaster />} />
+                <Route path="/warehouse-master" element={<WarehouseMaster />} /> */}
+                {/* <Route path="/bom-master" element={<BOMMaster />} />
+                <Route path="/type-master" element={<TypeMaster />} />
+                <Route path="/group-master" element={<GroupMaster />} />
+                <Route path="/part-master" element={<PartMaster />} /> */}
+                {/* <Route
+                  path="/vendor-items-master"
+                  element={<VendorItemsMaster />}
+                /> */}
+                {/* <Route
+                  path="/material-incoming"
+                  element={<MaterialIncoming />}
+                /> */}
+                {/* <Route path="/incoming-qc" element={<IncomingQC />} />
+                <Route
+                  path="/material-issue-request"
+                  element={<MaterialIssueRequest />}
+                /> */}
+                {/* <Route
+                  path="/issue-to-production"
+                  element={<IssueProduction />}
+                /> */}
+                {/* <Route
+                  path="/production-floor-receipt"
+                  element={<ProductionFloorReceipt />}
+                /> */}
+                {/* <Route path="/inventory-audit-report" element={<Reports />} /> */}
+                {/* <Route path="/activity-logs" element={<ActivityLogs />} /> */}
+                {/* <Route
+                  path="/production-material-usage"
+                  element={<ProductionMaterialUsage />}
+                /> */}
+                {/* <Route path="/wip-return" element={<WIPReturn />} /> */}
+                {/* <Route
+                  path="/approve-items-quantity"
+                  element={<ApproveItemsQuantity />}
+                /> */}
               </Routes>
             </div>
           </div>

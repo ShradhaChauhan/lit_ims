@@ -66,7 +66,6 @@ const LoginPage = () => {
       });
 
       const { token, permissions } = response.data.data;
-
       // Store permissions and token
       localStorage.setItem("token", token);
       localStorage.setItem("permissions", JSON.stringify(permissions));
