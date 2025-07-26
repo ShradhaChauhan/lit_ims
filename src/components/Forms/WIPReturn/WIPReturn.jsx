@@ -2,11 +2,15 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../../../services/api";
+import "./WIPReturn.css";
 
 const WIPReturn = () => {
   const [warehouseList, setWarehouseList] = useState([]);
   const [order, setOrder] = useState("");
-  const [date, setDate] = useState("");
+  const [date, setDate] = useState(() => {
+    const today = new Date();
+    return today.toISOString().split("T")[0];
+  });
   const [type, setType] = useState("");
   const [warehouse, setWarehouse] = useState("");
   const [workOrders, setWorkOrders] = useState([]);
@@ -15,6 +19,7 @@ const WIPReturn = () => {
   const [returnItems, setReturnItems] = useState([]);
   const [returnQty, setReturnQty] = useState("");
   const [reason, setReason] = useState("");
+  const [newBatchNumber, setNewBatchNumber] = useState("");
   // Pagination states
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -166,9 +171,29 @@ const WIPReturn = () => {
 
   const processReturn = async () => {
     try {
-      // Call api for approval here
+      const transformedReturnItems = returnItems.map((item) => ({
+        itemCode: item.itemCode,
+        itemName: item.itemName,
+        batchNo: item.batchNumber,
+        originalQty: item.receivedQuantity,
+        returnQty: item.returnQty,
+        returnReason: item.reason,
+      }));
+
+      const data = {
+        transactionNumber: transactionNumber,
+        returnType: type,
+        returnDate: date,
+        workOrderId: order,
+        warehouseId: warehouse,
+        returnItems: transformedReturnItems,
+      };
+
+      console.log("data" + JSON.stringify(data[0], null, 2));
+      const response = await api.post(`/api/wip-return`, data);
+      toast.success("Successfully returned the items");
     } catch (error) {
-      toast.error("Error in sending request for approval");
+      toast.error("Unable to process return request");
       console.error(error);
     }
   };
@@ -275,6 +300,7 @@ const WIPReturn = () => {
                   <input
                     type="date"
                     id="date"
+                    disabled
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
                     className={`form-select ps-5 ms-2 text-font ${
@@ -359,6 +385,7 @@ const WIPReturn = () => {
                                 className="form-control text-font w-100"
                                 disabled
                                 value={r.batchNumber}
+                                title={r.batchNumber}
                               />
                             </div>
                           </td>
@@ -377,9 +404,16 @@ const WIPReturn = () => {
                               <input
                                 type="text"
                                 className="form-control text-font w-100"
-                                value={returnQty}
+                                value={r.returnQty || ""}
                                 placeholder="Return Qty"
-                                onChange={(e) => setReturnQty(e.target.value)}
+                                onChange={(e) => {
+                                  const updated = returnItems.map((item, i) =>
+                                    i === index
+                                      ? { ...item, returnQty: e.target.value }
+                                      : item
+                                  );
+                                  setReturnItems(updated);
+                                }}
                               />
                             </div>
                           </td>
@@ -389,8 +423,15 @@ const WIPReturn = () => {
                                 type="text"
                                 className="form-control text-font w-100"
                                 placeholder="Reason"
-                                value={reason}
-                                onChange={(e) => setReason(e.target.value)}
+                                value={r.reason || ""}
+                                onChange={(e) => {
+                                  const updated = returnItems.map((item, i) =>
+                                    i === index
+                                      ? { ...item, reason: e.target.value }
+                                      : item
+                                  );
+                                  setReturnItems(updated);
+                                }}
                               />
                             </div>
                           </td>
@@ -419,7 +460,7 @@ const WIPReturn = () => {
               <button
                 type="button"
                 className="btn btn-primary add-btn"
-                // onClick={processReturn()}
+                onClick={processReturn}
               >
                 <i className="fa-solid fa-floppy-disk me-1"></i> Process Return
                 Record
