@@ -1,0 +1,120 @@
+.unauthorized-wrapper {
+  background-color: #111827;
+  margin-right: -0.9rem;
+  margin-left: -0.9rem;
+}
+.unauthorized-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2rem 3rem;
+}
+
+.text-section {
+    padding-left: 2rem;
+}
+
+.text-section h2 {
+  color: #f9fafb;
+  font-size: 2rem;
+}
+
+.text-section p {
+  color: #9ca3af;
+  font-size: 1rem;
+}
+
+.neon-403 {
+  font-size: 3rem;
+  font-weight: bold;
+  color: #0ff;
+  text-shadow: 0 0 5px #0ff, 0 0 10px #0ff, 0 0 20px #0ff;
+}
+
+.door-section .door {
+  width: 220px;
+  height: 300px;
+  background-color: #4b5563;
+  position: relative;
+  margin: 0 auto;
+  border-radius: 1rem;
+  border: 8px solid #374151;
+}
+
+.door::before {
+  content: '';
+  position: absolute;
+  top: 30%;
+  left: 20%;
+  width: 50px;
+  height: 20px;
+  background-color: #6b7280;
+  border-radius: 4px;
+}
+
+.door::after {
+  content: '';
+  position: absolute;
+  top: 55%;
+  left: 45%;
+  width: 15px;
+  height: 40px;
+  background-color: #e5e7eb;
+  border-radius: 4px;
+}
+
+/* General fade-in */
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(-20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in-top {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+.fade-in {
+  opacity: 0;
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+/* Delays */
+.delay-1 { animation-delay: 0.3s; }
+.delay-2 { animation-delay: 0.6s; }
+
+/* Slide in from left */
+@keyframes slideInLeft {
+  0% { opacity: 0; transform: translateX(-50px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+.slide-in-left {
+  animation: slideInLeft 0.7s ease-out forwards;
+}
+
+/* Bounce effect */
+@keyframes bounceIn {
+  0% { transform: scale(0.8); opacity: 0; }
+  60% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+.bounce-in {
+  animation: bounceIn 0.8s ease-in-out forwards;
+}
+
+/* Neon 403 flicker */
+.neon-403 {
+  animation: flicker 2s infinite;
+}
+
+@keyframes flicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+    text-shadow: 0 0 5px #0ff, 0 0 10px #0ff, 0 0 20px #0ff;
+    opacity: 1;
+  }
+  20%, 24%, 55% {
+    text-shadow: none;
+    opacity: 0.4;
+  }
+}

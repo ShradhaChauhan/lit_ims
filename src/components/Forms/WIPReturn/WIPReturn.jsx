@@ -180,20 +180,18 @@ const WIPReturn = () => {
         returnReason: item.reason,
       }));
 
-      const data = [
-        {
-          transactionNumber: transactionNumber,
-          returnType: type,
-          returnDate: date,
-          workOrderId: order,
-          warehouseId: warehouse,
-          returnItems: transformedReturnItems,
-        },
-      ];
+      const data = {
+        transactionNumber: transactionNumber,
+        returnType: type,
+        returnDate: date,
+        workOrderId: order,
+        warehouseId: warehouse,
+        returnItems: transformedReturnItems,
+      };
+
       console.log("data" + JSON.stringify(data[0], null, 2));
       const response = await api.post(`/api/wip-return`, data);
-      console.log(response.data.data);
-      setReturnItems(response.data.data);
+      toast.success("Successfully returned the items");
     } catch (error) {
       toast.error("Unable to process return request");
       console.error(error);
