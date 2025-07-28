@@ -78,7 +78,7 @@ function App() {
                 <Route
                   path="/business-partner"
                   element={
-                    <ProtectedRoute page="Vendor Master">
+                    <ProtectedRoute page="Business Partner">
                       <VendorMaster />
                     </ProtectedRoute>
                   }
@@ -142,7 +142,7 @@ function App() {
                 <Route
                   path="/material-incoming"
                   element={
-                    <ProtectedRoute page="Material Incoming">
+                    <ProtectedRoute page="Store Material Inward">
                       <MaterialIncoming />
                     </ProtectedRoute>
                   }
@@ -166,7 +166,7 @@ function App() {
                 <Route
                   path="/issue-to-production"
                   element={
-                    <ProtectedRoute page="Issue to Production">
+                    <ProtectedRoute page="Material Issue Transfer">
                       <IssueProduction />
                     </ProtectedRoute>
                   }
@@ -174,7 +174,7 @@ function App() {
                 <Route
                   path="/production-floor-receipt"
                   element={
-                    <ProtectedRoute page="Production Floor Receipt">
+                    <ProtectedRoute page="Material Receipt">
                       <ProductionFloorReceipt />
                     </ProtectedRoute>
                   }
@@ -182,7 +182,7 @@ function App() {
                 <Route
                   path="/inventory-audit-report"
                   element={
-                    <ProtectedRoute page="Inventory Audit Reports">
+                    <ProtectedRoute page="Inventory Audit Report">
                       <Reports />
                     </ProtectedRoute>
                   }
@@ -190,7 +190,7 @@ function App() {
                 <Route
                   path="/activity-logs"
                   element={
-                    <ProtectedRoute page="Audit Logs">
+                    <ProtectedRoute page="Activity Logs">
                       <ActivityLogs />
                     </ProtectedRoute>
                   }

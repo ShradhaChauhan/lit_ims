@@ -16,9 +16,6 @@ import LandingPage from "../LandingPage/LandingPage";
 
 const Dashboard = () => {
   const { rightSideComponent, setRightSideComponent } = useContext(AppContext);
-  // Role based access
-  const { getPermission } = useContext(AppContext);
-  const { canView, canEdit } = getPermission("User Management");
 
   return (
     <div className="right-side-div bg-light flex-grow-1 overflow-auto">

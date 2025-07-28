@@ -8,7 +8,7 @@ export const defineAbilitiesForPermissions = (permissions) => {
   const { can, rules } = new AbilityBuilder(createMongoAbility);
 
   permissions.forEach((perm) => {
-    const subject = perm.pageName; // e.g., "Vendor Master"
+    const subject = perm.pageName;
     console.log("canView : " + perm.canView);
     console.log("canEdit : " + perm.canEdit);
     if (perm.canView) {

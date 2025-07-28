@@ -30,7 +30,7 @@ const AddUserModal = () => {
   ];
 
   const moduleLabels = {
-    vendorMaster: "Vendor Master",
+    vendorMaster: "Business Partner",
     itemMaster: "Item Master",
     warehouseMaster: "Warehouse Master",
     bom: "BOM Master",
