@@ -78,7 +78,7 @@ function App() {
                 <Route
                   path="/business-partner"
                   element={
-                    <ProtectedRoute page="Vendor Master">
+                    <ProtectedRoute page="Business Partner">
                       <VendorMaster />
                     </ProtectedRoute>
                   }

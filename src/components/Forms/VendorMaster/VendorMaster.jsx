@@ -662,7 +662,7 @@ const VendorMaster = () => {
 
           {/* Add Partner Button */}
 
-          {ability.can("edit", "Vendor Master") && (
+          {ability.can("edit", "Business Partner") && (
             <button
               className="btn btn-primary add-btn"
               onClick={handleSetIsAddVendor}
@@ -1217,7 +1217,7 @@ const VendorMaster = () => {
                         >
                           <i className="fas fa-eye"></i>
                         </button>
-                        {ability.can("edit", "Vendor Master") && (
+                        {ability.can("edit", "Business Partner") && (
                           <button
                             className="btn-icon btn-success"
                             title="Edit"
@@ -1226,7 +1226,7 @@ const VendorMaster = () => {
                             <i className="fas fa-edit"></i>
                           </button>
                         )}
-                        {ability.can("edit", "Vendor Master") && (
+                        {ability.can("edit", "Business Partner") && (
                           <button
                             className="btn-icon btn-danger"
                             title="Delete"

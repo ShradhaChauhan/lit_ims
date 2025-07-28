@@ -653,7 +653,7 @@ const PartMaster = () => {
                           </span>
                         </div>
                       </td>
-                      <td className="actions">
+                      <td className="actions ps-3">
                         <button
                           className="btn-icon btn-primary"
                           title="View Details"

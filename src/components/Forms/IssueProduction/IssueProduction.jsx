@@ -401,12 +401,6 @@ const IssueProduction = () => {
     toast.info("Form cleared successfully");
   };
 
-  // Role based access
-  const { getPermission } = useContext(AppContext);
-  const { canView, canEdit } = getPermission("Issue to Production");
-
-  if (!canView) return <p>Access Denied</p>;
-
   return (
     <div>
       {" "}

@@ -7,6 +7,7 @@ import Select from "react-select";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import { AbilityContext } from "../../utils/AbilityContext";
+import VendorItemsMaster from "../Forms/VendorItemsMaster/VendorItemsMaster";
 
 const Users = () => {
   // Search filter states
@@ -429,7 +430,7 @@ const Users = () => {
   const masters = [
     {
       id: 1,
-      name: "Vendor Master",
+      name: "Business Partner",
       type: "vendorMaster",
     },
     {
@@ -551,6 +552,7 @@ const Users = () => {
   ];
   const modules = [
     "vendorMaster",
+    "vendorItemMaster",
     "itemMaster",
     "warehouseMaster",
     "bomMaster",
@@ -568,7 +570,8 @@ const Users = () => {
   ];
 
   const moduleLabels = {
-    vendorMaster: "Vendor Master",
+    vendorMaster: "Business Partner",
+    VendorItemMaster: "Vendor Item Master",
     itemMaster: "Item Master",
     warehouseMaster: "Warehouse Master",
     bom: "BOM Master",
@@ -1659,10 +1662,6 @@ const Users = () => {
       cleanupModalArtifacts();
     };
   }, []);
-
-  // Role based access
-  const { getPermission } = useContext(AppContext);
-  const { canView, canEdit } = getPermission("User Management");
 
   // Reset all filters
   const handleResetFilters = () => {
