@@ -18,8 +18,7 @@ const LoginPage = () => {
   const [branches, setBranches] = useState([]);
   const [error, setError] = useState("");
   const [responseUsername, setResponseUsername] = useState("");
-  const { setIsAuthenticated, setPermissions, setRole } =
-    useContext(AppContext);
+  const { setIsAuthenticated, setRole } = useContext(AppContext);
 
   const handleVerify = async (e) => {
     if (e?.preventDefault) e.preventDefault();
@@ -69,7 +68,6 @@ const LoginPage = () => {
       // Store permissions and token
       localStorage.setItem("token", token);
       localStorage.setItem("permissions", JSON.stringify(permissions));
-      setPermissions(permissions);
       setIsAuthenticated(true);
 
       if (rememberMe) {

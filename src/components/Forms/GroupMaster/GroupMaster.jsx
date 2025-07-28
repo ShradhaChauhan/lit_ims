@@ -4,6 +4,7 @@ import api from "../../../services/api";
 import { Link } from "react-router-dom";
 import { Modal } from "bootstrap";
 import { toast } from "react-toastify";
+import { AbilityContext } from "../../../utils/AbilityContext";
 
 const GroupMaster = () => {
   const [errors, setErrors] = useState({});
@@ -478,6 +479,9 @@ const GroupMaster = () => {
     return (a.trno || "").localeCompare(b.trno || "");
   });
 
+  // RBAC
+  const ability = useContext(AbilityContext);
+
   return (
     <div>
       {/* Header section */}
@@ -497,12 +501,14 @@ const GroupMaster = () => {
 
           {/* Add Group Button */}
 
-          <button
-            className="btn btn-primary add-btn"
-            onClick={handleSetIsAddGroup}
-          >
-            <i className="fa-solid fa-plus pe-1"></i> Add New Group
-          </button>
+          {ability.can("edit", "Group Master") && (
+            <button
+              className="btn btn-primary add-btn"
+              onClick={handleSetIsAddGroup}
+            >
+              <i className="fa-solid fa-plus pe-1"></i> Add New Group
+            </button>
+          )}
         </div>
       </nav>
 
@@ -813,24 +819,28 @@ const GroupMaster = () => {
                       >
                         <i className="fas fa-eye"></i>
                       </button>
-                      <button
-                        className="btn-icon btn-success"
-                        title="Edit"
-                        onClick={(e) => handleEditDetails(group, e)}
-                      >
-                        <i className="fas fa-edit"></i>
-                      </button>
-                      <button
-                        className="btn-icon btn-danger"
-                        title="Delete"
-                        onClick={() => {
-                          setGroupIdState(group.id);
-                          setConfirmType("single");
-                          handleShowConfirm("single");
-                        }}
-                      >
-                        <i className="fas fa-trash"></i>
-                      </button>
+                      {ability.can("edit", "Group Master") && (
+                        <button
+                          className="btn-icon btn-success"
+                          title="Edit"
+                          onClick={(e) => handleEditDetails(group, e)}
+                        >
+                          <i className="fas fa-edit"></i>
+                        </button>
+                      )}
+                      {ability.can("edit", "Group Master") && (
+                        <button
+                          className="btn-icon btn-danger"
+                          title="Delete"
+                          onClick={() => {
+                            setGroupIdState(group.id);
+                            setConfirmType("single");
+                            handleShowConfirm("single");
+                          }}
+                        >
+                          <i className="fas fa-trash"></i>
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))

@@ -31,22 +31,22 @@ const AppContextProvider = (props) => {
   };
 
   // Sync changes to localStorage
-  useEffect(() => {
-    localStorage.setItem("isAuthenticated", isAuthenticated);
-  }, [isAuthenticated]);
+  // useEffect(() => {
+  //   localStorage.setItem("isAuthenticated", isAuthenticated);
+  // }, [isAuthenticated]);
 
-  useEffect(() => {
-    const storedPermissions = localStorage.getItem("permissions");
-    try {
-      if (storedPermissions) {
-        const parsedPermissions = JSON.parse(storedPermissions);
-        setPermissions(parsedPermissions);
-      }
-    } catch (e) {
-      console.error("Failed to parse stored permissions:", e);
-      localStorage.removeItem("permissions");
-    }
-  }, []);
+  // useEffect(() => {
+  //   const storedPermissions = localStorage.getItem("permissions");
+  //   try {
+  //     if (storedPermissions) {
+  //       const parsedPermissions = JSON.parse(storedPermissions);
+  //       setPermissions(parsedPermissions);
+  //     }
+  //   } catch (e) {
+  //     console.error("Failed to parse stored permissions:", e);
+  //     localStorage.removeItem("permissions");
+  //   }
+  // }, []);
 
   useEffect(() => {
     const storedRole = localStorage.getItem("role");

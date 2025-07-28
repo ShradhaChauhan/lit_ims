@@ -5,6 +5,7 @@ import { AppContext } from "../../../context/AppContext";
 import { Link } from "react-router-dom";
 import api from "../../../services/api";
 import { toast } from "react-toastify";
+import { AbilityContext } from "../../../utils/AbilityContext";
 
 const VendorMaster = () => {
   const [errors, setErrors] = useState({});
@@ -639,6 +640,9 @@ const VendorMaster = () => {
     setErrors({});
   };
 
+  // RBAC
+  const ability = useContext(AbilityContext);
+
   return (
     <div>
       {/* Header section */}
@@ -658,12 +662,14 @@ const VendorMaster = () => {
 
           {/* Add Partner Button */}
 
-          <button
-            className="btn btn-primary add-btn"
-            onClick={handleSetIsAddVendor}
-          >
-            <i className="fa-solid fa-plus pe-1"></i> Add New Partner
-          </button>
+          {ability.can("edit", "Vendor Master") && (
+            <button
+              className="btn btn-primary add-btn"
+              onClick={handleSetIsAddVendor}
+            >
+              <i className="fa-solid fa-plus pe-1"></i> Add New Partner
+            </button>
+          )}
         </div>
       </nav>
 
@@ -1203,7 +1209,7 @@ const VendorMaster = () => {
                             vendor.status.slice(1)}
                         </span>
                       </td>
-                      <td className="actions">
+                      <td className="actions ps-4">
                         <button
                           className="btn-icon btn-primary"
                           title="View Details"
@@ -1211,24 +1217,28 @@ const VendorMaster = () => {
                         >
                           <i className="fas fa-eye"></i>
                         </button>
-                        <button
-                          className="btn-icon btn-success"
-                          title="Edit"
-                          onClick={() => handleShowEditModal(vendor.id)}
-                        >
-                          <i className="fas fa-edit"></i>
-                        </button>
-                        <button
-                          className="btn-icon btn-danger"
-                          title="Delete"
-                          onClick={() => {
-                            setPartnerIdState(vendor.id);
-                            setConfirmType("single");
-                            handleShowConfirm("single");
-                          }}
-                        >
-                          <i className="fas fa-trash"></i>
-                        </button>
+                        {ability.can("edit", "Vendor Master") && (
+                          <button
+                            className="btn-icon btn-success"
+                            title="Edit"
+                            onClick={() => handleShowEditModal(vendor.id)}
+                          >
+                            <i className="fas fa-edit"></i>
+                          </button>
+                        )}
+                        {ability.can("edit", "Vendor Master") && (
+                          <button
+                            className="btn-icon btn-danger"
+                            title="Delete"
+                            onClick={() => {
+                              setPartnerIdState(vendor.id);
+                              setConfirmType("single");
+                              handleShowConfirm("single");
+                            }}
+                          >
+                            <i className="fas fa-trash"></i>
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))

@@ -4,6 +4,7 @@ import api from "../../../services/api";
 import { Link } from "react-router-dom";
 import { Modal } from "bootstrap";
 import { toast } from "react-toastify";
+import { AbilityContext } from "../../../utils/AbilityContext";
 
 const TypeMaster = () => {
   const [errors, setErrors] = useState({});
@@ -416,6 +417,9 @@ const TypeMaster = () => {
     setSearchTerm("");
   };
 
+  // RBAC
+  const ability = useContext(AbilityContext);
+
   return (
     <div>
       {/* Header section */}
@@ -435,12 +439,14 @@ const TypeMaster = () => {
 
           {/* Add Type Button */}
 
-          <button
-            className="btn btn-primary add-btn"
-            onClick={handleSetIsAddType}
-          >
-            <i className="fa-solid fa-plus pe-1"></i> Add New Type
-          </button>
+          {ability.can("edit", "Type Master") && (
+            <button
+              className="btn btn-primary add-btn"
+              onClick={handleSetIsAddType}
+            >
+              <i className="fa-solid fa-plus pe-1"></i> Add New Type
+            </button>
+          )}
         </div>
       </nav>
 
@@ -708,29 +714,33 @@ const TypeMaster = () => {
                       >
                         <i className="fas fa-eye"></i>
                       </button>
-                      <button
-                        className="btn-icon btn-success"
-                        title="Edit"
-                        onClick={(e) => handleEditDetails(type, e)}
-                      >
-                        <i className="fas fa-edit"></i>
-                      </button>
-                      <button
-                        className="btn-icon btn-danger"
-                        title="Delete"
-                        disabled={isDeleting}
-                        onClick={() => {
-                          setTypeIdState(type.id);
-                          setConfirmType("single");
-                          handleShowConfirm("single");
-                        }}
-                      >
-                        {isDeleting ? (
-                          <i className="fas fa-spinner fa-spin"></i>
-                        ) : (
-                          <i className="fas fa-trash"></i>
-                        )}
-                      </button>
+                      {ability.can("edit", "Type Master") && (
+                        <button
+                          className="btn-icon btn-success"
+                          title="Edit"
+                          onClick={(e) => handleEditDetails(type, e)}
+                        >
+                          <i className="fas fa-edit"></i>
+                        </button>
+                      )}
+                      {ability.can("edit", "Type Master") && (
+                        <button
+                          className="btn-icon btn-danger"
+                          title="Delete"
+                          disabled={isDeleting}
+                          onClick={() => {
+                            setTypeIdState(type.id);
+                            setConfirmType("single");
+                            handleShowConfirm("single");
+                          }}
+                        >
+                          {isDeleting ? (
+                            <i className="fas fa-spinner fa-spin"></i>
+                          ) : (
+                            <i className="fas fa-trash"></i>
+                          )}
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))

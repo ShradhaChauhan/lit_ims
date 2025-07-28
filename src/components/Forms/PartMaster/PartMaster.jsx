@@ -4,6 +4,7 @@ import api from "../../../services/api";
 import { Link } from "react-router-dom";
 import { Modal } from "bootstrap";
 import { toast } from "react-toastify";
+import { AbilityContext } from "../../../utils/AbilityContext";
 
 const PartMaster = () => {
   const [errors, setErrors] = useState({});
@@ -315,6 +316,9 @@ const PartMaster = () => {
     setSearchTerm("");
   };
 
+  // RBAC
+  const ability = useContext(AbilityContext);
+
   return (
     <div>
       {/* Header section */}
@@ -334,12 +338,14 @@ const PartMaster = () => {
 
           {/* Add Part Button */}
 
-          <button
-            className="btn btn-primary add-btn"
-            onClick={handleSetIsAddPart}
-          >
-            <i className="fa-solid fa-plus pe-1"></i> Add New Part
-          </button>
+          {ability.can("edit", "Part Master") && (
+            <button
+              className="btn btn-primary add-btn"
+              onClick={handleSetIsAddPart}
+            >
+              <i className="fa-solid fa-plus pe-1"></i> Add New Part
+            </button>
+          )}
         </div>
       </nav>
 
@@ -655,24 +661,28 @@ const PartMaster = () => {
                         >
                           <i className="fas fa-eye"></i>
                         </button>
-                        <button
-                          className="btn-icon btn-success"
-                          title="Edit"
-                          onClick={(e) => handleEditDetails(part, e)}
-                        >
-                          <i className="fas fa-edit"></i>
-                        </button>
-                        <button
-                          className="btn-icon btn-danger"
-                          title="Delete"
-                          onClick={() => {
-                            setPartIdState(part.id);
-                            setConfirmType("single");
-                            handleShowConfirm("single");
-                          }}
-                        >
-                          <i className="fas fa-trash"></i>
-                        </button>
+                        {ability.can("edit", "Part Master") && (
+                          <button
+                            className="btn-icon btn-success"
+                            title="Edit"
+                            onClick={(e) => handleEditDetails(part, e)}
+                          >
+                            <i className="fas fa-edit"></i>
+                          </button>
+                        )}
+                        {ability.can("edit", "Part Master") && (
+                          <button
+                            className="btn-icon btn-danger"
+                            title="Delete"
+                            onClick={() => {
+                              setPartIdState(part.id);
+                              setConfirmType("single");
+                              handleShowConfirm("single");
+                            }}
+                          >
+                            <i className="fas fa-trash"></i>
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))

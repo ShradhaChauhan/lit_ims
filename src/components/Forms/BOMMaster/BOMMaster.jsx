@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { Modal } from "bootstrap";
 import { toast } from "react-toastify";
 import exportToExcel from "../../../utils/exportToExcel";
+import { AbilityContext } from "../../../utils/AbilityContext";
 
 const BOMMaster = () => {
   const [errors, setErrors] = useState({});
@@ -627,6 +628,9 @@ const BOMMaster = () => {
     setSelectedStatus("");
   };
 
+  // RBAC
+  const ability = useContext(AbilityContext);
+
   return (
     <div>
       <nav className="navbar bg-light border-body" data-bs-theme="light">
@@ -644,12 +648,14 @@ const BOMMaster = () => {
           </div>
           {/* Add BOM Button */}
 
-          <button
-            className="btn btn-primary add-btn"
-            onClick={handleSetIsAddBOM}
-          >
-            <i className="fa-solid fa-plus pe-1"></i> Add New BOM
-          </button>
+          {ability.can("edit", "BOM Master") && (
+            <button
+              className="btn btn-primary add-btn"
+              onClick={handleSetIsAddBOM}
+            >
+              <i className="fa-solid fa-plus pe-1"></i> Add New BOM
+            </button>
+          )}
         </div>
       </nav>
 
@@ -1099,24 +1105,28 @@ const BOMMaster = () => {
                       >
                         <i className="fas fa-eye"></i>
                       </button>
-                      <button
-                        className="btn-icon btn-success"
-                        title="Edit"
-                        onClick={(e) => handleEditDetails(bom, e)}
-                      >
-                        <i className="fas fa-edit"></i>
-                      </button>
-                      <button
-                        className="btn-icon btn-danger"
-                        title="Delete"
-                        onClick={() => {
-                          setBomIdState(bom.id);
-                          setConfirmType("single");
-                          handleShowConfirm("single");
-                        }}
-                      >
-                        <i className="fas fa-trash"></i>
-                      </button>
+                      {ability.can("edit", "BOM Master") && (
+                        <button
+                          className="btn-icon btn-success"
+                          title="Edit"
+                          onClick={(e) => handleEditDetails(bom, e)}
+                        >
+                          <i className="fas fa-edit"></i>
+                        </button>
+                      )}
+                      {ability.can("edit", "BOM Master") && (
+                        <button
+                          className="btn-icon btn-danger"
+                          title="Delete"
+                          onClick={() => {
+                            setBomIdState(bom.id);
+                            setConfirmType("single");
+                            handleShowConfirm("single");
+                          }}
+                        >
+                          <i className="fas fa-trash"></i>
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))

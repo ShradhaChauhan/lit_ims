@@ -26,6 +26,7 @@ import ProductionFloorReceipt from "../Forms/ProductionFloorReceipt/ProductionFl
 import ProductionMaterialUsage from "../Forms/ProductionMaterialUsage/ProductionMaterialUsage";
 import Users from "../Users/Users";
 import ApproveItemsQuantity from "../Forms/ApproveItemsQuantity/ApproveItemsQuantity";
+import { AbilityContext } from "../../utils/AbilityContext";
 
 const SideBar = () => {
   const {
@@ -59,7 +60,7 @@ const SideBar = () => {
       label: "Administrations",
       submenu: [
         {
-          label: "Users",
+          label: "User Management",
           compName: "Users",
           newPath: "users",
           path: "Administrations / Users",
@@ -302,6 +303,9 @@ const SideBar = () => {
       setRightSideComponent(<ApproveItemsQuantity />);
   };
 
+  // RBAC
+  const ability = useContext(AbilityContext);
+
   return (
     <div
       className={`d-flex flex-column vh-100 sidebar ${
@@ -389,18 +393,20 @@ const SideBar = () => {
               <ul className="nav flex-column ms-4">
                 {item.submenu.map((sub, subIdx) => (
                   <li key={subIdx} className="nav-item">
-                    <Link
-                      to={sub.newPath}
-                      onClick={() => {
-                        handleRightSideComponentName(sub.compName);
-                        setIsActiveComponent(sub.path);
-                        setLabelName(sub.label);
-                      }}
-                      className="nav-link text-white small menuListItem"
-                    >
-                      <i className={`${sub.icon} me-2`}></i>
-                      {sub.label}
-                    </Link>
+                    {ability.can("view", sub.label || "") && (
+                      <Link
+                        to={sub.newPath}
+                        onClick={() => {
+                          handleRightSideComponentName(sub.compName);
+                          setIsActiveComponent(sub.path);
+                          setLabelName(sub.label);
+                        }}
+                        className="nav-link text-white small menuListItem"
+                      >
+                        <i className={`${sub.icon} me-2`}></i>
+                        {sub.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>
