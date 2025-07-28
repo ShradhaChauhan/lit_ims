@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { Modal } from "bootstrap";
 import { toast } from "react-toastify";
 import exportToExcel from "../../../utils/exportToExcel";
+import { AbilityContext } from "../../../utils/AbilityContext";
 
 const ItemMaster = () => {
   const [errors, setErrors] = useState({});
@@ -676,6 +677,9 @@ const ItemMaster = () => {
     setSelectedStatus("");
   };
 
+  // RBAC
+  const ability = useContext(AbilityContext);
+
   return (
     <div>
       {/* Header section */}
@@ -695,12 +699,14 @@ const ItemMaster = () => {
 
           {/* Add Item Button */}
 
-          <button
-            className="btn btn-primary add-btn"
-            onClick={handleSetIsAddVendor}
-          >
-            <i className="fa-solid fa-plus pe-1"></i> Add New Item
-          </button>
+          {ability.can("edit", "Item Master") && (
+            <button
+              className="btn btn-primary add-btn"
+              onClick={handleSetIsAddVendor}
+            >
+              <i className="fa-solid fa-plus pe-1"></i> Add New Item
+            </button>
+          )}
         </div>
       </nav>
 
@@ -1244,29 +1250,33 @@ const ItemMaster = () => {
                       >
                         <i className="fas fa-eye"></i>
                       </button>
-                      <button
-                        className="btn-icon btn-success"
-                        title="Edit"
-                        onClick={(e) => handleEditDetails(item, e)}
-                      >
-                        <i className="fas fa-edit"></i>
-                      </button>
-                      <button
-                        className="btn-icon btn-danger"
-                        title="Delete"
-                        onClick={() => {
-                          setItemIdState(item.id);
-                          setConfirmType("single");
-                          handleShowConfirm("single");
-                        }}
-                        disabled={deleting}
-                      >
-                        {deleting ? (
-                          <i className="fas fa-spinner fa-spin"></i>
-                        ) : (
-                          <i className="fas fa-trash"></i>
-                        )}
-                      </button>
+                      {ability.can("edit", "Item Master") && (
+                        <button
+                          className="btn-icon btn-success"
+                          title="Edit"
+                          onClick={(e) => handleEditDetails(item, e)}
+                        >
+                          <i className="fas fa-edit"></i>
+                        </button>
+                      )}
+                      {ability.can("edit", "Item Master") && (
+                        <button
+                          className="btn-icon btn-danger"
+                          title="Delete"
+                          onClick={() => {
+                            setItemIdState(item.id);
+                            setConfirmType("single");
+                            handleShowConfirm("single");
+                          }}
+                          disabled={deleting}
+                        >
+                          {deleting ? (
+                            <i className="fas fa-spinner fa-spin"></i>
+                          ) : (
+                            <i className="fas fa-trash"></i>
+                          )}
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))

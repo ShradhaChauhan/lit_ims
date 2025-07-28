@@ -4,6 +4,7 @@ import api from "../../../services/api";
 import { Link } from "react-router-dom";
 import { Modal } from "bootstrap";
 import { toast } from "react-toastify";
+import { AbilityContext } from "../../../utils/AbilityContext";
 
 const WarehouseMaster = () => {
   const [errors, setErrors] = useState({});
@@ -520,6 +521,9 @@ const WarehouseMaster = () => {
     setStatusFilter("");
   };
 
+  // RBAC
+  const ability = useContext(AbilityContext);
+
   return (
     <div>
       {/* Header section */}
@@ -539,12 +543,14 @@ const WarehouseMaster = () => {
 
           {/* Add Warehouse Button */}
 
-          <button
-            className="btn btn-primary add-btn"
-            onClick={handleSetIsAddWarehouse}
-          >
-            <i className="fa-solid fa-plus pe-1"></i> Add New Warehouse
-          </button>
+          {ability.can("edit", "Warehouse Master") && (
+            <button
+              className="btn btn-primary add-btn"
+              onClick={handleSetIsAddWarehouse}
+            >
+              <i className="fa-solid fa-plus pe-1"></i> Add New Warehouse
+            </button>
+          )}
         </div>
       </nav>
 
@@ -873,24 +879,28 @@ const WarehouseMaster = () => {
                       >
                         <i className="fas fa-eye"></i>
                       </button>
-                      <button
-                        className="btn-icon btn-success"
-                        title="Edit"
-                        onClick={(e) => handleEditDetails(warehouse, e)}
-                      >
-                        <i className="fas fa-edit"></i>
-                      </button>
-                      <button
-                        className="btn-icon btn-danger"
-                        title="Delete"
-                        onClick={() => {
-                          setWarehouseIdState(warehouse.id);
-                          setConfirmType("single");
-                          handleShowConfirm("single");
-                        }}
-                      >
-                        <i className="fas fa-trash"></i>
-                      </button>
+                      {ability.can("edit", "Warehouse Master") && (
+                        <button
+                          className="btn-icon btn-success"
+                          title="Edit"
+                          onClick={(e) => handleEditDetails(warehouse, e)}
+                        >
+                          <i className="fas fa-edit"></i>
+                        </button>
+                      )}
+                      {ability.can("edit", "Warehouse Master") && (
+                        <button
+                          className="btn-icon btn-danger"
+                          title="Delete"
+                          onClick={() => {
+                            setWarehouseIdState(warehouse.id);
+                            setConfirmType("single");
+                            handleShowConfirm("single");
+                          }}
+                        >
+                          <i className="fas fa-trash"></i>
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))

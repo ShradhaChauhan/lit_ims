@@ -5,6 +5,7 @@ import { Modal } from "bootstrap";
 import api from "../../../services/api";
 import { toast } from "react-toastify";
 import exportToExcel from "../../../utils/exportToExcel";
+import { AbilityContext } from "../../../utils/AbilityContext";
 
 const VendorItemsMaster = () => {
   const [vendorItems, setVendorItems] = useState([]);
@@ -707,6 +708,9 @@ const VendorItemsMaster = () => {
     setSelectedStatusFilter("");
   };
 
+  // RBAC
+  const ability = useContext(AbilityContext);
+
   return (
     <div>
       {/* Header section */}
@@ -726,12 +730,14 @@ const VendorItemsMaster = () => {
 
           {/* Add Type Button */}
 
-          <button
-            className="btn btn-primary add-btn"
-            onClick={handleSetIsAddVendorItem}
-          >
-            <i className="fa-solid fa-plus pe-1"></i> Add New Assignment
-          </button>
+          {ability.can("edit", "Vendor Item Master") && (
+            <button
+              className="btn btn-primary add-btn"
+              onClick={handleSetIsAddVendorItem}
+            >
+              <i className="fa-solid fa-plus pe-1"></i> Add New Assignment
+            </button>
+          )}
         </div>
       </nav>
 
@@ -1148,24 +1154,28 @@ const VendorItemsMaster = () => {
                       >
                         <i className="fas fa-eye"></i>
                       </button>
-                      <button
-                        className="btn-icon btn-success"
-                        title="Edit"
-                        onClick={(e) => handleEditDetails(assignment, e)}
-                      >
-                        <i className="fas fa-edit"></i>
-                      </button>
-                      <button
-                        className="btn-icon btn-danger"
-                        title="Delete"
-                        onClick={() => {
-                          setVendorItemIdState(assignment.id);
-                          setConfirmType("single");
-                          handleShowConfirm("single");
-                        }}
-                      >
-                        <i className="fas fa-trash"></i>
-                      </button>
+                      {ability.can("edit", "Vendor Item Master") && (
+                        <button
+                          className="btn-icon btn-success"
+                          title="Edit"
+                          onClick={(e) => handleEditDetails(assignment, e)}
+                        >
+                          <i className="fas fa-edit"></i>
+                        </button>
+                      )}
+                      {ability.can("edit", "Vendor Item Master") && (
+                        <button
+                          className="btn-icon btn-danger"
+                          title="Delete"
+                          onClick={() => {
+                            setVendorItemIdState(assignment.id);
+                            setConfirmType("single");
+                            handleShowConfirm("single");
+                          }}
+                        >
+                          <i className="fas fa-trash"></i>
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))
