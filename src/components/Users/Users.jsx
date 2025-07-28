@@ -6,6 +6,7 @@ import { Modal } from "bootstrap";
 import Select from "react-select";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
+import { AbilityContext } from "../../utils/AbilityContext";
 
 const Users = () => {
   // Search filter states
@@ -433,26 +434,36 @@ const Users = () => {
     },
     {
       id: 2,
+      name: "Vendor Item Master",
+      type: "vendorItemMaster",
+    },
+    {
+      id: 3,
       name: "Part Master",
       type: "partMaster",
     },
     {
-      id: 3,
+      id: 4,
       name: "BOM Master",
       type: "bomMaster",
     },
     {
-      id: 4,
+      id: 5,
+      name: "Type Master",
+      type: "typeMaster",
+    },
+    {
+      id: 6,
       name: "Group Master",
       type: "groupMaster",
     },
     {
-      id: 5,
+      id: 7,
       name: "Item Master",
       type: "itemMaster",
     },
     {
-      id: 6,
+      id: 8,
       name: "Warehouse Master",
       type: "warehouseMaster",
     },
@@ -460,7 +471,7 @@ const Users = () => {
   const transactions = [
     {
       id: 1,
-      name: "Material Incoming",
+      name: "Store Material Inward",
       type: "materialIncoming",
     },
     {
@@ -475,12 +486,12 @@ const Users = () => {
     },
     {
       id: 4,
-      name: "Issue to Production",
+      name: "Material Issue Transfer",
       type: "issuetoProduction",
     },
     {
       id: 5,
-      name: "Production Floor Receipt",
+      name: "Material Receipt",
       type: "productionFloorReceipt",
     },
     {
@@ -497,18 +508,18 @@ const Users = () => {
   const reports = [
     {
       id: 1,
-      name: "Inventory Reports",
-      type: "inventoryReports",
+      name: "Inventory Audit Report",
+      type: "inventoryAuditReport",
     },
     {
       id: 2,
-      name: "Transaction Reports",
-      type: "transactionReports",
+      name: "Transaction Report",
+      type: "transactionReport",
     },
     {
       id: 3,
-      name: "Production Reports",
-      type: "productionReports",
+      name: "Production Report",
+      type: "productionReport",
     },
   ];
   const administrations = [
@@ -529,7 +540,7 @@ const Users = () => {
     },
     {
       id: 4,
-      name: "Audit Logs",
+      name: "Activity Logs",
       type: "auditLogs",
     },
     {
@@ -1660,6 +1671,9 @@ const Users = () => {
     setFilterStatus("");
   };
 
+  // RBAC
+  const ability = useContext(AbilityContext);
+
   return (
     <div>
       {/* Header section */}
@@ -1679,12 +1693,14 @@ const Users = () => {
 
           {/* Add User Button */}
 
-          <button
-            className="btn btn-primary add-btn"
-            onClick={handleLoadBranchDropdownValues}
-          >
-            <i className="fa-solid fa-plus pe-1"></i> Add New User
-          </button>
+          {ability.can("edit", "User Management") && (
+            <button
+              className="btn btn-primary add-btn"
+              onClick={handleLoadBranchDropdownValues}
+            >
+              <i className="fa-solid fa-plus pe-1"></i> Add New User
+            </button>
+          )}
         </div>
       </nav>
       {/* Search and Filter Section */}
@@ -2524,31 +2540,35 @@ const Users = () => {
                         >
                           <i className="fas fa-eye"></i>
                         </button>
-                        <button
-                          className="btn-icon btn-success"
-                          title="Edit"
-                          onClick={(e) => handleEditDetails(user, e)}
-                        >
-                          <i className="fas fa-edit"></i>
-                        </button>
-                        <button
-                          className="btn-icon btn-danger"
-                          title="Delete"
-                          onClick={() => {
-                            setUserIdState(user.id);
-                            setConfirmType("single");
-                            handleShowConfirm("single");
-                          }}
-                          disabled={deleteLoading}
-                        >
-                          <i
-                            className={
-                              deleteLoading
-                                ? "fas fa-spinner fa-spin"
-                                : "fas fa-trash"
-                            }
-                          ></i>
-                        </button>
+                        {ability.can("edit", "User Management") && (
+                          <button
+                            className="btn-icon btn-success"
+                            title="Edit"
+                            onClick={(e) => handleEditDetails(user, e)}
+                          >
+                            <i className="fas fa-edit"></i>
+                          </button>
+                        )}
+                        {ability.can("edit", "User Management") && (
+                          <button
+                            className="btn-icon btn-danger"
+                            title="Delete"
+                            onClick={() => {
+                              setUserIdState(user.id);
+                              setConfirmType("single");
+                              handleShowConfirm("single");
+                            }}
+                            disabled={deleteLoading}
+                          >
+                            <i
+                              className={
+                                deleteLoading
+                                  ? "fas fa-spinner fa-spin"
+                                  : "fas fa-trash"
+                              }
+                            ></i>
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))
