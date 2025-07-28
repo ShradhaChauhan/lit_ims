@@ -20,6 +20,7 @@ const WIPReturn = () => {
   const [returnQty, setReturnQty] = useState("");
   const [reason, setReason] = useState("");
   const [newBatchNumber, setNewBatchNumber] = useState("");
+  const [recentReturns, setRecentReturns] = useState([]);
   // Pagination states
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -179,9 +180,12 @@ const WIPReturn = () => {
         returnQty: item.returnQty,
         returnReason: item.reason,
       }));
+      console.log(order);
+      const workOrder = recentReceipts.find((r) => r.id === Number(order));
 
       const data = {
         transactionNumber: transactionNumber,
+        receiptNumber: workOrder.transactionNumber,
         returnType: type,
         returnDate: date,
         workOrderId: order,
@@ -189,14 +193,46 @@ const WIPReturn = () => {
         returnItems: transformedReturnItems,
       };
 
-      console.log("data" + JSON.stringify(data[0], null, 2));
+      console.log("data: " + JSON.stringify(data));
+
       const response = await api.post(`/api/wip-return`, data);
       toast.success("Successfully returned the items");
+      handleReset();
+      getRecentReturns();
     } catch (error) {
-      toast.error("Unable to process return request");
+      toast.error("Unable to process return request. Please try again!");
       console.error(error);
     }
   };
+
+  const handleReset = () => {
+    setOrder("");
+    setType("");
+    setWarehouse("");
+    setReturnItems([]);
+  };
+
+  useEffect(() => {
+    getRecentReturns();
+  }, []);
+
+  const getRecentReturns = async () => {
+    try {
+      const response = await api.get("/api/wip-return/recent/summary");
+      setRecentReturns(response.data.data);
+    } catch (error) {
+      toast.error("Error in fetching returned items");
+      console.error("Error fetching returned items:", error);
+    }
+  };
+
+  useEffect(() => {
+    setPagination((prev) => ({
+      ...prev,
+      totalItems: recentReturns.length,
+      totalPages: Math.ceil(recentReturns.length / prev.itemsPerPage),
+    }));
+  }, [recentReturns, pagination.itemsPerPage]);
 
   return (
     <div>
@@ -488,61 +524,82 @@ const WIPReturn = () => {
                     </tr>
                   </thead>
                   <tbody className="text-break">
-                    <tr className="no-data-row">
-                      <td colSpan="7" className="no-data-cell">
-                        <div className="no-data-content">
-                          <i className="fas fa-clock-rotate-left no-data-icon"></i>
-                          <p className="no-data-text">No Recent Returns</p>
-                        </div>
-                      </td>
-                    </tr>
+                    {recentReturns.length === 0 ? (
+                      <tr className="no-data-row">
+                        <td colSpan="7" className="no-data-cell">
+                          <div className="no-data-content">
+                            <i className="fas fa-clock-rotate-left no-data-icon"></i>
+                            <p className="no-data-text">No Recent Returns</p>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      recentReturns
+                        .slice(
+                          (pagination.currentPage - 1) *
+                            pagination.itemsPerPage,
+                          pagination.currentPage * pagination.itemsPerPage
+                        )
+                        .map((r, index) => (
+                          <tr key={index}>
+                            <td className="ps-4">{r.date}</td>
+                            <td className="ps-4">{r.transactionNumber}</td>
+                            <td className="ps-4">{r.workOrderId}</td>
+                            <td className="ps-4">{r.returnType}</td>
+                            <td className="ps-4">
+                              <ul>
+                                {r.items.map((i, iIndex) => (
+                                  <li key={iIndex}>{i}</li>
+                                ))}
+                              </ul>
+                            </td>
+                            <td className="ps-4">{r.totalValue}</td>
+                            <td className="ps-4">{r.status}</td>
+                          </tr>
+                        ))
+                    )}
                   </tbody>
                 </table>
                 {/* Pagination */}
                 <div className="pagination-container">
                   <div className="pagination-info">
-                    Showing {getDisplayRange()} of {filteredItems.length}{" "}
+                    Showing {getDisplayRange()} of {pagination.totalItems}{" "}
                     entries
                   </div>
+
                   <div className="pagination">
                     <button
                       className="btn-page"
-                      disabled={pagination.currentPage === 1}
                       onClick={() =>
                         handlePageChange(pagination.currentPage - 1)
                       }
+                      disabled={pagination.currentPage === 1}
                     >
                       <i className="fas fa-chevron-left"></i>
                     </button>
 
-                    {getPageNumbers().map((page, index) =>
-                      page === "..." ? (
-                        <span
-                          key={`ellipsis-${index}`}
-                          className="pagination-ellipsis"
-                        >
-                          ...
-                        </span>
-                      ) : (
-                        <button
-                          key={page}
-                          className={`btn-page ${
-                            pagination.currentPage === page ? "active" : ""
-                          }`}
-                          onClick={() => handlePageChange(page)}
-                        >
-                          {page}
-                        </button>
-                      )
-                    )}
+                    {getPageNumbers().map((page, index) => (
+                      <button
+                        key={index}
+                        className={`btn-page ${
+                          pagination.currentPage === page ? "active" : ""
+                        }`}
+                        onClick={() =>
+                          typeof page === "number" && handlePageChange(page)
+                        }
+                        disabled={page === "..."}
+                      >
+                        {page}
+                      </button>
+                    ))}
 
                     <button
                       className="btn-page"
-                      disabled={
-                        pagination.currentPage === pagination.totalPages
-                      }
                       onClick={() =>
                         handlePageChange(pagination.currentPage + 1)
+                      }
+                      disabled={
+                        pagination.currentPage === pagination.totalPages
                       }
                     >
                       <i className="fas fa-chevron-right"></i>

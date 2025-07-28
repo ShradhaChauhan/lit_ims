@@ -1,432 +1,317 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { AppContext } from "../../context/AppContext";
 import "./LandingPage.css";
 import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  AreaChart,
-  Area,
-  LabelList,
-} from "recharts";
+  FaBoxOpen,
+  FaClock,
+  FaClipboardCheck,
+  FaIndustry,
+  FaTruckLoading,
+  FaShippingFast,
+  FaUndoAlt,
+  FaChartLine,
+} from "react-icons/fa";
 import api from "../../services/api";
 import { toast } from "react-toastify";
 
-// Sample data - replace with actual API calls in production
-const inventoryStatusData = [
-  { name: "In Stock", value: 65, color: "#278dedff" },
-  { name: "Low Stock", value: 0, color: "#494b51ff" },
-  { name: "Out of Stock", value: 10, color: "#7c6dc0ff" },
+const cardData = [
+  {
+    title: "Total Items",
+    value: "15,234",
+    change: "+12% from last month",
+    icon: <FaBoxOpen />,
+    iconColor: "bg-primary",
+    changeColor: "text-success",
+  },
+  {
+    title: "Pending Approvals",
+    value: "8",
+    change: "+3 from yesterday",
+    icon: <FaClock />,
+    iconColor: "bg-warning",
+    changeColor: "text-danger",
+  },
+  {
+    title: "QC Pending",
+    value: "12",
+    change: "+5 from yesterday",
+    icon: <FaClipboardCheck />,
+    iconColor: "bg-danger",
+    changeColor: "text-danger",
+  },
+  {
+    title: "Production Orders",
+    value: "23",
+    change: "+8% from last week",
+    icon: <FaIndustry />,
+    iconColor: "bg-success",
+    changeColor: "text-success",
+  },
+  {
+    title: "Incoming Process",
+    value: "47",
+    change: "15 pending QC",
+    icon: <FaTruckLoading />,
+    iconColor: "bg-primary",
+    changeColor: "text-success",
+  },
+  {
+    title: "Production Dispatch",
+    value: "34",
+    change: "8 pending issue",
+    icon: <FaShippingFast />,
+    iconColor: "bg-info",
+    changeColor: "text-success",
+  },
+  {
+    title: "WIP Returns",
+    value: "7",
+    change: "-2 from yesterday",
+    icon: <FaUndoAlt />,
+    iconColor: "bg-warning",
+    changeColor: "text-danger",
+  },
+  {
+    title: "Audit Accuracy",
+    value: "94.3%",
+    change: "+2.1% from last audit",
+    icon: <FaChartLine />,
+    iconColor: "bg-success",
+    changeColor: "text-success",
+  },
 ];
 
-const monthlyInventoryData = [
-  { name: "Jan", inflow: 4000, outflow: 2400 },
-  { name: "Feb", inflow: 3000, outflow: 1398 },
-  { name: "Mar", inflow: 2000, outflow: 9800 },
-  { name: "Apr", inflow: 2780, outflow: 3908 },
-  { name: "May", inflow: 1890, outflow: 4800 },
-  { name: "Jun", inflow: 2390, outflow: 3800 },
-  { name: "Jul", inflow: 3490, outflow: 4300 },
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  CartesianGrid,
+  ResponsiveContainer,
+} from "recharts";
+
+const dataSets = {
+  7: [
+    { name: "Mon", Inward: 70, Outward: 30 },
+    { name: "Tue", Inward: 60, Outward: 50 },
+    { name: "Wed", Inward: 80, Outward: 40 },
+    { name: "Thu", Inward: 65, Outward: 70 },
+    { name: "Fri", Inward: 60, Outward: 90 },
+    { name: "Sat", Inward: 55, Outward: 40 },
+    { name: "Sun", Inward: 45, Outward: 85 },
+  ],
+  30: [
+    // Add realistic or dummy data
+  ],
+  90: [
+    // Add realistic or dummy data
+  ],
+};
+
+// Sliding window dummy data
+const frames = [
+  { id: 1, text: "Frame 1: Welcome to Inventory" },
+  { id: 2, text: "Frame 2: Track your Orders" },
+  { id: 3, text: "Frame 3: Review Reports" },
+  { id: 4, text: "Frame 4: Analyze Stock" },
 ];
-
-const topMovingItems = [
-  { name: "Item A", quantity: 120 },
-  { name: "Item B", quantity: 98 },
-  { name: "Item C", quantity: 86 },
-  { name: "Item D", quantity: 75 },
-  { name: "Item E", quantity: 62 },
-];
-
-// Custom tooltip for QC status
-const QCTooltip = ({ active, payload }) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="custom-tooltip">
-        <p className="label">{`${payload[0].name}: ${payload[0].value}`}</p>
-        <p className="desc">{getQCDescription(payload[0].name)}</p>
-      </div>
-    );
-  }
-  return null;
-};
-
-// Helper function to get QC status description
-const getQCDescription = (status) => {
-  switch (status) {
-    case "Pass":
-      return "Items that passed quality check";
-    case "Fail":
-      return "Items that failed quality check";
-    case "Pending":
-      return "Items awaiting quality inspection";
-    default:
-      return "Unknown status";
-  }
-};
-
-// Color mapping for QC status
-const QC_COLORS = {
-  Pass: "#278dedff", // Green
-  Fail: "#494b51ff", // Red
-  Pending: "#7c6dc0ff", // Amber
-};
 
 const LandingPage = () => {
-  const { rightSideComponent, setRightSideComponent } = useContext(AppContext);
-  const [qcData, setQcData] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [inventorySummary, setInventorySummary] = useState({
-    totalItems: 0,
-    totalValue: 0,
-    lowStockItems: 0,
-    recentTransactions: 0,
-  });
-  const [qcSummary, setQcSummary] = useState({
-    total: 0,
-    passRate: 0,
-    failRate: 0,
-    pendingRate: 0,
-  });
+  const [range, setRange] = useState("7");
 
-  // Fetch QC data from the correct API endpoint
-  const getQCData = async () => {
-    setIsLoading(true);
-    try {
-      const response = await api.get("/api/receipt/iqc-count");
-      const { data } = response.data;
-
-      // Calculate total
-      const totalCount = data.pendingCount + data.passCount + data.failCount;
-
-      // Format data for chart
-      const chartData = [
-        { name: "Pass", value: data.passCount, fill: QC_COLORS["Pass"] },
-        { name: "Fail", value: data.failCount, fill: QC_COLORS["Fail"] },
-        {
-          name: "Pending",
-          value: data.pendingCount,
-          fill: QC_COLORS["Pending"],
-        },
-      ];
-
-      // Calculate rates
-      setQcSummary({
-        total: totalCount,
-        passRate: totalCount
-          ? Math.round((data.passCount / totalCount) * 100)
-          : 0,
-        failRate: totalCount
-          ? Math.round((data.failCount / totalCount) * 100)
-          : 0,
-        pendingRate: totalCount
-          ? Math.round((data.pendingCount / totalCount) * 100)
-          : 0,
-      });
-
-      setQcData(chartData);
-    } catch (error) {
-      toast.error("Error: Unable to fetch QC data.");
-      console.error("Error fetching QC data:", error);
-
-      // Set default data for visualization
-      const defaultData = [
-        { name: "Pass", value: 10, fill: QC_COLORS["Pass"] },
-        { name: "Fail", value: 0, fill: QC_COLORS["Fail"] },
-        { name: "Pending", value: 5, fill: QC_COLORS["Pending"] },
-      ];
-
-      setQcData(defaultData);
-      setQcSummary({
-        total: 15,
-        passRate: 67,
-        failRate: 0,
-        pendingRate: 33,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Fetch inventory summary data
-  const getInventorySummary = async () => {
-    // In a real application, replace this with actual API call
-    setInventorySummary({
-      totalItems: 1245,
-      totalValue: 567890,
-      lowStockItems: 0,
-      recentTransactions: 156,
-    });
-  };
+  // Sliding window
+  const [index, setIndex] = useState(0);
 
   useEffect(() => {
-    getQCData();
-    getInventorySummary();
+    const interval = setInterval(() => {
+      setIndex((prev) => (prev + 1) % frames.length);
+    }, 4000); // every 4 seconds
+
+    return () => clearInterval(interval); // cleanup
   }, []);
+
+  // Line Chart
+  const LineChartCard = ({ title, data }) => (
+    <div style={{ width: "100%", height: 300, boxSizing: "border-box" }}>
+      <h5 className="text-center mb-3">{title}</h5>
+      <ResponsiveContainer>
+        <LineChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="day" />
+          <YAxis />
+          <Tooltip />
+          <Legend />
+          <Line
+            type="monotone"
+            dataKey="inward"
+            stroke="#007bff"
+            strokeWidth={2}
+          />
+          <Line
+            type="monotone"
+            dataKey="outward"
+            stroke="#dc3545"
+            strokeWidth={2}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+
+  // Banner Carousel
+  const chartData = [
+    {
+      title: "Week 1",
+      lineColor1: "#3b82f6",
+      lineColor2: "#ef4444",
+      data: [
+        { day: "Mon", inward: 50, outward: 30 },
+        { day: "Tue", inward: 45, outward: 40 },
+        { day: "Wed", inward: 65, outward: 30 },
+        { day: "Thu", inward: 70, outward: 20 },
+        { day: "Fri", inward: 60, outward: 80 },
+        { day: "Sat", inward: 55, outward: 50 },
+        { day: "Sun", inward: 40, outward: 75 },
+      ],
+    },
+    {
+      title: "Week 2",
+      lineColor1: "#a23bf6ff",
+      lineColor2: "#ef5e44ff",
+      data: [
+        { day: "Mon", inward: 30, outward: 25 },
+        { day: "Tue", inward: 35, outward: 30 },
+        { day: "Wed", inward: 50, outward: 45 },
+        { day: "Thu", inward: 60, outward: 40 },
+        { day: "Fri", inward: 55, outward: 60 },
+        { day: "Sat", inward: 70, outward: 50 },
+        { day: "Sun", inward: 65, outward: 55 },
+      ],
+    },
+    // Add more as needed
+  ];
+
+  const [current, setCurrent] = useState(0);
+  const intervalRef = useRef(null);
+  const total = chartData.length;
+
+  // Auto-slide
+  useEffect(() => {
+    startAutoSlide();
+    return stopAutoSlide;
+  }, []);
+
+  const startAutoSlide = () => {
+    intervalRef.current = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % total);
+    }, 9000);
+  };
+
+  const stopAutoSlide = () => {
+    clearInterval(intervalRef.current);
+  };
+
+  const handlePrev = () => {
+    setCurrent((prev) => (prev - 1 + total) % total);
+  };
+
+  const handleNext = () => {
+    setCurrent((prev) => (prev + 1) % total);
+  };
 
   return (
     <div className="dashboard-container">
-      {/* Simple Header */}
-      <div className="dashboard-header">
-        <div>
-          <h2 className="dashboard-title">Dashboard</h2>
-          <p className="dashboard-breadcrumb">
-            <Link to="/dashboard">
-              <i className="fas fa-home"></i>
-            </Link>
-            <span> / Dashboard</span>
-          </p>
-        </div>
-      </div>
-
-      {/* Summary Cards */}
-      <div className="summary-cards">
-        <Link to="/item-master" className="text-decoration-none">
-          <div className="summary-card">
-            <div className="card-icon blue">
-              <i className="fas fa-box"></i>
-            </div>
-            <div className="card-content">
-              <h3>{inventorySummary.totalItems}</h3>
-              <p>Total Items</p>
-            </div>
-          </div>
-        </Link>
-        <div className="summary-card">
-          <div className="card-icon blue">
-            <i className="fas fa-dollar-sign"></i>
-          </div>
-          <div className="card-content">
-            <h3>${inventorySummary.totalValue.toLocaleString()}</h3>
-            <p>Inventory Value</p>
+      {/* Header section */}
+      <nav className="navbar bg-light border-body" data-bs-theme="light">
+        <div className="container-fluid p-0">
+          <div className="mt-4">
+            <h3 className="nav-header header-style">Dashboard</h3>
+            <p className="breadcrumb">
+              <Link to="/dashboard">
+                <i className="fas fa-home text-8"></i>
+              </Link>{" "}
+              <span className="ms-1 mt-1 text-small-gray">/ Dashboard</span>
+            </p>
           </div>
         </div>
-        <div className="summary-card">
-          <div className="card-icon blue">
-            <i className="fas fa-exclamation-triangle"></i>
-          </div>
-          <div className="card-content">
-            <h3>{inventorySummary.lowStockItems}</h3>
-            <p>Low Stock Items</p>
-          </div>
-        </div>
-        <Link to="/activity-logs" className="text-decoration-none">
-          <div className="summary-card">
-            <div className="card-icon blue">
-              <i className="fas fa-exchange-alt"></i>
-            </div>
-            <div className="card-content">
-              <h3>{inventorySummary.recentTransactions}</h3>
-              <p>Recent Transactions</p>
-            </div>
-          </div>
-        </Link>
-      </div>
+      </nav>
 
-      {/* Enhanced Quality Check Status */}
-      <div className="chart-container qc-status-container">
-        <div className="chart-header">
-          <h3>Quality Check Status</h3>
-          <Link to="/incoming-qc" className="view-all-link">
-            View All QC Records <i className="fas fa-arrow-right"></i>
-          </Link>
-        </div>
-
-        {isLoading ? (
-          <div className="loading-indicator">
-            <i className="fas fa-spinner fa-spin"></i> Loading QC data...
-          </div>
-        ) : (
-          <div className="qc-content">
-            <div className="qc-summary">
-              <div className="qc-stat">
-                <div className="stat-value">{qcSummary.total}</div>
-                <div className="stat-label">Total Items</div>
-              </div>
-              <div className="qc-stat pass">
-                <div className="stat-value">{qcSummary.passRate}%</div>
-                <div className="stat-label">Pass Rate</div>
-              </div>
-              <div className="qc-stat fail">
-                <div className="stat-value">{qcSummary.failRate}%</div>
-                <div className="stat-label">Fail Rate</div>
-              </div>
-              <div className="qc-stat hold">
-                <div className="stat-value">{qcSummary.pendingRate}%</div>
-                <div className="stat-label">Pending Rate</div>
-              </div>
-            </div>
-
-            <div className="qc-chart">
-              {qcSummary.total === 0 ? (
-                <div className="no-data-message">
-                  <i className="fas fa-info-circle"></i> No QC data available at
-                  this time.
-                </div>
-              ) : (
-                <div className="qc-charts-container">
-                  <div className="qc-pie-chart">
-                    <ResponsiveContainer width="100%" height={250}>
-                      <PieChart>
-                        <Pie
-                          data={qcData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={80}
-                          paddingAngle={5}
-                          dataKey="value"
-                          label={(entry) => `${entry.name}: ${entry.value}`}
-                        >
-                          {qcData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.fill} />
-                          ))}
-                        </Pie>
-                        <Tooltip content={<QCTooltip />} />
-                        <Legend />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="qc-bar-chart">
-                    <ResponsiveContainer width="100%" height={250}>
-                      <BarChart data={qcData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip content={<QCTooltip />} />
-                        <Bar
-                          dataKey="value"
-                          name="Quantity"
-                          radius={[4, 4, 0, 0]}
-                        >
-                          {qcData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.fill} />
-                          ))}
-                          <LabelList dataKey="value" position="top" />
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
+      {/* Banner  */}
+      <div className="summary row g-4">
+        {cardData.map((card, index) => (
+          <div className="col-sm-6 col-md-4 col-lg-3" key={index}>
+            <div className="card h-100 shadow-sm border-0 rounded-3">
+              <div className="card-body d-flex flex-column">
+                <div className="d-flex align-items-center justify-content-between mb-2">
+                  <h6 className="text-muted">{card.title}</h6>
+                  <div
+                    className={`icon-box text-white d-flex align-items-center justify-content-center rounded-circle ${card.iconColor}`}
+                    style={{ width: 32, height: 32 }}
+                  >
+                    {card.icon}
                   </div>
                 </div>
-              )}
+                <h4 className="fw-bold">{card.value}</h4>
+                <p className={`mb-0 small ${card.changeColor}`}>
+                  {card.change}
+                </p>
+              </div>
             </div>
           </div>
-        )}
+        ))}
       </div>
 
-      {/* Charts Row 1 */}
-      <div className="charts-row">
-        <div className="chart-container">
-          <div className="chart-header">
-            <h3>Inventory Status</h3>
-          </div>
-          <div className="chart-body">
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie
-                  data={inventoryStatusData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  fill="#7c9dd3ff"
-                  paddingAngle={5}
-                  dataKey="value"
-                  label
+      {/* Banner Carousel */}
+      <div
+        className="graph-carousel border rounded position-relative p-3 bg-white shadow-sm mt-4 p-4"
+        onMouseEnter={stopAutoSlide}
+        onMouseLeave={startAutoSlide}
+      >
+        <button className="carousel-arrow left" onClick={handlePrev}>
+          &#8249;
+        </button>
+        <button className="carousel-arrow right" onClick={handleNext}>
+          &#8250;
+        </button>
+
+        <h5 className="text-center">{chartData[current].title}</h5>
+        {/* Buttons on Right */}
+        {/* <div className="text-end flex-grow-1">
+              {["7", "30", "90"].map((day) => (
+                <button
+                  key={day}
+                  className={`btn btn-sm mx-1 ${
+                    range === day ? "btn-primary" : "btn-outline-secondary"
+                  }`}
+                  onClick={() => setRange(day)}
                 >
-                  {inventoryStatusData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        <div className="chart-container">
-          <div className="chart-header">
-            <h3>Monthly Inventory Flow</h3>
-          </div>
-          <div className="chart-body">
-            <ResponsiveContainer width="100%" height={250}>
-              <AreaChart data={monthlyInventoryData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Area
-                  type="monotone"
-                  dataKey="inflow"
-                  stackId="1"
-                  stroke="#278dedff"
-                  fill="#278dedff"
-                />
-                <Area
-                  type="monotone"
-                  dataKey="outflow"
-                  stackId="1"
-                  stroke="#737576ff"
-                  fill="#737576ff"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-
-      {/* Charts Row 2 */}
-      <div className="charts-row">
-        <div className="chart-container">
-          <div className="chart-header">
-            <h3>Top Moving Items</h3>
-          </div>
-          <div className="chart-body">
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart layout="vertical" data={topMovingItems}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" />
-                <YAxis dataKey="name" type="category" />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="quantity" fill="#278dedff" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Links */}
-      <div className="quick-links-container">
-        <h3>Quick Actions</h3>
-        <div className="quick-links">
-          <Link to="/material-incoming" className="quick-link">
-            <i className="fas fa-truck-loading"></i>
-            <span>Material Incoming</span>
-          </Link>
-          <Link to="/issue-to-production" className="quick-link">
-            <i className="fas fa-dolly"></i>
-            <span>Material Issue Transfer</span>
-          </Link>
-          <Link to="/inventory-audit-report" className="quick-link">
-            <i className="fas fa-chart-bar"></i>
-            <span>Inventory Report</span>
-          </Link>
-          <Link to="/item-master" className="quick-link">
-            <i className="fas fa-boxes"></i>
-            <span>Item Master</span>
-          </Link>
-        </div>
+                  {day} Days
+                </button>
+              ))}
+            </div> */}
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={chartData[current].data}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="day" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Line
+              type="monotone"
+              dataKey="inward"
+              stroke={chartData[current].lineColor1}
+              strokeWidth={3}
+            />
+            <Line
+              type="monotone"
+              dataKey="outward"
+              stroke={chartData[current].lineColor2}
+              strokeWidth={3}
+            />
+          </LineChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
