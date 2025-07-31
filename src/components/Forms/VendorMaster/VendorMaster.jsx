@@ -125,8 +125,8 @@ const VendorMaster = () => {
     const fetchCountries = async () => {
       try {
         const response = await api.get("/api/location/countries");
+        console.log("Country : " + response.data);
         setCountryList(response.data.data);
-        console.log(response.data.data);
       } catch (err) {
         console.error("Error fetching states:", err);
       }
@@ -151,7 +151,6 @@ const VendorMaster = () => {
           `/api/location/states?countryId=${countryId}`
         );
         setStateList(response.data.data);
-        console.log(response.data.data);
       } catch (err) {
         console.error("Error fetching states:", err);
       }
@@ -570,6 +569,7 @@ const VendorMaster = () => {
       address: "",
       status: "active",
     });
+    setQuery("");
     setIsChecked(true);
     setStatus("active");
   };

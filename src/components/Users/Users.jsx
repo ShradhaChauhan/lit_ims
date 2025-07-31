@@ -2695,7 +2695,7 @@ const Users = () => {
                   aria-label="Close"
                 ></button>
               </div>
-              <div className="modal-body">
+              <div className="modal-body" style={{ overflowX: "hidden" }}>
                 {/* Basic Information */}
                 <div className="user-details-grid">
                   <div className="detail-item">

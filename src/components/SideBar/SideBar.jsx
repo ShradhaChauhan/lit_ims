@@ -199,13 +199,13 @@ const SideBar = () => {
           path: "Transactions /Production Floor Receipt",
           icon: "fas fa-circle-check",
         },
-        {
-          label: "Production Material Usage",
-          compName: "ProductionMaterialUsage",
-          newPath: "production-material-usage",
-          path: "Transactions / Production Material Usage",
-          icon: "fas fa-industry",
-        },
+        // {
+        //   label: "Production Material Usage",
+        //   compName: "ProductionMaterialUsage",
+        //   newPath: "production-material-usage",
+        //   path: "Transactions / Production Material Usage",
+        //   icon: "fas fa-industry",
+        // },
         {
           label: "WIP Return",
           compName: "WIPReturn",

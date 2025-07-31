@@ -149,13 +149,6 @@ const ApproveItemsQuantity = () => {
     }
   }, [isConfirmModal]);
 
-  const toggleAction = (id, action) => {
-    setSelectedActions((prev) => ({
-      ...prev,
-      [id]: prev[id] === action ? null : action,
-    }));
-  };
-
   const handleGetApprovalList = async () => {
     try {
       const response = await api.get("/api/approvals/my");
@@ -175,31 +168,50 @@ const ApproveItemsQuantity = () => {
   }, []);
 
   const handleApprovalAction = async (id, status) => {
-    let remarks = '';
-    if (window && typeof window.prompt === 'function') {
-      remarks = window.prompt(`Enter remarks for ${status === 'APPROVED' ? 'approval' : 'rejection'} (optional):`, '');
-      if (remarks === null) return; // Cancelled
-    }
+    // status === "APPROVED"
+    //   ? setMessage("Enter remarks for approval (optional)")
+    //   : setMessage("Enter remarks for rejection (optional)");
+    let remarks = "";
+    // if (window && typeof window.prompt === "function") {
+    //   remarks = window.prompt(
+    //     `Enter remarks for ${
+    //       status === "APPROVED" ? "approval" : "rejection"
+    //     } (optional):`,
+    //     ""
+    //   );
+    //   if (remarks === null) return; // Cancelled
+    // }
     try {
-      const url = `/api/approvals/${id}/action?status=${status}${remarks ? `&remarks=${encodeURIComponent(remarks)}` : ''}`;
+      const url = `/api/approvals/${id}/action?status=${status}${
+        remarks ? `&remarks=${encodeURIComponent(remarks)}` : ""
+      }`;
       const response = await api.post(url);
       if (response.data.status) {
-        toast.success(response.data.message || `Request ${status.toLowerCase()} successfully`);
-        handleGetApprovalList();
+        toast.success(
+          response.data.message ||
+            `Request ${status.toLowerCase()} successfully`
+        );
+        // handleGetApprovalList();
       } else {
-        toast.error(response.data.message || `Failed to ${status.toLowerCase()}`);
+        toast.error(
+          response.data.message || `Failed to ${status.toLowerCase()}`
+        );
       }
+      handleGetApprovalList();
     } catch (error) {
-      toast.error(error.response?.data?.message || `Failed to ${status.toLowerCase()}`);
+      toast.error(
+        error.response?.data?.message || `Failed to ${status.toLowerCase()}`
+      );
     }
   };
 
   const handleViewMeta = (metaData) => {
     let parsed = null;
     try {
-      parsed = typeof metaData === 'string' && metaData.trim().startsWith('{')
-        ? JSON.parse(metaData)
-        : metaData;
+      parsed =
+        typeof metaData === "string" && metaData.trim().startsWith("{")
+          ? JSON.parse(metaData)
+          : metaData;
     } catch {
       parsed = metaData;
     }
@@ -234,7 +246,10 @@ const ApproveItemsQuantity = () => {
       {/* Table */}
       <div className="margin-2 mx-2">
         <div className="table-container">
-          <table>
+          <table
+            className="table align-middle w-100"
+            style={{ tableLayout: "auto" }}
+          >
             <thead>
               <tr>
                 <th>ID</th>
@@ -243,32 +258,94 @@ const ApproveItemsQuantity = () => {
                 <th>Requested By</th>
                 <th>Requested To</th>
                 <th>Status</th>
-                <th>Remarks</th>
+                {/* <th>Remarks</th> */}
                 <th>Requested Date</th>
                 <th>Details</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody className="text-break">
-              {list.map((val) => (
-                <tr key={val.id}>
-                  <td className="ps-4">{val.id}</td>
-                  <td className="ps-4">{val.referenceType}</td>
-                  <td className="ps-4">{val.referenceId}</td>
-                  <td className="ps-4">{val.requestedBy}</td>
-                  <td className="ps-4">{val.requestedTo}</td>
-                  <td className="ps-4">{val.status}</td>
-                  <td className="ps-4">{val.remarks}</td>
-                  <td className="ps-4">{val.requestedDate ? new Date(val.requestedDate).toLocaleString() : ''}</td>
-                  <td className="ps-4">
-                    <button className="btn btn-sm btn-info" onClick={() => handleViewMeta(val.metaData)}>View</button>
-                  </td>
-                  <td className="ps-4">
-                    <button className="btn btn-sm btn-success me-2" onClick={() => handleApprovalAction(val.id, 'APPROVED')}>Approve</button>
-                    <button className="btn btn-sm btn-danger" onClick={() => handleApprovalAction(val.id, 'REJECTED')}>Reject</button>
+              {list.length === 0 ? (
+                <tr>
+                  <td colSpan="9" className="text-center">
+                    <div className="p-4">
+                      <i class="fa-solid fa-check-to-slot fa-3x mb-3 icon-color"></i>
+                      <h5 className="gray">Nothing to approve</h5>
+                    </div>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                list.map((val) => (
+                  <tr key={val.id}>
+                    <td className="text-wrap">{val.id}</td>
+                    <td className="text-wrap">{val.referenceType}</td>
+                    <td className="text-wrap">{val.referenceId}</td>
+                    <td className="text-wrap">{val.requestedBy}</td>
+                    <td className="text-wrap">{val.requestedTo}</td>
+                    <td className="text-wrap">{val.status}</td>
+                    {/* <td className="text-wrap">{val.remarks ? val.remarks : "-"}</td> */}
+                    <td className="text-wrap">
+                      {val.requestedDate
+                        ? new Date(val.requestedDate).toLocaleString()
+                        : ""}
+                    </td>
+                    <td className="text-wrap">
+                      <button
+                        className="btn-icon btn-primary"
+                        title="View Details"
+                        onClick={() => handleViewMeta(val.metaData)}
+                      >
+                        <i className="fas fa-eye"></i>
+                      </button>
+                    </td>
+                    <td className="ps-2 text-nowrap align-middle">
+                      <div className="d-flex align-items-center gap-2 flex-wrap">
+                        <span
+                          className="btn btn-outline-success btn-sm px-2 py-0 fw-semibold text-7"
+                          role="button"
+                          onClick={() =>
+                            handleApprovalAction(val.id, "APPROVED")
+                          }
+                        >
+                          Approve
+                        </span>
+                        <span
+                          className="btn btn-outline-danger btn-sm px-2 py-0 fw-semibold text-7"
+                          role="button"
+                          onClick={() =>
+                            handleApprovalAction(val.id, "REJECTED")
+                          }
+                        >
+                          Reject
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* <td className="ps-2">
+                    <button
+                      className="btn-icon btn-success me-2"
+                      title="Approve"
+                      onClick={() => {
+                        handleApprovalAction(val.id, "APPROVED");
+                        // setIsConfirmModal(true);
+                      }}
+                    >
+                      <span className="badge text-bg-success">Approve</span>
+                    </button>
+                    <button
+                      className="btn-icon btn-danger"
+                      title="Reject"
+                      onClick={() => {
+                        handleApprovalAction(val.id, "REJECTED");
+                        // setIsConfirmModal(true);
+                      }}
+                    >
+                      <span className="badge text-bg-danger">Reject</span>
+                    </button>
+                  </td> */}
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -276,41 +353,64 @@ const ApproveItemsQuantity = () => {
 
       {/* MetaData Modal */}
       {showMetaModal && (
-        <div className="modal fade show" style={{display:'block'}} tabIndex="-1">
+        <div
+          className="modal fade show"
+          style={{ display: "block" }}
+          tabIndex="-1"
+        >
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Details</h5>
-                <button type="button" className="btn-close" onClick={handleCloseMetaModal}></button>
+                <h5 className="modal-title">
+                  <i className="fas fa-circle-info me-2"></i>Details
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={handleCloseMetaModal}
+                ></button>
               </div>
               <div className="modal-body">
-                {metaDetails && typeof metaDetails === 'object' && !Array.isArray(metaDetails) ? (
+                {metaDetails &&
+                typeof metaDetails === "object" &&
+                !Array.isArray(metaDetails) ? (
                   <table className="table table-bordered">
                     <tbody>
                       {Object.entries(metaDetails).map(([key, value]) => (
                         <tr key={key}>
-                          <th style={{verticalAlign: 'top', width: '30%'}}>{key}</th>
+                          <th style={{ verticalAlign: "top", width: "30%" }}>
+                            {key}
+                          </th>
                           <td>
                             {Array.isArray(value) ? (
                               <table className="table table-sm table-striped mb-0">
                                 <thead>
                                   <tr>
-                                    {value.length > 0 && typeof value[0] === 'object'
-                                      ? Object.keys(value[0]).map((k) => <th key={k}>{k}</th>)
-                                      : <th>Value</th>}
+                                    {value.length > 0 &&
+                                    typeof value[0] === "object" ? (
+                                      Object.keys(value[0]).map((k) => (
+                                        <th key={k}>{k}</th>
+                                      ))
+                                    ) : (
+                                      <th>Value</th>
+                                    )}
                                   </tr>
                                 </thead>
                                 <tbody>
                                   {value.map((item, idx) => (
                                     <tr key={idx}>
-                                      {typeof item === 'object'
-                                        ? Object.values(item).map((v, i) => <td key={i}>{String(v)}</td>)
-                                        : <td>{String(item)}</td>}
+                                      {typeof item === "object" ? (
+                                        Object.values(item).map((v, i) => (
+                                          <td key={i}>{String(v)}</td>
+                                        ))
+                                      ) : (
+                                        <td>{String(item)}</td>
+                                      )}
                                     </tr>
                                   ))}
                                 </tbody>
                               </table>
-                            ) : typeof value === 'object' && value !== null ? (
+                            ) : typeof value === "object" && value !== null ? (
                               <table className="table table-sm table-bordered mb-0">
                                 <tbody>
                                   {Object.entries(value).map(([k, v]) => (
@@ -321,27 +421,105 @@ const ApproveItemsQuantity = () => {
                                   ))}
                                 </tbody>
                               </table>
-                            ) : String(value)}
+                            ) : (
+                              String(value)
+                            )}
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 ) : (
-                  <div style={{whiteSpace: 'pre-line'}}>
+                  <div style={{ whiteSpace: "pre-line" }}>
                     {metaDetails
-                      ? metaDetails.split(',').map((part, idx) => <div key={idx}>{part.trim()}</div>)
-                      : 'No details available.'}
+                      ? metaDetails
+                          .split(",")
+                          .map((part, idx) => (
+                            <div key={idx}>{part.trim()}</div>
+                          ))
+                      : "No details available."}
                   </div>
                 )}
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={handleCloseMetaModal}>Close</button>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-css"
+                  onClick={handleCloseMetaModal}
+                >
+                  <i className="fas fa-xmark me-2"></i>Close
+                </button>
               </div>
             </div>
           </div>
         </div>
       )}
+
+      {/* Confirmation dialog modal */}
+      {/* {isConfirmModal && (
+        <div
+          className="modal fade"
+          id="ConfirmModal"
+          tabIndex="-1"
+          ref={modalRef}
+        >
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  <i className="fas fa-circle-check me-2"></i>
+                  Confirm
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => {
+                    setIsConfirmModal(false);
+                  }}
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body">{message}</div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-primary add-btn"
+                  onClick={() => {
+                    if (modalRef.current) {
+                      const bsModal = Modal.getInstance(modalRef.current);
+                      if (bsModal) {
+                        bsModal.hide();
+                      }
+                    }
+                    cleanupModalArtifacts();
+                    setTimeout(() => setIsConfirmModal(false), 300);
+                  }}
+                >
+                  <i className="fas fa-check me-2"></i>
+                  OK
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary add-btn"
+                  onClick={() => {
+                    if (modalRef.current) {
+                      const bsModal = Modal.getInstance(modalRef.current);
+                      if (bsModal) {
+                        bsModal.hide();
+                      }
+                    }
+                    cleanupModalArtifacts();
+                    setTimeout(() => setIsConfirmModal(false), 300);
+                  }}
+                >
+                  <i className="fas fa-times me-2"></i>
+                  No
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )} */}
     </div>
   );
 };

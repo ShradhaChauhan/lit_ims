@@ -10,77 +10,19 @@ import {
   FaShippingFast,
   FaUndoAlt,
   FaChartLine,
+  FaMoneyBill,
+  FaReceipt,
+  FaExclamation,
+  FaClipboardList,
+  FaArrowRight,
+  FaArrowAltCircleLeft,
+  FaArrowAltCircleRight,
+  FaCross,
+  FaTimes,
+  FaExclamationTriangle,
 } from "react-icons/fa";
 import api from "../../services/api";
 import { toast } from "react-toastify";
-
-const cardData = [
-  {
-    title: "Total Items",
-    value: "15,234",
-    change: "+12% from last month",
-    icon: <FaBoxOpen />,
-    iconColor: "bg-primary",
-    changeColor: "text-success",
-  },
-  {
-    title: "Pending Approvals",
-    value: "8",
-    change: "+3 from yesterday",
-    icon: <FaClock />,
-    iconColor: "bg-warning",
-    changeColor: "text-danger",
-  },
-  {
-    title: "QC Pending",
-    value: "12",
-    change: "+5 from yesterday",
-    icon: <FaClipboardCheck />,
-    iconColor: "bg-danger",
-    changeColor: "text-danger",
-  },
-  {
-    title: "Production Orders",
-    value: "23",
-    change: "+8% from last week",
-    icon: <FaIndustry />,
-    iconColor: "bg-success",
-    changeColor: "text-success",
-  },
-  {
-    title: "Incoming Process",
-    value: "47",
-    change: "15 pending QC",
-    icon: <FaTruckLoading />,
-    iconColor: "bg-primary",
-    changeColor: "text-success",
-  },
-  {
-    title: "Production Dispatch",
-    value: "34",
-    change: "8 pending issue",
-    icon: <FaShippingFast />,
-    iconColor: "bg-info",
-    changeColor: "text-success",
-  },
-  {
-    title: "WIP Returns",
-    value: "7",
-    change: "-2 from yesterday",
-    icon: <FaUndoAlt />,
-    iconColor: "bg-warning",
-    changeColor: "text-danger",
-  },
-  {
-    title: "Audit Accuracy",
-    value: "94.3%",
-    change: "+2.1% from last audit",
-    icon: <FaChartLine />,
-    iconColor: "bg-success",
-    changeColor: "text-success",
-  },
-];
-
 import {
   LineChart,
   Line,
@@ -90,25 +32,19 @@ import {
   Legend,
   CartesianGrid,
   ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts";
-
-const dataSets = {
-  7: [
-    { name: "Mon", Inward: 70, Outward: 30 },
-    { name: "Tue", Inward: 60, Outward: 50 },
-    { name: "Wed", Inward: 80, Outward: 40 },
-    { name: "Thu", Inward: 65, Outward: 70 },
-    { name: "Fri", Inward: 60, Outward: 90 },
-    { name: "Sat", Inward: 55, Outward: 40 },
-    { name: "Sun", Inward: 45, Outward: 85 },
-  ],
-  30: [
-    // Add realistic or dummy data
-  ],
-  90: [
-    // Add realistic or dummy data
-  ],
-};
+import {
+  format,
+  parse,
+  eachDayOfInterval,
+  startOfMonth,
+  endOfMonth,
+  parseISO,
+  isSameDay,
+} from "date-fns";
 
 // Sliding window dummy data
 const frames = [
@@ -119,84 +55,376 @@ const frames = [
 ];
 
 const LandingPage = () => {
+  // All states
+  const [totalItems, setTotalItems] = useState(0);
+  const [pendingApprovals, setPendingApprovals] = useState(0);
+  const [pendingQC, setPendingQC] = useState(0);
+  const [qcPassCount, setQcPassCount] = useState(0);
+  const [qcFailCount, setQcFailCount] = useState(0);
+  const [materialRequest, setMaterialRequest] = useState(0);
+  const [materialReceipt, setMaterialReceipt] = useState(0);
+  const [wipReturn, setWipReturn] = useState(0);
+  const [materialTransfer, setMaterialTransfer] = useState(0);
+  const [selectedItem, setSelectedItem] = useState("");
+  const [items, setItems] = useState([]);
+  const [current, setCurrent] = useState(0);
+  const intervalRef = useRef(null);
   const [range, setRange] = useState("7");
-
+  const [lineChartData, setLineChartData] = useState([]);
+  const [qcLineChartData, setQCLineChartData] = useState([]);
+  const [materialReceiptData, setMaterialReceiptData] = useState([]);
+  const [wipReturnData, setWipReturnData] = useState([]);
+  const [wipRejectedItems, setWipRejectedItems] = useState([]);
+  const [incomingMaterialToday, setIncomingMaterialToday] = useState([]);
   // Sliding window
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setIndex((prev) => (prev + 1) % frames.length);
-    }, 4000); // every 4 seconds
+    }, 10000); // every 4 seconds
 
     return () => clearInterval(interval); // cleanup
   }, []);
 
-  // Line Chart
-  const LineChartCard = ({ title, data }) => (
-    <div style={{ width: "100%", height: 300, boxSizing: "border-box" }}>
-      <h5 className="text-center mb-3">{title}</h5>
-      <ResponsiveContainer>
-        <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="day" />
-          <YAxis />
-          <Tooltip />
-          <Legend />
-          <Line
-            type="monotone"
-            dataKey="inward"
-            stroke="#007bff"
-            strokeWidth={2}
-          />
-          <Line
-            type="monotone"
-            dataKey="outward"
-            stroke="#dc3545"
-            strokeWidth={2}
-          />
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
-  );
+  // Fetch Pending QC
+  const fetchStoreItems = async () => {
+    try {
+      const response = await api.get("/api/items/all");
+      setItems(response.data.data);
+    } catch (error) {
+      toast.error("Error in fetching items list");
+      console.error("Error fetching items list:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchStoreItems();
+  }, []);
+
+  // Fetch QC Pass/Fail list
+  const fetchQCPassFail = async () => {
+    try {
+      const response = await api.get("/api/receipt/qc-status/result");
+      const rawData = response.data.data;
+      const today = new Date();
+
+      // Step 1: Initialize all time slots (1 AM to 12 PM)
+      const chartMap = {};
+      for (let hour = 0; hour < 24; hour++) {
+        const date = new Date();
+        date.setHours(hour, 0, 0, 0);
+        const timeStr = format(date, "h a"); // 1 AM, 2 PM, etc.
+        chartMap[timeStr] = { time: timeStr, pass: 0, fail: 0 };
+      }
+
+      // Step 2: Add actual data
+      rawData.forEach((entry) => {
+        const parsedDate = parse(
+          entry.createdAt,
+          "dd-MM-yyyy hh:mm:ss a",
+          new Date()
+        );
+
+        if (isSameDay(parsedDate, today)) {
+          const timeStr = format(parsedDate, "h a");
+
+          if (!chartMap[timeStr]) {
+            chartMap[timeStr] = { time: timeStr, pass: 0, fail: 0 };
+          }
+
+          if (entry.status === "PASS") {
+            chartMap[timeStr].pass += entry.quantity;
+          } else if (entry.status === "FAIL") {
+            chartMap[timeStr].fail += entry.quantity;
+          }
+        }
+      });
+
+      // Step 3: Convert and sort
+      const chartDataArray = Object.values(chartMap).sort(
+        (a, b) =>
+          new Date(`2000-01-01 ${a.time}`) - new Date(`2000-01-01 ${b.time}`)
+      );
+
+      setLineChartData(chartDataArray);
+    } catch (error) {
+      toast.error("Error in fetching QC pass and fail list");
+      console.error("Error fetching QC pass and fail list:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchQCPassFail();
+  }, []);
+
+  // Material Request
+  const prepareChartData = (data) => {
+    const today = new Date();
+    const chartMap = {};
+
+    // Step 1: Pre-fill all 24 hours with 0
+    for (let h = 0; h < 24; h++) {
+      const hour = new Date(2000, 0, 1, h); // dummy date
+      const timeStr = format(hour, "h a"); // "1 AM", "2 PM", etc.
+      chartMap[timeStr] = { time: timeStr, bom: 0, item: 0 };
+    }
+
+    // Step 2: Override with actual data (only today's)
+    data.forEach((entry) => {
+      const parsedDate = parse(
+        entry.createdAt,
+        "dd-MM-yyyy hh:mm:ss a",
+        new Date()
+      );
+
+      if (isSameDay(parsedDate, today)) {
+        const timeStr = format(parsedDate, "h a");
+        const totalQty = entry.items.reduce((sum, i) => sum + i.quantity, 0);
+
+        if (entry.type === "bom") chartMap[timeStr].bom += totalQty;
+        else if (entry.type === "item") chartMap[timeStr].item += totalQty;
+      }
+    });
+
+    // Step 3: Return sorted array by time
+    return Object.values(chartMap).sort(
+      (a, b) =>
+        new Date(`2000-01-01 ${a.time}`) - new Date(`2000-01-01 ${b.time}`)
+    );
+  };
+
+  const fetchMaterialRequestMonthly = async () => {
+    try {
+      const res = await api.get("/api/requisitions/recent");
+      const fullMonthData = prepareChartData(res.data.data);
+      setQCLineChartData(fullMonthData);
+    } catch (error) {
+      console.error("Error fetching material transfer data:", error);
+    }
+  };
+
+  -useEffect(() => {
+    fetchMaterialRequestMonthly();
+  }, []);
+
+  // Material Issue Transfer
+  const prepareReceiptChartData = (data) => {
+    const today = new Date();
+    const allDates = eachDayOfInterval({
+      start: startOfMonth(today),
+      end: endOfMonth(today),
+    });
+
+    // Step 1: Initialize all dates for the month
+    const chartMap = {};
+    allDates.forEach((dateObj) => {
+      const dateStr = format(dateObj, "dd MMMM yyyy"); // e.g. "24 July 2025"
+      chartMap[dateStr] = { day: dateStr, bom: 0, item: 0 };
+    });
+
+    // Step 2: Fill actual data
+    data.forEach((entry) => {
+      const parsedDate = parseISO(entry.receiptDate); // handles yyyy-MM-dd
+      const dateStr = format(parsedDate, "dd MMMM yyyy");
+
+      const itemCount = entry.items?.length || 0;
+
+      if (entry.type === "bom") {
+        chartMap[dateStr].bom += itemCount;
+      } else if (entry.type === "items") {
+        chartMap[dateStr].item += itemCount;
+      }
+    });
+
+    // Step 3: Convert to sorted array
+    return Object.values(chartMap).sort(
+      (a, b) => new Date(a.day) - new Date(b.day)
+    );
+  };
+
+  const fetchMaterialReceiptMonthly = async () => {
+    try {
+      const response = await api.get("/api/production-receipt/table");
+      const fullMonthData = prepareReceiptChartData(response.data.data);
+      setMaterialReceiptData(fullMonthData);
+    } catch (error) {
+      toast.error("Error in fetching material receipt data");
+      console.error("Error fetching material receipt data:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchMaterialReceiptMonthly();
+  }, []);
 
   // Banner Carousel
+
+  // WIP Return
+  const prepareWIPChartData = (data) => {
+    const today = new Date();
+    const allDates = eachDayOfInterval({
+      start: startOfMonth(today),
+      end: endOfMonth(today),
+    });
+
+    // Step 1: Initialize all dates in chartMap
+    const chartMap = {};
+    allDates.forEach((dateObj) => {
+      const dateStr = format(dateObj, "dd MMMM yyyy");
+      chartMap[dateStr] = {
+        day: dateStr,
+        defective: 0,
+        excess: 0,
+        reusable: 0,
+      };
+    });
+
+    // Step 2: Aggregate values based on returnType
+    data.forEach((entry) => {
+      const parsedDate = parseISO(entry.date);
+      const dateStr = format(parsedDate, "dd MMMM yyyy");
+
+      const value = entry.totalValue || 0;
+
+      if (!chartMap[dateStr]) {
+        chartMap[dateStr] = {
+          day: dateStr,
+          defective: 0,
+          excess: 0,
+          reusable: 0,
+        };
+      }
+
+      switch (entry.returnType) {
+        case "Defective Material":
+          chartMap[dateStr].defective += value;
+          break;
+        case "Excess Material":
+          chartMap[dateStr].excess += value;
+          break;
+        default:
+          break;
+      }
+    });
+
+    return Object.values(chartMap).sort(
+      (a, b) => new Date(a.day) - new Date(b.day)
+    );
+  };
+
+  const fetchWipReturnMonthly = async () => {
+    try {
+      const response = await api.get("/api/wip-return/recent/summary");
+      const fullMonthData = prepareWIPChartData(response.data.data);
+      setWipReturnData(fullMonthData);
+    } catch (error) {
+      toast.error("Error in fetching material receipt data");
+      console.error("Error fetching material receipt data:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchWipReturnMonthly();
+  }, []);
+
+  const fetchIncomingMaterialToday = async () => {
+    try {
+      const date = format(Date.now(), "yyyy-MM-dd");
+      const response = await api.get(`/api/receipt/items-by-date?date=${date}`);
+      setTotalItems(response.data.data.count);
+      const rawData = response.data.data.items;
+      const today = new Date();
+
+      // Step 1: Initialize time slots using 0–23 as keys
+      const chartMap = {};
+      for (let hour = 0; hour < 24; hour++) {
+        chartMap[hour] = {
+          hour: hour, // numeric hour
+          timeLabel: `${hour}:00`, // Optional: for display on X-axis
+          inward: 0,
+          outward: 0,
+        };
+      }
+
+      // Step 2: Add actual data
+      rawData.forEach((entry) => {
+        const parsedDate = parse(
+          entry.createdAt,
+          "yyyy-MM-dd HH:mm:ss",
+          new Date()
+        );
+
+        if (isSameDay(parsedDate, today)) {
+          const hour = parsedDate.getHours(); // 0–23
+          if (chartMap[hour]) {
+            chartMap[hour].inward += 1;
+          }
+        }
+      });
+
+      // Step 3: Set chart data
+      const chartDataArray = Object.values(chartMap);
+      setIncomingMaterialToday(chartDataArray);
+    } catch (error) {
+      toast.error("Error in fetching material receipt data");
+      console.error("Error fetching material receipt data:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchIncomingMaterialToday();
+  }, []);
+
+  const fetchWipRejectedItems = async () => {
+    try {
+      const response = await api.get("/api/wip-return/count-defective");
+      console.log(response.data.data);
+      setWipRejectedItems(response.data.data);
+    } catch (error) {
+      toast.error("Error in fetching wip rejected items");
+      console.error("Error fetching wip rejected items:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchWipRejectedItems();
+  }, []);
+
   const chartData = [
     {
-      title: "Week 1",
+      title: "Store Material Inward",
       lineColor1: "#3b82f6",
-      lineColor2: "#ef4444",
-      data: [
-        { day: "Mon", inward: 50, outward: 30 },
-        { day: "Tue", inward: 45, outward: 40 },
-        { day: "Wed", inward: 65, outward: 30 },
-        { day: "Thu", inward: 70, outward: 20 },
-        { day: "Fri", inward: 60, outward: 80 },
-        { day: "Sat", inward: 55, outward: 50 },
-        { day: "Sun", inward: 40, outward: 75 },
-      ],
+      lineColor2: "#efcd44ff",
+      data: incomingMaterialToday,
     },
     {
-      title: "Week 2",
-      lineColor1: "#a23bf6ff",
-      lineColor2: "#ef5e44ff",
-      data: [
-        { day: "Mon", inward: 30, outward: 25 },
-        { day: "Tue", inward: 35, outward: 30 },
-        { day: "Wed", inward: 50, outward: 45 },
-        { day: "Thu", inward: 60, outward: 40 },
-        { day: "Fri", inward: 55, outward: 60 },
-        { day: "Sat", inward: 70, outward: 50 },
-        { day: "Sun", inward: 65, outward: 55 },
-      ],
+      title: "IQC",
+      lineColor1: "#0c8a40ff",
+      lineColor2: "#d42f12ff",
+      data: lineChartData,
     },
-    // Add more as needed
+    {
+      title: "Material Issue Request",
+      lineColor1: "#550c8aff",
+      lineColor2: "#e88711ff",
+      data: qcLineChartData,
+    },
+    {
+      title: "Material Receipt",
+      lineColor1: "#8a0c55ff",
+      lineColor2: "#1edabaff",
+      data: materialReceiptData,
+    },
+    {
+      title: "WIP Return",
+      lineColor1: "#04f962ff",
+      lineColor2: "#1e50daff",
+      data: wipReturnData,
+    },
   ];
 
-  const [current, setCurrent] = useState(0);
-  const intervalRef = useRef(null);
   const total = chartData.length;
-
   // Auto-slide
   useEffect(() => {
     startAutoSlide();
@@ -221,13 +449,263 @@ const LandingPage = () => {
     setCurrent((prev) => (prev + 1) % total);
   };
 
+  // Pie Chart Sample data
+  const data = [
+    { name: "QC Passed", value: qcPassCount },
+    { name: "QC Failed", value: qcFailCount },
+    { name: "QC Pending", value: pendingQC },
+  ];
+
+  const COLORS = ["#16A34A", "#DC2626", "#3B82F6"];
+
+  const CustomLegend = ({ payload }) => {
+    return (
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          justifyContent: "center",
+          gap: "10px",
+          marginTop: "20px",
+        }}
+      >
+        {payload.map((entry, index) => (
+          <div
+            key={`item-${index}`}
+            style={{ display: "flex", alignItems: "center" }}
+          >
+            <div
+              style={{
+                width: 10,
+                height: 10,
+                backgroundColor: entry.color,
+                marginRight: 5,
+              }}
+            />
+            <span style={{ fontSize: 14, color: entry.color }}>
+              {entry.value}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  // Fetch Total Items
+  // const fetchTotalItems = async () => {
+  //   try {
+  //     const response = await api.get("/api/items/all");
+  //     setTotalItems(response.data.data.length);
+  //   } catch (error) {
+  //     toast.error("Error in fetching total items");
+  //     console.error("Error fetching total items:", error);
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   fetchTotalItems();
+  // }, []);
+
+  // Fetch Pending Approvals
+  const fetchPendingApprovals = async () => {
+    try {
+      const response = await api.get(
+        "/api/stock-adjustments/requests?status=PENDING"
+      );
+      setPendingApprovals(response.data.data.length);
+    } catch (error) {
+      toast.error("Error in fetching pending approvals");
+      console.error("Error fetching pending approvals:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchPendingApprovals();
+  }, []);
+
+  // Fetch Pending QC
+  const fetchPendingQC = async () => {
+    try {
+      const response = await api.get("/api/receipt/iqc-count");
+      setPendingQC(response.data.data.pendingCount);
+      setQcPassCount(response.data.data.passCount);
+      setQcFailCount(response.data.data.failCount);
+    } catch (error) {
+      toast.error("Error in fetching pending QC");
+      console.error("Error fetching pending QC:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchPendingQC();
+  }, []);
+
+  // Fetch material request
+  const fetchMaterialRequest = async () => {
+    try {
+      const response = await api.get("/api/requisitions/recent");
+      setMaterialRequest(response.data.data.length);
+    } catch (error) {
+      toast.error("Error in fetching material request");
+      console.error("Error fetching material request:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchMaterialRequest();
+  }, []);
+
+  // Fetch material receipt
+  const fetchMaterialReceipt = async () => {
+    try {
+      const response = await api.get("/api/production-receipt/table");
+      setMaterialReceipt(response.data.data.length);
+    } catch (error) {
+      toast.error("Error in fetching material receipt");
+      console.error("Error fetching material receipt:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchMaterialReceipt();
+  }, []);
+
+  // Fetch material receipt
+  const fetchWIPreturn = async () => {
+    try {
+      const response = await api.get("/api/wip-return/recent/summary");
+      setWipReturn(response.data.data.length);
+    } catch (error) {
+      toast.error("Error in fetching wip return");
+      console.error("Error fetching wip return:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchWIPreturn();
+  }, []);
+
+  // Fetch material receipt
+  const fetchMaterialTransfer = async () => {
+    try {
+      const response = await api.get("/api/issue-production/all-issue");
+      setMaterialTransfer(response.data.data.length);
+    } catch (error) {
+      toast.error("Error in fetching material transfer");
+      console.error("Error fetching material transfer:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchMaterialTransfer();
+  }, []);
+
+  // Card data for line chart
+  const cardData = [
+    {
+      title: "Total Incoming Material",
+      value: totalItems,
+      change:
+        totalItems === 0
+          ? "0 incoming material"
+          : "+" + totalItems + " from yesterday",
+      icon: <FaBoxOpen />,
+      iconColor: "bg-primary",
+      changeColor: "text-success",
+    },
+    {
+      title: "QC Pending",
+      value: pendingQC,
+      change:
+        pendingQC === 0 ? "0 pending QC" : "+" + pendingQC + " from yesterday",
+      icon: <FaClipboardList />,
+      iconColor: pendingQC === 0 ? "bg-warning" : "bg-danger",
+      changeColor: pendingQC === 0 ? "text-success" : "text-danger",
+    },
+    {
+      title: "Material Request",
+      value: materialRequest,
+      change:
+        materialRequest === 0
+          ? "0 material request"
+          : "+" + materialRequest + " material request",
+      icon: <FaIndustry />,
+      iconColor: materialRequest === 0 ? "bg-success" : "bg-danger",
+      changeColor: materialRequest === 0 ? "text-success" : "text-danger",
+    },
+    {
+      title: "Pending Approvals",
+      value: pendingApprovals,
+      change:
+        pendingApprovals === 0
+          ? "0 pending approvals"
+          : "+" + pendingApprovals + " pending approvals",
+      icon: <FaClock />,
+      iconColor: pendingApprovals === 0 ? "bg-warning" : "bg-danger",
+      changeColor: pendingApprovals === 0 ? "text-success" : "text-danger",
+    },
+    {
+      title: "Material Transfer",
+      value: materialTransfer,
+      change:
+        materialTransfer === 0
+          ? "0 material transfer"
+          : "+" + materialTransfer + " material transfer",
+      icon: <FaArrowAltCircleRight />,
+      iconColor: materialTransfer === 0 ? "bg-primary" : "bg-success",
+      changeColor: materialTransfer === 0 ? "text-primary" : "text-success",
+    },
+    {
+      title: "Material Receipt",
+      value: materialReceipt,
+      change:
+        materialReceipt === 0
+          ? "0 material receipt"
+          : "+" + materialReceipt + " confirmed material receipt",
+      icon: <FaReceipt />,
+      iconColor: "bg-success",
+      changeColor: "text-success",
+    },
+    {
+      title: "WIP Returns",
+      value: wipReturn,
+      change:
+        wipReturn === 0 ? "0 WIP return" : "+" + wipReturn + " WIP return",
+      icon: <FaUndoAlt />,
+      iconColor: wipReturn === 0 ? "bg-warning" : "bg-success",
+      changeColor: wipReturn === 0 ? "text-danger" : "text-success",
+    },
+    {
+      title: "Total Rejected Items (IQC)",
+      value: qcFailCount,
+      change:
+        qcFailCount === 0
+          ? "0 items rejected"
+          : "+" + qcFailCount + " items rejected",
+      icon: <FaTimes />,
+      iconColor: qcFailCount === 0 ? "bg-info" : "bg-danger",
+      changeColor: qcFailCount === 0 ? "text-success" : "text-danger",
+    },
+    {
+      title: "Total Rejected Items (WIP)",
+      value: wipRejectedItems,
+      change:
+        wipRejectedItems === 0
+          ? "0 items rejected"
+          : "+" + wipRejectedItems + " items rejected",
+      icon: <FaExclamationTriangle />,
+      iconColor: wipRejectedItems === 0 ? "bg-info" : "bg-danger",
+      changeColor: wipRejectedItems === 0 ? "text-success" : "text-danger",
+    },
+  ];
+
   return (
-    <div className="dashboard-container">
+    <div>
       {/* Header section */}
-      <nav className="navbar bg-light border-body" data-bs-theme="light">
+      <nav className="navbar text-dark border-body" data-bs-theme="light">
         <div className="container-fluid p-0">
           <div className="mt-4">
-            <h3 className="nav-header header-style">Dashboard</h3>
+            <h3 className="nav-header header-style text-dark">Dashboard</h3>
             <p className="breadcrumb">
               <Link to="/dashboard">
                 <i className="fas fa-home text-8"></i>
@@ -238,7 +716,7 @@ const LandingPage = () => {
         </div>
       </nav>
 
-      {/* Banner  */}
+      {/* Card  */}
       <div className="summary row g-4">
         {cardData.map((card, index) => (
           <div className="col-sm-6 col-md-4 col-lg-3" key={index}>
@@ -262,23 +740,47 @@ const LandingPage = () => {
           </div>
         ))}
       </div>
+      {/* Banner */}
+      <div className="container-fluid">
+        <div className="row" style={{ overflow: "visible" }}>
+          {/* Banner Carousel */}
+          <div
+            className="col-8 graph-carousel border rounded p-3 bg-white shadow-sm mt-4 p-4"
+            onMouseEnter={stopAutoSlide}
+            onMouseLeave={startAutoSlide}
+          >
+            <button className="carousel-arrow left" onClick={handlePrev}>
+              &#8249;
+            </button>
+            <button className="carousel-arrow right" onClick={handleNext}>
+              &#8250;
+            </button>
 
-      {/* Banner Carousel */}
-      <div
-        className="graph-carousel border rounded position-relative p-3 bg-white shadow-sm mt-4 p-4"
-        onMouseEnter={stopAutoSlide}
-        onMouseLeave={startAutoSlide}
-      >
-        <button className="carousel-arrow left" onClick={handlePrev}>
-          &#8249;
-        </button>
-        <button className="carousel-arrow right" onClick={handleNext}>
-          &#8250;
-        </button>
+            <div>
+              {chartData[current].title === "Store Material Inward" && (
+                <select
+                  className="filter-select"
+                  value={selectedItem}
+                  onLoad={fetchStoreItems}
+                  onChange={(e) => {
+                    setSelectedItem(e.target.value);
+                  }}
+                >
+                  <option value="">Select Items</option>
+                  {items.map((items, index) => (
+                    <option key={index} value={items.id}>
+                      {items.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+              <h5 className="text-center text-dark">
+                {chartData[current].title}
+              </h5>
+            </div>
 
-        <h5 className="text-center">{chartData[current].title}</h5>
-        {/* Buttons on Right */}
-        {/* <div className="text-end flex-grow-1">
+            {/* Buttons on Right */}
+            {/* <div className="text-end flex-grow-1">
               {["7", "30", "90"].map((day) => (
                 <button
                   key={day}
@@ -291,27 +793,120 @@ const LandingPage = () => {
                 </button>
               ))}
             </div> */}
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={chartData[current].data}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="day" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Line
-              type="monotone"
-              dataKey="inward"
-              stroke={chartData[current].lineColor1}
-              strokeWidth={3}
-            />
-            <Line
-              type="monotone"
-              dataKey="outward"
-              stroke={chartData[current].lineColor2}
-              strokeWidth={3}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+            <ResponsiveContainer width="95%" height={300}>
+              <LineChart data={chartData[current].data}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis
+                  dataKey={
+                    chartData[current].title === "IQC" ||
+                    chartData[current].title === "Material Issue Request"
+                      ? "time"
+                      : chartData[current].title === "Store Material Inward"
+                      ? "hour"
+                      : "day"
+                  }
+                />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                {chartData[current].title !== "WIP Return" && (
+                  <Line
+                    type="monotone"
+                    dataKey={`${
+                      chartData[current].title === "IQC"
+                        ? "pass"
+                        : chartData[current].title ===
+                            "Material Issue Request" ||
+                          chartData[current].title === "Material Receipt" ||
+                          chartData[current].title === "WIP Return"
+                        ? "bom"
+                        : "inward"
+                    }`}
+                    stroke={chartData[current].lineColor1}
+                    strokeWidth={3}
+                  />
+                )}
+                {chartData[current].title !== "WIP Return" && (
+                  <Line
+                    type="monotone"
+                    dataKey={`${
+                      chartData[current].title === "IQC"
+                        ? "fail"
+                        : chartData[current].title ===
+                            "Material Issue Request" ||
+                          chartData[current].title === "Material Receipt" ||
+                          chartData[current].title === "WIP Return"
+                        ? "item"
+                        : "outward"
+                    }`}
+                    stroke={chartData[current].lineColor2}
+                    strokeWidth={3}
+                  />
+                )}
+                {chartData[current].title === "WIP Return" && (
+                  <Line
+                    type="monotone"
+                    dataKey="defective"
+                    stroke="#ef4444"
+                    strokeWidth={3}
+                  />
+                )}
+                {chartData[current].title === "WIP Return" && (
+                  <Line
+                    type="monotone"
+                    dataKey="excess"
+                    stroke="#f59e0b"
+                    strokeWidth={3}
+                  />
+                )}
+                {chartData[current].title === "WIP Return" && (
+                  <Line
+                    type="monotone"
+                    dataKey="reusable"
+                    stroke="#10b981"
+                    strokeWidth={3}
+                  />
+                )}
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Pie Chart */}
+          <div className="col-md-4 d-flex align-items-center justify-content-center">
+            <PieChart width={400} height={300}>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                innerRadius={60}
+                outerRadius={100}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {data.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={COLORS[index % COLORS.length]}
+                  />
+                ))}
+                <text
+                  x="50%"
+                  y="45%"
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fill="#111827"
+                  fontSize="14"
+                  fontWeight="bold"
+                >
+                  QC Status
+                </text>
+              </Pie>
+              <Tooltip />
+              <Legend content={<CustomLegend />} />
+            </PieChart>
+          </div>
+        </div>
       </div>
     </div>
   );

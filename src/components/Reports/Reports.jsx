@@ -135,38 +135,8 @@ const Reports = () => {
 
   const [warehouseDetail, setWarehouseDetail] = useState([]);
 
-  const [itemDetail, setItemDetail] = useState([
-    {
-      id: 1,
-      itemCode: "10021256",
-      itemName: "Item 1",
-      transferFrom: "WIP1",
-      transferTo: "STR",
-      date: "01-06-2025",
-      trno: "TR12345",
-      quantity: 10,
-      unitPrice: "10.00",
-      totalPrice: "100.00",
-      cumulativeQuantity: 100,
-      cumulativeValue: "1000",
-      status: "Complete",
-    },
-    {
-      id: 2,
-      itemCode: "10021200",
-      itemName: "Item 1",
-      transferFrom: "STR",
-      transferTo: "WIP2",
-      date: "08-10-2025",
-      trno: "TR12200",
-      quantity: 10,
-      unitPrice: "50.00",
-      totalPrice: "500.00",
-      cumulativeQuantity: 500,
-      cumulativeValue: "5000",
-      status: "Complete",
-    },
-  ]);
+  // Item history state for Item History modal
+  const [itemHistory, setItemHistory] = useState([]);
 
   const [transactionDetails, setTransactionDetails] = useState([
     {
@@ -256,9 +226,9 @@ const Reports = () => {
     });
   };
 
-  // Item Report modal filtering and sorting
+  // Item Report modal filtering and sorting (now uses itemHistory)
   const filteredItemsDetails = useMemo(() => {
-    let filtered = [...itemDetail];
+    let filtered = [...itemHistory];
 
     if (modalItemSearchQuery) {
       const query = modalItemSearchQuery.toLowerCase();
@@ -266,8 +236,8 @@ const Reports = () => {
         (item) =>
           item.itemName?.toLowerCase().includes(query) ||
           item.itemCode?.toLowerCase().includes(query) ||
-          item.transferFrom?.toLowerCase?.().includes(query) ||
-          item.transferTo?.toLowerCase?.().includes(query)
+          item.sourceWarehouseName?.toLowerCase?.().includes(query) ||
+          item.targetWarehouseName?.toLowerCase?.().includes(query)
       );
     }
 
@@ -289,7 +259,7 @@ const Reports = () => {
     }
 
     return filtered;
-  }, [itemDetail, modalItemSearchQuery, modalItemSortConfig]);
+  }, [itemHistory, modalItemSearchQuery, modalItemSortConfig]);
 
   const handleModalItemSort = (key) => {
     setModalItemSortConfig((prev) => {
@@ -510,9 +480,34 @@ const Reports = () => {
     // fetchItems will be called by the useEffect that depends on itemsPerPage
   };
 
+  // Fetch item history when opening Item History modal
+  const handleOpenItemHistory = (warehouseDetail) => {
+    setIsShowItemDetails(true);
+    setViewItemsData(warehouseDetail);
+    setIsShowDetails(true);
+    // Fetch item history from API
+    api
+      .post("/api/warehouse-transfer-logs/filter", {
+        itemCode: warehouseDetail.itemCode,
+        sourceWarehouseId:
+          warehouseDetail.warehouseId ||
+          warehouseDetail.sourceWarehouseId ||
+          warehouseDetail.id,
+      })
+      .then((response) => {
+        if (response.data && response.data.status) {
+          setItemHistory(response.data.data || []);
+        } else {
+          setItemHistory([]);
+        }
+      })
+      .catch(() => {
+        setItemHistory([]);
+      });
+  };
+
   return (
     <div>
-      {" "}
       {/* Header Section */}
       <nav className="navbar bg-light border-body" data-bs-theme="light">
         <div className="container-fluid">
@@ -825,7 +820,7 @@ const Reports = () => {
                                     <span>{warehouseDetail.quantity}</span>
                                   </div>
                                 </td>
-                                <td className="ps-4">
+                                <td className="ps-5">
                                   <div>
                                     <span>-</span>
                                   </div>
@@ -834,12 +829,9 @@ const Reports = () => {
                                   <button
                                     className="btn-icon btn-primary"
                                     title="View Details"
-                                    onClick={() => {
-                                      console.log(warehouseDetail.id);
-                                      setIsShowItemDetails(true);
-                                      setViewItemsData(warehouseDetail);
-                                      setIsShowDetails(true);
-                                    }}
+                                    onClick={() =>
+                                      handleOpenItemHistory(warehouseDetail)
+                                    }
                                   >
                                     <i className="fas fa-eye"></i>
                                   </button>
@@ -923,11 +915,11 @@ const Reports = () => {
                       <thead>
                         <tr>
                           <th
-                            onClick={() => handleModalItemSort("trno")}
+                            onClick={() => handleModalItemSort("trNo")}
                             style={{ cursor: "pointer" }}
                           >
                             TRNO{" "}
-                            {modalItemSortConfig.key === "trno" &&
+                            {modalItemSortConfig.key === "trNo" &&
                               (modalItemSortConfig.direction === "asc" ? (
                                 <i className="fa-solid fa-sort-up"></i>
                               ) : (
@@ -935,11 +927,11 @@ const Reports = () => {
                               ))}
                           </th>
                           <th
-                            onClick={() => handleModalItemSort("date")}
+                            onClick={() => handleModalItemSort("transferredAt")}
                             style={{ cursor: "pointer" }}
                           >
                             Date{" "}
-                            {modalItemSortConfig.key === "time" &&
+                            {modalItemSortConfig.key === "transferredAt" &&
                               (modalItemSortConfig.direction === "asc" ? (
                                 <i className="fa-solid fa-sort-up"></i>
                               ) : (
@@ -971,11 +963,14 @@ const Reports = () => {
                               ))}
                           </th>
                           <th
-                            onClick={() => handleModalItemSort("transferFrom")}
+                            onClick={() =>
+                              handleModalItemSort("sourceWarehouseName")
+                            }
                             style={{ cursor: "pointer" }}
                           >
                             Transferred From{" "}
-                            {modalItemSortConfig.key === "transferFrom" &&
+                            {modalItemSortConfig.key ===
+                              "sourceWarehouseName" &&
                               (modalItemSortConfig.direction === "asc" ? (
                                 <i className="fa-solid fa-sort-up"></i>
                               ) : (
@@ -983,11 +978,14 @@ const Reports = () => {
                               ))}
                           </th>
                           <th
-                            onClick={() => handleModalItemSort("transferTo")}
+                            onClick={() =>
+                              handleModalItemSort("targetWarehouseName")
+                            }
                             style={{ cursor: "pointer" }}
                           >
                             Transferred To{" "}
-                            {modalItemSortConfig.key === "transferTo" &&
+                            {modalItemSortConfig.key ===
+                              "targetWarehouseName" &&
                               (modalItemSortConfig.direction === "asc" ? (
                                 <i className="fa-solid fa-sort-up"></i>
                               ) : (
@@ -1007,64 +1005,24 @@ const Reports = () => {
                               ))}
                           </th>
                           <th
-                            onClick={() => handleModalItemSort("unitPrice")}
+                            onClick={() => handleModalItemSort("transferredBy")}
                             style={{ cursor: "pointer" }}
                           >
-                            Unit Price{" "}
-                            {modalItemSortConfig.key === "unitPrice" &&
+                            Transferred By{" "}
+                            {modalItemSortConfig.key === "transferredBy" &&
                               (modalItemSortConfig.direction === "asc" ? (
                                 <i className="fa-solid fa-sort-up"></i>
                               ) : (
                                 <i className="fa-solid fa-sort-down"></i>
                               ))}
                           </th>
-                          <th
-                            onClick={() => handleModalItemSort("totalPrice")}
-                            style={{ cursor: "pointer" }}
-                          >
-                            Total Price{" "}
-                            {modalItemSortConfig.key === "totalPrice" &&
-                              (modalItemSortConfig.direction === "asc" ? (
-                                <i className="fa-solid fa-sort-up"></i>
-                              ) : (
-                                <i className="fa-solid fa-sort-down"></i>
-                              ))}
-                          </th>
-                          <th
-                            onClick={() =>
-                              handleModalItemSort("cumulativeQuantity")
-                            }
-                            style={{ cursor: "pointer" }}
-                          >
-                            Cumulative Quantity{" "}
-                            {modalItemSortConfig.key === "cumulativeQuantity" &&
-                              (modalItemSortConfig.direction === "asc" ? (
-                                <i className="fa-solid fa-sort-up"></i>
-                              ) : (
-                                <i className="fa-solid fa-sort-down"></i>
-                              ))}
-                          </th>
-                          <th
-                            onClick={() =>
-                              handleModalItemSort("cumulativeValue")
-                            }
-                            style={{ cursor: "pointer" }}
-                          >
-                            Cumulative Value{" "}
-                            {modalItemSortConfig.key === "cumulativeValue" &&
-                              (modalItemSortConfig.direction === "asc" ? (
-                                <i className="fa-solid fa-sort-up"></i>
-                              ) : (
-                                <i className="fa-solid fa-sort-down"></i>
-                              ))}
-                          </th>
-                          <th>Actions</th>
+                          <th>Status</th>
                         </tr>
                       </thead>
                       <tbody className="text-break">
                         {filteredItemsDetails.length === 0 ? (
                           <tr className="no-data-row">
-                            <td colSpan="5" className="no-data-cell">
+                            <td colSpan="9" className="no-data-cell">
                               <div className="no-data-content">
                                 <i className="fas fa-box-open no-data-icon"></i>
                                 <p className="no-data-text">No items found</p>
@@ -1072,16 +1030,22 @@ const Reports = () => {
                             </td>
                           </tr>
                         ) : (
-                          filteredItemsDetails.map((item) => (
-                            <tr key={item.id}>
+                          filteredItemsDetails.map((item, idx) => (
+                            <tr key={idx}>
                               <td className="ps-4">
                                 <div>
-                                  <span>{item.trno}</span>
+                                  <span>{item.trNo}</span>
                                 </div>
                               </td>
                               <td className="ps-4">
                                 <div>
-                                  <span>{item.date}</span>
+                                  <span>
+                                    {item.transferredAt
+                                      ? new Date(
+                                          item.transferredAt
+                                        ).toLocaleString()
+                                      : "-"}
+                                  </span>
                                 </div>
                               </td>
                               <td className="ps-4">
@@ -1096,15 +1060,14 @@ const Reports = () => {
                               </td>
                               <td className="ps-4">
                                 <div>
-                                  <span>{item.transferFrom}</span>
+                                  <span>{item.sourceWarehouseName}</span>
                                 </div>
                               </td>
                               <td className="ps-4">
                                 <div>
-                                  <span>{item.transferTo}</span>
+                                  <span>{item.targetWarehouseName}</span>
                                 </div>
                               </td>
-
                               <td className="ps-4">
                                 <div>
                                   <span>{item.quantity}</span>
@@ -1112,27 +1075,12 @@ const Reports = () => {
                               </td>
                               <td className="ps-4">
                                 <div>
-                                  <span>{item.unitPrice}</span>
+                                  <span>{item.transferredBy}</span>
                                 </div>
                               </td>
                               <td className="ps-4">
                                 <div>
-                                  <span>{item.totalPrice}</span>
-                                </div>
-                              </td>
-                              <td className="ps-4">
-                                <div>
-                                  <span>{item.cumulativeQuantity}</span>
-                                </div>
-                              </td>
-                              <td className="ps-4">
-                                <div>
-                                  <span>{item.cumulativeValue}</span>
-                                </div>
-                              </td>
-                              <td className="actions ps-4">
-                                <div>
-                                  <span>{item.status}</span>
+                                  <span>Complete</span>
                                 </div>
                               </td>
                             </tr>
