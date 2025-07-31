@@ -417,7 +417,7 @@ const MaterialIncoming = () => {
       };
 
       console.log("Sending approval request:", data);
-      const response = await api.post("/api/stock-adjustments/requests", data);
+      const response = await api.post("/api/approvals/stock-adjustment", data);
       console.log("Approval request response:", response.data);
       return response.data;
     } catch (error) {
