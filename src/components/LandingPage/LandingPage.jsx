@@ -75,7 +75,7 @@ const LandingPage = () => {
   const [materialReceiptData, setMaterialReceiptData] = useState([]);
   const [wipReturnData, setWipReturnData] = useState([]);
   const [wipRejectedItems, setWipRejectedItems] = useState([]);
-
+  const [incomingMaterialToday, setIncomingMaterialToday] = useState([]);
   // Sliding window
   const [index, setIndex] = useState(0);
 
@@ -332,8 +332,40 @@ const LandingPage = () => {
     try {
       const date = format(Date.now(), "yyyy-MM-dd");
       const response = await api.get(`/api/receipt/items-by-date?date=${date}`);
-      // const fullMonthData = prepareWIPChartData(response.data.data);
-      // setWipReturnData(fullMonthData);
+      setTotalItems(response.data.data.count);
+      const rawData = response.data.data.items;
+      const today = new Date();
+
+      // Step 1: Initialize time slots using 0–23 as keys
+      const chartMap = {};
+      for (let hour = 0; hour < 24; hour++) {
+        chartMap[hour] = {
+          hour: hour, // numeric hour
+          timeLabel: `${hour}:00`, // Optional: for display on X-axis
+          inward: 0,
+          outward: 0,
+        };
+      }
+
+      // Step 2: Add actual data
+      rawData.forEach((entry) => {
+        const parsedDate = parse(
+          entry.createdAt,
+          "yyyy-MM-dd HH:mm:ss",
+          new Date()
+        );
+
+        if (isSameDay(parsedDate, today)) {
+          const hour = parsedDate.getHours(); // 0–23
+          if (chartMap[hour]) {
+            chartMap[hour].inward += 1;
+          }
+        }
+      });
+
+      // Step 3: Set chart data
+      const chartDataArray = Object.values(chartMap);
+      setIncomingMaterialToday(chartDataArray);
     } catch (error) {
       toast.error("Error in fetching material receipt data");
       console.error("Error fetching material receipt data:", error);
@@ -364,15 +396,7 @@ const LandingPage = () => {
       title: "Store Material Inward",
       lineColor1: "#3b82f6",
       lineColor2: "#efcd44ff",
-      data: [
-        { day: "Mon", inward: 50, outward: 30 },
-        { day: "Tue", inward: 45, outward: 40 },
-        { day: "Wed", inward: 65, outward: 30 },
-        { day: "Thu", inward: 70, outward: 20 },
-        { day: "Fri", inward: 60, outward: 80 },
-        { day: "Sat", inward: 55, outward: 50 },
-        { day: "Sun", inward: 40, outward: 75 },
-      ],
+      data: incomingMaterialToday,
     },
     {
       title: "IQC",
@@ -468,19 +492,19 @@ const LandingPage = () => {
   };
 
   // Fetch Total Items
-  const fetchTotalItems = async () => {
-    try {
-      const response = await api.get("/api/items/all");
-      setTotalItems(response.data.data.length);
-    } catch (error) {
-      toast.error("Error in fetching total items");
-      console.error("Error fetching total items:", error);
-    }
-  };
+  // const fetchTotalItems = async () => {
+  //   try {
+  //     const response = await api.get("/api/items/all");
+  //     setTotalItems(response.data.data.length);
+  //   } catch (error) {
+  //     toast.error("Error in fetching total items");
+  //     console.error("Error fetching total items:", error);
+  //   }
+  // };
 
-  useEffect(() => {
-    fetchTotalItems();
-  }, []);
+  // useEffect(() => {
+  //   fetchTotalItems();
+  // }, []);
 
   // Fetch Pending Approvals
   const fetchPendingApprovals = async () => {
@@ -777,6 +801,8 @@ const LandingPage = () => {
                     chartData[current].title === "IQC" ||
                     chartData[current].title === "Material Issue Request"
                       ? "time"
+                      : chartData[current].title === "Store Material Inward"
+                      ? "hour"
                       : "day"
                   }
                 />
