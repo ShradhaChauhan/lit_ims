@@ -91,6 +91,7 @@ const IssueProduction = () => {
   const handleFetchRequisitionNumberList = async () => {
     try {
       const response = await api.get("/api/requisitions/trNo");
+      console.log(response.data.data);
       setRequisitionNumbers(response.data.data);
     } catch (error) {
       toast.error("Error in fetching requisition number list");

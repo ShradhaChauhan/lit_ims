@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import api from "../../../services/api";
 
 const MaterialIssueRequest = () => {
+  const [tempQuantity, setTempQuantity] = useState(0);
   // Helper function to check requisition type restriction
   const getRequisitionTypeOptions = () => {
     // If no items have been added yet, allow both types
@@ -333,7 +334,7 @@ const MaterialIssueRequest = () => {
         warehouse,
         items: selectedBOM.items,
       };
-
+      setTempQuantity(quantity);
       setRequest((prev) => [...prev, newBOM]);
       setIsBOMAdded(true);
       setBom("");
@@ -819,7 +820,7 @@ const MaterialIssueRequest = () => {
       {/* View Modal */}
       {showModal && (
         <div
-          className="modal show d-block"
+          className="modal show d-block modal-lg"
           tabIndex="-1"
           style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
         >
@@ -851,7 +852,7 @@ const MaterialIssueRequest = () => {
                   <>
                     <hr />
                     <h6>BOM Items:</h6>
-                    <table className="table table-striped table-sm">
+                    <table className="table table-striped table-sm p-2">
                       <thead>
                         <tr>
                           <th>Item Name</th>
@@ -867,7 +868,7 @@ const MaterialIssueRequest = () => {
                             <td>{item.itemName}</td>
                             <td>{item.itemCode}</td>
                             <td>{item.uom}</td>
-                            <td>{item.quantity}</td>
+                            <td>{item.quantity * tempQuantity}</td>
                             <td>{item.warehouseName}</td>
                           </tr>
                         ))}

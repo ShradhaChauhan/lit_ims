@@ -585,7 +585,11 @@ const ItemMaster = () => {
         price: itemDetails.price || null,
         stQty: parseInt(itemDetails.stQty) || 0,
         life: parseInt(itemDetails.life) || 0,
+        inventoryItem: itemDetails.inventoryItem || false,
+        iqc: itemDetails.iqc,
       };
+
+      console.log(finalData);
 
       api
         .put(`/api/items/update/${itemDetails.id}`, finalData)
@@ -1192,7 +1196,7 @@ const ItemMaster = () => {
                 </tr>
               ) : getPaginatedItems().length === 0 ? (
                 <tr className="no-data-row">
-                  <td colSpan="12" className="no-data-cell">
+                  <td colSpan="8" className="no-data-cell">
                     <div className="no-data-content">
                       <i className="fas fa-box-open no-data-icon"></i>
                       <p className="no-data-text">No items found</p>

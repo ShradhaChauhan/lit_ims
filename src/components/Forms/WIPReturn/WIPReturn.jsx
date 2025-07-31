@@ -12,6 +12,7 @@ const WIPReturn = () => {
     return today.toISOString().split("T")[0];
   });
   const [type, setType] = useState("");
+  const [errors, setErrors] = useState({});
   const [warehouse, setWarehouse] = useState("");
   const [workOrders, setWorkOrders] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
@@ -171,6 +172,36 @@ const WIPReturn = () => {
   };
 
   const processReturn = async () => {
+    const validationErrors = {};
+    console.log(!warehouse);
+    if (!order) validationErrors.order = "Work Order is required.";
+    if (!type) validationErrors.type = "Return Type is required.";
+    if (!warehouse) validationErrors.warehouse = "Warehouse is required.";
+    if (order && returnItems.length === 0) {
+      toast.error("Please add at least one return item.");
+      return;
+    }
+
+    // Check for empty returnQty and reason in returnItems
+    returnItems.forEach((item, index) => {
+      if (!item.returnQty || isNaN(item.returnQty)) {
+        validationErrors[`returnQty_${index}`] =
+          "Return Qty is required and must be a number.";
+      }
+      if (!item.reason) {
+        validationErrors[`reason_${index}`] = "Return Reason is required.";
+      }
+    });
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      toast.error("Please fill all required fields.");
+      return;
+    }
+
+    // Clear previous errors
+    setErrors({});
+
     try {
       const transformedReturnItems = returnItems.map((item) => ({
         itemCode: item.itemCode,
@@ -180,7 +211,7 @@ const WIPReturn = () => {
         returnQty: item.returnQty,
         returnReason: item.reason,
       }));
-      console.log(order);
+
       const workOrder = recentReceipts.find((r) => r.id === Number(order));
 
       const data = {
@@ -193,8 +224,6 @@ const WIPReturn = () => {
         returnItems: transformedReturnItems,
       };
 
-      console.log("data: " + JSON.stringify(data));
-
       const response = await api.post(`/api/wip-return`, data);
       toast.success("Successfully returned the items");
       handleReset();
@@ -204,6 +233,41 @@ const WIPReturn = () => {
       console.error(error);
     }
   };
+
+  // const processReturn = async () => {
+  //   try {
+  //     const transformedReturnItems = returnItems.map((item) => ({
+  //       itemCode: item.itemCode,
+  //       itemName: item.itemName,
+  //       batchNo: item.batchNumber,
+  //       originalQty: item.receivedQuantity,
+  //       returnQty: item.returnQty,
+  //       returnReason: item.reason,
+  //     }));
+  //     console.log(order);
+  //     const workOrder = recentReceipts.find((r) => r.id === Number(order));
+
+  //     const data = {
+  //       transactionNumber: transactionNumber,
+  //       receiptNumber: workOrder.transactionNumber,
+  //       returnType: type,
+  //       returnDate: date,
+  //       workOrderId: order,
+  //       warehouseId: warehouse,
+  //       returnItems: transformedReturnItems,
+  //     };
+
+  //     console.log("data: " + JSON.stringify(data));
+
+  //     const response = await api.post(`/api/wip-return`, data);
+  //     toast.success("Successfully returned the items");
+  //     handleReset();
+  //     getRecentReturns();
+  //   } catch (error) {
+  //     toast.error("Unable to process return request. Please try again!");
+  //     console.error(error);
+  //   }
+  // };
 
   const handleReset = () => {
     setOrder("");
@@ -275,7 +339,7 @@ const WIPReturn = () => {
                 <div className="position-relative w-100">
                   <i className="fas fa-file-lines ms-2 position-absolute z-0 input-icon"></i>
                   <select
-                    className={`form-select ps-5 ms-2 text-font ${
+                    className={`form-select ps-5 text-font ${
                       order === "" ? "text-muted" : ""
                     }`}
                     id="workOrder"
@@ -296,6 +360,9 @@ const WIPReturn = () => {
                   </select>
                   {/* <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i> */}
                 </div>
+                {errors.order && (
+                  <span className="error-message">{errors.order}</span>
+                )}
               </div>
               <div className="col-3 d-flex flex-column form-group">
                 <label htmlFor="shift" className="form-label">
@@ -304,7 +371,7 @@ const WIPReturn = () => {
                 <div className="position-relative w-100">
                   <i className="fas fa-tags ms-2 position-absolute z-0 input-icon"></i>
                   <select
-                    className={`form-select ps-5 ms-2 text-font ${
+                    className={`form-select ps-5 text-font ${
                       type === "" ? "text-muted" : ""
                     }`}
                     id="shift"
@@ -320,12 +387,12 @@ const WIPReturn = () => {
                     <option value="Defective Material" className="text-muted">
                       Defective Material
                     </option>
-                    <option value="Unused Material" className="text-muted">
-                      Unused Material
-                    </option>
                   </select>
                   {/* <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i> */}
                 </div>
+                {errors.type && (
+                  <span className="error-message">{errors.type}</span>
+                )}
               </div>
               <div className="col-3 d-flex flex-column form-group">
                 <label htmlFor="date" className="form-label">
@@ -339,7 +406,7 @@ const WIPReturn = () => {
                     disabled
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className={`form-select ps-5 ms-2 text-font ${
+                    className={`form-select ps-5 text-font ${
                       date === "" ? "text-muted" : ""
                     }`}
                   />
@@ -369,6 +436,9 @@ const WIPReturn = () => {
                     ))}
                   </select>
                 </div>
+                {errors.warehouse && (
+                  <span className="error-message">{errors.warehouse}</span>
+                )}
               </div>
             </div>
             {/* Return Items Table Section */}
@@ -451,6 +521,11 @@ const WIPReturn = () => {
                                   setReturnItems(updated);
                                 }}
                               />
+                              {errors[`returnQty_${index}`] && (
+                                <span className="error-message">
+                                  {errors[`returnQty_${index}`]}
+                                </span>
+                              )}
                             </div>
                           </td>
                           <td className="ps-4">
@@ -469,6 +544,11 @@ const WIPReturn = () => {
                                   setReturnItems(updated);
                                 }}
                               />
+                              {errors[`reason_${index}`] && (
+                                <span className="error-message">
+                                  {errors[`reason_${index}`]}
+                                </span>
+                              )}
                             </div>
                           </td>
                           <td className="actions ps-4">

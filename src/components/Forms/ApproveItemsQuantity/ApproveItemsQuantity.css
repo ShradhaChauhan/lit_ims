@@ -32,3 +32,30 @@
   background-color: #dc3545;
   color: white;
 }
+
+.btn-css {
+    padding: 0.5rem 1.2rem !important;
+    font-size: 0.8rem !important;
+    font-weight: 500 !important;
+}
+
+.badge[role="button"] {
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.badge[role="button"]:hover {
+  filter: brightness(0.95);
+}
+
+.text-7 {
+  font-size: 0.75rem;
+}
+
+.gray {
+  color: #8D91AD;
+}
+
+.icon-color {
+  color: #94A3B8;
+}
