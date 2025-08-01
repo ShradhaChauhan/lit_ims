@@ -429,6 +429,17 @@ const MaterialIssueRequest = () => {
     }
   };
 
+  const handleQuantityChange = (id, val) => {
+    const regex = /^(\d+(\.\d{0,2})?)?$/;
+
+    if (val === "" || regex.test(val)) {
+      const updatedData = request.map((item) =>
+        item.id === id ? { ...item, quantity: val } : item
+      );
+      setRequest(updatedData);
+    }
+  };
+
   return (
     <div>
       {/* Header section */}
@@ -618,7 +629,7 @@ const MaterialIssueRequest = () => {
                     <tr>
                       <th>Item/BOM Name</th>
                       <th>Type</th>
-                      <th>Code</th>
+                      <th>Item Code</th>
                       <th>Quantity</th>
                       <th>Actions</th>
                     </tr>
@@ -638,7 +649,14 @@ const MaterialIssueRequest = () => {
                           </td>
                           <td className="ps-4">
                             <span>
-                              {i.quantity} {i.uom ? i.uom : ""}
+                              <input
+                                type="text"
+                                className="form-control text-8"
+                                value={i.quantity}
+                                onChange={(e) =>
+                                  handleQuantityChange(i.id, e.target.value)
+                                }
+                              />
                             </span>
                           </td>
                           <td className="actions ps-4">

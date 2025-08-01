@@ -116,6 +116,7 @@ const IssueProduction = () => {
             issuedQty: 0,
             variance: 0,
             status: "Pending",
+            // stockQty: stockQty
           })
         );
 
@@ -341,6 +342,7 @@ const IssueProduction = () => {
             quantity: batch.quantity,
             issuedQty: batch.quantity,
             variance: item ? item.variance : 0,
+            // stockQty: batch.stockQty
           };
         }),
       };
@@ -509,7 +511,8 @@ const IssueProduction = () => {
                   <thead>
                     <tr className="text-break">
                       <th>Item Name</th>
-                      <th>Code</th>
+                      <th>Item Code</th>
+                      <th>Stock Qty</th>
                       <th>Requested Qty</th>
                       <th>Standard Qty</th>
                       <th>Issued Qty</th>
@@ -541,6 +544,11 @@ const IssueProduction = () => {
                           <td className="ps-4">
                             <div>
                               <span>{item.code}</span>
+                            </div>
+                          </td>
+                          <td className="ps-4">
+                            <div>
+                              <span>-{/* {item.stockQty} */}</span>
                             </div>
                           </td>
                           <td className="ps-4">
