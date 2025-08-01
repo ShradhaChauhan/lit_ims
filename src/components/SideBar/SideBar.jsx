@@ -29,6 +29,7 @@ import ApproveItemsQuantity from "../Forms/ApproveItemsQuantity/ApproveItemsQuan
 import { AbilityContext } from "../../utils/AbilityContext";
 
 const SideBar = () => {
+  const [searchTerm, setSearchTerm] = useState("");
   const {
     rightSideComponent,
     setRightSideComponent,
@@ -306,114 +307,154 @@ const SideBar = () => {
   // RBAC
   const ability = useContext(AbilityContext);
 
+  // Search bar filter
+  const filteredMenuItems = menuItems
+    .map((item) => {
+      const lowerSearch = searchTerm.toLowerCase();
+
+      // If no submenu, just check label
+      if (!item.submenu) {
+        if (item.label.toLowerCase().includes(lowerSearch)) return item;
+        return null;
+      }
+
+      // For submenu items
+      const filteredSubmenu = item.submenu.filter((sub) =>
+        sub.label.toLowerCase().includes(lowerSearch)
+      );
+
+      if (
+        item.label.toLowerCase().includes(lowerSearch) ||
+        filteredSubmenu.length > 0
+      ) {
+        return {
+          ...item,
+          submenu: filteredSubmenu, // only include matching submenu items
+        };
+      }
+
+      return null;
+    })
+    .filter(Boolean);
+
   return (
     <div
       className={`d-flex flex-column vh-100 sidebar ${
         isCollapsed ? "collapsed" : ""
       }`}
     >
-      <div className="p-2 d-flex justify-content-between align-items-center">
-        {!isCollapsed && <img src={ims_logo} width={66} height={60} />}
-        <button
-          className="btn btn-sm btn-outline-light"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-        >
-          <i className="fa-solid fa-bars"></i>
-        </button>
-      </div>
-
-      {/* Search Bar */}
-      <SearchBar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-
-      {/* Menu Items */}
-      {!isCollapsed && <p className="heading">MAIN MENU</p>}
-      <ul className="nav nav-pills flex-column mb-auto mt-1">
-        {menuItems.map((item, idx) => (
-          <li
-            key={idx}
-            className="nav-item position-relative"
-            onMouseEnter={() => isCollapsed && setHoveredMenu(item.label)}
-            onMouseLeave={() => isCollapsed && setHoveredMenu(null)}
+      <div className="sidebar-header">
+        <div className="p-2 d-flex justify-content-between align-items-center">
+          {!isCollapsed && <img src={ims_logo} width={66} height={60} />}
+          <button
+            className="btn btn-sm btn-outline-light"
+            onClick={() => setIsCollapsed(!isCollapsed)}
           >
-            {/* Menu Item */}
-            <div
-              className={`nav-link text-white d-flex justify-content-between align-items-center menuListItem`}
-              onClick={() => {
-                if (item.submenu) {
-                  // Toggle submenu
-                  if (!isCollapsed) toggleSubmenu(item.label);
-                } else {
-                  // Navigate directly for menu items like "Reports" or "Activity Logs"
-                  navigate(`/${item.path.toLowerCase().replace(/\s+/g, "-")}`);
-                  setIsActiveComponent(item.path);
-                  setLabelName(item.label);
-                  handleRightSideComponentName(item.label); // Pass label if it's used as a compName
-                }
-              }}
+            <i className="fa-solid fa-bars"></i>
+          </button>
+        </div>
+      </div>
+      <div className="sidebar-scroll-area">
+        {/* Search Bar */}
+        <SearchBar
+          isCollapsed={isCollapsed}
+          setIsCollapsed={setIsCollapsed}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+        />
+
+        {/* Menu Items */}
+        {!isCollapsed && <p className="heading">MAIN MENU</p>}
+        <ul className="nav nav-pills flex-column mb-auto mt-1">
+          {filteredMenuItems.map((item, idx) => (
+            <li
+              key={idx}
+              className="nav-item position-relative"
+              onMouseEnter={() => isCollapsed && setHoveredMenu(item.label)}
+              onMouseLeave={() => isCollapsed && setHoveredMenu(null)}
             >
-              <span>
-                <i className={`${item.icon} me-2`}></i>
-                {!isCollapsed && item.label}
-              </span>
+              {/* Menu Item */}
+              <div
+                className={`nav-link text-white d-flex justify-content-between align-items-center menuListItem`}
+                onClick={() => {
+                  if (item.submenu) {
+                    // Toggle submenu
+                    if (!isCollapsed) toggleSubmenu(item.label);
+                  } else {
+                    // Navigate directly for menu items like "Reports" or "Activity Logs"
+                    navigate(
+                      `/${item.path.toLowerCase().replace(/\s+/g, "-")}`
+                    );
+                    setIsActiveComponent(item.path);
+                    setLabelName(item.label);
+                    handleRightSideComponentName(item.label); // Pass label if it's used as a compName
+                  }
+                }}
+              >
+                <span>
+                  <i className={`${item.icon} me-2`}></i>
+                  {!isCollapsed && item.label}
+                </span>
 
-              {!isCollapsed && item.submenu && (
-                <i
-                  className={`fas fa-chevron-${
-                    openSubmenus[item.label] ? "down" : "right"
-                  }`}
-                ></i>
-              )}
-            </div>
+                {!isCollapsed && item.submenu && (
+                  <i
+                    className={`fas fa-chevron-${
+                      openSubmenus[item.label] ? "down" : "right"
+                    }`}
+                  ></i>
+                )}
+              </div>
 
-            {/* ▶️ Flyover submenu (collapsed mode) */}
-            {isCollapsed && hoveredMenu === item.label && item.submenu && (
-              <ul className="flyover-submenu nav flex-column">
-                {item.submenu.map((sub, subIdx) => (
-                  <li key={subIdx} className="nav-item">
-                    <Link
-                      to={sub.newPath}
-                      onClick={() => {
-                        handleRightSideComponentName(sub.compName);
-                        setIsActiveComponent(sub.path);
-                        setLabelName(sub.label);
-                        setHoveredMenu(null);
-                      }}
-                      className="nav-link small submenu-item"
-                    >
-                      <i className={`${sub.icon} me-2`}></i>
-                      {sub.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            {/* ▼ Expanded submenu (expanded mode) */}
-            {!isCollapsed && openSubmenus[item.label] && item.submenu && (
-              <ul className="nav flex-column ms-4">
-                {item.submenu.map((sub, subIdx) => (
-                  <li key={subIdx} className="nav-item">
-                    {ability.can("view", sub.label || "") && (
+              {/* ▶️ Flyover submenu (collapsed mode) */}
+              {isCollapsed && hoveredMenu === item.label && item.submenu && (
+                <ul className="flyover-submenu nav flex-column">
+                  {item.submenu.map((sub, subIdx) => (
+                    <li key={subIdx} className="nav-item">
                       <Link
                         to={sub.newPath}
                         onClick={() => {
                           handleRightSideComponentName(sub.compName);
                           setIsActiveComponent(sub.path);
                           setLabelName(sub.label);
+                          setHoveredMenu(null);
                         }}
-                        className="nav-link text-white small menuListItem"
+                        className="nav-link small submenu-item"
                       >
                         <i className={`${sub.icon} me-2`}></i>
                         {sub.label}
                       </Link>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </li>
-        ))}
-      </ul>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {/* ▼ Expanded submenu (expanded mode) */}
+              {!isCollapsed && openSubmenus[item.label] && item.submenu && (
+                <ul className="nav flex-column ms-4">
+                  {item.submenu.map((sub, subIdx) => (
+                    <li key={subIdx} className="nav-item">
+                      {ability.can("view", sub.label || "") && (
+                        <Link
+                          to={sub.newPath}
+                          onClick={() => {
+                            handleRightSideComponentName(sub.compName);
+                            setIsActiveComponent(sub.path);
+                            setLabelName(sub.label);
+                          }}
+                          className="nav-link text-white small menuListItem"
+                        >
+                          <i className={`${sub.icon} me-2`}></i>
+                          {sub.label}
+                        </Link>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </li>
+          ))}
+        </ul>
+      </div>
 
       {!isCollapsed ? (
         <div className="ms-2">

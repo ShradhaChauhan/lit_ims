@@ -82,7 +82,7 @@ const VendorMaster = () => {
     email: "",
     city: "",
     state: "",
-    country: "",
+    country: "India",
     pincode: "",
     address: "",
     status: "active",
