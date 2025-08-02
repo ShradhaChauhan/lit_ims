@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./LandingPage.css";
 import {
   FaBoxOpen,
@@ -44,7 +44,9 @@ import {
   endOfMonth,
   parseISO,
   isSameDay,
+  isValid,
 } from "date-fns";
+import { AppContext } from "../../context/AppContext";
 
 // Sliding window dummy data
 const frames = [
@@ -76,15 +78,18 @@ const LandingPage = () => {
   const [wipReturnData, setWipReturnData] = useState([]);
   const [wipRejectedItems, setWipRejectedItems] = useState([]);
   const [incomingMaterialToday, setIncomingMaterialToday] = useState([]);
+  const { istoken } = useContext(AppContext);
   // Sliding window
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
+    // if (istoken) {
     const interval = setInterval(() => {
       setIndex((prev) => (prev + 1) % frames.length);
     }, 10000); // every 4 seconds
 
     return () => clearInterval(interval); // cleanup
+    // }
   }, []);
 
   // Fetch Pending QC
@@ -204,7 +209,7 @@ const LandingPage = () => {
     }
   };
 
-  -useEffect(() => {
+  useEffect(() => {
     fetchMaterialRequestMonthly();
   }, []);
 
@@ -225,14 +230,27 @@ const LandingPage = () => {
 
     // Step 2: Fill actual data
     data.forEach((entry) => {
-      const parsedDate = parseISO(entry.receiptDate); // handles yyyy-MM-dd
+      const parsedDate = parseISO(entry.receiptDate);
+
+      // Skip if receiptDate is missing or invalid
+      if (!entry.receiptDate || !isValid(parsedDate)) {
+        console.warn("Skipping invalid or missing receiptDate entry:", entry);
+        return;
+      }
+
       const dateStr = format(parsedDate, "dd MMMM yyyy");
+
+      // Skip if this date is outside the current month (i.e. not initialized in chartMap)
+      if (!chartMap[dateStr]) {
+        console.warn("Date not in current month range:", dateStr);
+        return;
+      }
 
       const itemCount = entry.items?.length || 0;
 
       if (entry.type === "bom") {
         chartMap[dateStr].bom += itemCount;
-      } else if (entry.type === "items") {
+      } else if (entry.type === "item") {
         chartMap[dateStr].item += itemCount;
       }
     });
@@ -427,8 +445,10 @@ const LandingPage = () => {
   const total = chartData.length;
   // Auto-slide
   useEffect(() => {
+    // if (istoken) {
     startAutoSlide();
     return stopAutoSlide;
+    // }
   }, []);
 
   const startAutoSlide = () => {

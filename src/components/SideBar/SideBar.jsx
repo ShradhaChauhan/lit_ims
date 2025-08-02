@@ -254,6 +254,8 @@ const SideBar = () => {
   const handleLogout = async () => {
     try {
       await api.post("/api/auth/logout");
+
+      localStorage.removeItem("authToken");
       navigate("/");
     } catch (err) {
       console.error("Logout Failed", err);
