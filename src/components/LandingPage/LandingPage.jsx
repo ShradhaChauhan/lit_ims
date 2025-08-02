@@ -777,7 +777,7 @@ const LandingPage = () => {
             </button>
 
             <div>
-              {chartData[current].title === "Store Material Inward" && (
+              {/* {chartData[current].title === "Store Material Inward" && (
                 <select
                   className="filter-select"
                   value={selectedItem}
@@ -793,7 +793,7 @@ const LandingPage = () => {
                     </option>
                   ))}
                 </select>
-              )}
+              )} */}
               <h5 className="text-center text-dark">
                 {chartData[current].title}
               </h5>
