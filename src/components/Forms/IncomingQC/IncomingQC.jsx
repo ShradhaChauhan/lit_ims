@@ -14,6 +14,8 @@ const IncomingQC = () => {
   const [batchDetails, setBatchDetails] = useState([]);
   const [isFail, setIsFail] = useState(false);
   const [isPass, setIsPass] = useState("");
+  const [isHold, setIsHold] = useState("");
+  const holdRef = useRef(null);
   const passRef = useRef(null);
   const failRef = useRef(null);
   const [defectCategory, setDefectCategory] = useState("");
@@ -267,20 +269,33 @@ const IncomingQC = () => {
       toast.error("Please select a warehouse");
       return;
     }
+    if (selectedFile) {
+      console.log("File selected:", selectedFile);
+    } else {
+      toast.error("Please select a file first.");
+      return;
+    }
+    if (!defectCategory) {
+      toast.error("Please select a defect category");
+      return;
+    }
     try {
       const data = {
         id: batchDetails[0].id,
-        qcStatus: isFail ? "FAIL" : "PASS",
+        qcStatus: isFail ? "FAIL" : isHold ? "HOLD" : "PASS",
         defectCategory: defectCategory,
         remarks: remarks,
         warehouseId: selectedWarehouse,
+        attachment: selectedFile,
       };
       console.log(data);
       const response = await api.put("/api/receipt/qc-status/update", data);
       fetchPassFailQC();
       fetchPendingQC();
       setIsPass("");
+      setIsHold("");
       setIsFail(false);
+      setSelectedFile("");
       toast.success("Batch details are passed successfully");
       setIsShowQualityCheckForm(false);
     } catch (error) {
@@ -348,6 +363,13 @@ const IncomingQC = () => {
 
   // Dynamically calculate widths
   const fieldClass = isFail ? "flex-1" : "flex-1-3";
+
+  // Add Attachment
+  const [selectedFile, setSelectedFile] = useState(null);
+
+  const handleFileChange = (event) => {
+    setSelectedFile(event.target.files[0]);
+  };
 
   return (
     <div>
@@ -417,7 +439,7 @@ const IncomingQC = () => {
           <form autoComplete="off" className="padding-2">
             <div className="form-grid pt-0">
               <div className="row form-style">
-                <div className={`${isFail ? "col-md-4" : "col-md-8"}`}>
+                <div className={`${isFail ? "col-md-4" : "col-md-4"}`}>
                   <label className="text-8 font-weight p-0">
                     Batch Details <span className="text-danger fs-6">*</span>
                   </label>
@@ -496,40 +518,61 @@ const IncomingQC = () => {
                       Quality Status <span className="text-danger fs-6">*</span>
                     </label>
                     <div className="row">
-                      <div className="col-6">
+                      <div className="col-4">
                         <button
                           type="button"
                           className={`btn w-100 ${
                             isPass === "PASS"
                               ? "btn-success"
-                              : isFail
+                              : isFail === "FAIL" || isHold === "HOLD"
                               ? "btn-secondary"
                               : "btn-outline-success"
                           }`}
                           onClick={() => {
                             setIsPass("PASS");
                             setIsFail(false);
+                            setIsHold(false);
                           }}
                         >
                           Pass (Alt + P)
                         </button>
                       </div>
-                      <div className="col-6">
+                      <div className="col-4">
                         <button
                           type="button"
                           className={`btn w-100 ${
                             isFail
                               ? "btn-danger"
-                              : isPass === "PASS"
+                              : isPass === "PASS" || isHold === "HOLD"
                               ? "btn-secondary"
                               : "btn-outline-danger"
                           }`}
                           onClick={() => {
-                            setIsFail(true);
-                            setIsPass("");
+                            setIsFail("FAIL");
+                            setIsPass(false);
+                            setIsHold(false);
                           }}
                         >
                           Fail (Alt + F)
+                        </button>
+                      </div>
+                      <div className="col-4">
+                        <button
+                          type="button"
+                          className={`btn w-100 ${
+                            isHold
+                              ? "btn-warning"
+                              : isPass === "PASS" || isFail === "FAIL"
+                              ? "btn-secondary"
+                              : "btn-outline-warning"
+                          }`}
+                          onClick={() => {
+                            setIsFail(false);
+                            setIsHold("HOLD");
+                            setIsPass(false);
+                          }}
+                        >
+                          Hold (Alt + H)
                         </button>
                       </div>
                     </div>
@@ -565,8 +608,29 @@ const IncomingQC = () => {
                           </option>
                         ))}
                       </select>
-                      <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                     </div>
+                  </div>
+                  <div className="mt-3">
+                    <label
+                      htmlFor="attachment"
+                      className="form-label mb-0 text-8 font-weight py-2"
+                    >
+                      Add Attachment <span className="text-danger fs-6">*</span>
+                    </label>
+                    <div className="position-relative w-100">
+                      <input
+                        className="form-control text-8"
+                        type="file"
+                        id="formFile"
+                        onChange={handleFileChange}
+                      />
+                    </div>
+                    {selectedFile && (
+                      <div className="mt-3 text-8">
+                        <span className="fw-medium ">Selected File:</span>{" "}
+                        {selectedFile.name}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className={`${fieldClass} form-group`}>
@@ -576,7 +640,8 @@ const IncomingQC = () => {
                         htmlFor="category"
                         className="form-label mb-0 text-8 font-weight py-3"
                       >
-                        Defect Category
+                        Defect Category{" "}
+                        <span className="text-danger fs-6">*</span>
                       </label>
                       <div className="position-relative w-100">
                         <i
@@ -629,7 +694,7 @@ const IncomingQC = () => {
                     </div>
                   )}
 
-                  {isFail && (
+                  {(isFail || isHold) && (
                     <div>
                       <label
                         htmlFor="remarks"

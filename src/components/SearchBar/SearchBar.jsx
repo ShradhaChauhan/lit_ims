@@ -2,23 +2,25 @@ import React, { useRef } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import "./SearchBar.css";
 
-const SearchBar = ({ isCollapsed, setIsCollapsed }) => {
+const SearchBar = ({
+  isCollapsed,
+  setIsCollapsed,
+  searchTerm,
+  setSearchTerm,
+}) => {
   const inputRef = useRef(null);
 
-  /* Press Ctrl + f to access search bar. It is a shorcut to open search bar. */
+  // Ctrl + F shortcut
   useHotkeys(
     ["ctrl+f"],
     (e) => {
       e.preventDefault();
-
       if (isCollapsed) {
         setIsCollapsed(false);
         setTimeout(() => inputRef.current?.focus(), 300);
       } else {
         inputRef.current?.focus();
       }
-
-      return false;
     },
     [isCollapsed]
   );
@@ -32,6 +34,8 @@ const SearchBar = ({ isCollapsed, setIsCollapsed }) => {
             type="text"
             className="form-control search-input ps-5"
             placeholder="Search..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
           <i className="fas fa-search search-icon position-absolute"></i>
         </div>

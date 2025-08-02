@@ -23,6 +23,9 @@ const VendorMaster = () => {
   const countryRef = useRef(null);
   const stateRef = useRef(null);
   const cityRef = useRef(null);
+  const [username, setUsername] = useState("");
+  const [domain, setDomain] = useState("digiupdates.com");
+  const domains = ["litgroup.in"];
 
   // Dropdown should hide on click of outside
   useEffect(() => {
@@ -56,7 +59,7 @@ const VendorMaster = () => {
   const [countryList, setCountryList] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
-  const [countryId, setCountryId] = useState("");
+  const [countryId, setCountryId] = useState(1);
 
   // State list
   const [stateList, setStateList] = useState([]);
@@ -82,7 +85,7 @@ const VendorMaster = () => {
     email: "",
     city: "",
     state: "",
-    country: "",
+    country: "India",
     pincode: "",
     address: "",
     status: "active",
@@ -444,6 +447,7 @@ const VendorMaster = () => {
 
     if (Object.keys(newErrors).length === 0) {
       try {
+        console.log(formData);
         const response = await api.post("/api/vendor-customer/add", formData);
         console.log("Partner added successfully:", response.data);
 
@@ -811,7 +815,7 @@ const VendorMaster = () => {
                   </label>
                   <div className="position-relative w-100">
                     <i className="fa-solid fa-envelope ps-2 position-absolute z-0 input-icon"></i>
-                    <input
+                    {/* <input
                       type="email"
                       className="form-control ps-5 ms-2 text-font"
                       id="email"
@@ -820,7 +824,34 @@ const VendorMaster = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, email: e.target.value })
                       }
-                    />
+                    /> */}
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px",
+                      }}
+                    >
+                      <input
+                        className="form-control ps-5 ms-2 text-font"
+                        type="text"
+                        placeholder="Enter email"
+                        value={username}
+                        onChange={(e) => {
+                          setUsername(e.target.value);
+                          setFormData({
+                            ...formData,
+                            email: e.target.value + "@litgroup.in",
+                          });
+                        }}
+                      />
+                      <input
+                        className="form-control ms-2 text-font"
+                        type="text"
+                        value="@litgroup.in"
+                        disabled
+                      />
+                    </div>
                   </div>
                   {errors.email && (
                     <span className="error-message ms-2">{errors.email}</span>
@@ -1577,7 +1608,7 @@ const VendorMaster = () => {
                           </label>
                           <div className="position-relative w-100">
                             <i className="fa-solid fa-envelope ps-2 position-absolute z-0 input-icon"></i>
-                            <input
+                            {/* <input
                               type="email"
                               className="form-control ps-5 ms-2 text-font"
                               id="email"
@@ -1589,7 +1620,33 @@ const VendorMaster = () => {
                                   email: e.target.value,
                                 })
                               }
-                            />
+                            /> */}
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "4px",
+                              }}
+                            >
+                              <input
+                                className="form-control ps-5 ms-2 text-font"
+                                type="text"
+                                placeholder="Enter email"
+                                value={partnerDetails.email.split("@")[0] || ""}
+                                onChange={(e) =>
+                                  setPartnerDetails({
+                                    ...partnerDetails,
+                                    email: e.target.value + "@litgroup.in",
+                                  })
+                                }
+                              />
+                              <input
+                                className="form-control ms-2 text-font"
+                                type="text"
+                                value="@litgroup.in"
+                                disabled
+                              />
+                            </div>
                           </div>
                           {errors.email && (
                             <span className="error-message ms-2">

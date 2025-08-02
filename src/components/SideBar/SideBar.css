@@ -14,7 +14,7 @@
   margin-top: 20px;
 }
 
-.sidebar {
+/* .sidebar {
   width: 277px;
   background-color: var(--sidebar-color);
   transition: width 0.3s ease;
@@ -24,11 +24,55 @@
   flex-direction: column;
   padding: 1rem;
   overflow: visible !important;
+} */
+
+.sidebar {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 277px;
+  background-color: var(--sidebar-color);
+  transition: width 0.3s ease;
+  color: white;
+  flex-shrink: 0;
 }
 
 .sidebar.collapsed {
   width: 70px;
 }
+
+.sidebar-scroll-area {
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+  padding: 0 1rem;
+  position: relative; /* so flyout can be absolute inside */
+}
+
+/* Scrollbar Styling */
+.sidebar-scroll-area::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-scroll-area::-webkit-scrollbar-track {
+  background: #1c2234; /* darker sidebar background */
+  border-radius: 10px;
+}
+
+.sidebar-scroll-area::-webkit-scrollbar-thumb {
+  background: #3a4463; /* subtle blue-gray thumb */
+  border-radius: 10px;
+}
+
+.sidebar-scroll-area::-webkit-scrollbar-thumb:hover {
+  background: #536087; /* slightly brighter on hover */
+}
+
+/* 
+.sidebar.collapsed {
+  width: 70px; 
+} */
 
 .sidebar::-webkit-scrollbar {
   width: 6px;
@@ -153,32 +197,35 @@
   position: relative;
   z-index: 10;
 } 
+
 /* .flyover-submenu {
-  position: absolute !important;
-  top: 0 !important;
-  left: 100% !important;
-  background-color: var(--sidebar-color) !important;
-  font-size: 0.8rem;
-  border: 1px solid #ccc !important;
-  border-radius: 0.25rem !important;
-  z-index: 9999 !important;
-  min-width: 200px !important;
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15) !important;
-  padding: 0.5rem 0 !important;
-  transition: width 0.3s ease;
-}
-*/
-.flyover-submenu {
   position: absolute;
   top: 0;
   left: 100%;
-  background-color: var(--sidebar-color); /* or your theme */
+  background-color: var(--sidebar-color);
   font-size: 0.8rem;
   padding: 0.5rem;  
   border-radius: 0.25rem !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   min-width: 220px;
   z-index: 1000;
+  opacity: 0;
+  transform: translateX(-10px);
+  pointer-events: none;
+  transition: all 0.25s ease-out;
+} */
+
+.flyover-submenu {
+  position: absolute;
+  top: 0;
+  left: 100%;
+  background-color: var(--sidebar-color);
+  font-size: 0.8rem;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  min-width: 220px;
+  z-index: 9999; /* increased */
   opacity: 0;
   transform: translateX(-10px);
   pointer-events: none;
