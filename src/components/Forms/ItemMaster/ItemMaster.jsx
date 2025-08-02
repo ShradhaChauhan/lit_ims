@@ -7,6 +7,7 @@ import { Modal } from "bootstrap";
 import { toast } from "react-toastify";
 import exportToExcel from "../../../utils/exportToExcel";
 import { AbilityContext } from "../../../utils/AbilityContext";
+import * as XLSX from "xlsx";
 
 const ItemMaster = () => {
   const [errors, setErrors] = useState({});
@@ -684,6 +685,56 @@ const ItemMaster = () => {
   // RBAC
   const ability = useContext(AbilityContext);
 
+  // Excel import
+  const [excelData, setExcelData] = useState([]);
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+
+    reader.onload = (evt) => {
+      const arrayBuffer = evt.target.result;
+      const workbook = XLSX.read(arrayBuffer, { type: "array" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const parsedData = XLSX.utils.sheet_to_json(worksheet);
+      console.log("parsedData: " + JSON.stringify(parsedData));
+      setExcelData(parsedData);
+    };
+
+    reader.readAsArrayBuffer(file);
+  };
+
+  const handleSaveToAPI = async () => {
+    console.log(excelData);
+    if (excelData.length === 0) {
+      toast.error("Please select an excel file");
+      return;
+    }
+    try {
+      for (const row of excelData) {
+        const payload = {
+          name: row.name,
+          code: row.code,
+          uom: row.uom,
+          groupName: row.groupName,
+          status: row.status,
+          price: row.price,
+          stQty: row.stQty,
+          life: row.life,
+          inventoryItem: row.inventoryItem,
+          iqc: row.iqc,
+        };
+        console.log("Excel import payload: " + JSON.stringify(payload));
+        const response = await api.post("/api/items/add", payload);
+        toast.success("Excel imported successfully");
+      }
+    } catch (error) {
+      console.error("Error saving excel data:", error);
+      toast.error(error.response.data.message);
+    }
+  };
+
   return (
     <div>
       {/* Header section */}
@@ -1120,7 +1171,7 @@ const ItemMaster = () => {
       {/* Table Section */}
       <div className="margin-2 mx-2">
         <div className="table-container">
-          <div className="table-header">
+          <div className="table-header d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div className="selected-count">
               <input
                 type="checkbox"
@@ -1133,8 +1184,21 @@ const ItemMaster = () => {
               </label>
             </div>
             <div className="bulk-actions">
+              <input
+                type="file"
+                accept=".xlsx, .xls"
+                className="form-control form-control-sm w-auto text-8"
+                onChange={handleFileUpload}
+              />
+
               <button
-                className="btn-action"
+                className="btn btn-outline-secondary text-8"
+                onClick={handleSaveToAPI}
+              >
+                <i className="fas fa-file-import me-1"></i> Import Excel
+              </button>
+              <button
+                className="btn btn-outline-success text-8"
                 onClick={() => {
                   console.log(selectedItems);
                   const rowData = getPaginatedItems().filter((row) =>
@@ -1144,7 +1208,7 @@ const ItemMaster = () => {
                   exportToExcel(rowData, "ItemMaster");
                 }}
               >
-                <i className="fas fa-file-export"></i>
+                <i className="fas fa-file-export me-1"></i>
                 Export Selected
               </button>
               <button

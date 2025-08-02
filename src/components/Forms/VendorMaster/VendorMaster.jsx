@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import api from "../../../services/api";
 import { toast } from "react-toastify";
 import { AbilityContext } from "../../../utils/AbilityContext";
+import * as XLSX from "xlsx";
 
 const VendorMaster = () => {
   const [errors, setErrors] = useState({});
@@ -647,6 +648,54 @@ const VendorMaster = () => {
   // RBAC
   const ability = useContext(AbilityContext);
 
+  // Excel import
+  const [excelData, setExcelData] = useState([]);
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+
+    reader.onload = (evt) => {
+      const arrayBuffer = evt.target.result;
+      const workbook = XLSX.read(arrayBuffer, { type: "array" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const parsedData = XLSX.utils.sheet_to_json(worksheet);
+      console.log("parsedData: " + JSON.stringify(parsedData));
+      setExcelData(parsedData);
+    };
+
+    reader.readAsArrayBuffer(file);
+  };
+
+  const handleSaveToAPI = async () => {
+    if (excelData.length === 0) {
+      toast.error("Please select an excel file");
+      return;
+    }
+    try {
+      for (const row of excelData) {
+        const payload = {
+          type: row.type,
+          name: row.name,
+          mobile: row.mobile,
+          email: row.email,
+          address: row.address,
+          city: row.city,
+          state: row.state,
+          pincode: row.pincode,
+          status: row.status,
+        };
+        console.log("Excel import payload: " + JSON.stringify(payload));
+        const response = await api.post("/api/group/save", payload);
+        toast.success("Excel imported successfully");
+      }
+    } catch (error) {
+      console.error("Error saving excel data:", error);
+      toast.error(error.response.data.message);
+    }
+  };
+
   return (
     <div>
       {/* Header section */}
@@ -1139,7 +1188,7 @@ const VendorMaster = () => {
       {/* Table Section */}
       <div className="margin-2 mx-2">
         <div className="table-container">
-          <div className="table-header">
+          <div className="table-header d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div className="selected-count">
               <input
                 type="checkbox"
@@ -1152,8 +1201,21 @@ const VendorMaster = () => {
               </label>
             </div>
             <div className="bulk-actions">
-              <button className="btn-action">
-                <i className="fas fa-envelope"></i>
+              <input
+                type="file"
+                accept=".xlsx, .xls"
+                className="form-control form-control-sm w-auto text-8"
+                onChange={handleFileUpload}
+              />
+
+              <button
+                className="btn btn-outline-secondary text-8"
+                onClick={handleSaveToAPI}
+              >
+                <i className="fas fa-file-import me-1"></i> Import Excel
+              </button>
+              <button className="btn btn-outline-success text-8">
+                <i className="fas fa-envelope me-1"></i>
                 Email Selected
               </button>
               <button

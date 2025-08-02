@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { Modal } from "bootstrap";
 import { toast } from "react-toastify";
 import { AbilityContext } from "../../../utils/AbilityContext";
+import * as XLSX from "xlsx";
 
 const GroupMaster = () => {
   const [errors, setErrors] = useState({});
@@ -482,6 +483,48 @@ const GroupMaster = () => {
   // RBAC
   const ability = useContext(AbilityContext);
 
+  // Excel import
+  const [excelData, setExcelData] = useState([]);
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+
+    reader.onload = (evt) => {
+      const arrayBuffer = evt.target.result;
+      const workbook = XLSX.read(arrayBuffer, { type: "array" }); // 'array' instead of 'binary'
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const parsedData = XLSX.utils.sheet_to_json(worksheet);
+      console.log("parsedData: " + JSON.stringify(parsedData));
+      setExcelData(parsedData);
+    };
+
+    reader.readAsArrayBuffer(file);
+  };
+
+  const handleSaveToAPI = async () => {
+    if (excelData.length === 0) {
+      toast.error("Please select an excel file");
+      return;
+    }
+    try {
+      for (const row of excelData) {
+        const payload = {
+          name: row.name,
+          status: row.status,
+          groupCode: row.groupCode,
+        };
+        console.log("Excel import payload: " + JSON.stringify(payload));
+        const response = await api.post("/api/group/save", payload);
+        toast.success("Excel imported successfully");
+      }
+    } catch (error) {
+      console.error("Error saving excel data:", error);
+      toast.error(error.response.data.message);
+    }
+  };
+
   return (
     <div>
       {/* Header section */}
@@ -714,8 +757,9 @@ const GroupMaster = () => {
       {/* Table Section */}
       <div className="margin-2 mx-2">
         <div className="table-container">
-          <div className="table-header">
-            <div className="selected-count">
+          <div className="table-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            {/* Left side - selected count */}
+            <div className="selected-count d-flex align-items-center gap-2">
               <input
                 type="checkbox"
                 id="select-all"
@@ -726,26 +770,45 @@ const GroupMaster = () => {
                 {selectedGroups.length} Selected
               </label>
             </div>
-            <button
-              className="btn-action btn-danger"
-              onClick={() => {
-                setConfirmType("multi");
-                handleShowConfirm("multi");
-              }}
-              disabled={deleteLoading || selectedGroups.length === 0}
-            >
-              {deleteLoading ? (
-                <span>
-                  <i className="fa-solid fa-spinner fa-spin me-1"></i>{" "}
-                  Deleting...
-                </span>
-              ) : (
-                <span>
-                  <i className="fas fa-trash"></i> Delete Selected
-                </span>
-              )}
-            </button>
+
+            {/* Right side - buttons and file input */}
+            <div className="d-flex align-items-center gap-2 ms-auto">
+              <input
+                type="file"
+                accept=".xlsx, .xls"
+                className="form-control form-control-sm w-auto text-8"
+                onChange={handleFileUpload}
+              />
+
+              <button
+                className="btn btn-outline-secondary text-8"
+                onClick={handleSaveToAPI}
+              >
+                <i className="fas fa-file-import me-1"></i> Import Excel
+              </button>
+
+              <button
+                className="btn-action btn-danger"
+                onClick={() => {
+                  setConfirmType("multi");
+                  handleShowConfirm("multi");
+                }}
+                disabled={deleteLoading || selectedGroups.length === 0}
+              >
+                {deleteLoading ? (
+                  <span>
+                    <i className="fa-solid fa-spinner fa-spin me-1"></i>{" "}
+                    Deleting...
+                  </span>
+                ) : (
+                  <span>
+                    <i className="fas fa-trash me-1"></i> Delete Selected
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
+
           {dataError && (
             <div className="alert alert-danger" role="alert">
               {dataError}
