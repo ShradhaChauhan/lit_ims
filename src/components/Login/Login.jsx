@@ -18,7 +18,7 @@ const LoginPage = () => {
   const [branches, setBranches] = useState([]);
   const [error, setError] = useState("");
   const [responseUsername, setResponseUsername] = useState("");
-  const { setIsAuthenticated, setRole } = useContext(AppContext);
+  const { setIsAuthenticated, setRole, setIsToken } = useContext(AppContext);
 
   const handleVerify = async (e) => {
     if (e?.preventDefault) e.preventDefault();
@@ -49,6 +49,13 @@ const LoginPage = () => {
     }
   };
 
+  // If already logged in
+  useEffect(() => {
+    if (localStorage.getItem("authToken")) {
+      navigate("/dashboard");
+    }
+  }, []);
+
   const handleLogin = async (e) => {
     if (e?.preventDefault) e.preventDefault();
     setError("");
@@ -66,7 +73,9 @@ const LoginPage = () => {
 
       const { token, permissions } = response.data.data;
       // Store permissions and token
+      setIsToken(token);
       localStorage.setItem("token", token);
+      localStorage.setItem("authToken", token);
       localStorage.setItem("permissions", JSON.stringify(permissions));
       setIsAuthenticated(true);
 

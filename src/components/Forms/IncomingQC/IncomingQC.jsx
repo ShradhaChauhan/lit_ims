@@ -275,7 +275,7 @@ const IncomingQC = () => {
       toast.error("Please select a file first.");
       return;
     }
-    if (!defectCategory) {
+    if (isFail === "FAIL" && !defectCategory) {
       toast.error("Please select a defect category");
       return;
     }

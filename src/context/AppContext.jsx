@@ -20,6 +20,7 @@ const AppContextProvider = (props) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [role, setRole] = useState(null);
   const [permissions, setPermissions] = useState([]);
+  const [istoken, setIsToken] = useState("");
 
   const getPermission = (pageName) => {
     return (
@@ -87,6 +88,8 @@ const AppContextProvider = (props) => {
     getPermission,
     role,
     setRole,
+    istoken,
+    setIsToken,
   };
 
   return (
