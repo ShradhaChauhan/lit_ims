@@ -289,7 +289,11 @@ const IncomingQC = () => {
         attachment: selectedFile,
       };
       console.log(data);
-      const response = await api.put("/api/receipt/qc-status/update", data);
+      const response = await api.put("/api/receipt/qc-status/update", data, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
       fetchPassFailQC();
       fetchPendingQC();
       setIsPass("");
