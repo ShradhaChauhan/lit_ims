@@ -696,10 +696,9 @@ const BOMMaster = () => {
             <h2>
               <i className="fas fa-sitemap"></i> Add New Bom
             </h2>
-            <button
-              className="btn-close"
-              onClick={() => setIsAddBom(false)}
-            ></button>
+            <button className="btn" onClick={() => setIsAddBom(false)}>
+              <i className="fas fa-times"></i>
+            </button>
           </div>
 
           {/* Form Fields */}
@@ -1199,10 +1198,12 @@ const BOMMaster = () => {
                 </h5>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="btn"
                   onClick={handleCloseConfirmModal}
                   aria-label="Close"
-                ></button>
+                >
+                  <i className="fas fa-times"></i>
+                </button>
               </div>
               <div className="modal-body">{message}</div>
               <div className="modal-footer">
@@ -1249,10 +1250,12 @@ const BOMMaster = () => {
               </h5>
               <button
                 type="button"
-                className="btn-close"
+                className="btn"
                 data-bs-dismiss="modal"
                 aria-label="Close"
-              ></button>
+              >
+                <i className="fas fa-times"></i>
+              </button>
             </div>
             <div className="modal-body">
               {bomDetails && (
@@ -1354,10 +1357,12 @@ const BOMMaster = () => {
               </h5>
               <button
                 type="button"
-                className="btn-close"
+                className="btn"
                 data-bs-dismiss="modal"
                 aria-label="Close"
-              ></button>
+              >
+                <i className="fas fa-times"></i>
+              </button>
             </div>
             <div className="modal-body" style={{ overflowX: "hidden" }}>
               <form onSubmit={handleEditBom}>

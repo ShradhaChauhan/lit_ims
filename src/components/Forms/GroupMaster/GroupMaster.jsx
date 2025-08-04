@@ -548,12 +548,12 @@ const GroupMaster = () => {
         validRows.push(payload);
       }
     }
-
+    let partialSuccess = false;
     try {
       for (const row of validRows) {
         await api.post("/api/group/save", row);
       }
-
+      partialSuccess = true;
       if (invalidRows.length > 0) {
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet("Invalid Group Rows");
@@ -609,7 +609,10 @@ const GroupMaster = () => {
       loadGroups();
     } catch (error) {
       console.error("Error saving excel data:", error);
-      toast.error(error.response?.data?.message || "Error importing Excel");
+
+      if (!partialSuccess) {
+        toast.error(error.response?.data?.message || "Error importing Excel");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -708,10 +711,9 @@ const GroupMaster = () => {
             <h2>
               <i className="fas fa-plus pe-1"></i> Add New Group
             </h2>
-            <button
-              className="btn-close"
-              onClick={() => setIsAddGroup(false)}
-            ></button>
+            <button className="btn" onClick={() => setIsAddGroup(false)}>
+              <i className="fas fa-times"></i>
+            </button>
           </div>
 
           {/* Form Fields */}
@@ -1101,10 +1103,12 @@ const GroupMaster = () => {
                 </h5>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="btn"
                   onClick={handleCloseConfirmModal}
                   aria-label="Close"
-                ></button>
+                >
+                  <i className="fas fa-times"></i>
+                </button>
               </div>
               <div className="modal-body">{message}</div>
               <div className="modal-footer">
@@ -1150,10 +1154,12 @@ const GroupMaster = () => {
                 </h5>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="btn"
                   data-bs-dismiss="modal"
                   aria-label="Close"
-                ></button>
+                >
+                  <i className="fas fa-times"></i>
+                </button>
               </div>
               <div className="modal-body">
                 <div className="user-details-grid">
@@ -1216,7 +1222,7 @@ const GroupMaster = () => {
                 </h5>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="btn"
                   onClick={() => {
                     if (groupEditModalRef.current) {
                       const bsModal = Modal.getInstance(
@@ -1228,7 +1234,9 @@ const GroupMaster = () => {
                     setError(null);
                   }}
                   aria-label="Close"
-                ></button>
+                >
+                  <i className="fas fa-times"></i>
+                </button>
               </div>
               {/* Modal Body */}
               <div className="modal-body">

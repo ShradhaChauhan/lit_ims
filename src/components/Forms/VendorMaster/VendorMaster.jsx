@@ -707,10 +707,10 @@ const VendorMaster = () => {
       }
 
       // Email validation
-      // const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      // if (payload.email && !emailRegex.test(payload.email)) {
-      //   invalidFields["email"] = true;
-      // }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (payload.email && !emailRegex.test(payload.email)) {
+        invalidFields["email"] = true;
+      }
 
       if (Object.keys(invalidFields).length > 0) {
         invalidRows.push({ rowNumber: i + 2, rowData: payload, invalidFields });
@@ -718,12 +718,12 @@ const VendorMaster = () => {
         validRows.push(payload);
       }
     }
-
+    let partialSuccess = false;
     try {
       for (const row of validRows) {
         await api.post("/api/vendor-customer/add", row);
       }
-
+      partialSuccess = true;
       if (invalidRows.length > 0) {
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet("Invalid Rows");
@@ -796,10 +796,13 @@ const VendorMaster = () => {
         toast.success("Excel imported successfully");
       }
 
-      fetchItems();
+      fetchVendors();
     } catch (error) {
       console.error("Error saving excel data:", error);
-      toast.error(error.response?.data?.message || "Error importing Excel");
+
+      if (!partialSuccess) {
+        toast.error(error.response?.data?.message || "Error importing Excel");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -907,12 +910,14 @@ const VendorMaster = () => {
               <i className="fas fa-plus pe-1"></i> Add New Partner
             </h2>
             <button
-              className="btn-close"
+              className="btn"
               onClick={(e) => {
                 handleReset(e);
                 setIsAddVendor(false);
               }}
-            ></button>
+            >
+              <i className="fas fa-times"></i>
+            </button>
           </div>
           {/* Form Fields */}
           <form
@@ -1540,10 +1545,12 @@ const VendorMaster = () => {
                 </h5>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="btn"
                   onClick={handleCloseConfirmModal}
                   aria-label="Close"
-                ></button>
+                >
+                  <i className="fas fa-times"></i>
+                </button>
               </div>
               <div className="modal-body">{message}</div>
               <div className="modal-footer">
@@ -1589,9 +1596,11 @@ const VendorMaster = () => {
                 </h5>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="btn"
                   onClick={handleCloseViewModal}
-                ></button>
+                >
+                  <i className="fas fa-times"></i>
+                </button>
               </div>
               <div className="modal-body">
                 <div className="user-details-grid">
@@ -1693,9 +1702,11 @@ const VendorMaster = () => {
                 </h5>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="btn"
                   onClick={handleCloseEditModal}
-                ></button>
+                >
+                  <i className="fas fa-times"></i>
+                </button>
               </div>
               {/* Modal Body */}
               <div className="modal-body">

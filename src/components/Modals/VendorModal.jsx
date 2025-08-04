@@ -16,9 +16,11 @@ const VendorModal = ({ vendorName, showModal, setShowModal }) => {
                 <h5 className="modal-title">{vendorName}</h5>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="btn"
                   onClick={() => setShowModal(false)}
-                ></button>
+                >
+                  <i className="fas fa-times"></i>
+                </button>
               </div>
               <div className="modal-body">
                 <table className="table">

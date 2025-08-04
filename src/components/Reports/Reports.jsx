@@ -702,10 +702,12 @@ const Reports = () => {
                 </h5>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="btn"
                   data-bs-dismiss="modal"
                   aria-label="Close"
-                ></button>
+                >
+                  <i className="fas fa-times"></i>
+                </button>
               </div>
               <div className="modal-body">
                 <div className="margin-2 mx-2">
@@ -878,10 +880,12 @@ const Reports = () => {
                 </h5>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="btn"
                   data-bs-dismiss="modal"
                   aria-label="Close"
-                ></button>
+                >
+                  <i className="fas fa-times"></i>
+                </button>
               </div>
               <div className="modal-body">
                 {/* Search and Filter Section */}
@@ -1124,10 +1128,10 @@ const Reports = () => {
                 </h5>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="btn"
                   data-bs-dismiss="modal"
                   aria-label="Close"
-                ></button>
+                ><i className="fas fa-times"></i></button>
               </div>
               <div className="modal-body">
                 <div className="search-filter-container mx-2">

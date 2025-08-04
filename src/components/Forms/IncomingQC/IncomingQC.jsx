@@ -614,7 +614,7 @@ const IncomingQC = () => {
                             setIsHold("HOLD");
                             setIsPass(false);
                             const storeWarehouse = warehouses.find(
-                              (w) => w.name === "Store"
+                              (w) => w.name === "IQC"
                             );
                             if (storeWarehouse) {
                               setSelectedWarehouse(storeWarehouse.id);
@@ -1079,10 +1079,12 @@ const IncomingQC = () => {
                 </h5>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="btn"
                   onClick={handleCloseConfirmModal}
                   aria-label="Close"
-                ></button>
+                >
+                  <i className="fas fa-times"></i>
+                </button>
               </div>
               <div className="modal-body">{message}</div>
               <div className="modal-footer">

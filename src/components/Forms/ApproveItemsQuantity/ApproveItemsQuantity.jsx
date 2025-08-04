@@ -278,7 +278,9 @@ const ApproveItemsQuantity = () => {
                 list.map((val) => (
                   <tr key={val.id}>
                     <td className="text-wrap">{val.id}</td>
-                    <td className="text-wrap">{val.referenceType}</td>
+                    <td className="text-wrap">
+                      {val.referenceType.replace(/_/g, " ")}
+                    </td>
                     <td className="text-wrap">{val.referenceId}</td>
                     <td className="text-wrap">{val.requestedBy}</td>
                     <td className="text-wrap">{val.requestedTo}</td>

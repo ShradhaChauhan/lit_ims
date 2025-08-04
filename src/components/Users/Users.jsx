@@ -1752,10 +1752,9 @@ const Users = () => {
               <h2>
                 <i className="fas fa-plus pe-1"></i> Add New User
               </h2>
-              <button
-                className="btn-close"
-                onClick={() => setIsAddUser(false)}
-              ></button>
+              <button className="btn" onClick={() => setIsAddUser(false)}>
+                <i className="fas fa-times"></i>
+              </button>
             </div>
             {/* Form Fields Section */}
             <form
@@ -2646,10 +2645,12 @@ const Users = () => {
                 </h5>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="btn"
                   onClick={handleCloseConfirmModal}
                   aria-label="Close"
-                ></button>
+                >
+                  <i className="fas fa-times"></i>
+                </button>
               </div>
               <div className="modal-body">{message}</div>
               <div className="modal-footer">
@@ -2690,10 +2691,12 @@ const Users = () => {
                 </h5>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="btn"
                   onClick={handleCloseModal}
                   aria-label="Close"
-                ></button>
+                >
+                  <i className="fas fa-times"></i>
+                </button>
               </div>
               <div className="modal-body" style={{ overflowX: "hidden" }}>
                 {/* Basic Information */}
@@ -2861,10 +2864,12 @@ const Users = () => {
                 </h5>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="btn"
                   onClick={handleCloseEditModal}
                   aria-label="Close"
-                ></button>
+                >
+                  <i className="fas fa-times"></i>
+                </button>
               </div>
               <div className="modal-body">
                 <div className="table-form-container">

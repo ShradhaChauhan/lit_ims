@@ -399,10 +399,9 @@ const PartMaster = () => {
             <h2>
               <i className="fas fa-cogs"></i> Add New Part
             </h2>
-            <button
-              className="btn-close"
-              onClick={() => setIsAddPart(false)}
-            ></button>
+            <button className="btn" onClick={() => setIsAddPart(false)}>
+              <i className="fas fa-times"></i>
+            </button>
           </div>
 
           {/* Form Fields */}
@@ -731,10 +730,12 @@ const PartMaster = () => {
                 </h5>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="btn"
                   onClick={handleCloseConfirmModal}
                   aria-label="Close"
-                ></button>
+                >
+                  <i className="fas fa-times"></i>
+                </button>
               </div>
               <div className="modal-body">{message}</div>
               <div className="modal-footer">
@@ -780,10 +781,12 @@ const PartMaster = () => {
                 </h5>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="btn"
                   data-bs-dismiss="modal"
                   aria-label="Close"
-                ></button>
+                >
+                  <i className="fas fa-times"></i>
+                </button>
               </div>
               <div className="modal-body">
                 <div className="user-details-grid">
@@ -846,10 +849,12 @@ const PartMaster = () => {
                 </h5>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="btn"
                   data-bs-dismiss="modal"
                   aria-label="Close"
-                ></button>
+                >
+                  <i className="fas fa-times"></i>
+                </button>
               </div>
               {/* Modal Body */}
               <div className="modal-body">
