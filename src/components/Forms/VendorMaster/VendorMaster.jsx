@@ -650,6 +650,7 @@ const VendorMaster = () => {
 
   // Excel import
   const [excelData, setExcelData] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
@@ -673,6 +674,7 @@ const VendorMaster = () => {
       toast.error("Please select an excel file");
       return;
     }
+    setIsLoading(true);
     try {
       for (const row of excelData) {
         const payload = {
@@ -688,16 +690,45 @@ const VendorMaster = () => {
         };
         console.log("Excel import payload: " + JSON.stringify(payload));
         const response = await api.post("/api/group/save", payload);
-        toast.success("Excel imported successfully");
       }
+      toast.success("Excel imported successfully");
     } catch (error) {
       console.error("Error saving excel data:", error);
       toast.error(error.response.data.message);
+    } finally {
+      // Hide loader
+      setIsLoading(false);
     }
   };
 
   return (
     <div>
+      {isLoading && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            backgroundColor: "rgba(0, 0, 0, 0.7)", // semi-transparent background
+            zIndex: 9999,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            pointerEvents: "all", // blocks clicks
+          }}
+        >
+          <div
+            className="spinner-border text-primary"
+            role="status"
+            style={{ width: "4rem", height: "4rem" }}
+          >
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      )}
+
       {/* Header section */}
       <nav className="navbar bg-light border-body" data-bs-theme="light">
         <div className="container-fluid">

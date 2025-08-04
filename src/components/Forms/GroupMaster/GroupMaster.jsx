@@ -42,9 +42,9 @@ const GroupMaster = () => {
   // Pagination state
   const [pagination, setPagination] = useState({
     currentPage: 1,
-    totalItems: 0,
     itemsPerPage: 10,
-    totalPages: 1,
+    totalItems: 0,
+    totalPages: 0,
   });
 
   // Search and filter state
@@ -152,31 +152,43 @@ const GroupMaster = () => {
     setDataError(null);
 
     try {
-      const response = await api.get("/api/group/all", {
-        params: {
-          page: pagination.currentPage,
-          limit: pagination.itemsPerPage,
-          search: searchTerm,
-          status: statusFilter,
-        },
+      const response = await api.get("/api/group/all");
+      const allGroups = response.data.data || [];
+
+      const filteredGroups = allGroups.filter((group) => {
+        const searchFields = [
+          group.trno?.toLowerCase() || "",
+          group.name?.toLowerCase() || "",
+          group.status?.toLowerCase() || "",
+        ];
+
+        const searchTermLower = searchTerm.toLowerCase();
+        const matchesSearch =
+          searchTerm === "" ||
+          searchFields.some((field) => field.includes(searchTermLower));
+
+        const matchesStatus =
+          !statusFilter ||
+          group.status?.toLowerCase() === statusFilter.toLowerCase();
+
+        return matchesSearch && matchesStatus;
       });
 
-      // Updated to handle the new API response structure
-      const groupsData = response.data.data || [];
-      setGroups(groupsData);
+      const startIndex = (pagination.currentPage - 1) * pagination.itemsPerPage;
+      const endIndex = startIndex + pagination.itemsPerPage;
+      const currentPageItems = filteredGroups.slice(startIndex, endIndex);
 
-      // Update pagination based on the available data
+      setGroups(currentPageItems);
+
       setPagination((prev) => ({
         ...prev,
-        totalItems: groupsData.length,
-        totalPages: Math.ceil(groupsData.length / prev.itemsPerPage),
+        totalItems: filteredGroups.length,
+        totalPages: Math.ceil(filteredGroups.length / prev.itemsPerPage),
       }));
     } catch (err) {
       console.error("Error loading groups:", err);
       setDataError(err.response?.data?.message || "Error loading groups");
-      toast.error(
-        "Error in getting groups list from database. Please try again."
-      );
+      toast.error("Error in getting groups list. Please try again.");
       setGroups([]);
     } finally {
       setDataLoading(false);
@@ -418,20 +430,20 @@ const GroupMaster = () => {
 
   // Handle pagination
   const handlePageChange = (newPage) => {
-    if (newPage > 0 && newPage <= pagination.totalPages) {
-      setPagination({ ...pagination, currentPage: newPage });
-    }
+    setPagination((prev) => ({
+      ...prev,
+      currentPage: newPage,
+    }));
   };
 
   const handleItemsPerPageChange = (e) => {
-    const newItemsPerPage = parseInt(e.target.value);
-    setPagination({
-      ...pagination,
+    const newItemsPerPage = parseInt(e.target.value, 10);
+    setPagination((prev) => ({
+      ...prev,
       itemsPerPage: newItemsPerPage,
-      currentPage: 1, // Reset to first page when changing items per page
-    });
+      currentPage: 1, // reset to first page
+    }));
   };
-
   // Handle search and filter
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
@@ -485,6 +497,7 @@ const GroupMaster = () => {
 
   // Excel import
   const [excelData, setExcelData] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
@@ -508,6 +521,8 @@ const GroupMaster = () => {
       toast.error("Please select an excel file");
       return;
     }
+    // Show loader (you can set a state variable here to show a spinner)
+    setIsLoading(true);
     try {
       for (const row of excelData) {
         const payload = {
@@ -517,16 +532,46 @@ const GroupMaster = () => {
         };
         console.log("Excel import payload: " + JSON.stringify(payload));
         const response = await api.post("/api/group/save", payload);
-        toast.success("Excel imported successfully");
       }
+      toast.success("Excel imported successfully");
+      loadGroups();
     } catch (error) {
       console.error("Error saving excel data:", error);
       toast.error(error.response.data.message);
+    } finally {
+      // Hide loader
+      setIsLoading(false);
     }
   };
 
   return (
     <div>
+      {isLoading && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            backgroundColor: "rgba(0, 0, 0, 0.7)", // semi-transparent background
+            zIndex: 9999,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            pointerEvents: "all", // blocks clicks
+          }}
+        >
+          <div
+            className="spinner-border text-primary"
+            role="status"
+            style={{ width: "4rem", height: "4rem" }}
+          >
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      )}
+
       {/* Header section */}
       <nav className="navbar bg-light border-body" data-bs-theme="light">
         <div className="container-fluid">
@@ -821,7 +866,8 @@ const GroupMaster = () => {
                   <input type="checkbox" disabled />
                 </th>
                 <th>TRNO</th>
-                <th>Name</th>
+                <th>Group Name</th>
+                <th>Group Code</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -865,6 +911,11 @@ const GroupMaster = () => {
                     <td className="ps-4">
                       <div>
                         <span>{group.name}</span>
+                      </div>
+                    </td>
+                    <td className="ps-4">
+                      <div>
+                        <span>{group.groupCode}</span>
                       </div>
                     </td>
                     <td className="ps-4">
@@ -915,7 +966,7 @@ const GroupMaster = () => {
           <div className="pagination-container">
             <div className="pagination-info">
               Showing{" "}
-              {sortedFilteredTypes.length > 0
+              {groups.length > 0
                 ? (pagination.currentPage - 1) * pagination.itemsPerPage + 1
                 : 0}
               -

@@ -23,6 +23,17 @@ const IncomingQC = () => {
   const qcRef = useRef(null);
   const [selectedWarehouse, setSelectedWarehouse] = useState("");
   const [warehouses, setWarehouses] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const totalCompletedItems = passFailQC.length;
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentCompletedItems = passFailQC.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
+
+  const totalPages = Math.ceil(totalCompletedItems / itemsPerPage);
 
   // select QC to be deleted
   const [selectedItems, setSelectedItems] = useState([]);
@@ -123,6 +134,10 @@ const IncomingQC = () => {
     setTypeFilter("");
     setVendorFilter("");
   };
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [currentPage]);
 
   // Fetch pending IQC from API
   const fetchPendingQC = async () => {
@@ -375,6 +390,56 @@ const IncomingQC = () => {
     setSelectedFile(event.target.files[0]);
   };
 
+  // Shortcut keys
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.altKey) {
+        switch (e.key.toLowerCase()) {
+          case "p":
+            e.preventDefault();
+            setIsPass("PASS");
+            setIsFail(false);
+            setIsHold(false);
+            break;
+          case "f":
+            e.preventDefault();
+            setIsFail("FAIL");
+            setIsPass(false);
+            setIsHold(false);
+            break;
+          case "h":
+            e.preventDefault();
+            setIsHold("HOLD");
+            setIsPass(false);
+            setIsFail(false);
+            break;
+          default:
+            break;
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  const previewFile = async (filename) => {
+    try {
+      const response = await api.get(
+        `/api/receipt/qc-status/attachment/${encodeURIComponent(filename)}`,
+        {
+          responseType: "blob", // 👈 tell Axios to return Blob
+        }
+      );
+
+      const fileURL = window.URL.createObjectURL(response.data); // 👈 use response.data
+      window.open(fileURL);
+    } catch (error) {
+      toast.error("Error previewing file");
+      console.error("Error previewing file:", error);
+    }
+  };
+
   return (
     <div>
       {/* Header section */}
@@ -525,7 +590,7 @@ const IncomingQC = () => {
                       <div className="col-4">
                         <button
                           type="button"
-                          className={`btn w-100 ${
+                          className={`btn w-100 text-8 ${
                             isPass === "PASS"
                               ? "btn-success"
                               : isFail === "FAIL" || isHold === "HOLD"
@@ -536,6 +601,12 @@ const IncomingQC = () => {
                             setIsPass("PASS");
                             setIsFail(false);
                             setIsHold(false);
+                            const storeWarehouse = warehouses.find(
+                              (w) => w.name === "Store"
+                            );
+                            if (storeWarehouse) {
+                              setSelectedWarehouse(storeWarehouse.id);
+                            }
                           }}
                         >
                           Pass (Alt + P)
@@ -544,7 +615,7 @@ const IncomingQC = () => {
                       <div className="col-4">
                         <button
                           type="button"
-                          className={`btn w-100 ${
+                          className={`btn w-100 text-8 ${
                             isFail
                               ? "btn-danger"
                               : isPass === "PASS" || isHold === "HOLD"
@@ -555,6 +626,12 @@ const IncomingQC = () => {
                             setIsFail("FAIL");
                             setIsPass(false);
                             setIsHold(false);
+                            const rejectionWarehouse = warehouses.find(
+                              (w) => w.name === "Rejection"
+                            );
+                            if (rejectionWarehouse) {
+                              setSelectedWarehouse(rejectionWarehouse.id);
+                            }
                           }}
                         >
                           Fail (Alt + F)
@@ -563,7 +640,7 @@ const IncomingQC = () => {
                       <div className="col-4">
                         <button
                           type="button"
-                          className={`btn w-100 ${
+                          className={`btn w-100 text-8 ${
                             isHold
                               ? "btn-warning"
                               : isPass === "PASS" || isFail === "FAIL"
@@ -574,6 +651,12 @@ const IncomingQC = () => {
                             setIsFail(false);
                             setIsHold("HOLD");
                             setIsPass(false);
+                            const storeWarehouse = warehouses.find(
+                              (w) => w.name === "Store"
+                            );
+                            if (storeWarehouse) {
+                              setSelectedWarehouse(storeWarehouse.id);
+                            }
                           }}
                         >
                           Hold (Alt + H)
@@ -922,11 +1005,12 @@ const IncomingQC = () => {
                   <th>Vendor Name</th>
                   <th>Quantity</th>
                   <th>Received Date</th>
+                  <th>Attachment</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody className="text-break">
-                {passFailQC.map((pfqc) => (
+                {currentCompletedItems.map((pfqc) => (
                   <tr key={pfqc.id}>
                     <td>{pfqc.itemName}</td>
                     <td>{pfqc.itemCode}</td>
@@ -934,6 +1018,20 @@ const IncomingQC = () => {
                     <td>{pfqc.vendorName}</td>
                     <td>{pfqc.quantity}</td>
                     <td>{pfqc.createdAt}</td>
+                    <td>
+                      {pfqc.attachmentFileName &&
+                      pfqc.attachmentFileName.length > 0 ? (
+                        <i
+                          className="fa-solid fa-link text-primary"
+                          role="button"
+                          title="View Attachment"
+                          onClick={() => previewFile(pfqc.attachmentFileName)}
+                        ></i>
+                      ) : (
+                        <span className="text-muted">-</span>
+                      )}
+                    </td>
+
                     <td className="actions">
                       <span
                         className={`badge status ${
@@ -952,26 +1050,56 @@ const IncomingQC = () => {
           {/* Pagination */}
           <div className="pagination-container">
             <div className="pagination-info">
-              Showing 1 to 5 of 10 pending items
+              Showing {indexOfFirstItem + 1} to{" "}
+              {Math.min(indexOfLastItem, totalCompletedItems)} of{" "}
+              {totalCompletedItems} items
             </div>
             <div className="pagination">
-              <button className="btn-page" disabled>
+              <button
+                className="btn-page"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              >
                 <i className="fas fa-chevron-left"></i>
               </button>
-              {/* Generate page buttons */}
 
-              <button className="btn btn-primary">1</button>
+              {[...Array(totalPages)].map((_, index) => (
+                <button
+                  key={index + 1}
+                  className={`btn btn-sm mx-1 ${
+                    currentPage === index + 1
+                      ? "btn-primary"
+                      : "btn-outline-primary"
+                  }`}
+                  onClick={() => setCurrentPage(index + 1)}
+                >
+                  {index + 1}
+                </button>
+              ))}
 
-              <button className="btn-page" disabled>
+              <button
+                className="btn-page"
+                disabled={currentPage === totalPages}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+              >
                 <i className="fas fa-chevron-right"></i>
               </button>
             </div>
+
             <div className="items-per-page">
-              <select>
-                <option value="10">10 per page</option>
-                <option value="25">25 per page</option>
-                <option value="50">50 per page</option>
-                <option value="100">100 per page</option>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1); // reset to first page
+                }}
+              >
+                <option value={10}>10 per page</option>
+                <option value={25}>25 per page</option>
+                <option value={50}>50 per page</option>
+                <option value={100}>100 per page</option>
               </select>
             </div>
           </div>

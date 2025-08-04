@@ -6,6 +6,7 @@ import api from "../../../services/api";
 
 const MaterialIssueRequest = () => {
   const [tempQuantity, setTempQuantity] = useState(0);
+  const [qty, setQty] = useState(0);
   // Helper function to check requisition type restriction
   const getRequisitionTypeOptions = () => {
     // If no items have been added yet, allow both types
@@ -65,13 +66,36 @@ const MaterialIssueRequest = () => {
       const requestType = request[0].type === "BOM" ? "bom" : "items";
       console.log("Warehouse: " + warehouse);
       // Format data for API
-      const formattedItems = request.map((item) => ({
-        id: item.id,
-        name: item.name,
-        code: item.code,
-        type: item.type.toLowerCase(),
-        quantity: Number(item.quantity),
-      }));
+      // const formattedItems = request.map((item) => ({
+      //   id: item.id,
+      //   name: item.name,
+      //   code: item.code,
+      //   type: item.type.toLowerCase(),
+      //   quantity: Number(item.quantity),
+      // }));
+      const formattedItems = request.flatMap((item) => {
+        if (item.type === "bom" || item.type === "BOM") {
+          // BOM - flatten the sub-items with calculated quantity
+          return item.items.map((subItem) => ({
+            id: subItem.itemId,
+            name: subItem.itemName,
+            code: subItem.itemCode,
+            type: "item", // sub-items are always individual items
+            quantity: Number(subItem.calculatedQuantity),
+          }));
+        } else {
+          // Individual item
+          return [
+            {
+              id: item.id,
+              name: item.name,
+              code: item.code,
+              type: "item",
+              quantity: Number(item.quantity),
+            },
+          ];
+        }
+      });
 
       const payload = {
         transactionNumber,
@@ -332,7 +356,11 @@ const MaterialIssueRequest = () => {
         code: selectedBOM.code,
         quantity,
         warehouse,
-        items: selectedBOM.items,
+        items: selectedBOM.items.map((i) => ({
+          ...i,
+          calculatedQuantity: i.quantity * quantity,
+        })),
+        // selectedBOM.items,
       };
       setTempQuantity(quantity);
       setRequest((prev) => [...prev, newBOM]);
@@ -438,6 +466,32 @@ const MaterialIssueRequest = () => {
       );
       setRequest(updatedData);
     }
+  };
+
+  // Toaltal quantity calculation
+  const handleBOMItemQuantityChange = (newVal, itemCode) => {
+    const updatedItems = selectedItem.items.map((item) =>
+      item.itemCode === itemCode
+        ? { ...item, calculatedQuantity: Number(newVal) }
+        : item
+    );
+    setSelectedItem({ ...selectedItem, items: updatedItems });
+  };
+
+  // Save button in Item Details modal
+  const handleSaveItemDetails = () => {
+    if (!selectedItem) return;
+
+    const updatedRequest = request.map((reqItem) =>
+      reqItem.id === selectedItem.id
+        ? { ...reqItem, items: selectedItem.items }
+        : reqItem
+    );
+
+    setRequest(updatedRequest);
+    setSelectedItem(null); // Close modal
+    setShowModal(false);
+    toast.success("Item details updated");
   };
 
   return (
@@ -580,7 +634,7 @@ const MaterialIssueRequest = () => {
               {/* Warehouse */}
               <div className={`${fieldClass} form-group`}>
                 <label htmlFor="warehouse" className="form-label ms-1">
-                  Warehouse <span className="text-danger fs-6">*</span>
+                  Location <span className="text-danger fs-6">*</span>
                 </label>
                 <div className="position-relative w-100">
                   <i className="fas fa-warehouse ms-2 position-absolute z-0 input-icon margin-top-8 text-font"></i>
@@ -593,7 +647,7 @@ const MaterialIssueRequest = () => {
                     onChange={(e) => setWarehouse(e.target.value)}
                   >
                     <option value="" disabled hidden>
-                      Select Warehouse
+                      Select Warehouse Location
                     </option>
                     {warehouseList.map((w) => (
                       <option value={w.id}>{w.name}</option>
@@ -647,14 +701,15 @@ const MaterialIssueRequest = () => {
                           </td>
                           <td className="ps-4">
                             <span>
-                              <input
+                              {/* <input
                                 type="text"
                                 className="form-control text-8"
                                 value={i.quantity}
                                 onChange={(e) =>
                                   handleQuantityChange(i.id, e.target.value)
                                 }
-                              />
+                              /> */}
+                              {i.quantity}
                             </span>
                           </td>
                           <td className="actions ps-4">
@@ -872,7 +927,7 @@ const MaterialIssueRequest = () => {
                       <thead>
                         <tr>
                           <th>Item Name</th>
-                          <th>Code</th>
+                          <th>Item Code</th>
                           <th>UOM</th>
                           <th>Qty</th>
                           <th>Warehouse</th>
@@ -884,7 +939,21 @@ const MaterialIssueRequest = () => {
                             <td>{item.itemName}</td>
                             <td>{item.itemCode}</td>
                             <td>{item.uom}</td>
-                            <td>{item.quantity * tempQuantity}</td>
+                            <td>
+                              <input
+                                type="text"
+                                className="form-control text-8"
+                                value={item.calculatedQuantity}
+                                onChange={(e) =>
+                                  handleBOMItemQuantityChange(
+                                    e.target.value,
+                                    item.itemCode
+                                  )
+                                }
+                              />
+
+                              {/* {item.quantity * tempQuantity} */}
+                            </td>
                             <td>{item.warehouseName}</td>
                           </tr>
                         ))}
@@ -892,6 +961,20 @@ const MaterialIssueRequest = () => {
                     </table>
                   </>
                 )}
+              </div>
+              <div className="modal-footer">
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setSelectedItem(null)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn btn-primary"
+                  onClick={handleSaveItemDetails}
+                >
+                  Save Changes
+                </button>
               </div>
             </div>
           </div>
