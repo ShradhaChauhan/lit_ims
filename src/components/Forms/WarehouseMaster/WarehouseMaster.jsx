@@ -777,7 +777,7 @@ const WarehouseMaster = () => {
                 {selectedWarehouses.length} Selected
               </label>
             </div>
-            <button
+            {/* <button
               className="btn-action btn-danger"
               onClick={() => {
                 setConfirmType("multi");
@@ -786,7 +786,7 @@ const WarehouseMaster = () => {
             >
               <i className="fas fa-trash"></i>
               Delete Selected
-            </button>
+            </button> */}
           </div>
           <table>
             <thead>
@@ -888,7 +888,7 @@ const WarehouseMaster = () => {
                           <i className="fas fa-edit"></i>
                         </button>
                       )}
-                      {ability.can("edit", "Warehouse Master") && (
+                      {/* {ability.can("edit", "Warehouse Master") && (
                         <button
                           className="btn-icon btn-danger"
                           title="Delete"
@@ -900,7 +900,7 @@ const WarehouseMaster = () => {
                         >
                           <i className="fas fa-trash"></i>
                         </button>
-                      )}
+                      )} */}
                     </td>
                   </tr>
                 ))

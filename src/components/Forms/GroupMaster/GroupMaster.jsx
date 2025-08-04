@@ -6,6 +6,8 @@ import { Modal } from "bootstrap";
 import { toast } from "react-toastify";
 import { AbilityContext } from "../../../utils/AbilityContext";
 import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
 
 const GroupMaster = () => {
   const [errors, setErrors] = useState({});
@@ -509,7 +511,7 @@ const GroupMaster = () => {
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
       const parsedData = XLSX.utils.sheet_to_json(worksheet);
-      console.log("parsedData: " + JSON.stringify(parsedData));
+      // console.log("parsedData: " + JSON.stringify(parsedData));
       setExcelData(parsedData);
     };
 
@@ -521,25 +523,94 @@ const GroupMaster = () => {
       toast.error("Please select an excel file");
       return;
     }
-    // Show loader (you can set a state variable here to show a spinner)
+
     setIsLoading(true);
-    try {
-      for (const row of excelData) {
-        const payload = {
-          name: row.name,
-          status: row.status,
-          groupCode: row.groupCode,
-        };
-        console.log("Excel import payload: " + JSON.stringify(payload));
-        const response = await api.post("/api/group/save", payload);
+
+    const validRows = [];
+    const invalidRows = [];
+
+    for (let i = 0; i < excelData.length; i++) {
+      const row = excelData[i];
+
+      const payload = {
+        name: row.name,
+        status: row.status,
+        groupCode: row.groupCode,
+      };
+
+      const isInvalid = Object.values(payload).some(
+        (value) => value === null || value === undefined || value === ""
+      );
+
+      if (isInvalid) {
+        invalidRows.push({ rowNumber: i + 2, rowData: payload }); // +2 for Excel-like row number
+      } else {
+        validRows.push(payload);
       }
-      toast.success("Excel imported successfully");
+    }
+
+    try {
+      for (const row of validRows) {
+        await api.post("/api/group/save", row);
+      }
+
+      if (invalidRows.length > 0) {
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet("Invalid Group Rows");
+
+        // Add header
+        worksheet.addRow(["Row No.", "Name", "Status", "Group Code"]);
+
+        // Add invalid rows with red cell highlight
+        invalidRows.forEach(({ rowNumber, rowData }) => {
+          const rowValues = [
+            rowNumber,
+            rowData.name,
+            rowData.status,
+            rowData.groupCode,
+          ];
+          const newRow = worksheet.addRow(rowValues);
+
+          rowValues.forEach((val, colIdx) => {
+            const cell = newRow.getCell(colIdx + 1);
+            if (val === null || val === undefined || val === "") {
+              cell.value = "NULL";
+              cell.fill = {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: { argb: "FFFF0000" }, // Red
+              };
+              cell.font = {
+                color: { argb: "FFFFFFFF" }, // White text
+                bold: true,
+              };
+            }
+          });
+        });
+
+        // Auto-size columns
+        worksheet.columns.forEach((col) => {
+          col.width = 20;
+        });
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        });
+        saveAs(blob, "GroupMaster_Invalid_Rows.xlsx");
+
+        toast.warn(
+          "Some rows were skipped. Excel file downloaded with details."
+        );
+      } else {
+        toast.success("Excel imported successfully");
+      }
+
       loadGroups();
     } catch (error) {
       console.error("Error saving excel data:", error);
-      toast.error(error.response.data.message);
+      toast.error(error.response?.data?.message || "Error importing Excel");
     } finally {
-      // Hide loader
       setIsLoading(false);
     }
   };

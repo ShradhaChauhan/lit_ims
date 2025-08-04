@@ -508,78 +508,40 @@ const IncomingQC = () => {
           <form autoComplete="off" className="padding-2">
             <div className="form-grid pt-0">
               <div className="row form-style">
-                <div className={`${isFail ? "col-md-4" : "col-md-4"}`}>
+                <div className={`${isFail ? "col-md-5" : "col-md-5"}`}>
                   <label className="text-8 font-weight p-0">
                     Batch Details <span className="text-danger fs-6">*</span>
                   </label>
                   {Array.isArray(batchDetails) &&
                     batchDetails.map((batch) => (
                       <div className="batch-details" key={batch.id}>
-                        <div className="row px-2">
-                          <div>
-                            <strong className="text-8 text-gray">
-                              Batch No:
+                        {[
+                          { label: "Batch No:", value: batch.batchNumber },
+                          { label: "Item Code:", value: batch.itemCode },
+                          { label: "Item Name:", value: batch.itemName },
+                          { label: "Quantity:", value: batch.quantity },
+                          { label: "Vendor:", value: batch.vendorName },
+                          { label: "Received:", value: batch.createdAt },
+                        ].map((field, index) => (
+                          <div
+                            className="px-2 py-1 d-flex flex-wrap justify-content-between align-items-center w-100 min-width-0"
+                            key={index}
+                          >
+                            <strong className="text-8 text-gray me-2">
+                              {field.label}
                             </strong>
-                            <span className="text-8 float-end">
-                              {batch.batchNumber}
+                            <span
+                              className="text-8"
+                              style={{
+                                overflowWrap: "break-word",
+                                wordBreak: "break-word",
+                                flexShrink: 1,
+                              }}
+                            >
+                              {field.value}
                             </span>
                           </div>
-                        </div>
-
-                        <div className="row px-2">
-                          <div>
-                            <strong className="text-8 text-gray">
-                              Item Code:
-                            </strong>
-                            <span className="text-8 float-end">
-                              {batch.itemCode}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="row px-2">
-                          <div>
-                            <strong className="text-8 text-gray">
-                              Item Name:
-                            </strong>
-                            <span className="text-8 float-end">
-                              {batch.itemName}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="row px-2">
-                          <div>
-                            <strong className="text-8 text-gray">
-                              Quantity:
-                            </strong>
-                            <span className="text-8 float-end">
-                              {batch.quantity}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="row px-2">
-                          <div>
-                            <strong className="text-8 text-gray">
-                              Vendor:
-                            </strong>
-                            <span className="text-8 float-end">
-                              {batch.vendorName}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="row px-2">
-                          <div>
-                            <strong className="text-8 text-gray">
-                              Received:
-                            </strong>
-                            <span className="text-8 float-end">
-                              {batch.createdAt}
-                            </span>
-                          </div>
-                        </div>
+                        ))}
                       </div>
                     ))}
                   <div>
@@ -665,26 +627,25 @@ const IncomingQC = () => {
                     </div>
                   </div>{" "}
                 </div>
-                <div className={`${isFail ? "col-md-4" : "col-md-4"}`}>
+                <div className={`${isFail ? "col-md-3" : "col-md-3"}`}>
                   <div className="mt-3">
                     <label
                       htmlFor="warehouse"
                       className="form-label mb-0 text-8 font-weight py-2"
                     >
-                      Select Warehouse{" "}
-                      <span className="text-danger fs-6">*</span>
+                      Warehouse <span className="text-danger fs-6">*</span>
                     </label>
                     <div className="position-relative w-100">
                       <i className="fas fa-warehouse position-absolute z-0 input-icon text-font"></i>
                       <select
-                        className={`form-select ps-5 text-font ${
+                        className={`form-control ps-5 text-font ${
                           selectedWarehouse ? "" : "text-secondary"
                         }`}
                         id="warehouse"
                         placeholder="Select warehouse"
                         value={selectedWarehouse}
                         onChange={(e) => setSelectedWarehouse(e.target.value)}
-                        required
+                        disabled
                       >
                         <option value="" disabled hidden className="text-muted">
                           Select warehouse

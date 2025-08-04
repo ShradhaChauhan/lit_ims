@@ -8,6 +8,10 @@ import { toast } from "react-toastify";
 import exportToExcel from "../../../utils/exportToExcel";
 import { AbilityContext } from "../../../utils/AbilityContext";
 import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
 
 const ItemMaster = () => {
   const [errors, setErrors] = useState({});
@@ -698,7 +702,7 @@ const ItemMaster = () => {
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
       const parsedData = XLSX.utils.sheet_to_json(worksheet);
-      console.log("parsedData: " + JSON.stringify(parsedData));
+      // console.log("parsedData: " + JSON.stringify(parsedData));
       setExcelData(parsedData);
     };
 
@@ -707,42 +711,125 @@ const ItemMaster = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSaveToAPI = async () => {
-    console.log(excelData);
     if (excelData.length === 0) {
       toast.error("Please select an excel file");
       return;
     }
 
-    // Show loader (you can set a state variable here to show a spinner)
     setIsLoading(true);
 
-    try {
-      for (const row of excelData) {
-        const payload = {
-          name: row.name,
-          code: row.code,
-          uom: row.uom,
-          groupName: row.groupName,
-          status: row.status,
-          price: row.price,
-          stQty: row.stQty,
-          life: row.life,
-          inventoryItem: row.inventoryItem,
-          iqc: row.iqc,
-        };
+    const invalidRows = [];
+    const validRows = [];
 
-        console.log("Excel import payload: " + JSON.stringify(payload));
-        await api.post("/api/items/add", payload);
+    for (let i = 0; i < excelData.length; i++) {
+      const row = excelData[i];
+
+      const payload = {
+        name: row.name,
+        code: row.code,
+        uom: row.uom,
+        groupName: row.groupName,
+        status: row.status,
+        price: row.price,
+        stQty: row.stQty,
+        life: row.life,
+        inventoryItem: row.inventoryItem,
+        iqc: row.iqc,
+      };
+
+      const isInvalid = Object.values(payload).some(
+        (value) => value === null || value === undefined || value === ""
+      );
+
+      if (isInvalid) {
+        invalidRows.push({ rowNumber: i + 2, rowData: payload }); // +2 for Excel row number
+      } else {
+        validRows.push(payload);
+      }
+    }
+
+    try {
+      for (const row of validRows) {
+        await api.post("/api/items/add", row);
       }
 
-      // Success toast after all rows are inserted
-      toast.success("Excel imported successfully");
+      if (invalidRows.length > 0) {
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet("Invalid Rows");
+
+        // Add header row
+        worksheet.addRow([
+          "Row No.",
+          "Name",
+          "Code",
+          "UOM",
+          "Group Name",
+          "Status",
+          "Price",
+          "Start Qty",
+          "Life",
+          "Inventory Item",
+          "IQC",
+        ]);
+
+        // Add invalid data with red fill for nulls
+        invalidRows.forEach(({ rowNumber, rowData }) => {
+          const rowValues = [
+            rowNumber,
+            rowData.name,
+            rowData.code,
+            rowData.uom,
+            rowData.groupName,
+            rowData.status,
+            rowData.price,
+            rowData.stQty,
+            rowData.life,
+            rowData.inventoryItem,
+            rowData.iqc,
+          ];
+
+          const excelRow = worksheet.addRow(rowValues);
+
+          rowValues.forEach((cellVal, idx) => {
+            if (cellVal === null || cellVal === undefined || cellVal === "") {
+              const cell = excelRow.getCell(idx + 1); // Excel is 1-indexed
+              cell.value = "NULL";
+              cell.fill = {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: { argb: "FFFF0000" }, // Red
+              };
+              cell.font = {
+                color: { argb: "FFFFFFFF" }, // White text
+                bold: true,
+              };
+            }
+          });
+        });
+
+        // Auto width
+        worksheet.columns.forEach((column) => {
+          column.width = 15;
+        });
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        });
+        saveAs(blob, "ItemMaster_Invalid_Rows.xlsx");
+
+        toast.warn(
+          "Some rows were skipped due to missing data. Check the downloaded Excel."
+        );
+      } else {
+        toast.success("Excel imported successfully");
+      }
+
       fetchItems();
     } catch (error) {
       console.error("Error saving excel data:", error);
       toast.error(error.response?.data?.message || "Error importing Excel");
     } finally {
-      // Hide loader
       setIsLoading(false);
     }
   };
@@ -1222,19 +1309,21 @@ const ItemMaster = () => {
               </label>
             </div>
             <div className="bulk-actions">
-              <input
-                type="file"
-                accept=".xlsx, .xls"
-                className="form-control form-control-sm w-auto text-8"
-                onChange={handleFileUpload}
-              />
+              <div className="d-flex align-items-center gap-2">
+                <input
+                  type="file"
+                  accept=".xlsx, .xls"
+                  className="form-control form-control-sm w-auto text-8"
+                  onChange={handleFileUpload}
+                />
 
-              <button
-                className="btn btn-outline-secondary text-8"
-                onClick={handleSaveToAPI}
-              >
-                <i className="fas fa-file-import me-1"></i> Import Excel
-              </button>
+                <button
+                  className="btn btn-outline-secondary text-8"
+                  onClick={handleSaveToAPI}
+                >
+                  <i className="fas fa-file-import me-1"></i> Import Excel
+                </button>
+              </div>
               <button
                 className="btn btn-outline-success text-8"
                 onClick={() => {
