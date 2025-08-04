@@ -5,6 +5,9 @@ import { Link } from "react-router-dom";
 import { Modal } from "bootstrap";
 import { toast } from "react-toastify";
 import { AbilityContext } from "../../../utils/AbilityContext";
+import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
 
 const TypeMaster = () => {
   const [errors, setErrors] = useState({});
@@ -419,9 +422,160 @@ const TypeMaster = () => {
 
   // RBAC
   const ability = useContext(AbilityContext);
+  // Excel import
+  const [excelData, setExcelData] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+
+    reader.onload = (evt) => {
+      const arrayBuffer = evt.target.result;
+      const workbook = XLSX.read(arrayBuffer, { type: "array" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const parsedData = XLSX.utils.sheet_to_json(worksheet);
+      // console.log("parsedData: " + JSON.stringify(parsedData));
+      setExcelData(parsedData);
+    };
+
+    reader.readAsArrayBuffer(file);
+  };
+
+  const handleSaveToAPI = async () => {
+    if (excelData.length === 0) {
+      toast.error("Please select an excel file");
+      return;
+    }
+
+    setIsLoading(true);
+
+    const validRows = [];
+    const invalidRows = [];
+
+    for (let i = 0; i < excelData.length; i++) {
+      const row = excelData[i];
+
+      const payload = {
+        name: row.name,
+        status: row.status,
+      };
+
+      const invalidFields = {};
+
+      for (const key in payload) {
+        if (!payload[key]) {
+          invalidFields[key] = true;
+        }
+      }
+
+      // Email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (payload.email && !emailRegex.test(payload.email)) {
+        invalidFields["email"] = true;
+      }
+
+      if (Object.keys(invalidFields).length > 0) {
+        invalidRows.push({ rowNumber: i + 2, rowData: payload, invalidFields });
+      } else {
+        validRows.push(payload);
+      }
+    }
+
+    try {
+      for (const row of validRows) {
+        await api.post("/api/type/save", row);
+      }
+
+      if (invalidRows.length > 0) {
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet("Invalid Rows");
+
+        // Add header
+        const header = ["Name", "Status"];
+        worksheet.addRow(header);
+
+        // Add invalid data rows
+        invalidRows.forEach(({ rowNumber, rowData, invalidFields }) => {
+          const rowValues = [
+            rowNumber,
+            rowData.name || "",
+            rowData.status || "",
+          ];
+          const newRow = worksheet.addRow(rowValues);
+
+          rowValues.forEach((val, colIdx) => {
+            const key = header[colIdx].toLowerCase().replace(" ", "");
+            const cell = newRow.getCell(colIdx + 1);
+
+            if (invalidFields[key] || val === "") {
+              cell.fill = {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: { argb: "FFFF0000" }, // Red
+              };
+              cell.font = {
+                color: { argb: "FFFFFFFF" }, // White text
+                bold: true,
+              };
+            }
+          });
+        });
+
+        worksheet.columns.forEach((col) => {
+          col.width = 20;
+        });
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        });
+        saveAs(blob, "Invalid_TypeMaster_Rows.xlsx");
+
+        toast.warn(
+          "Some rows were skipped. Excel file with details downloaded."
+        );
+      } else {
+        toast.success("Excel imported successfully");
+      }
+
+      fetchTypes();
+    } catch (error) {
+      console.error("Error saving excel data:", error);
+      toast.error(error.response?.data?.message || "Error importing Excel");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div>
+      {isLoading && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            backgroundColor: "rgba(0, 0, 0, 0.7)", // semi-transparent background
+            zIndex: 9999,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            pointerEvents: "all", // blocks clicks
+          }}
+        >
+          <div
+            className="spinner-border text-primary"
+            role="status"
+            style={{ width: "4rem", height: "4rem" }}
+          >
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      )}
       {/* Header section */}
       <nav className="navbar bg-light border-body" data-bs-theme="light">
         <div className="container-fluid">
@@ -619,24 +773,41 @@ const TypeMaster = () => {
                 {selectedTypes.length} Selected
               </label>
             </div>
-            <button
-              className="btn-action btn-danger"
-              onClick={() => {
-                setConfirmType("multi");
-                handleShowConfirm("multi");
-              }}
-              disabled={selectedTypes.length === 0 || isDeleting}
-            >
-              {isDeleting ? (
-                <>
-                  <i className="fas fa-spinner fa-spin"></i> Deleting...
-                </>
-              ) : (
-                <>
-                  <i className="fas fa-trash"></i> Delete Selected
-                </>
-              )}
-            </button>
+            <div className="bulk-actions">
+              <div className="d-flex align-items-center gap-2">
+                <input
+                  type="file"
+                  accept=".xlsx, .xls"
+                  className="form-control form-control-sm w-auto text-8"
+                  onChange={handleFileUpload}
+                />
+
+                <button
+                  className="btn btn-outline-secondary text-8"
+                  onClick={handleSaveToAPI}
+                >
+                  <i className="fas fa-file-import me-1"></i> Import Excel
+                </button>
+              </div>
+              <button
+                className="btn-action btn-danger"
+                onClick={() => {
+                  setConfirmType("multi");
+                  handleShowConfirm("multi");
+                }}
+                disabled={selectedTypes.length === 0 || isDeleting}
+              >
+                {isDeleting ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin"></i> Deleting...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-trash"></i> Delete Selected
+                  </>
+                )}
+              </button>
+            </div>
           </div>
           <table>
             <thead>

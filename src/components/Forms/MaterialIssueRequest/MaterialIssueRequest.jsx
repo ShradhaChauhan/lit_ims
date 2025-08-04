@@ -903,9 +903,12 @@ const MaterialIssueRequest = () => {
                 <h5 className="modal-title">Item Details</h5>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="btn"
+                  aria-label="Close"
                   onClick={() => setShowModal(false)}
-                ></button>
+                >
+                  <i className="fas fa-times"></i>
+                </button>
               </div>
               <div className="modal-body">
                 <p>
@@ -966,16 +969,19 @@ const MaterialIssueRequest = () => {
               </div>
               <div className="modal-footer">
                 <button
-                  className="btn btn-secondary"
-                  onClick={() => setSelectedItem(null)}
+                  className="btn btn-secondary text-8"
+                  onClick={() => {
+                    setSelectedItem(null);
+                    setShowModal(false);
+                  }}
                 >
-                  Cancel
+                  <i className="fa-solid fa-xmark me-1"></i> Cancel
                 </button>
                 <button
-                  className="btn btn-primary"
+                  className="btn btn-primary text-8"
                   onClick={handleSaveItemDetails}
                 >
-                  Save Changes
+                  <i className="fa-solid fa-floppy-disk me-1"></i> Save Changes
                 </button>
               </div>
             </div>
