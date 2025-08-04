@@ -470,11 +470,14 @@ const LandingPage = () => {
   };
 
   // Pie Chart Sample data
-  const data = [
-    { name: "QC Passed", value: qcPassCount },
-    { name: "QC Failed", value: qcFailCount },
-    { name: "QC Pending", value: pendingQC },
-  ];
+  const data =
+    qcPassCount + qcFailCount + pendingQC === 0
+      ? []
+      : [
+          { name: "QC Passed", value: qcPassCount },
+          { name: "QC Failed", value: qcFailCount },
+          { name: "QC Pending", value: pendingQC },
+        ];
 
   const COLORS = ["#16A34A", "#DC2626", "#3B82F6"];
 
@@ -893,38 +896,62 @@ const LandingPage = () => {
 
           {/* Pie Chart */}
           <div className="col-md-4 d-flex align-items-center justify-content-center">
-            <PieChart width={400} height={300}>
-              <Pie
-                data={data}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                innerRadius={60}
-                outerRadius={100}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {data.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={COLORS[index % COLORS.length]}
-                  />
-                ))}
+            {data.length === 0 ? (
+              <PieChart width={400} height={300}>
+                <Pie
+                  data={[{ name: "No Data", value: 1 }]}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  dataKey="value"
+                  fill="#d6d8db" // Bootstrap gray-300
+                />
                 <text
                   x="50%"
-                  y="45%"
+                  y="50%"
                   textAnchor="middle"
                   dominantBaseline="middle"
-                  fill="#111827"
+                  fill="#6c757d" // Bootstrap text-secondary
                   fontSize="14"
                   fontWeight="bold"
                 >
-                  QC Status
+                  No QC data
                 </text>
-              </Pie>
-              <Tooltip />
-              <Legend content={<CustomLegend />} />
-            </PieChart>
+              </PieChart>
+            ) : (
+              <PieChart width={400} height={300}>
+                <Pie
+                  data={data}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  innerRadius={60}
+                  outerRadius={100}
+                  dataKey="value"
+                >
+                  {data.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                  <text
+                    x="50%"
+                    y="45%"
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    fill="#343a40" // Bootstrap text-dark
+                    fontSize="14"
+                    fontWeight="bold"
+                  >
+                    QC Status
+                  </text>
+                </Pie>
+                <Tooltip />
+                <Legend content={<CustomLegend />} />
+              </PieChart>
+            )}
           </div>
         </div>
       </div>

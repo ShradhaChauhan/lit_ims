@@ -692,6 +692,7 @@ const VendorMaster = () => {
         email: row.email,
         address: row.address,
         city: row.city,
+        country: row.country,
         state: row.state,
         pincode: row.pincode,
         status: row.status,
@@ -706,10 +707,10 @@ const VendorMaster = () => {
       }
 
       // Email validation
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (payload.email && !emailRegex.test(payload.email)) {
-        invalidFields["email"] = true;
-      }
+      // const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      // if (payload.email && !emailRegex.test(payload.email)) {
+      //   invalidFields["email"] = true;
+      // }
 
       if (Object.keys(invalidFields).length > 0) {
         invalidRows.push({ rowNumber: i + 2, rowData: payload, invalidFields });
@@ -736,6 +737,7 @@ const VendorMaster = () => {
           "Email",
           "Address",
           "City",
+          "Country",
           "State",
           "Pincode",
           "Status",
@@ -752,6 +754,7 @@ const VendorMaster = () => {
             rowData.email || "",
             rowData.address || "",
             rowData.city || "",
+            rowData.country || "",
             rowData.state || "",
             rowData.pincode || "",
             rowData.status || "",
