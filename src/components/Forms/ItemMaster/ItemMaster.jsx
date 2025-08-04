@@ -704,6 +704,7 @@ const ItemMaster = () => {
 
     reader.readAsArrayBuffer(file);
   };
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSaveToAPI = async () => {
     console.log(excelData);
@@ -711,6 +712,10 @@ const ItemMaster = () => {
       toast.error("Please select an excel file");
       return;
     }
+
+    // Show loader (you can set a state variable here to show a spinner)
+    setIsLoading(true);
+
     try {
       for (const row of excelData) {
         const payload = {
@@ -725,18 +730,51 @@ const ItemMaster = () => {
           inventoryItem: row.inventoryItem,
           iqc: row.iqc,
         };
+
         console.log("Excel import payload: " + JSON.stringify(payload));
-        const response = await api.post("/api/items/add", payload);
-        toast.success("Excel imported successfully");
+        await api.post("/api/items/add", payload);
       }
+
+      // Success toast after all rows are inserted
+      toast.success("Excel imported successfully");
+      fetchItems();
     } catch (error) {
       console.error("Error saving excel data:", error);
-      toast.error(error.response.data.message);
+      toast.error(error.response?.data?.message || "Error importing Excel");
+    } finally {
+      // Hide loader
+      setIsLoading(false);
     }
   };
 
   return (
     <div>
+      {isLoading && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            backgroundColor: "rgba(0, 0, 0, 0.7)", // semi-transparent background
+            zIndex: 9999,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            pointerEvents: "all", // blocks clicks
+          }}
+        >
+          <div
+            className="spinner-border text-primary"
+            role="status"
+            style={{ width: "4rem", height: "4rem" }}
+          >
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      )}
+
       {/* Header section */}
       <nav className="navbar bg-light border-body" data-bs-theme="light">
         <div className="container-fluid">
