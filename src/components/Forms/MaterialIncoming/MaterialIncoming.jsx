@@ -798,10 +798,11 @@ const MaterialIncoming = () => {
     }
   };
 
-  // Add Attachment
+  // Add Invoice
   const [selectedFile, setSelectedFile] = useState(null);
 
   const handleFileChange = (event) => {
+    event.preventDefault();
     setSelectedFile(event.target.files[0]);
   };
 
@@ -1043,8 +1044,8 @@ const MaterialIncoming = () => {
               </div>
             </div>
             <div className="col-4 d-flex flex-column form-group">
-              <label htmlFor="attachment" className="form-label ms-2">
-                Add Attachment <span className="text-danger fs-6">*</span>
+              <label htmlFor="formFile" className="form-label ms-2">
+                Add Invoice <span className="text-danger fs-6">*</span>
               </label>
               <div className="position-relative w-100">
                 <input
@@ -1094,6 +1095,7 @@ const MaterialIncoming = () => {
                         <th>Quantity</th>
                         <th>Batch No</th>
                         <th>Warehouse</th>
+                        <th>Invoice</th>
                         <th>Actions</th>
                       </tr>
                     </thead>
@@ -1149,6 +1151,7 @@ const MaterialIncoming = () => {
                                 ))}
                               </select>
                             </td>
+                            <td>{receipt.invoice.name}</td>
                             <td className="actions ps-3">
                               <button
                                 className="btn-icon btn-primary"

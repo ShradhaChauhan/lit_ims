@@ -21,6 +21,15 @@ const AppContextProvider = (props) => {
   const [role, setRole] = useState(null);
   const [permissions, setPermissions] = useState([]);
   const [istoken, setIsToken] = useState("");
+  const [permissionsLoaded, setPermissionsLoaded] = useState(false);
+
+  useEffect(() => {
+    const savedPermissions = JSON.parse(
+      localStorage.getItem("permissions") || "[]"
+    );
+    setPermissions(savedPermissions);
+    setPermissionsLoaded(true); // Once loaded
+  }, []);
 
   const getPermission = (pageName) => {
     return (
@@ -103,6 +112,7 @@ const AppContextProvider = (props) => {
     setRole,
     istoken,
     setIsToken,
+    permissionsLoaded,
   };
 
   return (

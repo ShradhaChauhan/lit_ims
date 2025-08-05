@@ -661,7 +661,7 @@ const IncomingQC = () => {
                   </div>
                   <div className="mt-3">
                     <label
-                      htmlFor="attachment"
+                      htmlFor="formFile"
                       className="form-label mb-0 text-8 font-weight py-2"
                     >
                       Add Attachment <span className="text-danger fs-6">*</span>
