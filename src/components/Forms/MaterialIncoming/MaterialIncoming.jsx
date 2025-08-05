@@ -61,6 +61,7 @@ const MaterialIncoming = () => {
     setMode("");
     setVendor("");
     setReceiptList([]);
+    setSelectedFile("");
   };
 
   useEffect(() => {
@@ -166,6 +167,13 @@ const MaterialIncoming = () => {
     e.preventDefault();
     setLoading(true);
 
+    if (selectedFile) {
+      console.log("File selected:", selectedFile);
+    } else {
+      toast.error("Please select a file first.");
+      return;
+    }
+
     try {
       const newErrors = validateForm(formData);
       setErrors(newErrors);
@@ -220,6 +228,7 @@ const MaterialIncoming = () => {
             batchNo: batchData.batchNo || "",
             vendorCode: formData.code || batchData.vendorCode,
             vendorName: formData.vendorName || batchData.vendorName,
+            invoice: selectedFile,
           };
 
           // Add to receipt list
@@ -297,6 +306,7 @@ const MaterialIncoming = () => {
             vendorName: formData.vendorName,
             warehouse: defaultWarehouse.warehouseName,
             warehouseId: defaultWarehouse.warehouseId,
+            invoice: selectedFile,
           };
 
           console.log("Adding new item with warehouse:", newItem);
@@ -304,6 +314,7 @@ const MaterialIncoming = () => {
           toast.success("Item added successfully");
 
           // Reset item selection but keep vendor information
+          setSelectedFile("");
           setVendorItem("");
           setFormData((prev) => ({
             ...prev,
@@ -326,6 +337,7 @@ const MaterialIncoming = () => {
             vendorName: formData.vendorName,
             warehouse: defaultWarehouse.warehouseName,
             warehouseId: defaultWarehouse.warehouseId,
+            invoice: selectedFile,
           };
 
           console.log("Adding new item with warehouse (after error):", newItem);
@@ -342,6 +354,7 @@ const MaterialIncoming = () => {
             quantity: "",
             warehouse: "",
           }));
+          setSelectedFile("");
         }
       } else {
         toast.error("Please select a receipt mode first");
@@ -536,6 +549,7 @@ const MaterialIncoming = () => {
       const firstItem = receiptList[0];
 
       const payload = {
+        invoice: firstItem.invoice,
         mode: mode,
         vendor: firstItem.vendorName || formData.vendorName,
         vendorCode: firstItem.vendorCode || formData.code,
@@ -783,6 +797,15 @@ const MaterialIncoming = () => {
       };
     }
   };
+
+  // Add Invoice
+  const [selectedFile, setSelectedFile] = useState(null);
+
+  const handleFileChange = (event) => {
+    event.preventDefault();
+    setSelectedFile(event.target.files[0]);
+  };
+
   return (
     <div>
       {/* Header section */}
@@ -1020,6 +1043,25 @@ const MaterialIncoming = () => {
                 />
               </div>
             </div>
+            <div className="col-4 d-flex flex-column form-group">
+              <label htmlFor="formFile" className="form-label ms-2">
+                Add Invoice <span className="text-danger fs-6">*</span>
+              </label>
+              <div className="position-relative w-100">
+                <input
+                  className="form-control text-8"
+                  type="file"
+                  id="formFile"
+                  onChange={handleFileChange}
+                />
+              </div>
+              {selectedFile && (
+                <div className="mt-3 text-8">
+                  <span className="fw-medium ">Selected File:</span>{" "}
+                  {selectedFile.name}
+                </div>
+              )}
+            </div>
           </div>
           <div>
             <div className="row">
@@ -1053,6 +1095,7 @@ const MaterialIncoming = () => {
                         <th>Quantity</th>
                         <th>Batch No</th>
                         <th>Warehouse</th>
+                        <th>Invoice</th>
                         <th>Actions</th>
                       </tr>
                     </thead>
@@ -1108,6 +1151,7 @@ const MaterialIncoming = () => {
                                 ))}
                               </select>
                             </td>
+                            <td>{receipt.invoice.name}</td>
                             <td className="actions ps-3">
                               <button
                                 className="btn-icon btn-primary"
@@ -1167,10 +1211,12 @@ const MaterialIncoming = () => {
                 </h5>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="btn"
                   onClick={handleCloseConfirmModal}
                   aria-label="Close"
-                ></button>
+                >
+                  <i className="fas fa-times"></i>
+                </button>
               </div>
               <div className="modal-body">
                 {message}
@@ -1230,10 +1276,12 @@ const MaterialIncoming = () => {
                 </h5>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="btn"
                   data-bs-dismiss="modal"
                   aria-label="Close"
-                ></button>
+                >
+                  <i className="fas fa-times"></i>
+                </button>
               </div>
               <div className="modal-body">
                 <div className="user-details-grid">

@@ -10,10 +10,12 @@ const ItemMasterModal = ({ item, onClose }) => {
         </h5>
         <button
           type="button"
-          className="btn-close"
+          className="btn"
           onClick={onClose}
           aria-label="Close"
-        ></button>
+        >
+          <i className="fas fa-times"></i>
+        </button>
       </div>
       <div className="modal-body">
         <div className="user-details-grid">

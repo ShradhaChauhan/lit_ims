@@ -747,12 +747,12 @@ const ItemMaster = () => {
         validRows.push(payload);
       }
     }
-
+    let partialSuccess = false;
     try {
       for (const row of validRows) {
         await api.post("/api/items/add", row);
       }
-
+      partialSuccess = true;
       if (invalidRows.length > 0) {
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet("Invalid Rows");
@@ -828,7 +828,10 @@ const ItemMaster = () => {
       fetchItems();
     } catch (error) {
       console.error("Error saving excel data:", error);
-      toast.error(error.response?.data?.message || "Error importing Excel");
+
+      if (!partialSuccess) {
+        toast.error(error.response?.data?.message || "Error importing Excel");
+      }
     } finally {
       setIsLoading(false);
     }

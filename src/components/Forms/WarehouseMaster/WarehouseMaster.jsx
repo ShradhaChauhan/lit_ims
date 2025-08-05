@@ -590,10 +590,9 @@ const WarehouseMaster = () => {
             <h2>
               <i className="fas fa-warehouse"></i> Add New Warehouse
             </h2>
-            <button
-              className="btn-close"
-              onClick={() => setIsAddWarehouse(false)}
-            ></button>
+            <button className="btn" onClick={() => setIsAddWarehouse(false)}>
+              <i className="fas fa-times"></i>
+            </button>
           </div>
           {/* Form Fields */}
           <form
@@ -947,10 +946,12 @@ const WarehouseMaster = () => {
                 </h5>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="btn"
                   onClick={handleCloseConfirmModal}
                   aria-label="Close"
-                ></button>
+                >
+                  <i className="fas fa-times"></i>
+                </button>
               </div>
               <div className="modal-body">{message}</div>
               <div className="modal-footer">
@@ -997,10 +998,12 @@ const WarehouseMaster = () => {
                 </h5>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="btn"
                   data-bs-dismiss="modal"
                   aria-label="Close"
-                ></button>
+                >
+                  <i className="fas fa-times"></i>
+                </button>
               </div>
               <div className="modal-body">
                 <div className="user-details-grid">
@@ -1070,14 +1073,16 @@ const WarehouseMaster = () => {
                 </h5>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="btn"
                   data-bs-dismiss="modal"
                   aria-label="Close"
                   onClick={() => {
                     setIsProcessing(false);
                     setIsEditWarehouseDetails(false);
                   }}
-                ></button>
+                >
+                  <i className="fas fa-times"></i>
+                </button>
               </div>
               {/* Modal Body */}
               <div className="modal-body">

@@ -18,7 +18,13 @@ const LoginPage = () => {
   const [branches, setBranches] = useState([]);
   const [error, setError] = useState("");
   const [responseUsername, setResponseUsername] = useState("");
-  const { setIsAuthenticated, setRole, setIsToken } = useContext(AppContext);
+  const {
+    setIsAuthenticated,
+    setRole,
+    setIsToken,
+    setPermissions,
+    updatePermissions,
+  } = useContext(AppContext);
 
   const handleVerify = async (e) => {
     if (e?.preventDefault) e.preventDefault();
@@ -63,6 +69,7 @@ const LoginPage = () => {
       setError("Please select a branch.");
       return;
     }
+    localStorage.clear();
     try {
       const response = await api.post("/api/auth/select-branch", null, {
         params: {
@@ -72,12 +79,18 @@ const LoginPage = () => {
       });
 
       const { token, permissions } = response.data.data;
-      // Store permissions and token
+
+      // After successful login or switch
+      updatePermissions(permissions); // this sets both context and localStorage
       setIsToken(token);
+      setIsAuthenticated(true);
+      setRole(responseUsername);
+
+      localStorage.setItem("username", username);
       localStorage.setItem("token", token);
       localStorage.setItem("authToken", token);
+      setPermissions(permissions); // ← update sidebar-rendering state
       localStorage.setItem("permissions", JSON.stringify(permissions));
-      setIsAuthenticated(true);
 
       if (rememberMe) {
         localStorage.setItem("rememberedUsername", username);
@@ -86,7 +99,11 @@ const LoginPage = () => {
       }
 
       toast.success("Login successful");
-      navigate("/dashboard");
+
+      //  Only navigate if not already on dashboard, and after re-render
+      if (window.location.pathname !== "/dashboard") {
+        setTimeout(() => navigate("/dashboard"), 0);
+      }
     } catch (err) {
       setIsAuthenticated(false);
       console.error(err);

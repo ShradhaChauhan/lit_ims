@@ -12,7 +12,7 @@ import GroupMaster from "../Forms/GroupMaster/GroupMaster";
 import WarehouseMaster from "../Forms/WarehouseMaster/WarehouseMaster";
 import BOMMaster from "../Forms/BOMMaster/BOMMaster";
 import TypeMaster from "../Forms/TypeMaster/TypeMaster";
-import LandingPage from "../LandingPage/LandingPage";
+import AdminLandingPage from "../AdminLandingPage/AdminLandingPage";
 
 const Dashboard = () => {
   const { rightSideComponent, setRightSideComponent } = useContext(AppContext);
@@ -37,7 +37,7 @@ const Dashboard = () => {
       ) : rightSideComponent === "/users" ? (
         <Users />
       ) : (
-        <LandingPage />
+        <AdminLandingPage />
       )}
     </div>
   );

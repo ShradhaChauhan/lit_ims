@@ -56,10 +56,12 @@ const AddUserModal = () => {
               <h5 className="modal-title">Modal title</h5>
               <button
                 type="button"
-                className="btn-close"
+                className="btn"
                 data-bs-dismiss="modal"
                 aria-label="Close"
-              ></button>
+              >
+                <i className="fas fa-times"></i>
+              </button>
             </div>
             <div className="modal-body">
               <p>Modal body text goes here.</p>

@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import SearchBar from "../SearchBar/SearchBar";
 import "./SideBar.css";
 import { AppContext } from "../../context/AppContext";
@@ -35,6 +35,10 @@ const SideBar = () => {
     setRightSideComponent,
     setIsActiveComponent,
     setLabelName,
+    permissions,
+    setPermissions,
+    setIsAuthenticated,
+    setIsToken,
   } = useContext(AppContext);
 
   // Floating submenu state
@@ -251,11 +255,23 @@ const SideBar = () => {
     },
   ];
 
+  useEffect(() => {
+    // Whenever permissions change, update the UI
+  }, [permissions]);
+
   const handleLogout = async () => {
     try {
       await api.post("/api/auth/logout");
 
-      localStorage.removeItem("authToken");
+      // Clear all localStorage
+      localStorage.clear();
+
+      // Reset auth state
+      setIsAuthenticated(false);
+      setIsToken(null);
+      setRole(null);
+      setPermissions([]);
+
       navigate("/");
     } catch (err) {
       console.error("Logout Failed", err);
@@ -300,7 +316,9 @@ const SideBar = () => {
     name === "ProductionMaterialUsage" &&
       setRightSideComponent(<ProductionMaterialUsage />);
     name === "WIPReturn" && setRightSideComponent(<WIPReturn />);
-    name === "Reports" && setRightSideComponent(<div>Reports Coming Soon</div>);
+    name === "Reports" &&
+      permissions.some((p) => p.pageName.includes("Report") && p.canView) &&
+      setRightSideComponent(<div>Reports Coming Soon</div>);
     name === "Activity Logs" && setRightSideComponent(<ActivityLogs />);
     name === "Approve Items Quantity" &&
       setRightSideComponent(<ApproveItemsQuantity />);
@@ -314,25 +332,41 @@ const SideBar = () => {
     .map((item) => {
       const lowerSearch = searchTerm.toLowerCase();
 
-      // If no submenu, just check label
+      // ✅ Always show Dashboard
+      if (item.label === "Dashboard") {
+        if (item.label.toLowerCase().includes(lowerSearch)) {
+          return item;
+        }
+        return null; // hide from search results if not matching
+      }
+
+      // 🔍 Menu WITHOUT submenu
       if (!item.submenu) {
-        if (item.label.toLowerCase().includes(lowerSearch)) return item;
+        const hasPermission = ability.can("view", item.label || "");
+        const matchesSearch = item.label.toLowerCase().includes(lowerSearch);
+
+        if (hasPermission && matchesSearch) {
+          return item;
+        }
         return null;
       }
 
-      // For submenu items
-      const filteredSubmenu = item.submenu.filter((sub) =>
-        sub.label.toLowerCase().includes(lowerSearch)
+      // 🔍 Menu WITH submenu
+      const filteredSubmenu = item.submenu.filter(
+        (sub) =>
+          sub.label.toLowerCase().includes(lowerSearch) &&
+          ability.can("view", sub.label || "")
       );
 
-      if (
-        item.label.toLowerCase().includes(lowerSearch) ||
-        filteredSubmenu.length > 0
-      ) {
-        return {
-          ...item,
-          submenu: filteredSubmenu, // only include matching submenu items
-        };
+      const matchesMenuLabel = item.label.toLowerCase().includes(lowerSearch);
+
+      if (matchesMenuLabel || filteredSubmenu.length > 0) {
+        if (filteredSubmenu.length > 0) {
+          return {
+            ...item,
+            submenu: filteredSubmenu,
+          };
+        }
       }
 
       return null;
@@ -464,15 +498,14 @@ const SideBar = () => {
             <div className="profile-info" title="John Doe">
               <img
                 src={`https://ui-avatars.com/api/?name=${localStorage.getItem(
-                  "rememberedUsername"
+                  "username"
                 )}&background=2563eb&color=fff`}
                 alt="Profile"
               />
               <div className="user-details">
                 <p className="m-0 text-white">
-                  Hi, <span>{localStorage.getItem("rememberedUsername")}</span>
+                  Hi, <span>{localStorage.getItem("username")}</span>
                 </p>
-                <small>Admin</small>
               </div>
             </div>
             <button onClick={handleLogout} className="btn logout">

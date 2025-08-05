@@ -160,6 +160,7 @@ const IncomingQC = () => {
   const fetchWarehouses = async () => {
     try {
       const response = await api.get("/api/warehouses/store-and-rej");
+      console.log(response.data.data);
       setWarehouses(response.data.data);
     } catch (error) {
       toast.error("Error in fetching warehouses");
@@ -614,7 +615,7 @@ const IncomingQC = () => {
                             setIsHold("HOLD");
                             setIsPass(false);
                             const storeWarehouse = warehouses.find(
-                              (w) => w.name === "Store"
+                              (w) => w.name === "QC"
                             );
                             if (storeWarehouse) {
                               setSelectedWarehouse(storeWarehouse.id);
@@ -660,7 +661,7 @@ const IncomingQC = () => {
                   </div>
                   <div className="mt-3">
                     <label
-                      htmlFor="attachment"
+                      htmlFor="formFile"
                       className="form-label mb-0 text-8 font-weight py-2"
                     >
                       Add Attachment <span className="text-danger fs-6">*</span>
@@ -1079,10 +1080,12 @@ const IncomingQC = () => {
                 </h5>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="btn"
                   onClick={handleCloseConfirmModal}
                   aria-label="Close"
-                ></button>
+                >
+                  <i className="fas fa-times"></i>
+                </button>
               </div>
               <div className="modal-body">{message}</div>
               <div className="modal-footer">

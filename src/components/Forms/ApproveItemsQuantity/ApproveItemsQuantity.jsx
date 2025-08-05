@@ -259,7 +259,7 @@ const ApproveItemsQuantity = () => {
                 <th>Requested To</th>
                 <th>Status</th>
                 {/* <th>Remarks</th> */}
-                <th>Requested Date</th>
+                <th>Requested Date-Time</th>
                 <th>Details</th>
                 <th>Actions</th>
               </tr>
@@ -269,7 +269,7 @@ const ApproveItemsQuantity = () => {
                 <tr>
                   <td colSpan="9" className="text-center">
                     <div className="p-4">
-                      <i class="fa-solid fa-check-to-slot fa-3x mb-3 icon-color"></i>
+                      <i className="fa-solid fa-check-to-slot fa-3x mb-3 icon-color"></i>
                       <h5 className="gray">Nothing to approve</h5>
                     </div>
                   </td>
@@ -278,7 +278,9 @@ const ApproveItemsQuantity = () => {
                 list.map((val) => (
                   <tr key={val.id}>
                     <td className="text-wrap">{val.id}</td>
-                    <td className="text-wrap">{val.referenceType}</td>
+                    <td className="text-wrap">
+                      {val.referenceType.replace(/_/g, " ")}
+                    </td>
                     <td className="text-wrap">{val.referenceId}</td>
                     <td className="text-wrap">{val.requestedBy}</td>
                     <td className="text-wrap">{val.requestedTo}</td>

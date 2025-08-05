@@ -21,6 +21,15 @@ const AppContextProvider = (props) => {
   const [role, setRole] = useState(null);
   const [permissions, setPermissions] = useState([]);
   const [istoken, setIsToken] = useState("");
+  const [permissionsLoaded, setPermissionsLoaded] = useState(false);
+
+  useEffect(() => {
+    const savedPermissions = JSON.parse(
+      localStorage.getItem("permissions") || "[]"
+    );
+    setPermissions(savedPermissions);
+    setPermissionsLoaded(true); // Once loaded
+  }, []);
 
   const getPermission = (pageName) => {
     return (
@@ -29,6 +38,18 @@ const AppContextProvider = (props) => {
         canEdit: false,
       }
     );
+  };
+
+  useEffect(() => {
+    const savedPermissions = JSON.parse(
+      localStorage.getItem("permissions") || "[]"
+    );
+    setPermissions(savedPermissions);
+  }, []);
+
+  const updatePermissions = (newPermissions) => {
+    setPermissions(newPermissions);
+    localStorage.setItem("permissions", JSON.stringify(newPermissions));
   };
 
   // Sync changes to localStorage
@@ -85,11 +106,13 @@ const AppContextProvider = (props) => {
     setIsAddVendorItem,
     permissions,
     setPermissions,
+    updatePermissions,
     getPermission,
     role,
     setRole,
     istoken,
     setIsToken,
+    permissionsLoaded,
   };
 
   return (

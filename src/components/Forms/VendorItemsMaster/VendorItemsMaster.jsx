@@ -777,7 +777,7 @@ const VendorItemsMaster = () => {
         validRows.push(payload);
       }
     }
-
+    let partialSuccess = false;
     try {
       for (const row of validRows) {
         try {
@@ -790,7 +790,7 @@ const VendorItemsMaster = () => {
           );
         }
       }
-
+      partialSuccess = true;
       if (invalidRows.length > 0) {
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet("Invalid Rows");
@@ -873,8 +873,11 @@ const VendorItemsMaster = () => {
 
       fetchVendorItems();
     } catch (error) {
-      console.error("Error saving Excel data:", error);
-      toast.error(error.response?.data?.message || "Error importing Excel");
+      console.error("Error saving excel data:", error);
+
+      if (!partialSuccess) {
+        toast.error(error.response?.data?.message || "Error importing Excel");
+      }
     } finally {
       setIsLoading(false);
     }
