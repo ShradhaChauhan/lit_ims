@@ -1,21 +1,26 @@
-import { StrictMode } from "react";
+import { StrictMode, useContext } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import "./index.css?v=1.2";
 import App from "./App.jsx";
-import AppContextProvider from "./context/AppContext.jsx";
-import { AbilityProvider } from "./utils/AbilityProvider"; // your created file
-// import { getUserPermissions } from "./utils/auth"; // assume it returns the permission array from localStorage or API
+import AppContextProvider, { AppContext } from "./context/AppContext.jsx";
+import { AbilityProvider } from "./utils/AbilityProvider";
 
-const userData = JSON.parse(localStorage.getItem("permissions") || "{}");
+// ✅ NEW COMPONENT to read permissions from context
+const AppWithAbility = () => {
+  const { permissions } = useContext(AppContext);
+  return (
+    <AbilityProvider permissions={permissions}>
+      <App />
+    </AbilityProvider>
+  );
+};
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <AppContextProvider>
       <BrowserRouter>
-        <AbilityProvider permissions={userData || []}>
-          <App />
-        </AbilityProvider>
+        <AppWithAbility /> {/* ✅ dynamic permissions */}
       </BrowserRouter>
     </AppContextProvider>
   </StrictMode>

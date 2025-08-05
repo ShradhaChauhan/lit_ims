@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import "./LandingPage.css";
+import "./AdminLandingPage.css";
 import {
   FaBoxOpen,
   FaClock,
@@ -56,7 +56,7 @@ const frames = [
   { id: 4, text: "Frame 4: Analyze Stock" },
 ];
 
-const LandingPage = () => {
+const AdminLandingPage = () => {
   // All states
   const [totalItems, setTotalItems] = useState(0);
   const [pendingApprovals, setPendingApprovals] = useState(0);
@@ -626,11 +626,11 @@ const LandingPage = () => {
   // Card data for line chart
   const cardData = [
     {
-      title: "Total Incoming Material",
+      title: "Incoming Material",
       value: totalItems,
       change:
         totalItems === 0
-          ? "0 incoming material"
+          ? "0 incoming material from yesterday"
           : "+" + totalItems + " from yesterday",
       icon: <FaBoxOpen />,
       iconColor: "bg-primary",
@@ -650,8 +650,8 @@ const LandingPage = () => {
       value: materialRequest,
       change:
         materialRequest === 0
-          ? "0 material request"
-          : "+" + materialRequest + " material request",
+          ? "0 material request from yesterday"
+          : "+" + materialRequest + " material request from yesterday",
       icon: <FaIndustry />,
       iconColor: materialRequest === 0 ? "bg-success" : "bg-danger",
       changeColor: materialRequest === 0 ? "text-success" : "text-danger",
@@ -661,8 +661,8 @@ const LandingPage = () => {
       value: pendingApprovals,
       change:
         pendingApprovals === 0
-          ? "0 pending approvals"
-          : "+" + pendingApprovals + " pending approvals",
+          ? "0 pending approvals from yesterday"
+          : "+" + pendingApprovals + " pending approvals from yesterday",
       icon: <FaClock />,
       iconColor: pendingApprovals === 0 ? "bg-warning" : "bg-danger",
       changeColor: pendingApprovals === 0 ? "text-success" : "text-danger",
@@ -672,8 +672,8 @@ const LandingPage = () => {
       value: materialTransfer,
       change:
         materialTransfer === 0
-          ? "0 material transfer"
-          : "+" + materialTransfer + " material transfer",
+          ? "0 material transfer from yesterday"
+          : "+" + materialTransfer + " material transfer from yesterday",
       icon: <FaArrowAltCircleRight />,
       iconColor: materialTransfer === 0 ? "bg-primary" : "bg-success",
       changeColor: materialTransfer === 0 ? "text-primary" : "text-success",
@@ -683,8 +683,10 @@ const LandingPage = () => {
       value: materialReceipt,
       change:
         materialReceipt === 0
-          ? "0 material receipt"
-          : "+" + materialReceipt + " confirmed material receipt",
+          ? "0 material receipt from yesterday"
+          : "+" +
+            materialReceipt +
+            " confirmed material receipt from yesterday",
       icon: <FaReceipt />,
       iconColor: "bg-success",
       changeColor: "text-success",
@@ -693,29 +695,31 @@ const LandingPage = () => {
       title: "WIP Returns",
       value: wipReturn,
       change:
-        wipReturn === 0 ? "0 WIP return" : "+" + wipReturn + " WIP return",
+        wipReturn === 0
+          ? "0 WIP return from yesterday"
+          : "+" + wipReturn + " WIP return from yesterday",
       icon: <FaUndoAlt />,
       iconColor: wipReturn === 0 ? "bg-warning" : "bg-success",
       changeColor: wipReturn === 0 ? "text-danger" : "text-success",
     },
     {
-      title: "Total Rejected Items (IQC)",
+      title: "Rejected Items (IQC)",
       value: qcFailCount,
       change:
         qcFailCount === 0
-          ? "0 items rejected"
-          : "+" + qcFailCount + " items rejected",
+          ? "0 items rejected from yesterday"
+          : "+" + qcFailCount + " items rejected from yesterday",
       icon: <FaTimes />,
       iconColor: qcFailCount === 0 ? "bg-info" : "bg-danger",
       changeColor: qcFailCount === 0 ? "text-success" : "text-danger",
     },
     {
-      title: "Total Rejected Items (WIP)",
+      title: "Rejected Items (WIP)",
       value: wipRejectedItems,
       change:
         wipRejectedItems === 0
-          ? "0 items rejected"
-          : "+" + wipRejectedItems + " items rejected",
+          ? "0 items rejected from yesterday"
+          : "+" + wipRejectedItems + " items rejected from yesterday",
       icon: <FaExclamationTriangle />,
       iconColor: wipRejectedItems === 0 ? "bg-info" : "bg-danger",
       changeColor: wipRejectedItems === 0 ? "text-success" : "text-danger",
@@ -959,4 +963,4 @@ const LandingPage = () => {
   );
 };
 
-export default LandingPage;
+export default AdminLandingPage;

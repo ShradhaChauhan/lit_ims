@@ -23,12 +23,13 @@ import ProductionMaterialUsage from "./components/Forms/ProductionMaterialUsage/
 import WIPReturn from "./components/Forms/WIPReturn/WIPReturn";
 import ApproveItemsQuantity from "./components/Forms/ApproveItemsQuantity/ApproveItemsQuantity";
 import Reports from "./components/Reports/Reports";
+import Unauthorized from "./components/Unauthorized/Unauthorized";
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<Login />} />
-
+      <Route path="/unauthorized" element={<Unauthorized />} />
       <Route element={<PrivateRoute />}>
         <Route element={<MainLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />

@@ -31,6 +31,18 @@ const AppContextProvider = (props) => {
     );
   };
 
+  useEffect(() => {
+    const savedPermissions = JSON.parse(
+      localStorage.getItem("permissions") || "[]"
+    );
+    setPermissions(savedPermissions);
+  }, []);
+
+  const updatePermissions = (newPermissions) => {
+    setPermissions(newPermissions);
+    localStorage.setItem("permissions", JSON.stringify(newPermissions));
+  };
+
   // Sync changes to localStorage
   // useEffect(() => {
   //   localStorage.setItem("isAuthenticated", isAuthenticated);
@@ -85,6 +97,7 @@ const AppContextProvider = (props) => {
     setIsAddVendorItem,
     permissions,
     setPermissions,
+    updatePermissions,
     getPermission,
     role,
     setRole,

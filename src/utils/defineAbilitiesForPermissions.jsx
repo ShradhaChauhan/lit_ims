@@ -1,14 +1,21 @@
-// src/ability/defineAbilitiesForPermissions.js
 import { AbilityBuilder, createMongoAbility } from "@casl/ability";
 
 export function defineAbilitiesForPermissions(permissions) {
   const { can, rules } = new AbilityBuilder(createMongoAbility);
 
-  permissions.length > 0 &&
-    permissions.forEach((perm) => {
-      if (perm.canView) can("view", perm.pageName);
-      if (perm.canEdit) can("edit", perm.pageName);
-    });
+  // ✅ Defensive check
+  if (!Array.isArray(permissions)) {
+    console.warn(
+      "⚠️ Invalid permissions passed to defineAbilitiesForPermissions:",
+      permissions
+    );
+    permissions = [];
+  }
+
+  permissions.forEach((perm) => {
+    if (perm.canView) can("view", perm.pageName);
+    if (perm.canEdit) can("edit", perm.pageName);
+  });
 
   return createMongoAbility(rules);
 }

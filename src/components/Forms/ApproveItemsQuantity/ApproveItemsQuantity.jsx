@@ -269,7 +269,7 @@ const ApproveItemsQuantity = () => {
                 <tr>
                   <td colSpan="9" className="text-center">
                     <div className="p-4">
-                      <i class="fa-solid fa-check-to-slot fa-3x mb-3 icon-color"></i>
+                      <i className="fa-solid fa-check-to-slot fa-3x mb-3 icon-color"></i>
                       <h5 className="gray">Nothing to approve</h5>
                     </div>
                   </td>
