@@ -507,7 +507,7 @@ const ProductionFloorReceipt = () => {
                         />
                       </th>
                       <th>Item Name</th>
-                      <th>Batch Numbers</th>
+                      <th>Batch Number</th>
                       <th>Issued Qty</th>
                       <th>Received Qty</th>
                       <th>Variance</th>

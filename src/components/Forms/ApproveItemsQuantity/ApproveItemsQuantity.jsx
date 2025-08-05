@@ -259,7 +259,7 @@ const ApproveItemsQuantity = () => {
                 <th>Requested To</th>
                 <th>Status</th>
                 {/* <th>Remarks</th> */}
-                <th>Requested Date</th>
+                <th>Requested Date-Time</th>
                 <th>Details</th>
                 <th>Actions</th>
               </tr>

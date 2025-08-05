@@ -160,6 +160,7 @@ const IncomingQC = () => {
   const fetchWarehouses = async () => {
     try {
       const response = await api.get("/api/warehouses/store-and-rej");
+      console.log(response.data.data);
       setWarehouses(response.data.data);
     } catch (error) {
       toast.error("Error in fetching warehouses");
@@ -614,7 +615,7 @@ const IncomingQC = () => {
                             setIsHold("HOLD");
                             setIsPass(false);
                             const storeWarehouse = warehouses.find(
-                              (w) => w.name === "IQC"
+                              (w) => w.name === "QC"
                             );
                             if (storeWarehouse) {
                               setSelectedWarehouse(storeWarehouse.id);
