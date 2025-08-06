@@ -600,7 +600,7 @@ const PartMaster = () => {
                     <input type="checkbox" id="select-all-header" disabled />
                   </th>
                   <th>Code</th>
-                  <th>Name</th>
+                  <th>Part Name</th>
                   <th>UOM</th>
                   <th>Status</th>
                   <th>Actions</th>
@@ -796,7 +796,7 @@ const PartMaster = () => {
                   </div>
 
                   <div className="detail-item">
-                    <strong>Name:</strong>
+                    <strong>Part Name:</strong>
                     <span>{partDetails.name}</span>
                   </div>
                   <div className="detail-item">

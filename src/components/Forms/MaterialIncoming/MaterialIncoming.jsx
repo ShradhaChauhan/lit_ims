@@ -26,6 +26,10 @@ const MaterialIncoming = () => {
   const [currentReceipt, setCurrentReceipt] = useState(null);
   const [isStdQty, setIsStdQty] = useState(true);
   const [isConfirmModal, setIsConfirmModal] = useState(false);
+  // Preview modal state
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const previewModalRef = useRef(null);
+  const [invoiceNumber, setInvoiceNumber] = useState("");
   // receiptList is used to store the concatenated formData and show it in the table and to save the material receipt entry in database.
   const [receiptList, setReceiptList] = useState([]);
   // formData is used to set, reset and validate the form data.
@@ -41,6 +45,7 @@ const MaterialIncoming = () => {
     itemName: "",
     warehouse: "",
     batchno: "",
+    invoice: "",
   });
 
   const handleReset = (e) => {
@@ -57,11 +62,11 @@ const MaterialIncoming = () => {
       itemName: "",
       batchno: "",
       warehouse: "",
+      invoice: "",
     });
     setMode("");
     setVendor("");
     setReceiptList([]);
-    setSelectedFile("");
   };
 
   useEffect(() => {
@@ -167,13 +172,6 @@ const MaterialIncoming = () => {
     e.preventDefault();
     setLoading(true);
 
-    if (selectedFile) {
-      console.log("File selected:", selectedFile);
-    } else {
-      toast.error("Please select a file first.");
-      return;
-    }
-
     try {
       const newErrors = validateForm(formData);
       setErrors(newErrors);
@@ -228,7 +226,6 @@ const MaterialIncoming = () => {
             batchNo: batchData.batchNo || "",
             vendorCode: formData.code || batchData.vendorCode,
             vendorName: formData.vendorName || batchData.vendorName,
-            invoice: selectedFile,
           };
 
           // Add to receipt list
@@ -306,7 +303,6 @@ const MaterialIncoming = () => {
             vendorName: formData.vendorName,
             warehouse: defaultWarehouse.warehouseName,
             warehouseId: defaultWarehouse.warehouseId,
-            invoice: selectedFile,
           };
 
           console.log("Adding new item with warehouse:", newItem);
@@ -314,7 +310,6 @@ const MaterialIncoming = () => {
           toast.success("Item added successfully");
 
           // Reset item selection but keep vendor information
-          setSelectedFile("");
           setVendorItem("");
           setFormData((prev) => ({
             ...prev,
@@ -337,7 +332,6 @@ const MaterialIncoming = () => {
             vendorName: formData.vendorName,
             warehouse: defaultWarehouse.warehouseName,
             warehouseId: defaultWarehouse.warehouseId,
-            invoice: selectedFile,
           };
 
           console.log("Adding new item with warehouse (after error):", newItem);
@@ -354,7 +348,6 @@ const MaterialIncoming = () => {
             quantity: "",
             warehouse: "",
           }));
-          setSelectedFile("");
         }
       } else {
         toast.error("Please select a receipt mode first");
@@ -549,7 +542,7 @@ const MaterialIncoming = () => {
       const firstItem = receiptList[0];
 
       const payload = {
-        invoice: firstItem.invoice,
+        invoice: invoiceNumber,
         mode: mode,
         vendor: firstItem.vendorName || formData.vendorName,
         vendorCode: firstItem.vendorCode || formData.code,
@@ -798,13 +791,19 @@ const MaterialIncoming = () => {
     }
   };
 
-  // Add Invoice
-  const [selectedFile, setSelectedFile] = useState(null);
+  // Preview modal
+  useEffect(() => {
+    if (isPreviewModalOpen && previewModalRef.current) {
+      const bsModal = new Modal(previewModalRef.current, {
+        backdrop: "static",
+      });
+      bsModal.show();
 
-  const handleFileChange = (event) => {
-    event.preventDefault();
-    setSelectedFile(event.target.files[0]);
-  };
+      previewModalRef.current.addEventListener("hidden.bs.modal", () =>
+        setIsPreviewModalOpen(false)
+      );
+    }
+  }, [isPreviewModalOpen]);
 
   return (
     <div>
@@ -1043,25 +1042,6 @@ const MaterialIncoming = () => {
                 />
               </div>
             </div>
-            <div className="col-4 d-flex flex-column form-group">
-              <label htmlFor="formFile" className="form-label ms-2">
-                Add Invoice <span className="text-danger fs-6">*</span>
-              </label>
-              <div className="position-relative w-100">
-                <input
-                  className="form-control text-8"
-                  type="file"
-                  id="formFile"
-                  onChange={handleFileChange}
-                />
-              </div>
-              {selectedFile && (
-                <div className="mt-3 text-8">
-                  <span className="fw-medium ">Selected File:</span>{" "}
-                  {selectedFile.name}
-                </div>
-              )}
-            </div>
           </div>
           <div>
             <div className="row">
@@ -1095,7 +1075,6 @@ const MaterialIncoming = () => {
                         <th>Quantity</th>
                         <th>Batch No</th>
                         <th>Warehouse</th>
-                        <th>Invoice</th>
                         <th>Actions</th>
                       </tr>
                     </thead>
@@ -1121,7 +1100,7 @@ const MaterialIncoming = () => {
                             <td>{receipt.batchNo}</td>
                             <td>
                               <select
-                                className={`form-select text-font ${
+                                className={`form-control text-font ${
                                   receipt.warehouseId ? "" : "text-secondary"
                                 }`}
                                 value={
@@ -1140,6 +1119,7 @@ const MaterialIncoming = () => {
                                     setReceiptList(updatedList);
                                   }
                                 }}
+                                disabled
                               >
                                 {warehouses.map((w) => (
                                   <option
@@ -1151,7 +1131,6 @@ const MaterialIncoming = () => {
                                 ))}
                               </select>
                             </td>
-                            <td>{receipt.invoice.name}</td>
                             <td className="actions ps-3">
                               <button
                                 className="btn-icon btn-primary"
@@ -1178,7 +1157,16 @@ const MaterialIncoming = () => {
               <div className="form-actions">
                 <button
                   className="btn btn-primary border border-0 text-8 px-3 fw-medium py-2 me-3 float-end"
-                  onClick={handleSaveReceiptItem}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (receiptList.length === 0) {
+                      toast.error(
+                        "Please add at least one item to the receipt"
+                      );
+                      return;
+                    }
+                    setIsPreviewModalOpen(true);
+                  }}
                 >
                   <i className="fa-solid fa-floppy-disk me-1"></i> Save Receipt
                 </button>
@@ -1317,6 +1305,99 @@ const MaterialIncoming = () => {
                   }}
                 >
                   <i className="fas fa-xmark me-2"></i>Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Preview Modal */}
+      {isPreviewModalOpen && (
+        <div
+          className="modal fade"
+          ref={previewModalRef}
+          id="previewModal"
+          tabIndex="-1"
+        >
+          <div className="modal-dialog modal-xl">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  <i className="fas fa-eye me-2"></i>Preview Receipt Items
+                </h5>
+                <button
+                  type="button"
+                  className="btn"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                >
+                  <i className="fas fa-times"></i>
+                </button>
+              </div>
+              <div className="modal-body">
+                <div className="mb-3">
+                  <label
+                    htmlFor="invoiceNumber"
+                    className="form-label fw-semibold"
+                  >
+                    Invoice Number <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control text-font"
+                    id="invoiceNumber"
+                    placeholder="Enter Invoice Number"
+                    value={invoiceNumber}
+                    onChange={(e) => setInvoiceNumber(e.target.value)}
+                  />
+                </div>
+                <table className="table table-bordered text-font">
+                  <thead>
+                    <tr>
+                      <th>Item Name</th>
+                      <th>Item Code</th>
+                      <th>Quantity</th>
+                      <th>Batch No</th>
+                      <th>Warehouse</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {receiptList.map((item, idx) => (
+                      <tr key={idx}>
+                        <td>{item.itemName}</td>
+                        <td>{item.itemCode}</td>
+                        <td>{item.quantity}</td>
+                        <td>{item.batchNo}</td>
+                        <td>{item.warehouse}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="modal-footer">
+                <button
+                  className="btn btn-primary text-8"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (!invoiceNumber.trim()) {
+                      toast.error("Please enter an invoice number");
+                      return;
+                    }
+                    handleSaveReceiptItem(e);
+                    const modalInstance = Modal.getInstance(
+                      previewModalRef.current
+                    );
+                    if (modalInstance) modalInstance.hide();
+                  }}
+                >
+                  <i className="fa-solid fa-floppy-disk me-1"></i> Save
+                </button>
+                <button
+                  className="btn btn-secondary text-8"
+                  data-bs-dismiss="modal"
+                >
+                  <i className="fa-solid fa-xmark me-1"></i> Cancel
                 </button>
               </div>
             </div>

@@ -1169,12 +1169,12 @@ const GroupMaster = () => {
                   </div>
 
                   <div className="detail-item">
-                    <strong>Name:</strong>
+                    <strong>Group Name:</strong>
                     <span>{groupDetails.name}</span>
                   </div>
 
                   <div className="detail-item">
-                    <strong>Code:</strong>
+                    <strong>Group Code:</strong>
                     <span>{groupDetails.groupCode}</span>
                   </div>
 

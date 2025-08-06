@@ -277,6 +277,31 @@ const IncomingQC = () => {
   const handleYesConfirm = () => {
     handleDeleteSelected();
   };
+  // Preview details
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+
+  const handleShowModal = () => {
+    if (!selectedWarehouse) {
+      toast.error("Please select a warehouse");
+      return;
+    }
+    if (!selectedFile) {
+      toast.error("Please select a file first.");
+      return;
+    }
+    setShowPreviewModal(true);
+  };
+
+  const handleConfirm = async (e) => {
+    setShowPreviewModal(false);
+    await handlePassBatch(e);
+  };
+
+  const handleCancel = () => {
+    setShowPreviewModal(false);
+  };
+
+  const qcStatus = isFail ? "FAIL" : isHold ? "HOLD" : "PASS";
 
   // Submit button function
   const handlePassBatch = async (e) => {
@@ -386,9 +411,24 @@ const IncomingQC = () => {
 
   // Add Attachment
   const [selectedFile, setSelectedFile] = useState(null);
+  const MAX_FILE_SIZE_MB = 2;
 
   const handleFileChange = (event) => {
-    setSelectedFile(event.target.files[0]);
+    event.preventDefault();
+    const file = event.target.files[0];
+
+    if (file) {
+      const fileSizeInMB = file.size / (1024 * 1024); // Convert bytes to MB
+      if (fileSizeInMB > MAX_FILE_SIZE_MB) {
+        toast.warning("File size must be less than or equal to 2MB.");
+        setSelectedFile(null);
+
+        return;
+      }
+
+      setSelectedFile(file);
+    }
+    // setSelectedFile(event.target.files[0]);
   };
 
   // Shortcut keys
@@ -429,12 +469,23 @@ const IncomingQC = () => {
       const response = await api.get(
         `/api/receipt/qc-status/attachment/${encodeURIComponent(filename)}`,
         {
-          responseType: "blob", // 👈 tell Axios to return Blob
+          responseType: "blob",
         }
       );
 
-      const fileURL = window.URL.createObjectURL(response.data); // 👈 use response.data
-      window.open(fileURL);
+      const blob = new Blob([response.data]);
+      const fileURL = window.URL.createObjectURL(blob);
+
+      // Create a temporary anchor tag
+      const link = document.createElement("a");
+      link.href = fileURL;
+      link.download = filename; // 👈 ensures filename with extension
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(fileURL);
     } catch (error) {
       toast.error("Error previewing file");
       console.error("Error previewing file:", error);
@@ -671,6 +722,7 @@ const IncomingQC = () => {
                         className="form-control text-8"
                         type="file"
                         id="formFile"
+                        accept=".pdf, .jpg, .jpeg, .heic"
                         onChange={handleFileChange}
                       />
                     </div>
@@ -773,7 +825,8 @@ const IncomingQC = () => {
               <button
                 type="button"
                 className="btn btn-primary add-btn"
-                onClick={handlePassBatch}
+                // onClick={handlePassBatch}
+                onClick={handleShowModal}
               >
                 <i className="fa-solid fa-floppy-disk me-1"></i> Submit Quality
                 Check
@@ -1107,6 +1160,116 @@ const IncomingQC = () => {
                 >
                   <i className="fas fa-times me-2"></i>
                   No
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPreviewModal && (
+        <div
+          className="modal d-block show"
+          tabIndex="-1"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
+          <div className="modal-dialog">
+            <div className="modal-content">
+              {/* Header */}
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  <i className="fas fa-circle-check me-2"></i>
+                  Confirm Details
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={handleCancel}
+                  aria-label="Close"
+                ></button>
+              </div>
+              {/* Body */}
+              <div className="modal-body">
+                {batchDetails.map((batch, index) => (
+                  <div key={index} className="user-details-grid">
+                    <div className="detail-item">
+                      <strong>QC Status:</strong>
+                      <span>{qcStatus}</span>
+                    </div>
+
+                    {isFail && (
+                      <div className="detail-item">
+                        <strong>Defect Category:</strong>
+                        <span>{defectCategory || "N/A"}</span>
+                      </div>
+                    )}
+
+                    {!isPass && (
+                      <div className="detail-item">
+                        <strong>Remarks:</strong>
+                        <span>{remarks || "N/A"}</span>
+                      </div>
+                    )}
+
+                    <div className="detail-item">
+                      <strong>Warehouse:</strong>
+                      <span>
+                        {warehouses.find((w) => w.id === selectedWarehouse)
+                          ?.name || "N/A"}
+                      </span>
+                    </div>
+
+                    <div className="detail-item">
+                      <strong>Attached File:</strong>
+                      <span>{selectedFile?.name}</span>
+                    </div>
+
+                    <div className="detail-item">
+                      <strong>Batch Number:</strong>
+                      <span>{batch.batchNumber}</span>
+                    </div>
+
+                    <div className="detail-item">
+                      <strong>Item Code:</strong>
+                      <span>{batch.itemCode}</span>
+                    </div>
+
+                    <div className="detail-item">
+                      <strong>Item Name:</strong>
+                      <span>{batch.itemName}</span>
+                    </div>
+
+                    <div className="detail-item">
+                      <strong>Quantity:</strong>
+                      <span>{batch.quantity}</span>
+                    </div>
+
+                    <div className="detail-item">
+                      <strong>Vendor Name:</strong>
+                      <span>{batch.vendorName}</span>
+                    </div>
+
+                    <div className="detail-item">
+                      <strong>Created At:</strong>
+                      <span>{batch.createdAt}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Footer */}
+              <div className="modal-footer">
+                <button
+                  className="btn btn-s btn-primary"
+                  onClick={handleConfirm}
+                >
+                  <i className="fas fa-check me-1"></i> Yes
+                </button>
+                <button
+                  className="btn btn-s btn-secondary"
+                  onClick={handleCancel}
+                >
+                  <i className="fas fa-times me-1"></i> No
                 </button>
               </div>
             </div>

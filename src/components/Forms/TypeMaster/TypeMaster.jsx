@@ -819,7 +819,7 @@ const TypeMaster = () => {
                   <input type="checkbox" disabled />
                 </th>
                 <th>TRNO</th>
-                <th>Name</th>
+                <th>Type Name</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -1027,7 +1027,7 @@ const TypeMaster = () => {
                   </div>
 
                   <div className="detail-item">
-                    <strong>Name:</strong>
+                    <strong>Type Name:</strong>
                     <span>{typeDetails.name}</span>
                   </div>
 

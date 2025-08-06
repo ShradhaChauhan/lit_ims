@@ -794,8 +794,8 @@ const WarehouseMaster = () => {
                   <input type="checkbox" id="select-all-header" disabled />
                 </th>
                 <th>TRNO</th>
-                <th>Code</th>
-                <th>Name</th>
+                <th>Warehouse Code</th>
+                <th>Warehouse Name</th>
                 <th>Type</th>
                 <th>Status</th>
                 <th>Actions</th>

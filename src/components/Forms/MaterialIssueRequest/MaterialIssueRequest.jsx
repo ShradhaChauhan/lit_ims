@@ -795,10 +795,19 @@ const MaterialIssueRequest = () => {
                           <td className="ps-4">{req.createdAt}</td>
                           <td className="ps-4 text-capitalize">{req.type}</td>
                           <td className="ps-4">
-                            {req.items && req.items.length > 0
-                              ? req.items.map((item) => item.name).join(", ")
-                              : "-"}
+                            {req.items && req.items.length > 0 ? (
+                              <ul className="mb-0 ps-3">
+                                {req.items.map((item, index) => (
+                                  <li key={index}>
+                                    {"(" + item.code + ") " + item.name}
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              "-"
+                            )}
                           </td>
+
                           <td className="ps-4">
                             <span
                               className={`status-badge ${req.status.toLowerCase()}`}

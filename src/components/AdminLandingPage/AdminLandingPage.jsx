@@ -636,26 +636,26 @@ const AdminLandingPage = () => {
       iconColor: "bg-primary",
       changeColor: "text-success",
     },
-    {
-      title: "QC Pending",
-      value: pendingQC,
-      change:
-        pendingQC === 0 ? "0 pending QC" : "+" + pendingQC + " from yesterday",
-      icon: <FaClipboardList />,
-      iconColor: pendingQC === 0 ? "bg-warning" : "bg-danger",
-      changeColor: pendingQC === 0 ? "text-success" : "text-danger",
-    },
-    {
-      title: "Material Request",
-      value: materialRequest,
-      change:
-        materialRequest === 0
-          ? "0 material request from yesterday"
-          : "+" + materialRequest + " material request from yesterday",
-      icon: <FaIndustry />,
-      iconColor: materialRequest === 0 ? "bg-success" : "bg-danger",
-      changeColor: materialRequest === 0 ? "text-success" : "text-danger",
-    },
+    // {
+    //   title: "QC Pending",
+    //   value: pendingQC,
+    //   change:
+    //     pendingQC === 0 ? "0 pending QC" : "+" + pendingQC + " from yesterday",
+    //   icon: <FaClipboardList />,
+    //   iconColor: pendingQC === 0 ? "bg-warning" : "bg-danger",
+    //   changeColor: pendingQC === 0 ? "text-success" : "text-danger",
+    // },
+    // {
+    //   title: "Material Request",
+    //   value: materialRequest,
+    //   change:
+    //     materialRequest === 0
+    //       ? "0 material request from yesterday"
+    //       : "+" + materialRequest + " material request from yesterday",
+    //   icon: <FaIndustry />,
+    //   iconColor: materialRequest === 0 ? "bg-success" : "bg-danger",
+    //   changeColor: materialRequest === 0 ? "text-success" : "text-danger",
+    // },
     {
       title: "Pending Approvals",
       value: pendingApprovals,
@@ -667,41 +667,41 @@ const AdminLandingPage = () => {
       iconColor: pendingApprovals === 0 ? "bg-warning" : "bg-danger",
       changeColor: pendingApprovals === 0 ? "text-success" : "text-danger",
     },
-    {
-      title: "Material Transfer",
-      value: materialTransfer,
-      change:
-        materialTransfer === 0
-          ? "0 material transfer from yesterday"
-          : "+" + materialTransfer + " material transfer from yesterday",
-      icon: <FaArrowAltCircleRight />,
-      iconColor: materialTransfer === 0 ? "bg-primary" : "bg-success",
-      changeColor: materialTransfer === 0 ? "text-primary" : "text-success",
-    },
-    {
-      title: "Material Receipt",
-      value: materialReceipt,
-      change:
-        materialReceipt === 0
-          ? "0 material receipt from yesterday"
-          : "+" +
-            materialReceipt +
-            " confirmed material receipt from yesterday",
-      icon: <FaReceipt />,
-      iconColor: "bg-success",
-      changeColor: "text-success",
-    },
-    {
-      title: "WIP Returns",
-      value: wipReturn,
-      change:
-        wipReturn === 0
-          ? "0 WIP return from yesterday"
-          : "+" + wipReturn + " WIP return from yesterday",
-      icon: <FaUndoAlt />,
-      iconColor: wipReturn === 0 ? "bg-warning" : "bg-success",
-      changeColor: wipReturn === 0 ? "text-danger" : "text-success",
-    },
+    // {
+    //   title: "Material Transfer",
+    //   value: materialTransfer,
+    //   change:
+    //     materialTransfer === 0
+    //       ? "0 material transfer from yesterday"
+    //       : "+" + materialTransfer + " material transfer from yesterday",
+    //   icon: <FaArrowAltCircleRight />,
+    //   iconColor: materialTransfer === 0 ? "bg-primary" : "bg-success",
+    //   changeColor: materialTransfer === 0 ? "text-primary" : "text-success",
+    // },
+    // {
+    //   title: "Material Receipt",
+    //   value: materialReceipt,
+    //   change:
+    //     materialReceipt === 0
+    //       ? "0 material receipt from yesterday"
+    //       : "+" +
+    //         materialReceipt +
+    //         " confirmed material receipt from yesterday",
+    //   icon: <FaReceipt />,
+    //   iconColor: "bg-success",
+    //   changeColor: "text-success",
+    // },
+    // {
+    //   title: "WIP Returns",
+    //   value: wipReturn,
+    //   change:
+    //     wipReturn === 0
+    //       ? "0 WIP return from yesterday"
+    //       : "+" + wipReturn + " WIP return from yesterday",
+    //   icon: <FaUndoAlt />,
+    //   iconColor: wipReturn === 0 ? "bg-warning" : "bg-success",
+    //   changeColor: wipReturn === 0 ? "text-danger" : "text-success",
+    // },
     {
       title: "Rejected Items (IQC)",
       value: qcFailCount,

@@ -190,7 +190,8 @@ const ItemMaster = () => {
         (item) =>
           item.name?.toLowerCase().includes(searchLower) ||
           item.code?.toLowerCase().includes(searchLower) ||
-          item.barcode?.toLowerCase().includes(searchLower)
+          item.barcode?.toLowerCase().includes(searchLower) ||
+          item.groupName?.toLowerCase().includes(searchLower)
       );
     }
 
@@ -908,6 +909,19 @@ const ItemMaster = () => {
         <div className="filter-options">
           <select
             className="filter-select"
+            value={selectedGroup}
+            onChange={handleGroupFilter}
+          >
+            <option value="">All Groups</option>
+            {groups.map((group) => (
+              <option key={group.id} value={group.name}>
+                {group.name}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className="filter-select"
             value={selectedStatus}
             onChange={handleStatusFilter}
           >
@@ -1374,6 +1388,7 @@ const ItemMaster = () => {
                 <th>UOM</th>
                 <th>ST Qty</th>
                 <th>Life</th>
+                <th>Group</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -1390,7 +1405,7 @@ const ItemMaster = () => {
                 </tr>
               ) : getPaginatedItems().length === 0 ? (
                 <tr className="no-data-row">
-                  <td colSpan="8" className="no-data-cell">
+                  <td colSpan="9" className="no-data-cell">
                     <div className="no-data-content">
                       <i className="fas fa-box-open no-data-icon"></i>
                       <p className="no-data-text">No items found</p>
@@ -1433,6 +1448,7 @@ const ItemMaster = () => {
                         <span>{item.life}</span>
                       </div>
                     </td>
+                    <td className="ps-4">{item.groupName}</td>
                     <td className="ps-4">
                       <span
                         className={`badge status ${item.status?.toLowerCase()}`}
