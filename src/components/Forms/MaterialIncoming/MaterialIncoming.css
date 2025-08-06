@@ -21,3 +21,38 @@
   word-break: break-word !important;
   white-space: normal !important;
 }
+
+.text-6 {
+  font-size: 0.6rem;
+}
+
+/* Hide everything on print except .print-area */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+
+  .print-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+
+  .d-print-none {
+    display: none !important;
+  }
+}
+
+.modal-dialog.modal-xl {
+  max-width: 70%;
+}
+.modal-body {
+  max-height: 60vh;
+  overflow-y: auto;
+}

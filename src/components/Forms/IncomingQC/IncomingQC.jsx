@@ -722,6 +722,7 @@ const IncomingQC = () => {
                         className="form-control text-8"
                         type="file"
                         id="formFile"
+                        accept=".pdf, .jpg, .jpeg, .heic"
                         onChange={handleFileChange}
                       />
                     </div>

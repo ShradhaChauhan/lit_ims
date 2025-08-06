@@ -328,30 +328,37 @@ const SideBar = () => {
   const ability = useContext(AbilityContext);
 
   // Search bar filter
-  const filteredMenuItems = menuItems
-    .map((item) => {
-      const lowerSearch = searchTerm.toLowerCase();
+  const [filteredMenuItems, setFilteredMenuItems] = useState(menuItems);
 
-      // ✅ Always show Dashboard
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      // Reset state only if it actually needs resetting
+      setFilteredMenuItems(menuItems);
+      setOpenSubmenus({});
+      return;
+    }
+
+    const lowerSearch = searchTerm.toLowerCase();
+    const newOpenSubmenus = {};
+    const newFilteredItems = [];
+
+    menuItems.forEach((item) => {
       if (item.label === "Dashboard") {
         if (item.label.toLowerCase().includes(lowerSearch)) {
-          return item;
+          newFilteredItems.push(item);
         }
-        return null; // hide from search results if not matching
+        return;
       }
 
-      // 🔍 Menu WITHOUT submenu
       if (!item.submenu) {
         const hasPermission = ability.can("view", item.label || "");
         const matchesSearch = item.label.toLowerCase().includes(lowerSearch);
-
         if (hasPermission && matchesSearch) {
-          return item;
+          newFilteredItems.push(item);
         }
-        return null;
+        return;
       }
 
-      // 🔍 Menu WITH submenu
       const filteredSubmenu = item.submenu.filter(
         (sub) =>
           sub.label.toLowerCase().includes(lowerSearch) &&
@@ -362,16 +369,28 @@ const SideBar = () => {
 
       if (matchesMenuLabel || filteredSubmenu.length > 0) {
         if (filteredSubmenu.length > 0) {
-          return {
+          newFilteredItems.push({
             ...item,
             submenu: filteredSubmenu,
-          };
+          });
+          newOpenSubmenus[item.label] = true;
+        } else if (matchesMenuLabel) {
+          newFilteredItems.push(item);
         }
       }
+    });
 
-      return null;
-    })
-    .filter(Boolean);
+    setFilteredMenuItems((prev) =>
+      JSON.stringify(prev) !== JSON.stringify(newFilteredItems)
+        ? newFilteredItems
+        : prev
+    );
+    setOpenSubmenus((prev) =>
+      JSON.stringify(prev) !== JSON.stringify(newOpenSubmenus)
+        ? newOpenSubmenus
+        : prev
+    );
+  }, [searchTerm]);
 
   return (
     <div
