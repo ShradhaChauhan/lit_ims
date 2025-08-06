@@ -541,7 +541,12 @@ const ProductionFloorReceipt = () => {
                           </td>
                           <td className="ps-4">
                             <div>
-                              <span>{issuedItem.itemName}</span>
+                              <span>
+                                {"(" +
+                                  issuedItem.itemCode +
+                                  ") " +
+                                  issuedItem.itemName}
+                              </span>
                             </div>
                           </td>
                           <td className="ps-4">
@@ -694,7 +699,7 @@ const ProductionFloorReceipt = () => {
                       <ul className="mb-0 ps-3">
                         {r.items.map((item, index) => (
                           <li key={index}>
-                            {item.itemName} ({item.itemCode})
+                            {"(" + item.itemName + ") "} {item.itemCode}
                           </li>
                         ))}
                       </ul>

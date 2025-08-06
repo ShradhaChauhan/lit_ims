@@ -1050,8 +1050,8 @@ const BOMMaster = () => {
                 <th className="checkbox-cell">
                   <input type="checkbox" id="select-all" disabled />
                 </th>
-                <th>Name</th>
-                <th>Code</th>
+                <th>BOM Name</th>
+                <th>BOM Code</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -1262,11 +1262,11 @@ const BOMMaster = () => {
                 <div>
                   <div className="user-details-grid">
                     <div className="detail-item">
-                      <strong>Name:</strong>
+                      <strong>BOM Name:</strong>
                       <span>{bomDetails.name}</span>
                     </div>
                     <div className="detail-item">
-                      <strong>Code:</strong>
+                      <strong>BOM Code:</strong>
                       <span>{bomDetails.code}</span>
                     </div>
                     <div className="detail-item">

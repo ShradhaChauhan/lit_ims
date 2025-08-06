@@ -62,6 +62,9 @@ const MaterialIncoming = () => {
     setVendor("");
     setReceiptList([]);
     setSelectedFile("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   useEffect(() => {
@@ -315,6 +318,9 @@ const MaterialIncoming = () => {
 
           // Reset item selection but keep vendor information
           setSelectedFile("");
+          if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+          }
           setVendorItem("");
           setFormData((prev) => ({
             ...prev,
@@ -355,6 +361,9 @@ const MaterialIncoming = () => {
             warehouse: "",
           }));
           setSelectedFile("");
+          if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+          }
         }
       } else {
         toast.error("Please select a receipt mode first");
@@ -590,7 +599,20 @@ const MaterialIncoming = () => {
         }),
       };
 
-      console.log("Submitting receipt data:", payload);
+      const formData = new FormData();
+
+      // Append the invoice file from the first item
+      formData.append("invoice", firstItem.invoice);
+
+      // Append simple fields
+      formData.append("mode", mode);
+      formData.append("vendor", firstItem.vendorName || formData.vendorName);
+      formData.append("vendorCode", firstItem.vendorCode || formData.code);
+
+      // Append items array as JSON string
+      formData.append("items", JSON.stringify(payload.items));
+
+      console.log("Submitting receipt data:", formData);
 
       if (!payload.vendor || !payload.vendorCode) {
         toast.error("Vendor information is missing. Please select a vendor.");
@@ -598,7 +620,7 @@ const MaterialIncoming = () => {
         return;
       }
 
-      const response = await api.post("/api/receipt/save", payload);
+      const response = await api.post("/api/receipt/save", formData);
       console.log(
         "Material receipt entry added successfully:",
         response.data.data
@@ -800,10 +822,30 @@ const MaterialIncoming = () => {
 
   // Add Invoice
   const [selectedFile, setSelectedFile] = useState(null);
+  const fileInputRef = useRef(null);
+  const MAX_FILE_SIZE_MB = 2;
 
   const handleFileChange = (event) => {
     event.preventDefault();
-    setSelectedFile(event.target.files[0]);
+    const file = event.target.files[0];
+
+    if (file) {
+      const fileSizeInMB = file.size / (1024 * 1024); // Convert bytes to MB
+      if (fileSizeInMB > MAX_FILE_SIZE_MB) {
+        toast.warning("File size must be less than or equal to 2MB.");
+        setSelectedFile(null);
+
+        // Reset file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+
+        return;
+      }
+
+      setSelectedFile(file);
+    }
+    // setSelectedFile(event.target.files[0]);
   };
 
   return (
@@ -985,7 +1027,7 @@ const MaterialIncoming = () => {
                     </option>
                     {vendorItems.map((item) => (
                       <option key={item.id} value={item.id}>
-                        {item.itemName}
+                        {"(" + item.itemCode + ") " + item.itemName}
                       </option>
                     ))}
                   </select>
@@ -1052,6 +1094,7 @@ const MaterialIncoming = () => {
                   className="form-control text-8"
                   type="file"
                   id="formFile"
+                  ref={fileInputRef}
                   onChange={handleFileChange}
                 />
               </div>

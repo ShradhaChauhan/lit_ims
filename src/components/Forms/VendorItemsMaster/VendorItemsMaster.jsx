@@ -1334,7 +1334,12 @@ const VendorItemsMaster = () => {
                     </td>
                     <td className="ps-4">
                       <div>
-                        <span>{assignment.itemName}</span>
+                        <span>
+                          {" (" +
+                            assignment.itemCode +
+                            ") " +
+                            assignment.itemName}
+                        </span>
                       </div>
                     </td>
                     <td className="ps-4">

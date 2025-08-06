@@ -414,16 +414,21 @@ const SideBar = () => {
                 className={`nav-link text-white d-flex justify-content-between align-items-center menuListItem`}
                 onClick={() => {
                   if (item.submenu) {
-                    // Toggle submenu
-                    if (!isCollapsed) toggleSubmenu(item.label);
+                    if (isCollapsed) {
+                      // 👇 Expand the sidebar and open this submenu
+                      setIsCollapsed(false);
+                      setTimeout(() => toggleSubmenu(item.label), 100); // give time for expand animation
+                    } else {
+                      toggleSubmenu(item.label);
+                    }
+                    setIsActiveMenu(item.label);
                   } else {
-                    // Navigate directly for menu items like "Reports" or "Activity Logs"
                     navigate(
                       `/${item.path.toLowerCase().replace(/\s+/g, "-")}`
                     );
                     setIsActiveComponent(item.path);
                     setLabelName(item.label);
-                    handleRightSideComponentName(item.label); // Pass label if it's used as a compName
+                    handleRightSideComponentName(item.label);
                   }
                 }}
               >

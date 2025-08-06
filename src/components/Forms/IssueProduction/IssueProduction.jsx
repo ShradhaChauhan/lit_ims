@@ -104,22 +104,37 @@ const IssueProduction = () => {
       const response = await api.get(
         `/api/requisitions/${requisitionNumber}/items/full`
       );
+
       if (response.data.status) {
-        console.log(response.data.data[0].items);
-        const formattedItems = response.data.data[0].items.map(
-          (item, index) => ({
-            id: index + 1,
-            itemName: item.name,
-            code: item.code,
-            requestedQty: item.quantityRequested,
-            standardQty: item.stQuantity,
-            issuedQty: 0,
-            variance: 0,
-            status: "Pending",
-            // stockQty: stockQty
-          })
+        const items = response.data.data[0].items;
+        const warehouseId = response.data.data[0].warehouseId;
+        // Step 1: Fetch stockQty for each item in parallel
+        const stockQtyPromises = items.map((item) =>
+          api
+            .post(`/api/inventory/itemQuantity/${warehouseId}/${item.code}`)
+            .then((res) => res.data.stockQty || 0)
+            .catch((err) => {
+              console.error(`Error fetching stockQty for ${item.code}`, err);
+              return 0; // fallback to 0
+            })
         );
 
+        // Step 2: Wait for all stockQty responses
+        const stockQuantities = await Promise.all(stockQtyPromises);
+        // Step 3: Combine stockQty into formattedItems
+        const formattedItems = items.map((item, index) => ({
+          id: index + 1,
+          itemName: item.name,
+          code: item.code,
+          requestedQty: item.quantityRequested,
+          standardQty: item.stQuantity,
+          issuedQty: 0,
+          variance: 0,
+          status: "Pending",
+          stockQty: stockQuantities[index],
+        }));
+
+        // Step 4: Update state
         setRequestedItems(formattedItems);
         setType({
           type: response.data.data[0].type,
@@ -548,7 +563,7 @@ const IssueProduction = () => {
                           </td>
                           <td className="ps-4">
                             <div>
-                              <span>-{/* {item.stockQty} */}</span>
+                              <span>{item.stockQty}</span>
                             </div>
                           </td>
                           <td className="ps-4">
@@ -624,7 +639,9 @@ const IssueProduction = () => {
                         <tr key={batch.id}>
                           <td className="ps-4">
                             <div>
-                              <span>{batch.itemName}</span>
+                              <span>
+                                {"(" + batch.itemCode + ") " + batch.itemName}
+                              </span>
                             </div>
                           </td>
                           <td className="ps-4">
