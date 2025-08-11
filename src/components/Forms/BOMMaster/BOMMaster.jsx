@@ -1018,17 +1018,15 @@ const BOMMaster = () => {
             </div>
             <div className="bulk-actions">
               <button
-                className="btn-action"
+                className="btn btn-outline-success text-8"
                 onClick={() => {
-                  console.log(selectedBoms);
                   const rowData = filteredBoms.filter((row) =>
                     selectedBoms.includes(row.id)
                   );
-                  console.log(rowData);
                   exportToExcel(rowData, "BOM");
                 }}
               >
-                <i className="fas fa-file-export"></i>
+                <i className="fas fa-file-export me-1"></i>
                 Export Selected
               </button>
               <button
@@ -1040,7 +1038,7 @@ const BOMMaster = () => {
                 disabled={selectedBoms.length === 0}
               >
                 <i className="fas fa-trash"></i>
-                Delete Selected ({selectedBoms.length})
+                Delete Selected
               </button>
             </div>
           </div>

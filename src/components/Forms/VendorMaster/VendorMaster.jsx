@@ -9,6 +9,7 @@ import { AbilityContext } from "../../../utils/AbilityContext";
 import * as XLSX from "xlsx";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
+import exportToExcel from "../../../utils/exportToExcel";
 
 const VendorMaster = () => {
   const [errors, setErrors] = useState({});
@@ -1386,7 +1387,18 @@ const VendorMaster = () => {
                   <i className="fas fa-file-import me-1"></i> Import Excel
                 </button>
               </div>
-
+              <button
+                className="btn btn-outline-success text-8"
+                onClick={() => {
+                  const rowData = currentItems.filter((row) =>
+                    selectedVendors.includes(row.id)
+                  );
+                  exportToExcel(rowData, "Business Partners");
+                }}
+              >
+                <i className="fas fa-file-export me-1"></i>
+                Export Selected
+              </button>
               <button
                 className="btn-action btn-danger"
                 onClick={() => {

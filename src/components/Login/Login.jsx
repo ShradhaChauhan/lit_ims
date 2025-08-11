@@ -13,6 +13,7 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [localIp, setLocalIp] = React.useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [branch, setBranch] = useState("");
   const [branches, setBranches] = useState([]);
@@ -62,6 +63,26 @@ const LoginPage = () => {
     }
   }, []);
 
+  // IP address
+  function getLocalIP(callback) {
+    const pc = new RTCPeerConnection({ iceServers: [] });
+    pc.createDataChannel("");
+    pc.onicecandidate = (event) => {
+      if (!event || !event.candidate) return;
+      const ipRegex = /([0-9]{1,3}(\.[0-9]{1,3}){3})/;
+      const ipMatch = ipRegex.exec(event.candidate.candidate);
+      if (ipMatch) {
+        callback(ipMatch[1]);
+        pc.close();
+      }
+    };
+    pc.createOffer().then((offer) => pc.setLocalDescription(offer));
+  }
+
+  useEffect(() => {
+    getLocalIP((ip) => setLocalIp(ip));
+  }, []);
+
   const handleLogin = async (e) => {
     if (e?.preventDefault) e.preventDefault();
     setError("");
@@ -70,13 +91,12 @@ const LoginPage = () => {
       return;
     }
     localStorage.clear();
+    console.log("Local IP: " + localIp);
     try {
-      const response = await api.post("/api/auth/select-branch", null, {
-        params: {
-          username: responseUsername,
-          branchId: branch,
-          // Local IP - localIp
-        },
+      const response = await api.post("/api/auth/select-branch", {
+        username: responseUsername,
+        branchId: branch,
+        localIp,
       });
 
       const { token, permissions } = response.data.data;

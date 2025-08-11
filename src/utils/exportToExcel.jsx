@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 
 const exportToExcel = (selectedRows, compName) => {
   if (selectedRows.length === 0) {
-    alert("No rows selected.");
+    toast.warning("Please select atleast one row to export!");
     return;
   }
 
