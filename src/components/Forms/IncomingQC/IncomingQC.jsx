@@ -616,7 +616,7 @@ const IncomingQC = () => {
                             setIsFail(false);
                             setIsHold(false);
                             const storeWarehouse = warehouses.find(
-                              (w) => w.name === "Store"
+                              (w) => w.type === "STR"
                             );
                             if (storeWarehouse) {
                               setSelectedWarehouse(storeWarehouse.id);
@@ -641,7 +641,7 @@ const IncomingQC = () => {
                             setIsPass(false);
                             setIsHold(false);
                             const rejectionWarehouse = warehouses.find(
-                              (w) => w.name === "Rejection"
+                              (w) => w.type === "REJ"
                             );
                             if (rejectionWarehouse) {
                               setSelectedWarehouse(rejectionWarehouse.id);
@@ -666,7 +666,7 @@ const IncomingQC = () => {
                             setIsHold("HOLD");
                             setIsPass(false);
                             const storeWarehouse = warehouses.find(
-                              (w) => w.name === "QC"
+                              (w) => w.type === "IQC"
                             );
                             if (storeWarehouse) {
                               setSelectedWarehouse(storeWarehouse.id);

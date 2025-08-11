@@ -1256,17 +1256,15 @@ const VendorItemsMaster = () => {
               </div>
 
               <button
-                className="btn-action"
+                className="btn btn-outline-success text-8"
                 onClick={() => {
-                  console.log(selectedVendorItems);
                   const rowData = filteredVendorItems.filter((row) =>
                     selectedVendorItems.includes(row.id)
                   );
-                  console.log(rowData);
                   exportToExcel(rowData, "VendorItems");
                 }}
               >
-                <i className="fas fa-file-export"></i>
+                <i className="fas fa-file-export me-1"></i>
                 Export Selected
               </button>
               <button

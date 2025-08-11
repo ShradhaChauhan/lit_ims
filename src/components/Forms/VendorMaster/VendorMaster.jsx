@@ -9,6 +9,7 @@ import { AbilityContext } from "../../../utils/AbilityContext";
 import * as XLSX from "xlsx";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
+import exportToExcel from "../../../utils/exportToExcel";
 
 const VendorMaster = () => {
   const [errors, setErrors] = useState({});
@@ -27,7 +28,7 @@ const VendorMaster = () => {
   const stateRef = useRef(null);
   const cityRef = useRef(null);
   const [username, setUsername] = useState("");
-  const [domain, setDomain] = useState("digiupdates.com");
+  const [domain, setDomain] = useState(""); // Remove preset domain
   const domains = ["litgroup.in"];
 
   // Dropdown should hide on click of outside
@@ -92,6 +93,7 @@ const VendorMaster = () => {
     pincode: "",
     address: "",
     status: "active",
+    code: "", // Add code field to formData
   });
 
   const [viewModal, setViewModal] = useState(null);
@@ -426,6 +428,7 @@ const VendorMaster = () => {
     else if (!/^\d{6}$/.test(data.pincode))
       errors.pincode = "Pincode must be 6 digits";
     if (!data.address) errors.address = "Address is required";
+    if (!data.code) errors.code = "Code is required"; // Validate code
 
     return errors;
   };
@@ -441,6 +444,7 @@ const VendorMaster = () => {
     pincode: "",
     address: "",
     status: "",
+    addresses: [], // Update partnerDetails state to include addresses array
   });
 
   const handleAddPartner = async (e) => {
@@ -450,11 +454,28 @@ const VendorMaster = () => {
 
     if (Object.keys(newErrors).length === 0) {
       try {
-        console.log(formData);
-        const response = await api.post("/api/vendor-customer/add", formData);
+        // Format the payload according to required structure
+        const payload = {
+          code: formData.code,
+          type: formData.type.toUpperCase(),
+          name: formData.name,
+          mobile: formData.mobile,
+          email: formData.email,
+          status: formData.status.toUpperCase(),
+          addresses: [
+            {
+              address: formData.address,
+              city: formData.city,
+              state: formData.state,
+              pincode: formData.pincode,
+              country: formData.country,
+            },
+          ],
+        };
+
+        const response = await api.post("/api/vendor-customer/add", payload);
         console.log("Partner added successfully:", response.data);
 
-        // Check for the new response format
         if (response.data && response.data.status === true) {
           toast.success("Partner added successfully!");
         } else {
@@ -575,6 +596,7 @@ const VendorMaster = () => {
       pincode: "",
       address: "",
       status: "active",
+      code: "", // Reset code field
     });
     setQuery("");
     setIsChecked(true);
@@ -604,9 +626,17 @@ const VendorMaster = () => {
     try {
       const response = await api.get(`/api/vendor-customer/get/${partnerId}`);
       if (response.data && response.data.status === true) {
-        setPartnerDetails(response.data.data);
-      } else if (response.data) {
-        setPartnerDetails(response.data);
+        const { data } = response.data;
+        setPartnerDetails({
+          id: data.id,
+          code: data.code,
+          type: data.type,
+          name: data.name,
+          mobile: data.mobile,
+          email: data.email,
+          status: data.status,
+          addresses: data.addresses || [],
+        });
       }
       setIsShowPartnerDetails(true);
     } catch (error) {
@@ -686,16 +716,21 @@ const VendorMaster = () => {
       const row = excelData[i];
 
       const payload = {
-        type: row.type,
+        code: row.code,
+        type: row.type.toUpperCase(),
         name: row.name,
         mobile: row.mobile,
         email: row.email,
-        address: row.address,
-        city: row.city,
-        country: row.country,
-        state: row.state,
-        pincode: row.pincode,
-        status: row.status,
+        status: row.status.toUpperCase(),
+        addresses: [
+          {
+            address: row.address,
+            city: row.city,
+            state: row.state,
+            pincode: row.pincode,
+            country: row.country,
+          },
+        ],
       };
 
       const invalidFields = {};
@@ -732,6 +767,7 @@ const VendorMaster = () => {
         const header = [
           "Row No.",
           "Type",
+          "Code", // Add code to header
           "Name",
           "Mobile",
           "Email",
@@ -749,6 +785,7 @@ const VendorMaster = () => {
           const rowValues = [
             rowNumber,
             rowData.type || "",
+            rowData.code || "", // Add code to row values
             rowData.name || "",
             rowData.mobile || "",
             rowData.email || "",
@@ -927,7 +964,7 @@ const VendorMaster = () => {
           >
             <div className="form-grid border-bottom pt-0">
               <div className="row form-style">
-                <div className="col-4 d-flex flex-column form-group">
+                <div className="col-3 d-flex flex-column form-group">
                   <label htmlFor="type" className="form-label ms-2">
                     Type <span className="text-danger fs-6">*</span>
                   </label>
@@ -953,7 +990,28 @@ const VendorMaster = () => {
                     <span className="error-message ms-2">{errors.type}</span>
                   )}
                 </div>
-                <div className="col-4 d-flex flex-column form-group">
+                <div className="col-3 d-flex flex-column form-group">
+                  <label htmlFor="code" className="form-label ms-2">
+                    Code <span className="text-danger fs-6">*</span>
+                  </label>
+                  <div className="position-relative w-100">
+                    <i className="fas fa-hashtag position-absolute ps-2 z-0 input-icon"></i>
+                    <input
+                      type="text"
+                      className="form-control ps-5 ms-2 text-font"
+                      id="code"
+                      placeholder="Enter partner code"
+                      value={formData.code}
+                      onChange={(e) =>
+                        setFormData({ ...formData, code: e.target.value })
+                      }
+                    />
+                  </div>
+                  {errors.code && (
+                    <span className="error-message ms-2">{errors.code}</span>
+                  )}
+                </div>
+                <div className="col-3 d-flex flex-column form-group">
                   <label htmlFor="name" className="form-label  ms-2">
                     Name <span className="text-danger fs-6">*</span>
                   </label>
@@ -974,7 +1032,7 @@ const VendorMaster = () => {
                     <span className="error-message ms-2">{errors.name}</span>
                   )}
                 </div>
-                <div className="col-4 d-flex flex-column form-group">
+                <div className="col-3 d-flex flex-column form-group">
                   <label htmlFor="mobile" className="form-label  ms-2">
                     Mobile <span className="text-danger fs-6">*</span>
                   </label>
@@ -1004,7 +1062,7 @@ const VendorMaster = () => {
                   </label>
                   <div className="position-relative w-100">
                     <i className="fa-solid fa-envelope ps-2 position-absolute z-0 input-icon"></i>
-                    {/* <input
+                    <input
                       type="email"
                       className="form-control ps-5 ms-2 text-font"
                       id="email"
@@ -1013,34 +1071,7 @@ const VendorMaster = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, email: e.target.value })
                       }
-                    /> */}
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "4px",
-                      }}
-                    >
-                      <input
-                        className="form-control ps-5 ms-2 text-font"
-                        type="text"
-                        placeholder="Enter email"
-                        value={username}
-                        onChange={(e) => {
-                          setUsername(e.target.value);
-                          setFormData({
-                            ...formData,
-                            email: e.target.value + "@litgroup.in",
-                          });
-                        }}
-                      />
-                      <input
-                        className="form-control ms-2 text-font"
-                        type="text"
-                        value="@litgroup.in"
-                        disabled
-                      />
-                    </div>
+                    />
                   </div>
                   {errors.email && (
                     <span className="error-message ms-2">{errors.email}</span>
@@ -1356,7 +1387,18 @@ const VendorMaster = () => {
                   <i className="fas fa-file-import me-1"></i> Import Excel
                 </button>
               </div>
-
+              <button
+                className="btn btn-outline-success text-8"
+                onClick={() => {
+                  const rowData = currentItems.filter((row) =>
+                    selectedVendors.includes(row.id)
+                  );
+                  exportToExcel(rowData, "Business Partners");
+                }}
+              >
+                <i className="fas fa-file-export me-1"></i>
+                Export Selected
+              </button>
               <button
                 className="btn-action btn-danger"
                 onClick={() => {
@@ -1431,7 +1473,11 @@ const VendorMaster = () => {
                       </td>
                       <td className="ps-4">{vendor.email}</td>
                       <td className="ps-4">{vendor.mobile}</td>
-                      <td className="ps-4">{vendor.city}</td>
+                      <td className="ps-4">
+                        {vendor.addresses && vendor.addresses[0]
+                          ? vendor.addresses[0].city
+                          : ""}
+                      </td>
                       {/* <td>{vendor.pincode}</td> */}
                       <td className="ps-4">
                         <span
@@ -1496,18 +1542,68 @@ const VendorMaster = () => {
                   <i className="fas fa-chevron-left"></i>
                 </button>
 
-                {/* Generate page buttons */}
-                {Array.from({ length: totalPages }, (_, i) => (
-                  <button
-                    key={i + 1}
-                    className={`btn-page ${
-                      currentPage === i + 1 ? "active" : ""
-                    }`}
-                    onClick={() => paginate(i + 1)}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
+                {/* Modified page number logic */}
+                {Array.from({ length: totalPages }, (_, i) => {
+                  const pageNum = i + 1;
+                  // Show first page
+                  if (pageNum === 1)
+                    return (
+                      <button
+                        key={pageNum}
+                        className={`btn-page ${
+                          currentPage === pageNum ? "active" : ""
+                        }`}
+                        onClick={() => paginate(pageNum)}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+
+                  // Show dots after page 1 if there are many pages
+                  if (pageNum === 2 && currentPage > 5)
+                    return <span key="dots1">...</span>;
+
+                  // Show current page and 2 pages before and after
+                  if (
+                    pageNum >= currentPage - 2 &&
+                    pageNum <= currentPage + 2 &&
+                    pageNum <= totalPages
+                  )
+                    return (
+                      <button
+                        key={pageNum}
+                        className={`btn-page ${
+                          currentPage === pageNum ? "active" : ""
+                        }`}
+                        onClick={() => paginate(pageNum)}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+
+                  // Show dots before last page if there are many pages ahead
+                  if (
+                    pageNum === totalPages - 1 &&
+                    currentPage < totalPages - 4
+                  )
+                    return <span key="dots2">...</span>;
+
+                  // Show last page
+                  if (pageNum === totalPages)
+                    return (
+                      <button
+                        key={pageNum}
+                        className={`btn-page ${
+                          currentPage === pageNum ? "active" : ""
+                        }`}
+                        onClick={() => paginate(pageNum)}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+
+                  return null;
+                })}
 
                 <button
                   className="btn-page"
@@ -1521,6 +1617,7 @@ const VendorMaster = () => {
                 <select
                   value={itemsPerPage}
                   onChange={handleItemsPerPageChange}
+                  className="form-select"
                 >
                   <option value="10">10 per page</option>
                   <option value="25">25 per page</option>
@@ -1610,33 +1707,10 @@ const VendorMaster = () => {
                   </div>
 
                   <div className="detail-item">
-                    <strong>Email:</strong>
-                    <span>{partnerDetails.email}</span>
-                  </div>
-
-                  <div className="detail-item">
-                    <strong>State:</strong>
-                    <span>{partnerDetails.state}</span>
-                  </div>
-
-                  <div className="detail-item">
-                    <strong>Address:</strong>
-                    <span>{partnerDetails.address}</span>
-                  </div>
-
-                  <div className="detail-item">
                     <strong>Name:</strong>
                     <span>{partnerDetails.name}</span>
                   </div>
 
-                  <div className="detail-item">
-                    <strong>Mobile:</strong>
-                    <span>{partnerDetails.mobile}</span>
-                  </div>
-                  <div className="detail-item">
-                    <strong>Pincode:</strong>
-                    <span>{partnerDetails.pincode}</span>
-                  </div>
                   <div className="detail-item">
                     <strong>Type:</strong>
                     <span
@@ -1647,8 +1721,12 @@ const VendorMaster = () => {
                     </span>
                   </div>
                   <div className="detail-item">
-                    <strong>City:</strong>
-                    <span>{partnerDetails.city}</span>
+                    <strong>Email:</strong>
+                    <span>{partnerDetails.email}</span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Mobile:</strong>
+                    <span>{partnerDetails.mobile}</span>
                   </div>
                   <div className="detail-item">
                     <strong>Status:</strong>
@@ -1659,6 +1737,39 @@ const VendorMaster = () => {
                         partnerDetails.status?.slice(1)}
                     </span>
                   </div>
+                </div>
+
+                <div className="addresses-section mt-4">
+                  <h6 className="mb-3">Addresses</h6>
+                  {partnerDetails.addresses?.map((addr, index) => (
+                    <div
+                      key={addr.id}
+                      className="address-card p-3 mb-3 border rounded"
+                    >
+                      <h6 className="mb-2">Address {index + 1}</h6>
+                      <div className="row">
+                        <div className="col-md-6">
+                          <p>
+                            <strong>Address:</strong> {addr.address}
+                          </p>
+                          <p>
+                            <strong>City:</strong> {addr.city}
+                          </p>
+                          <p>
+                            <strong>State:</strong> {addr.state}
+                          </p>
+                        </div>
+                        <div className="col-md-6">
+                          <p>
+                            <strong>Pincode:</strong> {addr.pincode}
+                          </p>
+                          <p>
+                            <strong>Country:</strong> {addr.country}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
               <div className="modal-footer">
@@ -1815,7 +1926,7 @@ const VendorMaster = () => {
                           </label>
                           <div className="position-relative w-100">
                             <i className="fa-solid fa-envelope ps-2 position-absolute z-0 input-icon"></i>
-                            {/* <input
+                            <input
                               type="email"
                               className="form-control ps-5 ms-2 text-font"
                               id="email"
@@ -1827,33 +1938,7 @@ const VendorMaster = () => {
                                   email: e.target.value,
                                 })
                               }
-                            /> */}
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "4px",
-                              }}
-                            >
-                              <input
-                                className="form-control ps-5 ms-2 text-font"
-                                type="text"
-                                placeholder="Enter email"
-                                value={partnerDetails.email.split("@")[0] || ""}
-                                onChange={(e) =>
-                                  setPartnerDetails({
-                                    ...partnerDetails,
-                                    email: e.target.value + "@litgroup.in",
-                                  })
-                                }
-                              />
-                              <input
-                                className="form-control ms-2 text-font"
-                                type="text"
-                                value="@litgroup.in"
-                                disabled
-                              />
-                            </div>
+                            />
                           </div>
                           {errors.email && (
                             <span className="error-message ms-2">

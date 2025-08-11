@@ -8,6 +8,7 @@ import { AbilityContext } from "../../../utils/AbilityContext";
 import * as XLSX from "xlsx";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
+import exportToExcel from "../../../utils/exportToExcel";
 
 const TypeMaster = () => {
   const [errors, setErrors] = useState({});
@@ -790,6 +791,20 @@ const TypeMaster = () => {
                   onClick={handleSaveToAPI}
                 >
                   <i className="fas fa-file-import me-1"></i> Import Excel
+                </button>
+                <button
+                  className="btn btn-outline-success text-8"
+                  onClick={() => {
+                    console.log(selectedTypes);
+                    const rowData = sortedFilteredTypes.filter((row) =>
+                      selectedTypes.includes(row.id)
+                    );
+                    console.log(rowData);
+                    exportToExcel(rowData, "Types");
+                  }}
+                >
+                  <i className="fas fa-file-export me-1"></i>
+                  Export Selected
                 </button>
               </div>
               <button

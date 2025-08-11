@@ -72,6 +72,10 @@ const Users = () => {
     useState(false);
   const [isAllAdministrationsViewChecked, setIsAllAdministrationsViewChecked] =
     useState(false);
+  const [isAllWarehousesEditChecked, setIsAllWarehousesEditChecked] =
+    useState(false);
+  const [isAllWarehousesViewChecked, setIsAllWarehousesViewChecked] =
+    useState(false);
   const [transactionViewPermissions, setTransactionViewPermissions] = useState(
     {}
   );
@@ -82,6 +86,8 @@ const Users = () => {
   const [reportEditPermissions, setReportEditPermissions] = useState({});
   const [adminViewPermissions, setAdminViewPermissions] = useState({});
   const [adminEditPermissions, setAdminEditPermissions] = useState({});
+  const [warehouseViewPermissions, setWarehouseViewPermissions] = useState({});
+  const [warehouseEditPermissions, setWarehouseEditPermissions] = useState({});
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -323,6 +329,16 @@ const Users = () => {
     );
     setIsAllAdministrationsViewChecked(allAdminsView);
     setIsAllAdministrationsEditChecked(allAdminsEdit);
+
+    // Check warehouse permissions
+    const allWarehousesView = warehouses.every(
+      (r) => warehouseViewPermissions[r.type]
+    );
+    const allWarehousesEdit = warehouses.every(
+      (r) => warehouseEditPermissions[r.type]
+    );
+    setIsAllWarehousesViewChecked(allReportsView);
+    setIsAllWarehousesEditChecked(allReportsEdit);
   }, [
     masterViewPermissions,
     masterEditPermissions,
@@ -332,6 +348,8 @@ const Users = () => {
     reportEditPermissions,
     adminViewPermissions,
     adminEditPermissions,
+    warehouseViewPermissions,
+    warehouseEditPermissions,
   ]);
 
   const fetchUsers = async () => {
@@ -550,6 +568,38 @@ const Users = () => {
       type: "approveItemsQuantity",
     },
   ];
+  const warehouses = [
+    {
+      id: 1,
+      name: "Store",
+      type: "str",
+    },
+    {
+      id: 2,
+      name: "IQC",
+      type: "iqc",
+    },
+    {
+      id: 3,
+      name: "Rejection",
+      type: "rej",
+    },
+    {
+      id: 4,
+      name: "WIP1",
+      type: "wip1",
+    },
+    {
+      id: 5,
+      name: "WIP2",
+      type: "wip2",
+    },
+    {
+      id: 6,
+      name: "WIP3",
+      type: "wip3",
+    },
+  ];
   const modules = [
     "vendorMaster",
     "vendorItemMaster",
@@ -588,7 +638,13 @@ const Users = () => {
   };
 
   const collectPermissions = () => {
-    const all = [...masters, ...transactions, ...reports, ...administrations];
+    const all = [
+      ...masters,
+      ...transactions,
+      ...reports,
+      ...administrations,
+      ...warehouses,
+    ];
     return all.map((mod) => ({
       pageName: mod.name,
       canView:
@@ -596,12 +652,14 @@ const Users = () => {
         transactionViewPermissions[mod.type] ||
         reportViewPermissions[mod.type] ||
         adminViewPermissions[mod.type] ||
+        warehouseViewPermissions[mod.type] ||
         false,
       canEdit:
         masterEditPermissions[mod.type] ||
         transactionEditPermissions[mod.type] ||
         reportEditPermissions[mod.type] ||
         adminEditPermissions[mod.type] ||
+        warehouseEditPermissions[mod.type] ||
         false,
     }));
   };
@@ -888,6 +946,55 @@ const Users = () => {
     setIsAllAdministrationsViewChecked(allViewChecked);
   };
 
+  const handleSingleWarehouseEditChange = (type) => {
+    const isEditing = !warehouseEditPermissions[type];
+
+    setWarehouseEditPermissions((prev) => ({
+      ...prev,
+      [type]: isEditing,
+    }));
+
+    if (isEditing && !adminViewPermissions[type]) {
+      setAdminViewPermissions((prev) => ({
+        ...prev,
+        [type]: true,
+      }));
+    }
+  };
+
+  const handleWarehouseViewAllChange = (e) => {
+    const checked = e.target.checked;
+    setIsAllWarehousesViewChecked(checked);
+    const updatedPermissions = {};
+    warehouses.forEach((item) => {
+      updatedPermissions[item.type] = checked;
+    });
+    setWarehouseViewPermissions(updatedPermissions);
+  };
+
+  const handleWarehouseEditAllChange = (e) => {
+    const checked = e.target.checked;
+    setIsAllWarehousesEditChecked(checked);
+
+    const updatedEditPermissions = {};
+    const updatedViewPermissions = { ...warehouseViewPermissions };
+
+    warehouses.forEach((item) => {
+      updatedEditPermissions[item.type] = checked;
+      if (checked) {
+        updatedViewPermissions[item.type] = true;
+      }
+    });
+
+    setWarehouseEditPermissions(updatedEditPermissions);
+    setWarehouseViewPermissions(updatedViewPermissions);
+
+    const allViewChecked = warehouses.every(
+      (a) => updatedViewPermissions[a.type]
+    );
+    setIsAllWarehousesViewChecked(allViewChecked);
+  };
+
   const handleUserCheckboxChange = (userId) => {
     setSelectedUsers((prevSelected) =>
       prevSelected.includes(userId)
@@ -945,6 +1052,8 @@ const Users = () => {
     setReportEditPermissions({});
     setAdminViewPermissions({});
     setAdminEditPermissions({});
+    setWarehouseViewPermissions({});
+    setWarehouseEditPermissions({});
 
     // Reset permission checkboxes
     setIsAllMastersViewChecked(false);
@@ -955,6 +1064,8 @@ const Users = () => {
     setIsAllReportsEditChecked(false);
     setIsAllAdministrationsViewChecked(false);
     setIsAllAdministrationsEditChecked(false);
+    setIsAllWarehousesViewChecked(false);
+    setIsAllWarehousesEditChecked(false);
 
     // Reset branch selection
     setSelectedOptions([]);
@@ -1133,6 +1244,8 @@ const Users = () => {
           const newReportEditPermissions = {};
           const newAdminViewPermissions = {};
           const newAdminEditPermissions = {};
+          const newWarehouseViewPermissions = {};
+          const newWarehouseEditPermissions = {};
 
           // Create a mapping of permission names to modules for more accurate matching
           const permissionMapping = {};
@@ -1169,6 +1282,13 @@ const Users = () => {
             permissionMapping[admin.name] = {
               type: admin.type,
               category: "admin",
+            };
+          });
+
+          warehouses.forEach((warehouse) => {
+            permissionMapping[warehouse.name] = {
+              type: warehouse.type,
+              category: "warehouse",
             };
           });
 
@@ -1220,6 +1340,8 @@ const Users = () => {
                   newReportViewPermissions[moduleType] = true;
                 } else if (moduleCategory === "admin") {
                   newAdminViewPermissions[moduleType] = true;
+                } else if (moduleCategory === "warehouse") {
+                  newWarehouseViewPermissions[moduleType] = true;
                 }
               }
 
@@ -1232,6 +1354,8 @@ const Users = () => {
                   newReportEditPermissions[moduleType] = true;
                 } else if (moduleCategory === "admin") {
                   newAdminEditPermissions[moduleType] = true;
+                } else if (moduleCategory === "warehouse") {
+                  newWarehouseEditPermissions[moduleType] = true;
                 }
               }
             } else {
@@ -1257,6 +1381,8 @@ const Users = () => {
           setReportEditPermissions(newReportEditPermissions);
           setAdminViewPermissions(newAdminViewPermissions);
           setAdminEditPermissions(newAdminEditPermissions);
+          setWarehouseViewPermissions(newWarehouseViewPermissions);
+          setWarehouseEditPermissions(newWarehouseEditPermissions);
 
           // Update the "all checked" states after setting permissions
           setTimeout(() => {
@@ -1284,6 +1410,12 @@ const Users = () => {
             const allAdminsEdit = administrations.every(
               (a) => newAdminEditPermissions[a.type]
             );
+            const allWarehousesView = warehouses.every(
+              (a) => newWarehouseViewPermissions[a.type]
+            );
+            const allWarehousesEdit = warehouses.every(
+              (a) => newAdminEditPermissions[a.type]
+            );
 
             setIsAllMastersViewChecked(allMastersView);
             setIsAllMastersEditChecked(allMastersEdit);
@@ -1293,6 +1425,8 @@ const Users = () => {
             setIsAllReportsEditChecked(allReportsEdit);
             setIsAllAdministrationsViewChecked(allAdminsView);
             setIsAllAdministrationsEditChecked(allAdminsEdit);
+            setIsAllWarehousesViewChecked(allWarehousesView);
+            setIsAllWarehousesEditChecked(allWarehousesEdit);
 
             console.log("All masters view checked:", allMastersView);
             console.log("All masters edit checked:", allMastersEdit);
@@ -1425,8 +1559,8 @@ const Users = () => {
         value: branch.id,
       }));
 
-      setBranchDropdownValues(formattedBranches); // ✅ Set dropdown values
-      setIsAddUser(true); // ✅ Open the Add User form/modal
+      setBranchDropdownValues(formattedBranches); // Set dropdown values
+      setIsAddUser(true); // Open the Add User form/modal
     } catch (error) {
       console.error("Failed to load branch dropdown values:", error);
       toast.error("Failed to load branches. Please try again.");
@@ -1455,22 +1589,6 @@ const Users = () => {
   // Update handleEditUser function to match the required API structure
   const handleEditUser = async (e) => {
     e.preventDefault();
-    console.log("handleEditUser called"); // Debug log
-    console.log("Current masterViewPermissions:", masterViewPermissions);
-    console.log("Current masterEditPermissions:", masterEditPermissions);
-    console.log(
-      "Current transactionViewPermissions:",
-      transactionViewPermissions
-    );
-    console.log(
-      "Current transactionEditPermissions:",
-      transactionEditPermissions
-    );
-    console.log("Current reportViewPermissions:", reportViewPermissions);
-    console.log("Current reportEditPermissions:", reportEditPermissions);
-    console.log("Current adminViewPermissions:", adminViewPermissions);
-    console.log("Current adminEditPermissions:", adminEditPermissions);
-
     // Validate form data with isUpdate=true to skip password validation if empty
     const validationErrors = validateForm(
       {
@@ -1479,8 +1597,6 @@ const Users = () => {
       },
       true
     );
-
-    console.log("Validation errors:", validationErrors); // Debug log
     setErrors(validationErrors);
 
     if (Object.keys(validationErrors).length > 0) {
@@ -1525,6 +1641,15 @@ const Users = () => {
         pageName: admin.name,
         canView: !!adminViewPermissions[admin.type],
         canEdit: !!adminEditPermissions[admin.type],
+      });
+    });
+
+    // Add warehouse permissions
+    warehouses.forEach((warehouse) => {
+      formattedPermissions.push({
+        pageName: warehouse.name,
+        canView: !!warehouseViewPermissions[warehouse.type],
+        canEdit: !!warehouseEditPermissions[warehouse.type],
       });
     });
 
@@ -2345,6 +2470,92 @@ const Users = () => {
                                     onChange={() =>
                                       handleSingleAdminEditChange(
                                         administration.type
+                                      )
+                                    }
+                                  />
+                                  <i className="fas fa-edit permission-icon success"></i>
+                                </label>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="table-list-container">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th className="p-0">
+                            <i className="fas fa-cog icon-blue-color me-2"></i>
+                            Warehouses
+                          </th>
+                          <th className="p-0">
+                            <span className="icon-align">
+                              <div className="permission-controls">
+                                <label
+                                  className="checkbox-wrapper"
+                                  title="View Access"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={isAllWarehousesViewChecked}
+                                    onChange={handleWarehouseViewAllChange}
+                                  />
+                                  <i className="fas fa-eye permission-icon primary"></i>
+                                </label>
+                                <label
+                                  className="checkbox-wrapper"
+                                  title="Edit Access"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={isAllWarehousesEditChecked}
+                                    onChange={handleWarehouseEditAllChange}
+                                  />
+                                  <i className="fas fa-edit permission-icon success"></i>
+                                </label>
+                              </div>
+                            </span>
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-break">
+                        {warehouses.map((Warehouse) => (
+                          <tr key={Warehouse.type}>
+                            <td className="user-info">{Warehouse.name}</td>
+                            <td className="icon-align">
+                              <div className="permission-controls">
+                                <label
+                                  className="checkbox-wrapper"
+                                  title="View Access"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={
+                                      !!warehouseViewPermissions[Warehouse.type]
+                                    }
+                                    onChange={() =>
+                                      setWarehouseViewPermissions((prev) => ({
+                                        ...prev,
+                                        [Warehouse.type]: !prev[Warehouse.type],
+                                      }))
+                                    }
+                                  />
+                                  <i className="fas fa-eye permission-icon primary"></i>
+                                </label>
+                                <label
+                                  className="checkbox-wrapper"
+                                  title="Edit Access"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={
+                                      !!warehouseEditPermissions[Warehouse.type]
+                                    }
+                                    onChange={() =>
+                                      handleSingleWarehouseEditChange(
+                                        Warehouse.type
                                       )
                                     }
                                   />

@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { Modal } from "bootstrap";
 import { toast } from "react-toastify";
 import { AbilityContext } from "../../../utils/AbilityContext";
+import exportToExcel from "../../../utils/exportToExcel";
 
 const WarehouseMaster = () => {
   const [errors, setErrors] = useState({});
@@ -775,6 +776,20 @@ const WarehouseMaster = () => {
               <label htmlFor="select-all-count">
                 {selectedWarehouses.length} Selected
               </label>
+            </div>
+            <div className="bulk-actions">
+              <button
+                className="btn btn-outline-success text-8"
+                onClick={() => {
+                  const rowData = filteredWarehouses.filter((row) =>
+                    selectedWarehouses.includes(row.id)
+                  );
+                  exportToExcel(rowData, "Warehouses");
+                }}
+              >
+                <i className="fas fa-file-export me-1"></i>
+                Export Selected
+              </button>
             </div>
             {/* <button
               className="btn-action btn-danger"
