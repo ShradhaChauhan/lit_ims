@@ -550,7 +550,7 @@ table td .form-control {
 .btn-action {
     padding: 0.45rem 0.8rem;
     border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
+    border-radius: 0.5rem; 
     background-color: white;
     color: var(--text-color-gray);
     display: flex;

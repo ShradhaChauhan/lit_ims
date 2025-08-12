@@ -172,6 +172,7 @@ const ProductionFloorReceipt = () => {
           itemName: item.itemName,
           issuedQty: item.totalIssued,
           batchNumber: item.batchNumber,
+          requestedQuantity: item.requestedQuantity,
           receivedQty: "",
           variance: -item.totalIssued,
           notes: "",
@@ -508,6 +509,7 @@ const ProductionFloorReceipt = () => {
                       </th>
                       <th>Item Name</th>
                       <th>Batch Number</th>
+                      <th>Requested Qty</th>
                       <th>Issued Qty</th>
                       <th>Received Qty</th>
                       <th>Variance</th>
@@ -552,6 +554,11 @@ const ProductionFloorReceipt = () => {
                           <td className="ps-4">
                             <div>
                               <span>{issuedItem.batchNumber}</span>
+                            </div>
+                          </td>
+                          <td className="ps-4">
+                            <div>
+                              <span>{issuedItem.requestedQuantity}</span>
                             </div>
                           </td>
                           <td className="ps-4">

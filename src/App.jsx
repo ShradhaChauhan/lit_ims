@@ -24,8 +24,23 @@ import WIPReturn from "./components/Forms/WIPReturn/WIPReturn";
 import ApproveItemsQuantity from "./components/Forms/ApproveItemsQuantity/ApproveItemsQuantity";
 import Reports from "./components/Reports/Reports";
 import Unauthorized from "./components/Unauthorized/Unauthorized";
+import useAutoLogout from "./utils/useAutoLogout";
+import { toast } from "react-toastify";
+import { useState } from "react";
+import StoreLandingPage from "./components/StoreLandingPage/StoreLandingPage";
 
 function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    localStorage.getItem("isLoggedIn") === "true"
+  );
+
+  const handleLogout = () => {
+    localStorage.removeItem("authToken"); // clear token instead of isLoggedIn
+    toast.info("You have been logged out due to inactivity.");
+    window.location.href = "/"; // redirect to login
+  };
+
+  useAutoLogout(handleLogout, 15 * 60 * 1000); // 20 min timeout
   return (
     <Routes>
       <Route path="/" element={<Login />} />
@@ -33,6 +48,7 @@ function App() {
       <Route element={<PrivateRoute />}>
         <Route element={<MainLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/store-dashboard" element={<StoreLandingPage />} />
           <Route
             path="/users"
             element={

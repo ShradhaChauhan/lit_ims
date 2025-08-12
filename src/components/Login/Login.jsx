@@ -100,7 +100,8 @@ const LoginPage = () => {
       });
 
       const { token, permissions } = response.data.data;
-
+      // Start the session
+      localStorage.setItem("isLoggedIn", "true");
       // After successful login or switch
       updatePermissions(permissions); // this sets both context and localStorage
       setIsToken(token);
