@@ -434,7 +434,7 @@ const SideBar = () => {
                 onClick={() => {
                   if (item.submenu) {
                     if (isCollapsed) {
-                      // 👇 Expand the sidebar and open this submenu
+                      // Expand the sidebar and open this submenu
                       setIsCollapsed(false);
                       setTimeout(() => toggleSubmenu(item.label), 100); // give time for expand animation
                     } else {
@@ -488,7 +488,7 @@ const SideBar = () => {
                 </ul>
               )}
 
-              {/* ▼ Expanded submenu (expanded mode) */}
+              {/* Expanded submenu (expanded mode) */}
               {!isCollapsed && openSubmenus[item.label] && item.submenu && (
                 <ul className="nav flex-column ms-4">
                   {item.submenu.map((sub, subIdx) => (
@@ -532,17 +532,14 @@ const SideBar = () => {
                 </p>
               </div>
             </div>
-            <button onClick={handleLogout} className="btn logout text-8">
+            <button onClick={handleLogout} className="btn logout text-8 ms-3">
               <i className="fas fa-sign-out-alt"></i> Logout
             </button>
           </div>
         </div>
       ) : (
-        <button
-          onClick={handleLogout}
-          className="nav-link menuListItem fs-6 mb-2"
-        >
-          <i className="fas fa-sign-out-alt"></i>
+        <button onClick={handleLogout} className="nav-link menuListItem text-8">
+          <i className="fas fa-sign-out-alt mb-4"></i>
         </button>
       )}
     </div>

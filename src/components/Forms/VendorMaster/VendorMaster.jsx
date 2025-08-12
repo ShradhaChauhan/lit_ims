@@ -559,30 +559,41 @@ const VendorMaster = () => {
     const newErrors = validateForm(partnerDetails);
     setErrors(newErrors);
 
-    console.log(JSON.stringify(partnerDetails));
+    const tempData = {
+      code: partnerDetails.code,
+      type: partnerDetails.type,
+      name: partnerDetails.name,
+      mobile: partnerDetails.mobile,
+      email: partnerDetails.email,
+      status: partnerDetails.status,
+      addresses: (partnerDetails.addresses || []).map((a) => ({
+        id: a.id,
+        address: a.address,
+        city: a.city,
+        state: a.state,
+        pincode: a.pincode,
+        country: a.country,
+      })),
+    };
 
-    if (Object.keys(newErrors).length === 0) {
-      try {
-        const response = await api.put(
-          `/api/vendor-customer/update/${partnerDetails.id}`,
-          partnerDetails
-        );
+    console.log(JSON.stringify(tempData));
+    try {
+      const response = await api.put(
+        `/api/vendor-customer/update/${partnerDetails.id}`,
+        tempData
+      );
 
-        if (response.data && response.data.status === true) {
-          toast.success("Partner updated successfully!");
-        } else {
-          toast.success("Partner updated successfully!");
-        }
-
-        // Refresh the vendor list
-        fetchVendors();
-
-        // Close the modal
-        handleCloseEditModal();
-      } catch (error) {
-        console.error("Error updating partner:", error);
-        toast.error("Error updating partner. Please try again.");
+      if (response.data?.status === true) {
+        toast.success("Partner updated successfully!");
+      } else {
+        toast.error("Failed to update partner.");
       }
+
+      fetchVendors(); // Refresh list
+      handleCloseEditModal(); // Close modal
+    } catch (error) {
+      console.error("Error updating partner:", error);
+      toast.error("Error updating partner. Please try again.");
     }
   };
 
