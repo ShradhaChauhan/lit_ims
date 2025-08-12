@@ -263,7 +263,7 @@ const ProductionMaterialUsage = () => {
                 <div className="table-header">
                   <h6>Material Usage</h6>
                 </div>
-                <table className="table table-striped table-hover table-sm p-2">
+                <table className="table table-striped table-hover table-sm p-2 align-middle">
                   <thead>
                     <tr>
                       <th>Material</th>
@@ -490,7 +490,7 @@ const ProductionMaterialUsage = () => {
                 <div className="table-header">
                   <h6>Recent Production Records</h6>
                 </div>
-                <table className="table table-striped table-hover table-sm p-2">
+                <table className="table table-striped table-hover table-sm p-2 align-middle">
                   <thead>
                     <tr>
                       <th>Date</th>
@@ -675,7 +675,7 @@ const ProductionMaterialUsage = () => {
                     <div className="table-header">
                       <h6>Material Usage Details</h6>
                     </div>
-                    <table className="table table-striped table-hover table-sm p-2">
+                    <table className="table table-striped table-hover table-sm p-2 align-middle">
                       <thead>
                         <tr>
                           <th className="ps-4">Batch Number</th>

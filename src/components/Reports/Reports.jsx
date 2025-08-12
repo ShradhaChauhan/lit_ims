@@ -554,7 +554,7 @@ const Reports = () => {
       {/* Table Section */}
       <div className="margin-2 mx-2">
         <div className="table-container">
-          <table className="table table-striped table-hover table-sm p-2">
+          <table>
             <thead>
               <tr>
                 <th
@@ -737,7 +737,7 @@ const Reports = () => {
                     </div>
                   </div>
                   <div className="table-container">
-                    <table className="table table-striped table-hover table-sm p-2">
+                    <table>
                       <thead>
                         <tr>
                           <th
@@ -915,7 +915,7 @@ const Reports = () => {
                 </div>
                 <div className="margin-2 mx-2">
                   <div className="table-container">
-                    <table className="table table-striped table-hover table-sm p-2">
+                    <table>
                       <thead>
                         <tr>
                           <th
@@ -1165,7 +1165,7 @@ const Reports = () => {
                 </div>
                 <div className="margin-2 mx-2">
                   <div className="table-container">
-                    <table className="table table-striped table-hover table-sm p-2">
+                    <table>
                       <thead>
                         <tr>
                           <th

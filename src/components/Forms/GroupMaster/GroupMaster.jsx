@@ -944,7 +944,7 @@ const GroupMaster = () => {
               {dataError}
             </div>
           )}
-          <table className="table table-striped table-hover table-sm p-2">
+          <table>
             <thead>
               <tr>
                 <th className="checkbox-cell">

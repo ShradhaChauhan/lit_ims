@@ -91,20 +91,20 @@
 
 /* Input styling */
 input.form-control {
-  border-radius: 6px;
+  border-radius: 6px !important;
   box-shadow: none;
   transition: border 0.3s ease, box-shadow 0.3s ease;
 }
 
 input.form-control:focus {
-  border-color: #2c5364;
-  box-shadow: 0 0 5px rgba(44, 83, 100, 0.5);
+  border-color: #2c5364 !important;
+  box-shadow: 0 0 5px rgba(44, 83, 100, 0.5) !important;
 }
 
 /* Login button styling */
 .loginBtn {
-  background-color: #203a43;
-  color: #fff;
+  background-color: #203a43 !important;
+  color: #fff !important;
   font-weight: 600;
   padding: 10px 0;
   border-radius: 6px;
@@ -112,22 +112,22 @@ input.form-control:focus {
 }
 
 .loginBtn:hover {
-  background-color: #2c5364;
-  color: #CCF2F4;
+  background-color: #2c5364 !important;
+  color: #CCF2F4 !important;
   transform: scale(1.02);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
 }
 
 .input-i {
-  color: #495057; /* Bootstrap’s gray-dark */
-  font-size: 1rem;
-  left: 16px;
+  color: #495057 !important; /* Bootstrap’s gray-dark */
+  font-size: 1rem !important;
+  left: 16px !important;
   top: 50%;
   transform: translateY(-50%);
 }
 
 .description {
-    color: var(--lightGray);
+    color: var(--lightGray) !important;
 }
 
 .divider {
@@ -290,13 +290,11 @@ button:focus {
 
 .box:nth-child(2) {
  background: linear-gradient(to right, rgba(255,255,255,0.05), rgba(255,255,255,0.1));
-
-  animation-delay: 0.4s;
+ animation-delay: 0.4s;
 }
 
 .box:nth-child(3) {
   background: linear-gradient(to right, rgba(255,255,255,0.05), rgba(255,255,255,0.1));
-
   animation-delay: 0.6s;
 }
 
@@ -317,7 +315,7 @@ button:focus {
 }
 
 .login-box {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.1) !important;
   backdrop-filter: blur(10px);
   border-radius: 16px;
   padding: 40px;

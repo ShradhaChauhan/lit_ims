@@ -696,7 +696,7 @@ const MaterialIssueRequest = () => {
                 <div className="table-header">
                   <h6>Requested Items</h6>
                 </div>
-                <table className="table table-striped table-hover table-sm p-2">
+                <table className="align-middle">
                   <thead>
                     <tr>
                       <th>Item/BOM Name</th>
@@ -797,7 +797,7 @@ const MaterialIssueRequest = () => {
                 <div className="table-header">
                   <h6>Recent Requests</h6>
                 </div>
-                <table className="table table-striped table-hover table-sm p-2">
+                <table className="align-middle">
                   <thead>
                     <tr>
                       <th>Transaction #</th>
@@ -963,7 +963,7 @@ const MaterialIssueRequest = () => {
                   <>
                     <hr />
                     <h6>BOM Items:</h6>
-                    <table className="table table-striped table-hover table-sm p-2">
+                    <table className="align-middle">
                       <thead>
                         <tr>
                           <th>Item Name</th>

@@ -447,7 +447,7 @@ const WIPReturn = () => {
                 <div className="table-header">
                   <h6>Return Items</h6>
                 </div>
-                <table className="table table-striped table-hover table-sm p-2">
+                <table>
                   <thead>
                     <tr>
                       <th>Material</th>
@@ -591,7 +591,7 @@ const WIPReturn = () => {
                 <div className="table-header">
                   <h6>Recent Returns</h6>
                 </div>
-                <table className="table table-striped table-hover table-sm p-2">
+                <table>
                   <thead>
                     <tr>
                       <th>Date</th>
@@ -626,7 +626,7 @@ const WIPReturn = () => {
                             <td className="ps-4">{r.transactionNumber}</td>
                             <td className="ps-4">{r.workOrderId}</td>
                             <td className="ps-4">{r.returnType}</td>
-                            <td className="ps-4">
+                            <td>
                               <ul>
                                 {r.items.map((i, iIndex) => (
                                   <li key={iIndex}>{i}</li>

@@ -161,7 +161,7 @@ const ActivityLogs = () => {
       <div className="margin-2 mx-2">
         <div className="table-container">
           <div className="table-header"></div>
-          <table className="table table-striped table-hover table-sm p-2">
+          <table>
             <thead>
               <tr>
                 <th className="checkbox-cell">Id</th>

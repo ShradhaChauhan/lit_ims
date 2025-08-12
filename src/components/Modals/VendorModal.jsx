@@ -23,7 +23,7 @@ const VendorModal = ({ vendorName, showModal, setShowModal }) => {
                 </button>
               </div>
               <div className="modal-body">
-                <table className="table table-striped table-hover table-sm p-2">
+                <table className="table table-striped table-hover table-sm p-2 align-middle">
                   <thead>
                     <tr>
                       <th scope="col">#</th>

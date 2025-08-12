@@ -593,7 +593,7 @@ const PartMaster = () => {
           ) : error ? (
             <div className="alert alert-danger">{error}</div>
           ) : (
-            <table className="table table-striped table-hover table-sm p-2">
+            <table>
               <thead>
                 <tr>
                   <th className="checkbox-cell ps-4">

@@ -32,7 +32,7 @@ const SearchBar = ({
           <input
             ref={inputRef}
             type="text"
-            className="form-control search-input ps-5"
+            className="form-control search-input pl-2"
             placeholder="Search..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
