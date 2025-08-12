@@ -447,7 +447,7 @@ const WIPReturn = () => {
                 <div className="table-header">
                   <h6>Return Items</h6>
                 </div>
-                <table>
+                <table className="table table-striped table-hover table-sm p-2">
                   <thead>
                     <tr>
                       <th>Material</th>
@@ -591,7 +591,7 @@ const WIPReturn = () => {
                 <div className="table-header">
                   <h6>Recent Returns</h6>
                 </div>
-                <table>
+                <table className="table table-striped table-hover table-sm p-2">
                   <thead>
                     <tr>
                       <th>Date</th>

@@ -61,3 +61,12 @@ ul.dropdown-list li:hover {
   background-color: var(--lightBlue1) !important;
   cursor: pointer;
 }
+
+td.actions {
+  vertical-align: middle;
+}
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}

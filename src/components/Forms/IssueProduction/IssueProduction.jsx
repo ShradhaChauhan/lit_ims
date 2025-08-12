@@ -522,7 +522,7 @@ const IssueProduction = () => {
                         ") - BOM Items"}
                   </h6>
                 </div>
-                <table>
+                <table className="table table-striped table-hover table-sm p-2">
                   <thead>
                     <tr className="text-break">
                       <th>Item Name</th>
@@ -612,7 +612,7 @@ const IssueProduction = () => {
                 <div className="table-header">
                   <h6>Scanned Batches</h6>
                 </div>
-                <table>
+                <table className="table table-striped table-hover table-sm p-2">
                   <thead>
                     <tr className="text-break">
                       <th>Item Name</th>

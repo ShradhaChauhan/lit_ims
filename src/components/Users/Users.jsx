@@ -2133,7 +2133,7 @@ const Users = () => {
                 <p className="text-heading">Module Permissions</p>
                 <div className="row">
                   <div className="table-list-container">
-                    <table>
+                    <table className="table table-striped table-hover table-sm p-2">
                       <thead>
                         <tr>
                           <th className="p-0">
@@ -2216,7 +2216,7 @@ const Users = () => {
                     </table>
                   </div>
                   <div className="table-list-container">
-                    <table>
+                    <table className="table table-striped table-hover table-sm p-2">
                       <thead>
                         <tr>
                           <th className="p-0">
@@ -2308,7 +2308,7 @@ const Users = () => {
                     </table>
                   </div>
                   <div className="table-list-container">
-                    <table>
+                    <table className="table table-striped table-hover table-sm p-2">
                       <thead>
                         <tr>
                           <th className="p-0">
@@ -2392,7 +2392,7 @@ const Users = () => {
                     </table>
                   </div>
                   <div className="table-list-container">
-                    <table>
+                    <table className="table table-striped table-hover table-sm p-2">
                       <thead>
                         <tr>
                           <th className="p-0">
@@ -2483,7 +2483,7 @@ const Users = () => {
                     </table>
                   </div>
                   <div className="table-list-container">
-                    <table>
+                    <table className="table table-striped table-hover table-sm p-2">
                       <thead>
                         <tr>
                           <th className="p-0">
@@ -2666,7 +2666,7 @@ const Users = () => {
             </div>
           </div>
           {/* Table list */}
-          <table>
+          <table className="table table-striped table-hover table-sm p-2">
             <thead>
               <tr>
                 <th className="checkbox-cell">
@@ -2973,7 +2973,7 @@ const Users = () => {
                     Module Permissions
                   </h6>
                   <div className="table-responsive">
-                    <table className="table">
+                    <table className="table table-striped table-hover table-sm p-2">
                       <thead>
                         <tr>
                           <th style={{ width: "60%" }}>Module Name</th>
@@ -3347,7 +3347,7 @@ const Users = () => {
                         <p className="text-heading">Module Permissions</p>
                         <div className="row">
                           <div className="table-list-container">
-                            <table>
+                            <table className="table table-striped table-hover table-sm p-2">
                               <thead>
                                 <tr>
                                   <th className="p-0">
@@ -3438,7 +3438,7 @@ const Users = () => {
                             </table>
                           </div>
                           <div className="table-list-container">
-                            <table>
+                            <table className="table table-striped table-hover table-sm p-2">
                               <thead>
                                 <tr>
                                   <th className="p-0">
@@ -3546,7 +3546,7 @@ const Users = () => {
                             </table>
                           </div>
                           <div className="table-list-container">
-                            <table>
+                            <table className="table table-striped table-hover table-sm p-2">
                               <thead>
                                 <tr>
                                   <th className="p-0">
@@ -3643,7 +3643,7 @@ const Users = () => {
                             </table>
                           </div>
                           <div className="table-list-container">
-                            <table>
+                            <table className="table table-striped table-hover table-sm p-2">
                               <thead>
                                 <tr>
                                   <th className="p-0">

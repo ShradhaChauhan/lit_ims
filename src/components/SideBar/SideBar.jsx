@@ -430,7 +430,7 @@ const SideBar = () => {
             >
               {/* Menu Item */}
               <div
-                className={`nav-link text-white d-flex justify-content-between align-items-center menuListItem`}
+                className={`nav-link text-8 d-flex justify-content-between align-items-center menuListItem`}
                 onClick={() => {
                   if (item.submenu) {
                     if (isCollapsed) {
@@ -465,7 +465,7 @@ const SideBar = () => {
                 )}
               </div>
 
-              {/* ▶️ Flyover submenu (collapsed mode) */}
+              {/* Flyover submenu (collapsed mode) */}
               {isCollapsed && hoveredMenu === item.label && item.submenu && (
                 <ul className="flyover-submenu nav flex-column">
                   {item.submenu.map((sub, subIdx) => (
@@ -501,7 +501,7 @@ const SideBar = () => {
                             setIsActiveComponent(sub.path);
                             setLabelName(sub.label);
                           }}
-                          className="nav-link text-white small menuListItem"
+                          className="nav-link text-8 small menuListItem"
                         >
                           <i className={`${sub.icon} me-2`}></i>
                           {sub.label}
@@ -527,18 +527,21 @@ const SideBar = () => {
                 alt="Profile"
               />
               <div className="user-details">
-                <p className="m-0 text-white">
+                <p className="m-0 text-8">
                   Hi, <span>{localStorage.getItem("username")}</span>
                 </p>
               </div>
             </div>
-            <button onClick={handleLogout} className="btn logout">
+            <button onClick={handleLogout} className="btn logout text-8">
               <i className="fas fa-sign-out-alt"></i> Logout
             </button>
           </div>
         </div>
       ) : (
-        <button onClick={handleLogout} className="nav-link menuListItem fs-6">
+        <button
+          onClick={handleLogout}
+          className="nav-link menuListItem fs-6 mb-2"
+        >
           <i className="fas fa-sign-out-alt"></i>
         </button>
       )}

@@ -63,7 +63,10 @@ const ActivityLogs = () => {
 
   const getActivityLogs = async () => {
     try {
-      const response = await api.get("/api/logs");
+      const response =
+        localStorage.getItem("username") === "owner"
+          ? await api.get("/api/logs")
+          : await api.get("/api/logs/me");
       const logData = response?.data ?? [];
       setLogs(logData);
     } catch (error) {
@@ -158,7 +161,7 @@ const ActivityLogs = () => {
       <div className="margin-2 mx-2">
         <div className="table-container">
           <div className="table-header"></div>
-          <table>
+          <table className="table table-striped table-hover table-sm p-2">
             <thead>
               <tr>
                 <th className="checkbox-cell">Id</th>

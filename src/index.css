@@ -553,7 +553,7 @@ table td .form-control {
     border-radius: 0.5rem; 
     background-color: white;
     color: var(--text-color-gray);
-    display: flex;
+    display: flex; 
     align-items: center;
     gap: 0.5rem;
     cursor: pointer;

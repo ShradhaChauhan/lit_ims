@@ -1411,119 +1411,122 @@ const VendorMaster = () => {
               </button>
             </div>
           </div>
-          {loading ? (
-            <div className="text-center p-4">
-              Loading vendors and customers...
-            </div>
-          ) : (
-            <table>
-              <thead>
+          <table className="table table-striped table-hover table-sm p-2">
+            <thead>
+              <tr>
+                <th className="checkbox-cell">
+                  <input type="checkbox" id="select-all-header" disabled />
+                </th>
+                <th>Partner Code</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Email</th>
+                <th>Mobile</th>
+                <th>City</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody className="text-break">
+              {loading ? (
                 <tr>
-                  <th className="checkbox-cell">
-                    <input type="checkbox" id="select-all-header" disabled />
-                  </th>
-                  <th>Partner Code</th>
-                  <th>Name</th>
-                  <th>Type</th>
-                  <th>Email</th>
-                  <th>Mobile</th>
-                  <th>City</th>
-                  <th>Status</th>
-                  <th>Actions</th>
+                  <td colSpan="12" className="text-center">
+                    <div className="my-3">
+                      <i className="fas fa-spinner fa-spin me-2"></i> Loading
+                      vendors and customers...
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="text-break">
-                {filteredVendors.length === 0 ? (
-                  <tr>
-                    <td colSpan="9" className="text-center">
-                      <div className="p-4">
-                        <i className="fas fa-search fa-3x mb-3 text-muted"></i>
-                        <h5>No matching partners found</h5>
-                        <p className="text-muted">
-                          Click on "Add New Partner" button to add new partners
-                        </p>
+              ) : filteredVendors.length === 0 ? (
+                <tr>
+                  <td colSpan="9" className="text-center">
+                    <div className="p-4">
+                      <i className="fas fa-search fa-3x mb-3 text-muted"></i>
+                      <h5>No matching partners found</h5>
+                      <p className="text-muted">
+                        Click on "Add New Partner" button to add new partners
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                currentItems.map((vendor) => (
+                  <tr key={vendor.id}>
+                    <td className="checkbox-cell ps-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedVendors.includes(vendor.id)}
+                        onChange={() => handleVendorCheckboxChange(vendor.id)}
+                      />
+                    </td>
+                    <td className="ps-4">{vendor.code}</td>
+                    <td className="ps-3">
+                      <div className="user-info">
+                        <img
+                          src={`https://ui-avatars.com/api/?name=${vendor.name}&size=32&background=2563eb&color=fff`}
+                          alt={vendor.name}
+                        />
+                        <span>{vendor.name}</span>
                       </div>
                     </td>
-                  </tr>
-                ) : (
-                  currentItems.map((vendor) => (
-                    <tr key={vendor.id}>
-                      <td className="checkbox-cell ps-4">
-                        <input
-                          type="checkbox"
-                          checked={selectedVendors.includes(vendor.id)}
-                          onChange={() => handleVendorCheckboxChange(vendor.id)}
-                        />
-                      </td>
-                      <td className="ps-4">{vendor.code}</td>
-                      <td className="ps-3">
-                        <div className="user-info">
-                          <img
-                            src={`https://ui-avatars.com/api/?name=${vendor.name}&size=32&background=2563eb&color=fff`}
-                            alt={vendor.name}
-                          />
-                          <span>{vendor.name}</span>
-                        </div>
-                      </td>
-                      <td className="ps-4">
-                        <span className={`badge ${vendor.type.toLowerCase()}`}>
-                          {vendor.type.charAt(0).toUpperCase() +
-                            vendor.type.slice(1)}
-                        </span>
-                      </td>
-                      <td className="ps-4">{vendor.email}</td>
-                      <td className="ps-4">{vendor.mobile}</td>
-                      <td className="ps-4">
-                        {vendor.addresses && vendor.addresses[0]
-                          ? vendor.addresses[0].city
-                          : ""}
-                      </td>
-                      {/* <td>{vendor.pincode}</td> */}
-                      <td className="ps-4">
-                        <span
-                          className={`badge status ${vendor.status.toLowerCase()}`}
-                        >
-                          {vendor.status.charAt(0).toUpperCase() +
-                            vendor.status.slice(1)}
-                        </span>
-                      </td>
-                      <td className="actions ps-4">
+                    <td className="ps-4">
+                      <span className={`badge ${vendor.type.toLowerCase()}`}>
+                        {vendor.type.charAt(0).toUpperCase() +
+                          vendor.type.slice(1)}
+                      </span>
+                    </td>
+                    <td className="ps-4">{vendor.email}</td>
+                    <td className="ps-4">{vendor.mobile}</td>
+                    <td className="ps-4">
+                      {vendor.addresses && vendor.addresses[0]
+                        ? vendor.addresses[0].city
+                        : ""}
+                    </td>
+                    {/* <td>{vendor.pincode}</td> */}
+                    <td className="ps-4">
+                      <span
+                        className={`badge status ${vendor.status.toLowerCase()}`}
+                      >
+                        {vendor.status.charAt(0).toUpperCase() +
+                          vendor.status.slice(1)}
+                      </span>
+                    </td>
+                    <td className="ps-4">
+                      <button
+                        className="btn-icon btn-primary"
+                        title="View Details"
+                        onClick={() => handleViewPartner(vendor.id)}
+                      >
+                        <i className="fas fa-eye"></i>
+                      </button>
+                      {ability.can("edit", "Business Partner") && (
                         <button
-                          className="btn-icon btn-primary"
-                          title="View Details"
-                          onClick={() => handleViewPartner(vendor.id)}
+                          className="btn-icon btn-success"
+                          title="Edit"
+                          onClick={() => handleShowEditModal(vendor.id)}
                         >
-                          <i className="fas fa-eye"></i>
+                          <i className="fas fa-edit"></i>
                         </button>
-                        {ability.can("edit", "Business Partner") && (
-                          <button
-                            className="btn-icon btn-success"
-                            title="Edit"
-                            onClick={() => handleShowEditModal(vendor.id)}
-                          >
-                            <i className="fas fa-edit"></i>
-                          </button>
-                        )}
-                        {ability.can("edit", "Business Partner") && (
-                          <button
-                            className="btn-icon btn-danger"
-                            title="Delete"
-                            onClick={() => {
-                              setPartnerIdState(vendor.id);
-                              setConfirmType("single");
-                              handleShowConfirm("single");
-                            }}
-                          >
-                            <i className="fas fa-trash"></i>
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          )}
+                      )}
+                      {ability.can("edit", "Business Partner") && (
+                        <button
+                          className="btn-icon btn-danger"
+                          title="Delete"
+                          onClick={() => {
+                            setPartnerIdState(vendor.id);
+                            setConfirmType("single");
+                            handleShowConfirm("single");
+                          }}
+                        >
+                          <i className="fas fa-trash"></i>
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
 
           {/* Pagination */}
           {!loading && filteredVendors.length > 0 && (
