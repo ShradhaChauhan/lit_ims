@@ -247,7 +247,7 @@ const ApproveItemsQuantity = () => {
       <div className="margin-2 mx-2">
         <div className="table-container">
           <table
-            className="table align-middle w-100"
+            className="table table-striped table-hover align-middle w-100"
             style={{ tableLayout: "auto" }}
           >
             <thead>
@@ -376,7 +376,7 @@ const ApproveItemsQuantity = () => {
                 {metaDetails &&
                 typeof metaDetails === "object" &&
                 !Array.isArray(metaDetails) ? (
-                  <table className="table table-bordered">
+                  <table className="table table-striped table-hover table-bordered">
                     <tbody>
                       {Object.entries(metaDetails).map(([key, value]) => (
                         <tr key={key}>
@@ -385,7 +385,7 @@ const ApproveItemsQuantity = () => {
                           </th>
                           <td>
                             {Array.isArray(value) ? (
-                              <table className="table table-sm table-striped mb-0">
+                              <table className="table table-sm table-hover table-striped mb-0">
                                 <thead>
                                   <tr>
                                     {value.length > 0 &&
@@ -413,7 +413,7 @@ const ApproveItemsQuantity = () => {
                                 </tbody>
                               </table>
                             ) : typeof value === "object" && value !== null ? (
-                              <table className="table table-sm table-bordered mb-0">
+                              <table className="table table-striped table-hover table-sm table-bordered mb-0">
                                 <tbody>
                                   {Object.entries(value).map(([k, v]) => (
                                     <tr key={k}>

@@ -172,6 +172,7 @@ const ProductionFloorReceipt = () => {
           itemName: item.itemName,
           issuedQty: item.totalIssued,
           batchNumber: item.batchNumber,
+          requestedQuantity: item.requestedQuantity,
           receivedQty: "",
           variance: -item.totalIssued,
           notes: "",
@@ -496,7 +497,7 @@ const ProductionFloorReceipt = () => {
                     </label>
                   </div>
                 </div>
-                <table>
+                <table className="table table-striped table-hover table-sm p-2">
                   <thead>
                     <tr>
                       <th className="checkbox-cell ps-4">
@@ -508,6 +509,7 @@ const ProductionFloorReceipt = () => {
                       </th>
                       <th>Item Name</th>
                       <th>Batch Number</th>
+                      <th>Requested Qty</th>
                       <th>Issued Qty</th>
                       <th>Received Qty</th>
                       <th>Variance</th>
@@ -552,6 +554,11 @@ const ProductionFloorReceipt = () => {
                           <td className="ps-4">
                             <div>
                               <span>{issuedItem.batchNumber}</span>
+                            </div>
+                          </td>
+                          <td className="ps-4">
+                            <div>
+                              <span>{issuedItem.requestedQuantity}</span>
                             </div>
                           </td>
                           <td className="ps-4">
@@ -666,7 +673,7 @@ const ProductionFloorReceipt = () => {
           <div className="table-header">
             <h6>Recent Receipts</h6>
           </div>
-          <table>
+          <table className="table table-striped table-hover table-sm p-2">
             <thead>
               <tr>
                 <th>Transaction #</th>

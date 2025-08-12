@@ -1067,7 +1067,7 @@ const MaterialIncoming = () => {
                   <h2>Receipt Items</h2>
                 </div>
                 <div className="item-table-container mt-3">
-                  <table>
+                  <table className="table table-striped table-hover table-sm p-2">
                     <thead>
                       <tr>
                         <th>Item Name</th>
@@ -1352,7 +1352,7 @@ const MaterialIncoming = () => {
                     onChange={(e) => setInvoiceNumber(e.target.value)}
                   />
                 </div>
-                <table className="table table-bordered text-font">
+                <table className="table table-bordered table-striped table-hover text-font">
                   <thead>
                     <tr>
                       <th>Item Name</th>

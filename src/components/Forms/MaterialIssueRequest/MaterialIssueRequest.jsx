@@ -318,7 +318,7 @@ const MaterialIssueRequest = () => {
   // Dynamically calculate widths
   const fieldClass = isCompleteBOM || isIndividualItems ? "flex-1" : "flex-1-3";
 
-  const handleAddRequest = (e) => {
+  const handleAddRequest = async (e) => {
     e.preventDefault();
 
     if (!quantity || (!bom && !type)) {
@@ -348,6 +348,26 @@ const MaterialIssueRequest = () => {
         toast.error("Selected BOM not found");
         return;
       }
+
+      await Promise.all(
+        selectedBOM.items.map(async (i) => {
+          const response = await api.post(
+            `/api/inventory/itemQuantity/${i.warehouseId}/${i.itemCode}`
+          );
+          i.stockQty = response.data.data[0].quantity;
+        })
+      );
+
+      await Promise.all(
+        selectedBOM.items.map(async (i) => {
+          const response = await api.post(
+            `/api/inventory/itemQuantity/${warehouse}/${i.itemCode}`
+          );
+          i.wipQty = response.data.data[0].quantity;
+        })
+      );
+
+      console.log(JSON.stringify(selectedBOM));
 
       const newBOM = {
         id: selectedBOM.id,
@@ -676,7 +696,7 @@ const MaterialIssueRequest = () => {
                 <div className="table-header">
                   <h6>Requested Items</h6>
                 </div>
-                <table>
+                <table className="table table-striped table-hover table-sm p-2">
                   <thead>
                     <tr>
                       <th>Item/BOM Name</th>
@@ -777,7 +797,7 @@ const MaterialIssueRequest = () => {
                 <div className="table-header">
                   <h6>Recent Requests</h6>
                 </div>
-                <table>
+                <table className="table table-striped table-hover table-sm p-2">
                   <thead>
                     <tr>
                       <th>Transaction #</th>
@@ -900,14 +920,16 @@ const MaterialIssueRequest = () => {
       {/* View Modal */}
       {showModal && (
         <div
-          className="modal show d-block modal-lg"
+          className="modal show d-block modal-xl"
           tabIndex="-1"
           style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
         >
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Item Details</h5>
+                <h5 className="modal-title">
+                  <i class="fa-solid fa-circle-info me-2"></i>Item Details
+                </h5>
                 <button
                   type="button"
                   className="btn"
@@ -918,30 +940,38 @@ const MaterialIssueRequest = () => {
                 </button>
               </div>
               <div className="modal-body">
-                <p>
-                  <strong>Name:</strong> {selectedItem?.name}
-                </p>
-                <p>
-                  <strong>Type:</strong> {selectedItem?.type}
-                </p>
-                <p>
-                  <strong>Code:</strong> {selectedItem?.code}
-                </p>
-                <p>
-                  <strong>Quantity:</strong> {selectedItem?.quantity}
-                </p>
+                <div className="user-details-grid">
+                  <div className="detail-item">
+                    <strong>Name:</strong>
+                    <span>{selectedItem?.name}</span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Type:</strong>
+                    <span>{selectedItem?.type}</span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Code:</strong>
+                    <span>{selectedItem?.code}</span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Requested Quantity:</strong>
+                    <span>{selectedItem?.quantity}</span>
+                  </div>
+                </div>
 
                 {selectedItem?.items && selectedItem.items.length > 0 && (
                   <>
                     <hr />
                     <h6>BOM Items:</h6>
-                    <table className="table table-striped table-sm p-2">
+                    <table className="table table-striped table-hover table-sm p-2">
                       <thead>
                         <tr>
                           <th>Item Name</th>
                           <th>Item Code</th>
                           <th>UOM</th>
-                          <th>Qty</th>
+                          <th>Requested Qty</th>
+                          <th>Store Qty</th>
+                          <th>WIP Qty</th>
                           <th>Warehouse</th>
                         </tr>
                       </thead>
@@ -966,6 +996,22 @@ const MaterialIssueRequest = () => {
 
                               {/* {item.quantity * tempQuantity} */}
                             </td>
+                            <td>
+                              <input
+                                type="text"
+                                className="form-control text-8"
+                                value={item.stockQty}
+                                disabled
+                              />
+                            </td>
+                            <td>
+                              <input
+                                type="text"
+                                className="form-control text-8"
+                                value={item.wipQty}
+                                disabled
+                              />
+                            </td>
                             <td>{item.warehouseName}</td>
                           </tr>
                         ))}
@@ -976,6 +1022,12 @@ const MaterialIssueRequest = () => {
               </div>
               <div className="modal-footer">
                 <button
+                  className="btn btn-primary text-8"
+                  onClick={handleSaveItemDetails}
+                >
+                  <i className="fa-solid fa-floppy-disk me-1"></i> Save Changes
+                </button>
+                <button
                   className="btn btn-secondary text-8"
                   onClick={() => {
                     setSelectedItem(null);
@@ -983,12 +1035,6 @@ const MaterialIssueRequest = () => {
                   }}
                 >
                   <i className="fa-solid fa-xmark me-1"></i> Cancel
-                </button>
-                <button
-                  className="btn btn-primary text-8"
-                  onClick={handleSaveItemDetails}
-                >
-                  <i className="fa-solid fa-floppy-disk me-1"></i> Save Changes
                 </button>
               </div>
             </div>

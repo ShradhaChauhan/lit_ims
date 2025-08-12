@@ -813,7 +813,7 @@ const BOMMaster = () => {
                 <h2>Items List</h2>
               </div>
               <div className="item-table-container mt-3">
-                <table>
+                <table className="table table-striped table-hover table-sm p-2">
                   <thead>
                     <tr>
                       <th>Item</th>
@@ -1042,7 +1042,7 @@ const BOMMaster = () => {
               </button>
             </div>
           </div>
-          <table>
+          <table className="table table-striped table-hover table-sm p-2">
             <thead>
               <tr>
                 <th className="checkbox-cell">
@@ -1288,7 +1288,7 @@ const BOMMaster = () => {
                     <div className="mt-4">
                       <h6 className="mb-3">Items List</h6>
                       <div className="table-responsive">
-                        <table className="table table-bordered table-hover">
+                        <table className="table table-bordered table-striped table-hover table-hover">
                           <thead className="table-light">
                             <tr>
                               <th>Item Name</th>
@@ -1459,7 +1459,7 @@ const BOMMaster = () => {
                         <h2>Items List</h2>
                       </div>
                       <div className="item-table-container mt-3">
-                        <table>
+                        <table className="table table-striped table-hover table-sm p-2">
                           <thead>
                             <tr>
                               <th>Item</th>
