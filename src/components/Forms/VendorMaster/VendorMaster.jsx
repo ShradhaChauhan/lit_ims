@@ -559,6 +559,8 @@ const VendorMaster = () => {
     const newErrors = validateForm(partnerDetails);
     setErrors(newErrors);
 
+    console.log(JSON.stringify(partnerDetails));
+
     if (Object.keys(newErrors).length === 0) {
       try {
         const response = await api.put(
@@ -1411,7 +1413,7 @@ const VendorMaster = () => {
               </button>
             </div>
           </div>
-          <table className="table table-striped table-hover table-sm p-2">
+          <table className="table-hover align-middle">
             <thead>
               <tr>
                 <th className="checkbox-cell">
@@ -1460,7 +1462,7 @@ const VendorMaster = () => {
                       />
                     </td>
                     <td className="ps-4">{vendor.code}</td>
-                    <td className="ps-3">
+                    <td className="ps-4">
                       <div className="user-info">
                         <img
                           src={`https://ui-avatars.com/api/?name=${vendor.name}&size=32&background=2563eb&color=fff`}
@@ -1743,32 +1745,42 @@ const VendorMaster = () => {
                 </div>
 
                 <div className="addresses-section mt-4">
-                  <h6 className="mb-3">Addresses</h6>
+                  <h6 className="mb-3 text-primary ms-1">
+                    {partnerDetails.name
+                      .toLowerCase()
+                      .replace(/\b\w/g, (char) => char.toUpperCase())}{" "}
+                    Address
+                  </h6>
                   {partnerDetails.addresses?.map((addr, index) => (
                     <div
                       key={addr.id}
                       className="address-card p-3 mb-3 border rounded"
                     >
-                      <h6 className="mb-2">Address {index + 1}</h6>
+                      <h6 className="mb-2 text-primary">
+                        Address - {index + 1}
+                      </h6>
                       <div className="row">
-                        <div className="col-md-6">
-                          <p>
-                            <strong>Address:</strong> {addr.address}
-                          </p>
-                          <p>
-                            <strong>City:</strong> {addr.city}
-                          </p>
-                          <p>
-                            <strong>State:</strong> {addr.state}
-                          </p>
-                        </div>
-                        <div className="col-md-6">
-                          <p>
-                            <strong>Pincode:</strong> {addr.pincode}
-                          </p>
-                          <p>
-                            <strong>Country:</strong> {addr.country}
-                          </p>
+                        <div className="user-details-grid">
+                          <div className="detail">
+                            <strong>Address:</strong>
+                            <span className="text-8">{addr.address}</span>
+                          </div>
+                          <div className="detail">
+                            <strong>City:</strong>
+                            <span className="text-8">{addr.city}</span>
+                          </div>
+                          <div className="detail">
+                            <strong>State:</strong>
+                            <span className="text-8">{addr.state}</span>
+                          </div>
+                          <div className="detail">
+                            <strong>Pincode:</strong>
+                            <span className="text-8">{addr.pincode}</span>
+                          </div>
+                          <div className="detail">
+                            <strong>Country:</strong>
+                            <span className="text-8">{addr.country}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1863,11 +1875,6 @@ const VendorMaster = () => {
                             </select>
                             <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                           </div>
-                          {errors.type && (
-                            <span className="error-message ms-2">
-                              {errors.type}
-                            </span>
-                          )}
                         </div>
                         <div className="col-4 d-flex flex-column form-group">
                           <label htmlFor="name" className="form-label ms-2">
@@ -1889,11 +1896,6 @@ const VendorMaster = () => {
                               }
                             />
                           </div>
-                          {errors.name && (
-                            <span className="error-message ms-2">
-                              {errors.name}
-                            </span>
-                          )}
                         </div>
                         <div className="col-4 d-flex flex-column form-group">
                           <label htmlFor="mobile" className="form-label ms-2">
@@ -1915,11 +1917,6 @@ const VendorMaster = () => {
                               }
                             />
                           </div>
-                          {errors.mobile && (
-                            <span className="error-message ms-2">
-                              {errors.mobile}
-                            </span>
-                          )}
                         </div>
                       </div>
                       <div className="row form-style">
@@ -1943,13 +1940,49 @@ const VendorMaster = () => {
                               }
                             />
                           </div>
-                          {errors.email && (
-                            <span className="error-message ms-2">
-                              {errors.email}
-                            </span>
-                          )}
                         </div>
                         <div className="col-4 d-flex flex-column form-group">
+                          <label htmlFor="status" className="form-label ms-2">
+                            Status
+                          </label>
+                          <div className="position-relative w-100 ms-2">
+                            <div className="form-check form-switch position-absolute z-0 input-icon mt-1 padding-left-2">
+                              <input
+                                className="form-check-input text-font switch-style"
+                                type="checkbox"
+                                role="switch"
+                                id="switchCheckChecked"
+                                checked={partnerDetails.status === "active"}
+                                onChange={(e) => {
+                                  const newStatus = e.target.checked
+                                    ? "active"
+                                    : "inactive";
+                                  setPartnerDetails({
+                                    ...partnerDetails,
+                                    status: newStatus,
+                                  });
+                                }}
+                              />
+                            </div>
+                            <select
+                              className="form-control text-font switch-padding"
+                              id="status"
+                              value={partnerDetails.status || "active"}
+                              onChange={(e) => {
+                                const newStatus = e.target.value;
+                                setPartnerDetails({
+                                  ...partnerDetails,
+                                  status: newStatus,
+                                });
+                              }}
+                            >
+                              <option value="active">Active</option>
+                              <option value="inactive">Inactive</option>
+                            </select>
+                            <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                          </div>
+                        </div>
+                        {/* <div className="col-4 d-flex flex-column form-group">
                           <label htmlFor="city" className="form-label ms-2">
                             City <span className="text-danger fs-6">*</span>
                           </label>
@@ -2000,10 +2033,10 @@ const VendorMaster = () => {
                               {errors.state}
                             </span>
                           )}
-                        </div>
+                        </div> */}
                       </div>
                       <div className="row form-style">
-                        <div className="col-4 d-flex flex-column form-group">
+                        {/* <div className="col-4 d-flex flex-column form-group">
                           <label htmlFor="pincode" className="form-label ms-2">
                             Pincode <span className="text-danger fs-6">*</span>
                           </label>
@@ -2029,8 +2062,8 @@ const VendorMaster = () => {
                               {errors.pincode}
                             </span>
                           )}
-                        </div>
-                        <div className="col-4 d-flex flex-column form-group">
+                        </div> */}
+                        {/* <div className="col-4 d-flex flex-column form-group">
                           <label htmlFor="address" className="form-label ms-2">
                             Address <span className="text-danger fs-6">*</span>
                           </label>
@@ -2054,8 +2087,8 @@ const VendorMaster = () => {
                               {errors.address}
                             </span>
                           )}
-                        </div>
-                        <div className="col-4 d-flex flex-column form-group">
+                        </div> */}
+                        {/* <div className="col-4 d-flex flex-column form-group">
                           <label htmlFor="status" className="form-label ms-2">
                             Status
                           </label>
@@ -2095,7 +2128,151 @@ const VendorMaster = () => {
                             </select>
                             <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                           </div>
-                        </div>
+                        </div> */}
+                      </div>
+                      <div className="row form-style">
+                        <label htmlFor="address" className="form-label ms-2">
+                          Edit Address{" "}
+                          <span className="text-danger fs-6">*</span>
+                        </label>
+                        {partnerDetails.addresses.map((address, index) => (
+                          <div
+                            key={index}
+                            className="mb-4 p-3 rounded shadow-sm"
+                            style={{
+                              backgroundColor: "#f8f9fa", // light gray background
+                              border: "1px solid #dee2e6", // subtle border
+                            }}
+                          >
+                            <div className="row form-style">
+                              <div className="col-4 d-flex flex-column form-group">
+                                <label
+                                  htmlFor={`address-${index}`}
+                                  className="form-label ms-2"
+                                >
+                                  Address{" "}
+                                  <span className="text-danger fs-6">*</span>
+                                </label>
+                                <div className="position-relative w-100">
+                                  <i className="fas fa-map-marker-alt ps-2 position-absolute z-0 input-icon"></i>
+                                  <textarea
+                                    className="form-control pt-3 ps-5 ms-2 text-font"
+                                    id={`address-${index}`}
+                                    placeholder="Enter complete address"
+                                    value={address.address || ""}
+                                    onChange={(e) => {
+                                      const updatedAddresses = [
+                                        ...partnerDetails.addresses,
+                                      ];
+                                      updatedAddresses[index].address =
+                                        e.target.value;
+                                      setPartnerDetails({
+                                        ...partnerDetails,
+                                        addresses: updatedAddresses,
+                                      });
+                                    }}
+                                  ></textarea>
+                                </div>
+                              </div>
+
+                              <div className="col-4 d-flex flex-column form-group">
+                                <label
+                                  htmlFor={`city-${index}`}
+                                  className="form-label ms-2"
+                                >
+                                  City{" "}
+                                  <span className="text-danger fs-6">*</span>
+                                </label>
+                                <div className="position-relative w-100">
+                                  <i className="fas fa-city position-absolute ps-2 z-0 input-icon"></i>
+                                  <input
+                                    type="text"
+                                    className="form-control ps-5 ms-2 text-font"
+                                    id={`city-${index}`}
+                                    placeholder="Enter city"
+                                    value={address.city || ""}
+                                    onChange={(e) => {
+                                      const updatedAddresses = [
+                                        ...partnerDetails.addresses,
+                                      ];
+                                      updatedAddresses[index].city =
+                                        e.target.value;
+                                      setPartnerDetails({
+                                        ...partnerDetails,
+                                        addresses: updatedAddresses,
+                                      });
+                                    }}
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="col-4 d-flex flex-column form-group">
+                                <label
+                                  htmlFor={`state-${index}`}
+                                  className="form-label ms-2"
+                                >
+                                  State{" "}
+                                  <span className="text-danger fs-6">*</span>
+                                </label>
+                                <div className="position-relative w-100">
+                                  <i className="fa-solid fa-location-crosshairs ps-2 position-absolute z-0 input-icon"></i>
+                                  <input
+                                    type="text"
+                                    className="form-control ps-5 ms-2 text-font"
+                                    id={`state-${index}`}
+                                    placeholder="Enter state"
+                                    value={address.state || ""}
+                                    onChange={(e) => {
+                                      const updatedAddresses = [
+                                        ...partnerDetails.addresses,
+                                      ];
+                                      updatedAddresses[index].state =
+                                        e.target.value;
+                                      setPartnerDetails({
+                                        ...partnerDetails,
+                                        addresses: updatedAddresses,
+                                      });
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="row form-style mt-3">
+                              <div className="col-4 d-flex flex-column form-group">
+                                <label
+                                  htmlFor={`pincode-${index}`}
+                                  className="form-label ms-2"
+                                >
+                                  Pincode{" "}
+                                  <span className="text-danger fs-6">*</span>
+                                </label>
+                                <div className="position-relative w-100">
+                                  <i className="fa-solid fa-map-pin ps-2 position-absolute z-0 input-icon"></i>
+                                  <input
+                                    type="text"
+                                    className="form-control ps-5 ms-2 text-font"
+                                    id={`pincode-${index}`}
+                                    maxLength={6}
+                                    placeholder="Enter pincode"
+                                    value={address.pincode || ""}
+                                    onChange={(e) => {
+                                      const updatedAddresses = [
+                                        ...partnerDetails.addresses,
+                                      ];
+                                      updatedAddresses[index].pincode =
+                                        e.target.value;
+                                      setPartnerDetails({
+                                        ...partnerDetails,
+                                        addresses: updatedAddresses,
+                                      });
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </form>

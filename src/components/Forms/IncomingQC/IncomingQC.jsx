@@ -903,7 +903,7 @@ const IncomingQC = () => {
             </div>
           </div>
           <div className="item-table-container mt-3">
-            <table className="table table-striped table-hover table-sm p-2">
+            <table>
               <thead>
                 <tr>
                   <th className="checkbox-cell">
@@ -1011,7 +1011,7 @@ const IncomingQC = () => {
           </div>
 
           <div className="item-table-container mt-3">
-            <table className="table table-striped table-hover table-sm p-2">
+            <table>
               <thead>
                 <tr>
                   <th>Item Name</th>

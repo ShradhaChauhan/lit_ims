@@ -241,7 +241,7 @@ const LoginPage = () => {
                 <div className="mb-3">
                   <label className="form-label">Select Branch</label>
                   <select
-                    className="form-select text-color-gray"
+                    className="form-select text-color-gray text-8"
                     value={branch}
                     onChange={(e) => setBranch(e.target.value)}
                   >

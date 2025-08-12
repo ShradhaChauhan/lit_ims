@@ -142,7 +142,7 @@ const StoreLandingPage = () => {
         {/* Table */}
         <div className="card bg-dark p-3">
           <h6>Recent Shipments</h6>
-          <table className="table table-dark table-striped table-hover">
+          <table className="table table-dark table-striped table-hover align-middle">
             <thead>
               <tr>
                 <th>Shipment ID</th>
