@@ -166,7 +166,7 @@ const VendorMaster = () => {
 
     const timeout = setTimeout(fetchStates, 300); // debounce
     return () => clearTimeout(timeout);
-  }, [selectedCountry]);
+  }, []);
 
   const handleStateSelect = (state) => {
     setSelectedState(state);
@@ -559,30 +559,41 @@ const VendorMaster = () => {
     const newErrors = validateForm(partnerDetails);
     setErrors(newErrors);
 
-    console.log(JSON.stringify(partnerDetails));
+    const tempData = {
+      code: partnerDetails.code,
+      type: partnerDetails.type,
+      name: partnerDetails.name,
+      mobile: partnerDetails.mobile,
+      email: partnerDetails.email,
+      status: partnerDetails.status,
+      addresses: (partnerDetails.addresses || []).map((a) => ({
+        id: a.id,
+        address: a.address,
+        city: a.city,
+        state: a.state,
+        pincode: a.pincode,
+        country: a.country,
+      })),
+    };
 
-    if (Object.keys(newErrors).length === 0) {
-      try {
-        const response = await api.put(
-          `/api/vendor-customer/update/${partnerDetails.id}`,
-          partnerDetails
-        );
+    console.log(JSON.stringify(tempData));
+    try {
+      const response = await api.put(
+        `/api/vendor-customer/update/${partnerDetails.id}`,
+        tempData
+      );
 
-        if (response.data && response.data.status === true) {
-          toast.success("Partner updated successfully!");
-        } else {
-          toast.success("Partner updated successfully!");
-        }
-
-        // Refresh the vendor list
-        fetchVendors();
-
-        // Close the modal
-        handleCloseEditModal();
-      } catch (error) {
-        console.error("Error updating partner:", error);
-        toast.error("Error updating partner. Please try again.");
+      if (response.data?.status === true) {
+        toast.success("Partner updated successfully!");
+      } else {
+        toast.error("Failed to update partner.");
       }
+
+      fetchVendors(); // Refresh list
+      handleCloseEditModal(); // Close modal
+    } catch (error) {
+      console.error("Error updating partner:", error);
+      toast.error("Error updating partner. Please try again.");
     }
   };
 
@@ -857,20 +868,19 @@ const VendorMaster = () => {
             left: 0,
             width: "100vw",
             height: "100vh",
-            backgroundColor: "rgba(0, 0, 0, 0.7)", // semi-transparent background
+            backgroundColor: "rgba(0, 0, 0, 0.6)",
             zIndex: 9999,
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            pointerEvents: "all", // blocks clicks
+            pointerEvents: "all",
           }}
         >
-          <div
-            className="spinner-border text-primary"
-            role="status"
-            style={{ width: "4rem", height: "4rem" }}
-          >
-            <span className="visually-hidden">Loading...</span>
+          <div className="orbit-loader">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
           </div>
         </div>
       )}

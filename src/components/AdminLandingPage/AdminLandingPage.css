@@ -51,3 +51,34 @@
 .carousel-arrow.right {
   right: 10px;
 }
+
+/* General dropdown style for notifications */
+.notification-dropdown {
+  border-radius: 8px;
+  overflow: hidden; /* makes rounded corners work for all items */
+  min-width: 280px; /* so it looks like a real notification panel */
+}
+
+/* Notification item styling */
+.notification-dropdown .dropdown-item {
+  padding: 10px 15px;
+  border-left: 4px solid transparent;
+  transition: all 0.2s ease-in-out;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* Hover effect: subtle highlight + accent border */
+.notification-dropdown .dropdown-item:hover {
+  background-color: #f4f7ff; /* light blue shade */
+  border-left: 4px solid #3b82f6; /* professional blue accent */
+  color: #1e3a8a; /* darker blue text for emphasis */
+}
+
+/* Optional: make 'No new notifications' look muted */
+.notification-dropdown .dropdown-item.text-muted {
+  background: none !important;
+  border: none !important;
+  text-align: center;
+  padding: 12px;
+}

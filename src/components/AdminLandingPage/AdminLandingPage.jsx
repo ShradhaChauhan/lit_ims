@@ -726,12 +726,46 @@ const AdminLandingPage = () => {
     },
   ];
 
+  const [notification, setNotification] = useState([]);
+
+  const handleGetApprovalList = async () => {
+    try {
+      const response = await api.get("/api/approvals/my");
+      if (response.data.status) {
+        setNotification(response.data.data);
+      } else {
+        toast.error(response.data.message || "Failed to fetch notifications");
+      }
+    } catch (error) {
+      toast.error("Error in getting notifications");
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    handleGetApprovalList();
+  }, []);
+
+  // Notifications
+  const [notifications, setNotifications] = useState([
+    { id: 1, referenceType: "Order #123 created" },
+    { id: 2, referenceType: "Stock updated" },
+    { id: 3, referenceType: "New message from Admin" },
+  ]);
+
+  const [unreadCount, setUnreadCount] = useState(notifications.length);
+
+  const handleBellClick = () => {
+    // Mark all as read (count becomes 0 but keep list for viewing)
+    setUnreadCount(0);
+  };
+
   return (
     <div>
       {/* Header section */}
       <nav className="navbar text-dark border-body" data-bs-theme="light">
-        <div className="container-fluid p-0">
-          <div className="mt-4">
+        <div className="container-fluid p-0 d-flex justify-content-between align-items-center">
+          <div className="mt-4 col-10">
             <h3 className="nav-header header-style text-dark">Dashboard</h3>
             <p className="breadcrumb">
               <Link to="/dashboard">
@@ -739,6 +773,37 @@ const AdminLandingPage = () => {
               </Link>{" "}
               <span className="ms-1 mt-1 text-small-gray">/ Dashboard</span>
             </p>
+          </div>
+          <div className="dropdown">
+            {/* Bell Icon */}
+            <div
+              className="position-relative"
+              data-bs-toggle="dropdown"
+              onClick={handleBellClick}
+              style={{ cursor: "pointer" }}
+            >
+              <i className="fa-solid fa-bell fa-lg"></i>
+              {unreadCount > 0 && (
+                <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                  {unreadCount}
+                </span>
+              )}
+            </div>
+
+            {/* Dropdown Menu */}
+            <ul className="dropdown-menu dropdown-menu-end shadow notification-dropdown">
+              {notifications.length > 0 ? (
+                notifications.map((note) => (
+                  <li key={note.id} className="dropdown-item">
+                    {note.referenceType}
+                  </li>
+                ))
+              ) : (
+                <li className="dropdown-item text-muted">
+                  No new notifications
+                </li>
+              )}
+            </ul>
           </div>
         </div>
       </nav>

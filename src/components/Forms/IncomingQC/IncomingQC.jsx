@@ -909,8 +909,8 @@ const IncomingQC = () => {
                   <th className="checkbox-cell">
                     <input type="checkbox" id="select-all-header" disabled />
                   </th>
+                  <th>TrNo.</th>
                   <th>Item Name</th>
-                  <th>Item Code</th>
                   <th>Batch No</th>
                   <th>Vendor Name</th>
                   <th>Quantity</th>
@@ -939,8 +939,9 @@ const IncomingQC = () => {
                           onChange={() => handleItemCheckboxChange(i.id)}
                         />
                       </td>
-                      <td>{i.itemName}</td>
-                      <td>{i.itemCode}</td>
+                      <td>123212</td>
+                      <td>{"(" + i.itemCode + ") " + i.itemName}</td>
+
                       <td>{i.batchNumber}</td>
                       <td>{i.vendorName}</td>
                       <td>{i.quantity}</td>
