@@ -9,6 +9,7 @@ import { AbilityContext } from "../../../utils/AbilityContext";
 import * as XLSX from "xlsx";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
+import "./VendorItemsMaster.css";
 
 const VendorItemsMaster = () => {
   const [vendorItems, setVendorItems] = useState([]);
@@ -457,86 +458,84 @@ const VendorItemsMaster = () => {
     e.preventDefault();
     const newErrors = validateForm(vendorItemDetails);
     setErrors(newErrors);
+    console.log(Object.keys(newErrors).length);
+    const selectedVendor = vendors.find(
+      (v) => v.name.trim() === vendorItemDetails.vendor.trim()
+    );
+    const selectedItem = items.find(
+      (i) => i.name.trim() === vendorItemDetails.item.trim()
+    );
 
-    if (Object.keys(newErrors).length === 0) {
-      const selectedVendor = vendors.find(
-        (v) => v.name.trim() === vendorItemDetails.vendor.trim()
-      );
-      const selectedItem = items.find(
-        (i) => i.name.trim() === vendorItemDetails.item.trim()
-      );
-
-      if (!selectedVendor || !selectedItem) {
-        toast.error("Please select both vendor and item");
-        return;
-      }
-
-      const finalData = {
-        id: parseInt(vendorItemDetails.id),
-        vendorCode: selectedVendor.code,
-        vendorName: selectedVendor.name,
-        itemCode: selectedItem.code,
-        itemName: selectedItem.name,
-        days: parseInt(vendorItemDetails.leadTime) || 0,
-        quantity: parseInt(vendorItemDetails.minOrderQty) || 0,
-        price: parseFloat(vendorItemDetails.price) || 0,
-        status: vendorItemDetails.status.toLowerCase(),
-      };
-
-      console.log("Updating vendor item with data:", finalData);
-
-      api
-        .put("/api/vendor-item/update/" + vendorItemDetails.id, finalData)
-        .then((response) => {
-          if (response.data && response.data.status) {
-            // Close the modal using Bootstrap's Modal instance
-            const modalElement = vendorItemEditModalRef.current;
-            const modalInstance = Modal.getInstance(modalElement);
-            if (modalInstance) {
-              modalInstance.hide();
-            }
-
-            // Reset states
-            setIsEditVendorItemDetails(false);
-            setVendorItemDetails({
-              id: "",
-              vendor: "",
-              item: "",
-              leadTime: "",
-              minOrderQty: "",
-              price: "",
-              status: "active",
-            });
-            setSelectedVendorItems([]); // Clear any selections
-            setSelectAll(false); // Reset select all checkbox
-
-            // Refresh the list
-            fetchVendorItems();
-            toast.success(
-              response.data.message ||
-                "Vendor-Item assignment updated successfully!"
-            );
-          } else {
-            toast.error(
-              response.data?.message || "Error updating vendor-item assignment"
-            );
-          }
-        })
-        .catch((error) => {
-          console.error("Error updating vendor-item assignment:", error);
-          console.error("Error details:", {
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-            finalData: finalData,
-          });
-          toast.error(
-            `Error updating vendor-item assignment: ${
-              error.response?.data?.message || error.message
-            }`
-          );
-        });
+    if (!selectedVendor || !selectedItem) {
+      toast.error("Please select both vendor and item");
+      return;
     }
+
+    const finalData = {
+      id: parseInt(vendorItemDetails.id),
+      vendorCode: selectedVendor.code,
+      vendorName: selectedVendor.name,
+      itemCode: selectedItem.code,
+      itemName: selectedItem.name,
+      days: parseInt(vendorItemDetails.leadTime) || 0,
+      quantity: parseInt(vendorItemDetails.minOrderQty) || 0,
+      price: parseFloat(vendorItemDetails.price) || 0,
+      status: vendorItemDetails.status.toLowerCase(),
+    };
+
+    console.log("Updating vendor item with data:", finalData);
+
+    api
+      .put("/api/vendor-item/update/" + vendorItemDetails.id, finalData)
+      .then((response) => {
+        if (response.data && response.data.status) {
+          // Close the modal using Bootstrap's Modal instance
+          const modalElement = vendorItemEditModalRef.current;
+          const modalInstance = Modal.getInstance(modalElement);
+          if (modalInstance) {
+            modalInstance.hide();
+          }
+
+          // Reset states
+          setIsEditVendorItemDetails(false);
+          setVendorItemDetails({
+            id: "",
+            vendor: "",
+            item: "",
+            leadTime: "",
+            minOrderQty: "",
+            price: "",
+            status: "active",
+          });
+          setSelectedVendorItems([]); // Clear any selections
+          setSelectAll(false); // Reset select all checkbox
+
+          // Refresh the list
+          fetchVendorItems();
+          toast.success(
+            response.data.message ||
+              "Vendor-Item assignment updated successfully!"
+          );
+        } else {
+          toast.error(
+            response.data?.message || "Error updating vendor-item assignment"
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Error updating vendor-item assignment:", error);
+        console.error("Error details:", {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+          finalData: finalData,
+        });
+        toast.error(
+          `Error updating vendor-item assignment: ${
+            error.response?.data?.message || error.message
+          }`
+        );
+      });
   };
 
   // Add cleanup function for modal state
@@ -893,20 +892,19 @@ const VendorItemsMaster = () => {
             left: 0,
             width: "100vw",
             height: "100vh",
-            backgroundColor: "rgba(0, 0, 0, 0.7)", // semi-transparent background
+            backgroundColor: "rgba(0, 0, 0, 0.6)",
             zIndex: 9999,
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            pointerEvents: "all", // blocks clicks
+            pointerEvents: "all",
           }}
         >
-          <div
-            className="spinner-border text-primary"
-            role="status"
-            style={{ width: "4rem", height: "4rem" }}
-          >
-            <span className="visually-hidden">Loading...</span>
+          <div className="orbit-loader">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
           </div>
         </div>
       )}

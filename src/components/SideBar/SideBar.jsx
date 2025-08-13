@@ -269,7 +269,6 @@ const SideBar = () => {
       // Reset auth state
       setIsAuthenticated(false);
       setIsToken(null);
-      setRole(null);
       setPermissions([]);
 
       navigate("/");

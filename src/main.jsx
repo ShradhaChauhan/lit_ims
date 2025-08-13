@@ -5,6 +5,7 @@ import "./index.css?v=1.2";
 import App from "./App.jsx";
 import AppContextProvider, { AppContext } from "./context/AppContext.jsx";
 import { AbilityProvider } from "./utils/AbilityProvider";
+import "bootstrap/dist/js/bootstrap.bundle.min.js";
 
 // NEW COMPONENT to read permissions from context
 const AppWithAbility = () => {

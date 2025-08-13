@@ -1013,35 +1013,37 @@ const MaterialIncoming = () => {
             ) : (
               ""
             )}
-            <div className="col-4 d-flex flex-column form-group">
-              <label htmlFor="quantity" className="form-label ms-2">
-                Quantity <span className="text-danger fs-6">*</span>
-              </label>
+            {mode == "manual" && (
+              <div className="col-4 d-flex flex-column form-group">
+                <label htmlFor="quantity" className="form-label ms-2">
+                  Quantity <span className="text-danger fs-6">*</span>
+                </label>
 
-              <div className="d-flex align-items-center justify-content-between gap-2">
-                <div className="position-relative w-100">
-                  <i className="fas fa-calculator position-absolute ms-2 z-0 input-icon"></i>
+                <div className="d-flex align-items-center justify-content-between gap-2">
+                  <div className="position-relative w-100">
+                    <i className="fas fa-calculator position-absolute ms-2 z-0 input-icon"></i>
+                    <input
+                      type="text"
+                      className="form-control ps-5 text-font"
+                      id="quantity"
+                      placeholder="Quantity"
+                      value={formData.quantity}
+                      onChange={(e) =>
+                        setFormData({ ...formData, quantity: e.target.value })
+                      }
+                      disabled={mode === "scan" && isStdQty}
+                    />
+                  </div>
                   <input
-                    type="text"
-                    className="form-control ps-5 text-font"
-                    id="quantity"
-                    placeholder="Quantity"
-                    value={formData.quantity}
-                    onChange={(e) =>
-                      setFormData({ ...formData, quantity: e.target.value })
-                    }
-                    disabled={mode === "scan" && isStdQty}
+                    className="form-check-input mt-0"
+                    type="checkbox"
+                    id="isStdQtyManual"
+                    checked={!isStdQty}
+                    onChange={(e) => setIsStdQty(!e.target.checked)}
                   />
                 </div>
-                <input
-                  className="form-check-input mt-0"
-                  type="checkbox"
-                  id="isStdQtyManual"
-                  checked={!isStdQty}
-                  onChange={(e) => setIsStdQty(!e.target.checked)}
-                />
               </div>
-            </div>
+            )}
           </div>
           <div>
             <div className="row">
@@ -1067,7 +1069,7 @@ const MaterialIncoming = () => {
                   <h2>Receipt Items</h2>
                 </div>
                 <div className="item-table-container mt-3">
-                  <table className="table table-striped table-hover table-sm p-2 align-middle">
+                  <table className="align-middle">
                     <thead>
                       <tr>
                         <th>Item Name</th>
@@ -1096,7 +1098,17 @@ const MaterialIncoming = () => {
                           <tr key={index}>
                             <td>{receipt.itemName}</td>
                             <td>{receipt.itemCode}</td>
-                            <td>{receipt.quantity}</td>
+                            <td>
+                              {mode == "scan" ? (
+                                <input
+                                  type="text"
+                                  className="form-control text-8"
+                                  value={receipt.quantity}
+                                />
+                              ) : (
+                                receipt.quantity
+                              )}
+                            </td>
                             <td>{receipt.batchNo}</td>
                             <td>
                               <select

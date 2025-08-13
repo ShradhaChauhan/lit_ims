@@ -12,6 +12,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
+import "./ItemMaster.css";
 
 const ItemMaster = () => {
   const [errors, setErrors] = useState({});
@@ -848,20 +849,19 @@ const ItemMaster = () => {
             left: 0,
             width: "100vw",
             height: "100vh",
-            backgroundColor: "rgba(0, 0, 0, 0.7)", // semi-transparent background
+            backgroundColor: "rgba(0, 0, 0, 0.6)",
             zIndex: 9999,
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            pointerEvents: "all", // blocks clicks
+            pointerEvents: "all",
           }}
         >
-          <div
-            className="spinner-border text-primary"
-            role="status"
-            style={{ width: "4rem", height: "4rem" }}
-          >
-            <span className="visually-hidden">Loading...</span>
+          <div className="orbit-loader">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
           </div>
         </div>
       )}
@@ -1019,11 +1019,11 @@ const ItemMaster = () => {
                       id="code"
                       placeholder="Enter item code"
                       inputMode="numeric"
-                      maxLength="6"
+                      maxLength="8"
                       value={formData.code}
                       onChange={(e) => {
                         const digitsOnly = e.target.value.replace(/\D/g, "");
-                        if (digitsOnly.length <= 6) {
+                        if (digitsOnly.length <= 8) {
                           setFormData({
                             ...formData,
                             code: digitsOnly,

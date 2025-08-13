@@ -35,12 +35,12 @@ function App() {
   );
 
   const handleLogout = () => {
-    localStorage.removeItem("authToken");
+    localStorage.removeItem("authToken"); // clear token instead of isLoggedIn
     toast.info("You have been logged out due to inactivity.");
-    window.location.href = "/";
+    window.location.href = "/"; // redirect to login
   };
 
-  useAutoLogout(handleLogout, 30 * 60 * 1000); // 30 min timeout
+  useAutoLogout(handleLogout, 15 * 60 * 1000); // 20 min timeout
   return (
     <Routes>
       <Route path="/" element={<Login />} />

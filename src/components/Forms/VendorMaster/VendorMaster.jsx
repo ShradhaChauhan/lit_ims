@@ -166,7 +166,7 @@ const VendorMaster = () => {
 
     const timeout = setTimeout(fetchStates, 300); // debounce
     return () => clearTimeout(timeout);
-  }, [selectedCountry]);
+  }, []);
 
   const handleStateSelect = (state) => {
     setSelectedState(state);
@@ -868,20 +868,19 @@ const VendorMaster = () => {
             left: 0,
             width: "100vw",
             height: "100vh",
-            backgroundColor: "rgba(0, 0, 0, 0.7)", // semi-transparent background
+            backgroundColor: "rgba(0, 0, 0, 0.6)",
             zIndex: 9999,
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            pointerEvents: "all", // blocks clicks
+            pointerEvents: "all",
           }}
         >
-          <div
-            className="spinner-border text-primary"
-            role="status"
-            style={{ width: "4rem", height: "4rem" }}
-          >
-            <span className="visually-hidden">Loading...</span>
+          <div className="orbit-loader">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
           </div>
         </div>
       )}
