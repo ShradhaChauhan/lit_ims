@@ -939,7 +939,7 @@ const IncomingQC = () => {
                           onChange={() => handleItemCheckboxChange(i.id)}
                         />
                       </td>
-                      <td>123212</td>
+                      <td>1232121132131</td>
                       <td>{"(" + i.itemCode + ") " + i.itemName}</td>
 
                       <td>{i.batchNumber}</td>

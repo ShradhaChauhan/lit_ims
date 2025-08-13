@@ -157,7 +157,7 @@ const MaterialIncoming = () => {
       errors.mode = "Please select a mode";
     }
 
-    if (!data.vendor) {
+    if (!data.vendor && mode === "manual") {
       errors.vendor = "Please select vendor name";
     }
 
@@ -583,6 +583,33 @@ const MaterialIncoming = () => {
         }),
       };
 
+      payload.items.map(async (item) => {
+        console.log(item.quantity !== item.batchNo.substring(21, 27));
+        if (item.quantity !== item.batchNo.substring(21, 27)) {
+          const data = {
+            batchNo: item.batchNo,
+            requestedQty: item.quantity,
+            reason:
+              "Quantity updated from " +
+              item.batchNo.substring(21, 27) +
+              " to " +
+              item.quantity,
+            warehouseId: item.warehouseId || item.warehouse,
+          };
+          console.log("item: " + JSON.stringify(item));
+          console.log("approval data: " + JSON.stringify(data));
+          const response = await api.post(
+            "/api/approvals/stock-adjustment",
+            data
+          );
+
+          console.log(
+            `Stock adjustment done for ${item.batchNo}`,
+            response.data
+          );
+        }
+      });
+
       console.log("Submitting receipt data:", payload);
 
       if (!payload.vendor || !payload.vendorCode) {
@@ -698,11 +725,11 @@ const MaterialIncoming = () => {
           warehouseId = defaultWarehouse.warehouseId;
           warehouseName = defaultWarehouse.warehouseName;
         }
-
+        console.log("Vendor name: " + batchData.vendorName);
         setVendor(batchData.vendorName);
         setFormData({
           ...formData,
-          vendor: batchData.vendorName,
+          vendor: batchData.id,
           vendorName: batchData.vendorName,
           code: batchData.vendorCode,
           barcode: batchno,
@@ -880,8 +907,10 @@ const MaterialIncoming = () => {
                 <label htmlFor="vendorName" className="form-label ms-2">
                   Vendor Name <span className="text-danger fs-6">*</span>
                 </label>
+
                 <div className="position-relative w-100">
                   <i className="fas fa-building ms-2 position-absolute z-0 input-icon"></i>
+
                   <select
                     className={`form-control ps-5 ms-1 text-font ${
                       vendor ? "" : "text-secondary"
@@ -890,18 +919,18 @@ const MaterialIncoming = () => {
                     disabled={mode === "scan"}
                     value={vendor}
                     onChange={(e) => {
-                      const selectedId = parseInt(e.target.value); // dropdown value is string, convert to number
+                      const selectedName = e.target.value;
                       const selectedVendor = vendors.find(
-                        (v) => v.id === selectedId
+                        (v) => v.name === selectedName
                       );
 
                       if (selectedVendor) {
-                        setVendor(selectedId); // vendor state for dropdown
+                        setVendor(selectedVendor.name); // store name in state
                         setFormData((prev) => ({
                           ...prev,
-                          vendor: selectedId, // Save vendor id (or name if preferred)
-                          vendorName: selectedVendor.name,
-                          code: selectedVendor.code || "", // Auto-fill vendor code
+                          vendor: selectedVendor.id, // keep vendor id in data for backend
+                          vendorName: selectedVendor.name, // display name
+                          code: selectedVendor.code || "", // optional auto-fill
                         }));
                         getVendorItems(selectedVendor.code);
                       }
@@ -910,23 +939,24 @@ const MaterialIncoming = () => {
                     <option value="" disabled hidden className="text-muted">
                       {mode === "scan" ? "Vendor Name" : "Select Vendor"}
                     </option>
+
                     {vendors.map((v) => (
-                      <option value={v.id} key={v.id}>
+                      <option value={v.name} key={v.id}>
                         {v.name}
                       </option>
                     ))}
                   </select>
 
-                  {mode === "scan" ? (
-                    ""
-                  ) : (
+                  {mode !== "scan" && (
                     <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                   )}
                 </div>
+
                 {errors.vendor && (
                   <span className="error-message">{errors.vendor}</span>
                 )}
               </div>
+
               <div className="col-4 d-flex flex-column form-group">
                 <label htmlFor="vendorCode" className="form-label ms-2">
                   Vendor Code
@@ -1104,6 +1134,15 @@ const MaterialIncoming = () => {
                                   type="text"
                                   className="form-control text-8"
                                   value={receipt.quantity}
+                                  onChange={(e) =>
+                                    setReceiptList((prev) =>
+                                      prev.map((r) =>
+                                        r.id === receipt.id // or any unique key
+                                          ? { ...r, quantity: e.target.value }
+                                          : r
+                                      )
+                                    )
+                                  }
                                 />
                               ) : (
                                 receipt.quantity
@@ -1381,7 +1420,36 @@ const MaterialIncoming = () => {
                         <td>{item.itemCode}</td>
                         <td>{item.quantity}</td>
                         <td>{item.batchNo}</td>
-                        <td>{item.warehouse}</td>
+                        <td>
+                          <select
+                            className={`form-control text-font ${
+                              item.warehouseId ? "" : "text-secondary"
+                            }`}
+                            value={
+                              item.warehouseId
+                                ? `${item.warehouseId}|${item.warehouse}`
+                                : ""
+                            }
+                            onChange={(e) => {
+                              const selectedValue = e.target.value;
+                              if (selectedValue) {
+                                const [selectedId, selectedName] =
+                                  selectedValue.split("|");
+                                const updatedList = [...receiptList];
+                                updatedList[index].warehouse = selectedName;
+                                updatedList[index].warehouseId = selectedId;
+                                setReceiptList(updatedList);
+                              }
+                            }}
+                            disabled
+                          >
+                            {warehouses.map((w) => (
+                              <option key={w.id} value={`${w.id}|${w.name}`}>
+                                {w.name}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
