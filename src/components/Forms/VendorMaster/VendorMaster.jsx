@@ -558,7 +558,7 @@ const VendorMaster = () => {
     e.preventDefault();
     const newErrors = validateForm(partnerDetails);
     setErrors(newErrors);
-
+    console.log(partnerDetails.code);
     const tempData = {
       code: partnerDetails.code,
       type: partnerDetails.type,
@@ -577,6 +577,7 @@ const VendorMaster = () => {
     };
 
     console.log(JSON.stringify(tempData));
+    console.log(partnerDetails.id);
     try {
       const response = await api.put(
         `/api/vendor-customer/update/${partnerDetails.id}`,
@@ -1908,6 +1909,29 @@ const VendorMaster = () => {
                           </div>
                         </div>
                         <div className="col-4 d-flex flex-column form-group">
+                          <label htmlFor="code" className="form-label ms-2">
+                            Code <span className="text-danger fs-6">*</span>
+                          </label>
+                          <div className="position-relative w-100 ms-2">
+                            <i className="fas fa-user position-absolute ps-2 z-0 input-icon"></i>
+                            <input
+                              type="text"
+                              className="form-control ps-5 text-font"
+                              id="code"
+                              placeholder="Enter code"
+                              value={partnerDetails.code || ""}
+                              onChange={(e) =>
+                                setPartnerDetails({
+                                  ...partnerDetails,
+                                  code: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="row form-style">
+                        <div className="col-4 d-flex flex-column form-group">
                           <label htmlFor="mobile" className="form-label ms-2">
                             Mobile <span className="text-danger fs-6">*</span>
                           </label>
@@ -1928,8 +1952,6 @@ const VendorMaster = () => {
                             />
                           </div>
                         </div>
-                      </div>
-                      <div className="row form-style">
                         <div className="col-4 d-flex flex-column form-group">
                           <label htmlFor="email" className="form-label ms-2">
                             Email <span className="text-danger fs-6">*</span>
