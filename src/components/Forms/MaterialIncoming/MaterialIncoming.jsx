@@ -157,7 +157,7 @@ const MaterialIncoming = () => {
       errors.mode = "Please select a mode";
     }
 
-    if (!data.vendor) {
+    if (!data.vendor && mode === "manual") {
       errors.vendor = "Please select vendor name";
     }
 
@@ -197,6 +197,22 @@ const MaterialIncoming = () => {
         if (response.data && response.data.status) {
           console.log("Batch verified successfully:", response.data);
 
+          const fetchedBatchData = response.data.data;
+
+          // Determine the warehouse ID
+          let warehouseId;
+          let warehouseName;
+          if (fetchedBatchData.warehouseId) {
+            warehouseId = fetchedBatchData.warehouseId;
+          } else {
+            const defaultWarehouse = getDefaultWarehouse(
+              fetchedBatchData.isInventory,
+              fetchedBatchData.isIqc
+            );
+            warehouseId = defaultWarehouse.warehouseId;
+            warehouseName = defaultWarehouse.warehouseName;
+          }
+
           // Use the data returned from the API
           const batchData = response.data.data;
 
@@ -218,10 +234,10 @@ const MaterialIncoming = () => {
             itemCode: batchData.itemCode,
             warehouse: batchData.batchNo
               ? batchData.warehouseName
-              : findStoreWarehouseName(),
+              : warehouseName,
             warehouseId: batchData.batchNo
               ? batchData.warehouseId
-              : findStoreWarehouseId(),
+              : warehouseId,
             quantity: isStdQty ? batchData.quantity : formData.quantity,
             batchNo: batchData.batchNo || "",
             vendorCode: formData.code || batchData.vendorCode,
@@ -537,17 +553,13 @@ const MaterialIncoming = () => {
       console.log("Going to save receipt");
       console.log("Receipt list:", receiptList);
 
-      // Use vendor information from the first item in the receipt list
-      // This ensures we're using the correct vendor info even if the form state has changed
       const firstItem = receiptList[0];
-
       const payload = {
         invoice: invoiceNumber,
         mode: mode,
         vendor: firstItem.vendorName || formData.vendorName,
         vendorCode: firstItem.vendorCode || formData.code,
         items: receiptList.map((item) => {
-          // Find the corresponding vendor item to get isInventory and isIqc values
           const vendorItem = vendorItems.find(
             (vi) => vi.itemCode === item.itemCode
           );
@@ -565,15 +577,8 @@ const MaterialIncoming = () => {
             };
           }
 
-          // If warehouse is not set or empty, use the default warehouse
           const warehouseId = item.warehouseId || defaultWarehouse.warehouseId;
           const warehouse = item.warehouse || defaultWarehouse.warehouseName;
-
-          console.log(
-            `Item ${item.itemCode} using warehouse:`,
-            warehouse,
-            warehouseId
-          );
 
           return {
             ...item,
@@ -583,24 +588,62 @@ const MaterialIncoming = () => {
         }),
       };
 
-      console.log("Submitting receipt data:", payload);
-
-      if (!payload.vendor || !payload.vendorCode) {
-        toast.error("Vendor information is missing. Please select a vendor.");
-        setLoading(false);
-        return;
-      }
-
+      // Save the receipt first
       const response = await api.post("/api/receipt/save", payload);
+      let approvalsSent = 0;
+
+      // After saving successfully, check each item for quantity changes
+      await Promise.all(
+        payload.items.map(async (item) => {
+          // Extract original quantity from batch number if available and convert to number
+          const originalQty = item.batchNo
+            ? parseInt(item.batchNo.substring(21, 27))
+            : null;
+          // Convert current quantity to number for comparison
+          const currentQty = parseInt(item.quantity);
+
+          if (originalQty && currentQty !== originalQty) {
+            const approvalData = {
+              batchNo: item.batchNo,
+              requestedQty: currentQty,
+              reason: `Quantity updated from ${originalQty} to ${currentQty}`,
+              warehouseId: item.warehouseId,
+            };
+
+            console.log("Sending approval request:", approvalData);
+            await api.post("/api/approvals/stock-adjustment", approvalData);
+            approvalsSent++;
+
+            toast.info(
+              `Approval request sent for ${item.itemName} (${item.itemCode}) - Quantity change from ${originalQty} to ${currentQty}`,
+              {
+                autoClose: 5000,
+              }
+            );
+          }
+        })
+      );
+
       console.log(
         "Material receipt entry added successfully:",
         response.data.data
       );
-      toast.success("Material receipt added successfully");
+
+      // Show summary notification
+      if (approvalsSent > 0) {
+        toast.success(
+          `Material receipt saved with ${approvalsSent} approval request${
+            approvalsSent > 1 ? "s" : ""
+          }`
+        );
+      } else {
+        toast.success("Material receipt saved successfully");
+      }
+
       handleReset(e);
     } catch (error) {
-      toast.error(error.response.data.message);
-      console.error(error.response.data.message);
+      toast.error(error.response?.data?.message || "An error occurred");
+      console.error(error.response?.data?.message || error);
     } finally {
       setLoading(false);
     }
@@ -698,11 +741,11 @@ const MaterialIncoming = () => {
           warehouseId = defaultWarehouse.warehouseId;
           warehouseName = defaultWarehouse.warehouseName;
         }
-
+        console.log("Vendor name: " + batchData.vendorName);
         setVendor(batchData.vendorName);
         setFormData({
           ...formData,
-          vendor: batchData.vendorName,
+          vendor: batchData.id,
           vendorName: batchData.vendorName,
           code: batchData.vendorCode,
           barcode: batchno,
@@ -756,14 +799,6 @@ const MaterialIncoming = () => {
 
   // Function to determine default warehouse based on isInventory and isIqc flags
   const getDefaultWarehouse = (isInventory, isIqc) => {
-    console.log(
-      "Getting default warehouse for isInventory:",
-      isInventory,
-      "isIqc:",
-      isIqc
-    );
-    console.log("Available warehouses:", warehouses);
-
     if (isInventory && isIqc) {
       const warehouseId = findIqcWarehouseId();
       const warehouseName = findIqcWarehouseName();
@@ -880,8 +915,10 @@ const MaterialIncoming = () => {
                 <label htmlFor="vendorName" className="form-label ms-2">
                   Vendor Name <span className="text-danger fs-6">*</span>
                 </label>
+
                 <div className="position-relative w-100">
                   <i className="fas fa-building ms-2 position-absolute z-0 input-icon"></i>
+
                   <select
                     className={`form-control ps-5 ms-1 text-font ${
                       vendor ? "" : "text-secondary"
@@ -890,18 +927,18 @@ const MaterialIncoming = () => {
                     disabled={mode === "scan"}
                     value={vendor}
                     onChange={(e) => {
-                      const selectedId = parseInt(e.target.value); // dropdown value is string, convert to number
+                      const selectedName = e.target.value;
                       const selectedVendor = vendors.find(
-                        (v) => v.id === selectedId
+                        (v) => v.name === selectedName
                       );
 
                       if (selectedVendor) {
-                        setVendor(selectedId); // vendor state for dropdown
+                        setVendor(selectedVendor.name); // store name in state
                         setFormData((prev) => ({
                           ...prev,
-                          vendor: selectedId, // Save vendor id (or name if preferred)
-                          vendorName: selectedVendor.name,
-                          code: selectedVendor.code || "", // Auto-fill vendor code
+                          vendor: selectedVendor.id, // keep vendor id in data for backend
+                          vendorName: selectedVendor.name, // display name
+                          code: selectedVendor.code || "", // optional auto-fill
                         }));
                         getVendorItems(selectedVendor.code);
                       }
@@ -910,23 +947,24 @@ const MaterialIncoming = () => {
                     <option value="" disabled hidden className="text-muted">
                       {mode === "scan" ? "Vendor Name" : "Select Vendor"}
                     </option>
+
                     {vendors.map((v) => (
-                      <option value={v.id} key={v.id}>
+                      <option value={v.name} key={v.id}>
                         {v.name}
                       </option>
                     ))}
                   </select>
 
-                  {mode === "scan" ? (
-                    ""
-                  ) : (
+                  {mode !== "scan" && (
                     <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                   )}
                 </div>
+
                 {errors.vendor && (
                   <span className="error-message">{errors.vendor}</span>
                 )}
               </div>
+
               <div className="col-4 d-flex flex-column form-group">
                 <label htmlFor="vendorCode" className="form-label ms-2">
                   Vendor Code
@@ -1013,35 +1051,37 @@ const MaterialIncoming = () => {
             ) : (
               ""
             )}
-            <div className="col-4 d-flex flex-column form-group">
-              <label htmlFor="quantity" className="form-label ms-2">
-                Quantity <span className="text-danger fs-6">*</span>
-              </label>
+            {mode == "manual" && (
+              <div className="col-4 d-flex flex-column form-group">
+                <label htmlFor="quantity" className="form-label ms-2">
+                  Quantity <span className="text-danger fs-6">*</span>
+                </label>
 
-              <div className="d-flex align-items-center justify-content-between gap-2">
-                <div className="position-relative w-100">
-                  <i className="fas fa-calculator position-absolute ms-2 z-0 input-icon"></i>
+                <div className="d-flex align-items-center justify-content-between gap-2">
+                  <div className="position-relative w-100">
+                    <i className="fas fa-calculator position-absolute ms-2 z-0 input-icon"></i>
+                    <input
+                      type="text"
+                      className="form-control ps-5 text-font"
+                      id="quantity"
+                      placeholder="Quantity"
+                      value={formData.quantity}
+                      onChange={(e) =>
+                        setFormData({ ...formData, quantity: e.target.value })
+                      }
+                      disabled={mode === "scan" && isStdQty}
+                    />
+                  </div>
                   <input
-                    type="text"
-                    className="form-control ps-5 text-font"
-                    id="quantity"
-                    placeholder="Quantity"
-                    value={formData.quantity}
-                    onChange={(e) =>
-                      setFormData({ ...formData, quantity: e.target.value })
-                    }
-                    disabled={mode === "scan" && isStdQty}
+                    className="form-check-input mt-0"
+                    type="checkbox"
+                    id="isStdQtyManual"
+                    checked={!isStdQty}
+                    onChange={(e) => setIsStdQty(!e.target.checked)}
                   />
                 </div>
-                <input
-                  className="form-check-input mt-0"
-                  type="checkbox"
-                  id="isStdQtyManual"
-                  checked={!isStdQty}
-                  onChange={(e) => setIsStdQty(!e.target.checked)}
-                />
               </div>
-            </div>
+            )}
           </div>
           <div>
             <div className="row">
@@ -1067,7 +1107,7 @@ const MaterialIncoming = () => {
                   <h2>Receipt Items</h2>
                 </div>
                 <div className="item-table-container mt-3">
-                  <table>
+                  <table className="align-middle">
                     <thead>
                       <tr>
                         <th>Item Name</th>
@@ -1096,7 +1136,23 @@ const MaterialIncoming = () => {
                           <tr key={index}>
                             <td>{receipt.itemName}</td>
                             <td>{receipt.itemCode}</td>
-                            <td>{receipt.quantity}</td>
+                            <td>
+                              {mode == "scan" ? (
+                                <input
+                                  type="text"
+                                  className="form-control text-8"
+                                  value={receipt.quantity}
+                                  onChange={(e) => {
+                                    const updatedList = [...receiptList];
+                                    updatedList[index].quantity =
+                                      e.target.value;
+                                    setReceiptList(updatedList);
+                                  }}
+                                />
+                              ) : (
+                                receipt.quantity
+                              )}
+                            </td>
                             <td>{receipt.batchNo}</td>
                             <td>
                               <select
@@ -1352,7 +1408,7 @@ const MaterialIncoming = () => {
                     onChange={(e) => setInvoiceNumber(e.target.value)}
                   />
                 </div>
-                <table className="table table-bordered text-font">
+                <table className="table table-bordered table-striped table-hover text-font align-middle">
                   <thead>
                     <tr>
                       <th>Item Name</th>
@@ -1369,7 +1425,36 @@ const MaterialIncoming = () => {
                         <td>{item.itemCode}</td>
                         <td>{item.quantity}</td>
                         <td>{item.batchNo}</td>
-                        <td>{item.warehouse}</td>
+                        <td>
+                          <select
+                            className={`form-control text-font ${
+                              item.warehouseId ? "" : "text-secondary"
+                            }`}
+                            value={
+                              item.warehouseId
+                                ? `${item.warehouseId}|${item.warehouse}`
+                                : ""
+                            }
+                            onChange={(e) => {
+                              const selectedValue = e.target.value;
+                              if (selectedValue) {
+                                const [selectedId, selectedName] =
+                                  selectedValue.split("|");
+                                const updatedList = [...receiptList];
+                                updatedList[index].warehouse = selectedName;
+                                updatedList[index].warehouseId = selectedId;
+                                setReceiptList(updatedList);
+                              }
+                            }}
+                            disabled
+                          >
+                            {warehouses.map((w) => (
+                              <option key={w.id} value={`${w.id}|${w.name}`}>
+                                {w.name}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
                       </tr>
                     ))}
                   </tbody>

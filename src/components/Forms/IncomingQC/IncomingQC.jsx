@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import api from "../../../services/api";
 import { Modal } from "bootstrap";
 import "./IncomingQC.css";
+import _ from "lodash";
 
 const IncomingQC = () => {
   const [isShowQualityCheckForm, setIsShowQualityCheckForm] = useState(false);
@@ -32,7 +33,7 @@ const IncomingQC = () => {
     indexOfFirstItem,
     indexOfLastItem
   );
-
+  const [trno, setTrno] = useState("");
   const totalPages = Math.ceil(totalCompletedItems / itemsPerPage);
 
   // select QC to be deleted
@@ -143,7 +144,16 @@ const IncomingQC = () => {
   const fetchPendingQC = async () => {
     try {
       const response = await api.get("/api/receipt/pending-qc");
-      setIqc(response.data.data);
+      // Flatten the pending items from all transactions
+      const flattenedItems = response.data.data.reduce((acc, transaction) => {
+        return acc.concat(
+          transaction.pendingItems.map((item) => ({
+            ...item,
+            transactionNumber: transaction.transactionNumber,
+          }))
+        );
+      }, []);
+      setIqc(flattenedItems);
     } catch (error) {
       toast.error("Error in fetching pending IQC");
       console.error("Error fetching pending IQC:", error);
@@ -185,15 +195,30 @@ const IncomingQC = () => {
   }, []);
 
   // Update search input handler
-  const handleSearchBatchNo = async (batchno) => {
-    console.log("Inside handleSearchBatchNo function with batchno: " + batchno);
+  const handleSearchBatchNo = async (items) => {
     try {
-      const response = await api.get(
-        `/api/receipt/qc/item-by-batch?batchNo=${batchno}`
+      const responses = await Promise.all(
+        items.map(async (item) => {
+          const response = await api.get(
+            `/api/receipt/qc/item-by-batch?batchNo=${item.batchNumber}`
+          );
+          const data = response.data.data;
+          return Array.isArray(data) ? data : [data];
+        })
       );
-      console.log(response.data.data);
-      const data = response.data.data;
-      setBatchDetails(Array.isArray(data) ? data : [data]);
+
+      const allDetails = responses.flat();
+
+      setBatchDetails((prev) => {
+        // merge and deduplicate by batchNumber
+        const merged = [...prev, ...allDetails];
+        const unique = merged.filter(
+          (obj, index, self) =>
+            index === self.findIndex((o) => o.batchNumber === obj.batchNumber)
+        );
+        return unique;
+      });
+
       setIsShowQualityCheckForm(true);
     } catch (error) {
       toast.error("Error in fetching batch details");
@@ -281,14 +306,41 @@ const IncomingQC = () => {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
 
   const handleShowModal = () => {
-    if (!selectedWarehouse) {
-      toast.error("Please select a warehouse");
-      return;
+    // Validation: Ensure all batches have required details
+    for (const batch of batchDetails) {
+      const { status, warehouseId } = batchStatuses[batch.id] || {};
+
+      if (!status) {
+        toast.error(`Please select a QC status for batch ${batch.batchNumber}`);
+        return;
+      }
+
+      if (!warehouseId) {
+        toast.error(`Please select a warehouse for batch ${batch.batchNumber}`);
+        return;
+      }
+
+      if (
+        (status === "FAIL" || status === "HOLD") &&
+        !batchStatuses[batch.id]?.remarks
+      ) {
+        toast.error(`Please enter remarks for batch ${batch.batchNumber}`);
+        return;
+      }
+
+      if (status === "FAIL" && !batchStatuses[batch.id]?.defectCategory) {
+        toast.error(
+          `Please select defect category for batch ${batch.batchNumber}`
+        );
+        return;
+      }
     }
+
     if (!selectedFile) {
       toast.error("Please select a file first.");
       return;
     }
+
     setShowPreviewModal(true);
   };
 
@@ -306,49 +358,164 @@ const IncomingQC = () => {
   // Submit button function
   const handlePassBatch = async (e) => {
     e.preventDefault();
-    if (!selectedWarehouse) {
-      toast.error("Please select a warehouse");
-      return;
-    }
-    if (selectedFile) {
-      console.log("File selected:", selectedFile);
-    } else {
+
+    if (!selectedFile) {
       toast.error("Please select a file first.");
       return;
     }
-    if (isFail === "FAIL" && !defectCategory) {
-      toast.error("Please select a defect category");
-      return;
+
+    // Validate each batch
+    for (const batch of batchDetails) {
+      const batchData = batchStatuses[batch.id] || {};
+      if (!batchData.status) {
+        toast.error(`Please select QC status for batch ${batch.batchNumber}`);
+        return;
+      }
+      if (
+        (batchData.status === "FAIL" || batchData.status === "HOLD") &&
+        !batchData.remarks
+      ) {
+        toast.error(`Please enter remarks for batch ${batch.batchNumber}`);
+        return;
+      }
+      if (batchData.status === "FAIL" && !batchData.defectCategory) {
+        toast.error(
+          `Please select defect category for batch ${batch.batchNumber}`
+        );
+        return;
+      }
     }
+
+    // Build API payload
+    // const payload = {
+    //   transactionNumber: trno,
+    //   attachment: selectedFile,
+    //   batches: batchDetails.map((batch) => {
+    //     const batchData = batchStatuses[batch.id] || {};
+    //     const obj = {
+    //       id: batch.id,
+    //       qcStatus: batchData.status,
+    //     };
+    //     if (batchData.warehouseId) obj.warehouseId = batchData.warehouseId;
+    //     if (batchData.defectCategory)
+    //       obj.defectCategory = batchData.defectCategory;
+    //     if (batchData.remarks) obj.remarks = batchData.remarks;
+    //     return obj;
+    //   }),
+    // };
+    // console.log("IQC payload: " + JSON.stringify(payload));
+
     try {
-      const data = {
-        id: batchDetails[0].id,
-        qcStatus: isFail ? "FAIL" : isHold ? "HOLD" : "PASS",
-        defectCategory: defectCategory,
-        remarks: remarks,
-        warehouseId: selectedWarehouse,
-        attachment: selectedFile,
-      };
-      console.log(data);
-      const response = await api.put("/api/receipt/qc-status/update", data, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+      const formData = new FormData();
+      formData.append("transactionNumber", trno);
+      formData.append("attachment", selectedFile);
+
+      batchDetails.forEach((batch, index) => {
+        const batchData = batchStatuses[batch.id] || {};
+        formData.append(`batches[${index}].id`, batch.id);
+        formData.append(`batches[${index}].qcStatus`, batchData.status);
+        if (batchData.warehouseId)
+          formData.append(
+            `batches[${index}].warehouseId`,
+            batchData.warehouseId
+          );
+        if (batchData.defectCategory)
+          formData.append(
+            `batches[${index}].defectCategory`,
+            batchData.defectCategory
+          );
+        if (batchData.remarks)
+          formData.append(`batches[${index}].remarks`, batchData.remarks);
       });
+
+      formData.forEach((value, key) => {
+        console.log(key, value);
+      });
+
+      const response = await api.put(
+        "/api/receipt/qc-status/update",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      // const formData = new FormData();
+      // // formData.append("attachment", selectedFile);
+      // formData.append("data", JSON.stringify(payload));
+
+      // const response = await api.put(
+      //   "/api/receipt/qc-status/update",
+      //   formData,
+      //   {
+      //     headers: {
+      //       "Content-Type": "multipart/form-data",
+      //     },
+      //   }
+      // );
+
+      // Refresh tables
       fetchPassFailQC();
       fetchPendingQC();
-      setIsPass("");
-      setIsHold("");
-      setIsFail(false);
-      setSelectedFile("");
-      toast.success("Batch details are passed successfully");
+
+      // Reset state
+      setBatchStatuses({});
+      setSelectedFile(null);
       setIsShowQualityCheckForm(false);
+      setShowPreviewModal(false);
+
+      toast.success("Batch details submitted successfully!");
     } catch (error) {
-      toast.error("Error in fetching batch details");
-      console.error("Error fetching batch details:", error);
-      setIsShowQualityCheckForm(false);
+      console.error("Error submitting batch details:", error);
+      toast.error("Error submitting batch details");
     }
   };
+  // const handlePassBatch = async (e) => {
+  //   e.preventDefault();
+  //   if (!selectedWarehouse) {
+  //     toast.error("Please select a warehouse");
+  //     return;
+  //   }
+  //   if (selectedFile) {
+  //     console.log("File selected:", selectedFile);
+  //   } else {
+  //     toast.error("Please select a file first.");
+  //     return;
+  //   }
+  //   if (isFail === "FAIL" && !defectCategory) {
+  //     toast.error("Please select a defect category");
+  //     return;
+  //   }
+  //   try {
+  //     const data = {
+  //       id: batchDetails[0].id,
+  //       qcStatus: isFail ? "FAIL" : isHold ? "HOLD" : "PASS",
+  //       defectCategory: defectCategory,
+  //       remarks: remarks,
+  //       warehouseId: selectedWarehouse,
+  //       attachment: selectedFile,
+  //     };
+  //     console.log(data);
+  //     const response = await api.put("/api/receipt/qc-status/update", data, {
+  //       headers: {
+  //         "Content-Type": "multipart/form-data",
+  //       },
+  //     });
+  //     fetchPassFailQC();
+  //     fetchPendingQC();
+  //     setIsPass("");
+  //     setIsHold("");
+  //     setIsFail(false);
+  //     setSelectedFile("");
+  //     toast.success("Batch details are passed successfully");
+  //     setIsShowQualityCheckForm(false);
+  //   } catch (error) {
+  //     toast.error("Error in fetching batch details");
+  //     console.error("Error fetching batch details:", error);
+  //     setIsShowQualityCheckForm(false);
+  //   }
+  // };
 
   // QC delete related functions
   const handleItemCheckboxChange = (qcId) => {
@@ -492,6 +659,71 @@ const IncomingQC = () => {
     }
   };
 
+  const groupedData = _.groupBy(
+    iqc.filter((i) => {
+      const search = searchQuery.toLowerCase();
+      return (
+        i.itemName?.toLowerCase().includes(search) ||
+        i.itemCode?.toLowerCase().includes(search) ||
+        i.batchNumber?.toLowerCase().includes(search) ||
+        i.vendorName?.toLowerCase().includes(search)
+      );
+    }),
+    "transactionNumber"
+  );
+
+  // Batch details button change
+  const [batchStatuses, setBatchStatuses] = useState({}); // { batchId: {status, warehouseId} }
+
+  const handleStatusChange = (batchId, status) => {
+    let warehouseId = "";
+    if (status === "PASS") {
+      const storeWarehouse = warehouses.find((w) => w.type === "STR");
+      warehouseId = storeWarehouse?.id || "";
+    } else if (status === "FAIL") {
+      const rejectionWarehouse = warehouses.find((w) => w.type === "REJ");
+      warehouseId = rejectionWarehouse?.id || "";
+    } else if (status === "HOLD") {
+      const iqcWarehouse = warehouses.find((w) => w.type === "IQC");
+      warehouseId = iqcWarehouse?.id || "";
+    }
+
+    setBatchStatuses((prev) => ({
+      ...prev,
+      [batchId]: {
+        ...prev[batchId],
+        status,
+        warehouseId,
+        defectCategory:
+          status === "FAIL" ? prev[batchId]?.defectCategory || "" : "",
+        remarks:
+          status === "FAIL" || status === "HOLD"
+            ? prev[batchId]?.remarks || ""
+            : "",
+      },
+    }));
+  };
+
+  const handleDefectChange = (batchId, value) => {
+    setBatchStatuses((prev) => ({
+      ...prev,
+      [batchId]: {
+        ...prev[batchId],
+        defectCategory: value,
+      },
+    }));
+  };
+
+  const handleRemarksChange = (batchId, value) => {
+    setBatchStatuses((prev) => ({
+      ...prev,
+      [batchId]: {
+        ...prev[batchId],
+        remarks: value,
+      },
+    }));
+  };
+
   return (
     <div>
       {/* Header section */}
@@ -560,43 +792,175 @@ const IncomingQC = () => {
           <form autoComplete="off" className="padding-2">
             <div className="form-grid pt-0">
               <div className="row form-style">
-                <div className={`${isFail ? "col-md-5" : "col-md-5"}`}>
+                <div className="col-md-12">
                   <label className="text-8 font-weight p-0">
-                    Batch Details <span className="text-danger fs-6">*</span>
+                    Trno: <span className="text-primary text-8">{trno}</span>
                   </label>
-                  {Array.isArray(batchDetails) &&
-                    batchDetails.map((batch) => (
-                      <div className="batch-details" key={batch.id}>
-                        {[
-                          { label: "Batch No:", value: batch.batchNumber },
-                          { label: "Item Code:", value: batch.itemCode },
-                          { label: "Item Name:", value: batch.itemName },
-                          { label: "Quantity:", value: batch.quantity },
-                          { label: "Vendor:", value: batch.vendorName },
-                          { label: "Received:", value: batch.createdAt },
-                        ].map((field, index) => (
-                          <div
-                            className="px-2 py-1 d-flex flex-wrap justify-content-between align-items-center w-100 min-width-0"
-                            key={index}
-                          >
-                            <strong className="text-8 text-gray me-2">
-                              {field.label}
-                            </strong>
-                            <span
-                              className="text-8"
-                              style={{
-                                overflowWrap: "break-word",
-                                wordBreak: "break-word",
-                                flexShrink: 1,
-                              }}
-                            >
-                              {field.value}
-                            </span>
-                          </div>
-                        ))}
+                  <div className="mt-3 mb-3">
+                    <label
+                      htmlFor="formFile"
+                      className="form-label mb-0 text-8 font-weight py-2"
+                    >
+                      Add Attachment <span className="text-danger fs-6">*</span>
+                    </label>
+                    <div className="position-relative w-100">
+                      <input
+                        className="form-control text-8"
+                        type="file"
+                        id="formFile"
+                        accept=".pdf, .jpg, .jpeg, .heic"
+                        onChange={handleFileChange}
+                      />
+                    </div>
+                    {selectedFile && (
+                      <div className="mt-3 text-8">
+                        <span className="fw-medium ">Selected File:</span>{" "}
+                        {selectedFile.name}
                       </div>
-                    ))}
-                  <div>
+                    )}
+                  </div>
+                  {Array.isArray(batchDetails) &&
+                    batchDetails.map((batch) => {
+                      const status = batchStatuses[batch.id]?.status || "";
+                      const currentWarehouse =
+                        batchStatuses[batch.id]?.warehouseId || "";
+
+                      return (
+                        <div
+                          key={batch.id}
+                          // className="batch-details p-2 border rounded mb-2"
+                          className="batch-details d-flex align-items-center justify-content-between flex-wrap p-2 border rounded mb-2"
+                        >
+                          {/* Batch No */}
+                          <div className="text-8 me-3">
+                            <label className="form-label text-8">
+                              Batch No
+                            </label>
+                            <input
+                              type="text"
+                              className="form-control text-8"
+                              value={batch.batchNumber}
+                              disabled
+                            />
+                          </div>
+
+                          {/* Warehouse */}
+                          <div className="me-3" style={{ minWidth: "150px" }}>
+                            <label className="form-label text-8">
+                              Warehouse <span className="text-danger">*</span>
+                            </label>
+                            <select
+                              className="form-control text-8"
+                              value={currentWarehouse}
+                              disabled
+                            >
+                              <option value="">Warehouse</option>
+                              {warehouses.map((wh) => (
+                                <option key={wh.id} value={wh.id}>
+                                  {wh.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* FAIL → Defect Category */}
+                          {status === "FAIL" && (
+                            <div className="">
+                              <label className="form-label text-8">
+                                Defect Category{" "}
+                                <span className="text-danger">*</span>
+                              </label>
+                              <select
+                                className="form-select text-8"
+                                value={
+                                  batchStatuses[batch.id]?.defectCategory || ""
+                                }
+                                onChange={(e) =>
+                                  handleDefectChange(batch.id, e.target.value)
+                                }
+                              >
+                                <option value="">Select defect category</option>
+                                <option value="Broken/Damaged">
+                                  Broken/Damaged
+                                </option>
+                                <option value="Color Mismatch">
+                                  Color Mismatch
+                                </option>
+                                <option value="Dimensional Issue">
+                                  Dimensional Issue
+                                </option>
+                                <option value="Material Defect">
+                                  Material Defect
+                                </option>
+                                <option value="Wrong Item">Wrong Item</option>
+                              </select>
+                            </div>
+                          )}
+
+                          {/* FAIL or HOLD → Remarks */}
+                          {(status === "FAIL" || status === "HOLD") && (
+                            <div className="mt-3">
+                              <label className="form-label text-8">
+                                Remarks
+                              </label>
+                              <textarea
+                                className="form-control text-8"
+                                placeholder="Enter remarks"
+                                value={batchStatuses[batch.id]?.remarks || ""}
+                                onChange={(e) =>
+                                  handleRemarksChange(batch.id, e.target.value)
+                                }
+                              />
+                            </div>
+                          )}
+
+                          {/* Buttons */}
+                          <div className="mt-3 d-flex">
+                            <button
+                              type="button"
+                              className={`btn me-2 text-8 ${
+                                status === "PASS"
+                                  ? "btn-success"
+                                  : "btn-outline-success"
+                              }`}
+                              onClick={() =>
+                                handleStatusChange(batch.id, "PASS")
+                              }
+                            >
+                              Pass
+                            </button>
+                            <button
+                              type="button"
+                              className={`btn me-2 text-8 ${
+                                status === "FAIL"
+                                  ? "btn-danger"
+                                  : "btn-outline-danger"
+                              }`}
+                              onClick={() =>
+                                handleStatusChange(batch.id, "FAIL")
+                              }
+                            >
+                              Fail
+                            </button>
+                            <button
+                              type="button"
+                              className={`btn text-8 ${
+                                status === "HOLD"
+                                  ? "btn-warning"
+                                  : "btn-outline-warning"
+                              }`}
+                              onClick={() =>
+                                handleStatusChange(batch.id, "HOLD")
+                              }
+                            >
+                              Hold
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                  {/* <div>
                     <label className="text-8 font-weight p-0 mt-3">
                       Quality Status <span className="text-danger fs-6">*</span>
                     </label>
@@ -677,9 +1041,9 @@ const IncomingQC = () => {
                         </button>
                       </div>
                     </div>
-                  </div>{" "}
+                  </div>{" "} */}
                 </div>
-                <div className={`${isFail ? "col-md-3" : "col-md-3"}`}>
+                {/* <div className={`${isFail ? "col-md-3" : "col-md-3"}`}>
                   <div className="mt-3">
                     <label
                       htmlFor="warehouse"
@@ -817,7 +1181,7 @@ const IncomingQC = () => {
                       </div>
                     </div>
                   )}
-                </div>
+                </div> */}
               </div>
             </div>
 
@@ -903,71 +1267,98 @@ const IncomingQC = () => {
             </div>
           </div>
           <div className="item-table-container mt-3">
-            <table>
+            <table className="table table-hover">
               <thead>
                 <tr>
-                  <th className="checkbox-cell">
-                    <input type="checkbox" id="select-all-header" disabled />
-                  </th>
                   <th>TrNo.</th>
-                  <th>Item Name</th>
-                  <th>Batch No</th>
-                  <th>Vendor Name</th>
-                  <th>Quantity</th>
-                  <th>Received Date</th>
+                  <th>Total Items</th>
+                  <th>Batch Quantity</th>
                   <th>Actions</th>
                 </tr>
               </thead>
-              <tbody className="text-break">
-                {iqc
-                  .filter((i) => {
-                    const search = searchQuery.toLowerCase();
-                    const matchSearch =
-                      i.itemName.toLowerCase().includes(search) ||
-                      i.itemCode.toLowerCase().includes(search) ||
-                      i.batchNumber.toLowerCase().includes(search) ||
-                      i.vendorName.toLowerCase().includes(search);
+              <tbody id="transactionsTable" className="accordion">
+                {Object.entries(groupedData).map(([trNo, items], index) => {
+                  const collapseId = `collapse-${index}`;
+                  const totalQty = items.reduce(
+                    (total, item) => total + Number(item.quantity || 0),
+                    0
+                  );
 
-                    return matchSearch;
-                  })
-                  .map((i) => (
-                    <tr key={i.id}>
-                      <td className="checkbox-cell">
-                        <input
-                          type="checkbox"
-                          checked={selectedItems.includes(i.id)}
-                          onChange={() => handleItemCheckboxChange(i.id)}
-                        />
-                      </td>
-                      <td>1232121132131</td>
-                      <td>{"(" + i.itemCode + ") " + i.itemName}</td>
+                  return (
+                    <React.Fragment key={trNo}>
+                      {/* Accordion Header Row */}
+                      <tr
+                        className="accordion-header-row"
+                        data-bs-toggle="collapse"
+                        data-bs-target={`#${collapseId}`}
+                        style={{ cursor: "pointer" }}
+                      >
+                        <td className="px-3 py-2 text-decoration-none text-reset">
+                          {trNo}
+                        </td>
+                        <td>{items.length}</td>
+                        <td>{totalQty}</td>
+                        <td className="actions">
+                          <a href="#qc">
+                            <button
+                              className="btn btn-primary"
+                              style={{ fontSize: "0.7rem" }}
+                              onClick={() => {
+                                handleSearchBatchNo(items);
+                                setTrno(trNo);
+                                setTimeout(() => {
+                                  qcRef.current?.scrollIntoView({
+                                    behavior: "smooth",
+                                  });
+                                }, 100); // delay to wait for form render
+                              }}
+                            >
+                              <i className="fa-solid fa-clipboard-check me-1"></i>{" "}
+                              Start QC
+                            </button>
+                          </a>
+                        </td>
+                      </tr>
+                      <tr className="collapse" id={collapseId}>
+                        <td colSpan="8">{/* Your item details here */}</td>
+                      </tr>
 
-                      <td>{i.batchNumber}</td>
-                      <td>{i.vendorName}</td>
-                      <td>{i.quantity}</td>
-                      <td>{i.createdAt}</td>
-                      {/* Mar 15, 2024, 09:30 AM */}
-                      <td className="actions">
-                        <a href="#qc">
-                          <button
-                            className="btn btn-primary"
-                            style={{ fontSize: "0.7rem" }}
-                            onClick={() => {
-                              handleSearchBatchNo(i.batchNumber);
-                              setTimeout(() => {
-                                qcRef.current?.scrollIntoView({
-                                  behavior: "smooth",
-                                });
-                              }, 100); // delay to wait for form render
-                            }}
+                      {/* Accordion Content Row */}
+                      <tr className="p-0">
+                        <td colSpan={4} className="p-0 border-0">
+                          <div
+                            id={collapseId}
+                            className="accordion-collapse collapse"
+                            data-bs-parent="#transactionsTable"
                           >
-                            <i className="fa-solid fa-clipboard-check me-1"></i>{" "}
-                            Start QC
-                          </button>
-                        </a>
-                      </td>
-                    </tr>
-                  ))}
+                            <table className="table table-hover table-sm mb-0">
+                              <thead className="table-light">
+                                <tr className="text-primary">
+                                  <th>Item Name</th>
+                                  <th>Batch No</th>
+                                  <th>Vendor Name</th>
+                                  <th>Quantity</th>
+                                  <th>Received Date</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {items.map((item) => (
+                                  <tr key={item.id}>
+                                    <td className="px-3 py-2 ">{`(${item.itemCode}) ${item.itemName}`}</td>
+                                    <td>{item.batchNumber}</td>
+                                    <td>{item.vendorName}</td>
+                                    <td>{item.quantity}</td>
+                                    <td>{item.createdAt}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </td>
+                      </tr>
+                    </React.Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -1174,13 +1565,12 @@ const IncomingQC = () => {
           tabIndex="-1"
           style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
         >
-          <div className="modal-dialog">
+          <div className="modal-dialog modal-lg">
             <div className="modal-content">
               {/* Header */}
               <div className="modal-header">
                 <h5 className="modal-title">
-                  <i className="fas fa-circle-check me-2"></i>
-                  Confirm Details
+                  <i className="fas fa-circle-check me-2"></i> Confirm Details
                 </h5>
                 <button
                   type="button"
@@ -1189,70 +1579,86 @@ const IncomingQC = () => {
                   aria-label="Close"
                 ></button>
               </div>
+
               {/* Body */}
               <div className="modal-body">
+                {/* Transaction-level info */}
+                <div className="mb-3 p-3 bg-light border rounded">
+                  <div className="row">
+                    <div className="col-sm-6 text-8">
+                      <strong>Transaction No:</strong> <span>{trno}</span>
+                    </div>
+                    <div className="col-sm-6 text-8">
+                      <strong>Attached File:</strong>{" "}
+                      <span>{selectedFile?.name || "N/A"}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Batch cards */}
                 {batchDetails.map((batch, index) => (
-                  <div key={index} className="user-details-grid">
-                    <div className="detail-item">
-                      <strong>QC Status:</strong>
-                      <span>{qcStatus}</span>
+                  <div
+                    key={index}
+                    className="card mb-3 shadow-sm border-secondary"
+                  >
+                    <div className="card-header bg-secondary text-white text-8">
+                      <strong>
+                        Batch {index + 1} — {batch.batchNumber}
+                      </strong>
                     </div>
-
-                    {isFail && (
-                      <div className="detail-item">
-                        <strong>Defect Category:</strong>
-                        <span>{defectCategory || "N/A"}</span>
+                    <div className="card-body text-8">
+                      <div className="row">
+                        <div className="col-sm-6">
+                          <strong>QC Status:</strong>{" "}
+                          <span>
+                            {batchStatuses[batch.id]?.status || "N/A"}
+                          </span>
+                        </div>
+                        <div className="col-sm-6">
+                          <strong>Warehouse:</strong>{" "}
+                          <span>
+                            {warehouses.find(
+                              (w) =>
+                                w.id === batchStatuses[batch.id]?.warehouseId
+                            )?.name || "N/A"}
+                          </span>
+                        </div>
                       </div>
-                    )}
-
-                    {!isPass && (
-                      <div className="detail-item">
-                        <strong>Remarks:</strong>
-                        <span>{remarks || "N/A"}</span>
+                      <div className="row">
+                        <div className="col-sm-6">
+                          <strong>Item Code:</strong> {batch.itemCode}
+                        </div>
+                        <div className="col-sm-6">
+                          <strong>Item Name:</strong> {batch.itemName}
+                        </div>
+                        <div className="col-sm-6">
+                          <strong>Quantity:</strong> {batch.quantity}
+                        </div>
+                        <div className="col-sm-6">
+                          <strong>Vendor Name:</strong> {batch.vendorName}
+                        </div>
+                        <div className="col-sm-6">
+                          <strong>Created At:</strong> {batch.createdAt}
+                        </div>
                       </div>
-                    )}
+                      {batchStatuses[batch.id]?.status === "FAIL" && (
+                        <div>
+                          <strong>Defect Category:</strong>{" "}
+                          <span>
+                            {batchStatuses[batch.id]?.defectCategory || "N/A"}
+                          </span>
+                        </div>
+                      )}
 
-                    <div className="detail-item">
-                      <strong>Warehouse:</strong>
-                      <span>
-                        {warehouses.find((w) => w.id === selectedWarehouse)
-                          ?.name || "N/A"}
-                      </span>
-                    </div>
-
-                    <div className="detail-item">
-                      <strong>Attached File:</strong>
-                      <span>{selectedFile?.name}</span>
-                    </div>
-
-                    <div className="detail-item">
-                      <strong>Batch Number:</strong>
-                      <span>{batch.batchNumber}</span>
-                    </div>
-
-                    <div className="detail-item">
-                      <strong>Item Code:</strong>
-                      <span>{batch.itemCode}</span>
-                    </div>
-
-                    <div className="detail-item">
-                      <strong>Item Name:</strong>
-                      <span>{batch.itemName}</span>
-                    </div>
-
-                    <div className="detail-item">
-                      <strong>Quantity:</strong>
-                      <span>{batch.quantity}</span>
-                    </div>
-
-                    <div className="detail-item">
-                      <strong>Vendor Name:</strong>
-                      <span>{batch.vendorName}</span>
-                    </div>
-
-                    <div className="detail-item">
-                      <strong>Created At:</strong>
-                      <span>{batch.createdAt}</span>
+                      {(batchStatuses[batch.id]?.status === "FAIL" ||
+                        batchStatuses[batch.id]?.status === "HOLD") && (
+                        <div>
+                          <strong>Remarks:</strong>{" "}
+                          <span>
+                            {batchStatuses[batch.id]?.remarks || "N/A"}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
