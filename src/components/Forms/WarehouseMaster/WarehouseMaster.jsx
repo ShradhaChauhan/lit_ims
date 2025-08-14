@@ -663,6 +663,46 @@ const WarehouseMaster = () => {
     }),
   };
 
+  // Excel import
+  const [selectedFile, setSelectedFile] = useState(null);
+
+  const handleFileUpload = (event) => {
+    event.preventDefault();
+    const file = event.target.files[0];
+
+    if (file) {
+      const fileSizeInMB = file.size / (1024 * 1024); // Convert bytes to MB
+      if (fileSizeInMB > MAX_FILE_SIZE_MB) {
+        toast.warning("File size must be less than or equal to 2MB.");
+        setSelectedFile(null);
+
+        return;
+      }
+
+      setSelectedFile(file);
+    }
+  };
+
+  const handleSaveToAPI = async () => {
+    if (excelData.length === 0) {
+      toast.error("Please select an excel file");
+      return;
+    }
+    try {
+      setIsLoading(true);
+
+      await api.post("/api/warehouses/import-excel", selectedFile);
+
+      fetchWarehouses();
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error saving excel data:", error);
+      toast.error(error.response.data.message || "Error saving excel data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div>
       {isLoading && (
@@ -1086,6 +1126,21 @@ const WarehouseMaster = () => {
               </label>
             </div>
             <div className="bulk-actions">
+              <div className="d-flex align-items-center gap-2">
+                <input
+                  type="file"
+                  accept=".xlsx, .xls"
+                  className="form-control form-control-sm w-auto text-8"
+                  onChange={handleFileUpload}
+                />
+
+                <button
+                  className="btn btn-outline-secondary text-8"
+                  onClick={handleSaveToAPI}
+                >
+                  <i className="fas fa-file-import me-1"></i> Import Excel
+                </button>
+              </div>
               <button
                 className="btn btn-outline-success text-8"
                 onClick={() => {
