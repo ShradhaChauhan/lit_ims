@@ -683,7 +683,11 @@ const WarehouseMaster = () => {
     try {
       setIsLoading(true);
 
-      await api.post("/api/warehouses/import-excel", selectedFile);
+      await api.post("/api/warehouses/import-excel", selectedFile, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       fetchWarehouses();
       setIsLoading(false);
