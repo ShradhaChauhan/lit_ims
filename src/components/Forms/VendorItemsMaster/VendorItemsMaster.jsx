@@ -12,6 +12,28 @@ import { saveAs } from "file-saver";
 import "./VendorItemsMaster.css";
 
 const VendorItemsMaster = () => {
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  const totalEntries = data.length;
+  const totalPages = Math.ceil(totalEntries / itemsPerPage);
+
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, totalEntries);
+  const currentItems = data.slice(startIndex, endIndex);
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const handleItemsPerPageChange = (e) => {
+    setItemsPerPage(Number(e.target.value));
+    setCurrentPage(1);
+  };
+
   const [vendorItems, setVendorItems] = useState([]);
   const [errors, setErrors] = useState({});
   const { isAddVendorItem, setIsAddVendorItem } = useContext(AppContext);

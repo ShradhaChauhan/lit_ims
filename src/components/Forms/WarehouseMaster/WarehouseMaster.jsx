@@ -671,20 +671,12 @@ const WarehouseMaster = () => {
     const file = event.target.files[0];
 
     if (file) {
-      const fileSizeInMB = file.size / (1024 * 1024); // Convert bytes to MB
-      if (fileSizeInMB > MAX_FILE_SIZE_MB) {
-        toast.warning("File size must be less than or equal to 2MB.");
-        setSelectedFile(null);
-
-        return;
-      }
-
       setSelectedFile(file);
     }
   };
 
   const handleSaveToAPI = async () => {
-    if (excelData.length === 0) {
+    if (!selectedFile) {
       toast.error("Please select an excel file");
       return;
     }
