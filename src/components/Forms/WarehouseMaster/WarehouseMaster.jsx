@@ -13,6 +13,7 @@ const WarehouseMaster = () => {
   const warehouseEditModalRef = useRef(null);
   const { isAddWarehouse, setIsAddWarehouse } = useContext(AppContext);
 
+  const [isAddSubLocation, setIsAddSubLocation] = useState([{ id: 1 }]);
   // Confirm modal states
   const [message, setMesssage] = useState("");
   const [confirmState, setConfirmState] = useState(false);
@@ -31,6 +32,11 @@ const WarehouseMaster = () => {
     code: "",
     type: "",
     status: "active",
+    subLocations: isAddSubLocation.map((location) => ({
+      id: location.id,
+      name: "",
+      itemName: "",
+    })),
   });
   const [isShowWarehouseDetails, setIsShowWarehouseDetails] = useState(false);
   const [isEditWarehouseDetails, setIsEditWarehouseDetails] = useState(false);
@@ -49,6 +55,63 @@ const WarehouseMaster = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [filteredWarehouses, setFilteredWarehouses] = useState([]);
+
+  useEffect(() => {
+    if (formData.subLocations.length === 0) {
+      setFormData((prev) => ({
+        ...prev,
+        subLocations: isAddSubLocation.map((location) => ({
+          id: location.id,
+          name: "",
+          itemName: "",
+        })),
+      }));
+    }
+  }, []);
+
+  const handleDeleteSubLocation = (locationId) => {
+    setIsAddSubLocation((prevLocation) =>
+      prevLocation.filter((location) => location.id !== locationId)
+    );
+
+    setFormData((prev) => ({
+      ...prev,
+      subLocations: prev.subLocations.filter(
+        (location) => location.id !== locationId
+      ),
+    }));
+  };
+
+  const handleLocationChange = (index, field, value) => {
+    const updatedItems = [...formData.subLocations];
+
+    if (field === "item") {
+      const selectedItem = items.find((item) => item.id === parseInt(value));
+      if (selectedItem) {
+        updatedItems[index] = {
+          ...updatedItems[index],
+          item: value,
+          code: selectedItem.code,
+          uom: selectedItem.uom,
+        };
+      }
+    } else if (field === "warehouse") {
+      updatedItems[index] = {
+        ...updatedItems[index],
+        warehouse: value,
+      };
+    } else if (field === "quantity") {
+      updatedItems[index] = {
+        ...updatedItems[index],
+        quantity: value,
+      };
+    }
+
+    setFormData({
+      ...formData,
+      items: updatedItems,
+    });
+  };
 
   useEffect(() => {
     fetchWarehouses();
@@ -324,6 +387,7 @@ const WarehouseMaster = () => {
       name: warehouseDetails.name,
       code: warehouseDetails.code,
       type: warehouseDetails.type,
+      subLocations: warehouseDetails.subLocations,
       status: warehouseDetails.status,
     };
 
@@ -392,6 +456,7 @@ const WarehouseMaster = () => {
         name: formData.name,
         code: formData.code,
         type: formData.type,
+        subLocations: formData.subLocations,
         status: formData.status,
       };
 
@@ -401,6 +466,7 @@ const WarehouseMaster = () => {
         .then((response) => {
           console.log("Response received:", response.data);
           if (response.data && response.data.status) {
+            setIsAddSubLocation([{ id: 1 }]);
             toast.success("Warehouse added successfully:", response.data.data);
             // Reset form and close it
             handleReset(e);
@@ -440,6 +506,11 @@ const WarehouseMaster = () => {
       name: "",
       code: "",
       type: "",
+      subLocations: isAddSubLocation.map((location) => ({
+        id: location.id,
+        name: "",
+        itemName: "",
+      })),
       status: "active",
     });
     setIsChecked(true);
@@ -743,6 +814,87 @@ const WarehouseMaster = () => {
                   </div>
                 </div>
               </div>
+
+              <div className="parts-section">
+                <div className="bom-list-header">
+                  <h2>Add Sub Locations</h2>
+                </div>
+                <div className="item-table-container mt-3">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Location Name</th>
+                        <th>Item</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-break">
+                      {" "}
+                      {isAddSubLocation.map((location, index) => {
+                        const currentLocation = formData.subLocations.find(
+                          (item) => item.id === location.id
+                        ) || {
+                          id: location.id,
+                          name: "",
+                          itemName: "",
+                        };
+
+                        return (
+                          <tr key={location.id}>
+                            <td>
+                              <div className="field-wrapper">
+                                <div className="position-relative w-100">
+                                  <i className="fas fa-cogs position-absolute z-0 input-icon"></i>
+                                  <select
+                                    className="form-control text-font w-100 ps-5"
+                                    required
+                                    value={currentLocation.item}
+                                    onChange={(e) =>
+                                      handleItemChange(
+                                        index,
+                                        "item",
+                                        e.target.value
+                                      )
+                                    }
+                                  >
+                                    <option value="">Select Item</option>
+                                    {items.map((item) => (
+                                      <option key={item.id} value={item.id}>
+                                        {item.name} ({item.code})
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="actions">
+                              <div className="field-wrapper">
+                                <button
+                                  type="button"
+                                  className="btn-icon btn-danger ms-2"
+                                  title="Remove Sub Location"
+                                  onClick={() =>
+                                    handleDeleteSubLocation(location.id)
+                                  }
+                                  disabled={isAddSubLocation.length <= 1}
+                                >
+                                  <i className="fas fa-trash"></i>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                  <button
+                    type="button"
+                    className="btn btn-secondary text-font m-3"
+                  >
+                    <i className="fas fa-plus me-2"></i>
+                    Add Sub Loaction
+                  </button>
+                </div>
+              </div>
             </div>
             <div className="form-actions">
               <button
@@ -1041,7 +1193,10 @@ const WarehouseMaster = () => {
                     <strong>Type:</strong>
                     <span>{warehouseDetails.type}</span>
                   </div>
-
+                  <div className="detail-item">
+                    <strong>Sub Location:</strong>
+                    <span>{warehouseDetails.subLocations}</span>
+                  </div>
                   <div className="detail-item">
                     <strong>Status:</strong>
                     <span
@@ -1208,6 +1363,32 @@ const WarehouseMaster = () => {
                             </select>
                           </div>
                         </div>
+                        {warehouseDetails.subLocations && (
+                          <div className="col-4 d-flex flex-column form-group">
+                            <label
+                              htmlFor="subLocations"
+                              className="form-label"
+                            >
+                              Sub Location{" "}
+                              <span className="text-danger fs-6">*</span>
+                            </label>
+                            <div className="position-relative w-100">
+                              <i className="fa-solid fa-location-dot position-absolute z-0 input-icon"></i>
+                              <inout
+                                className="form-control text-font switch-padding"
+                                id="subLocations"
+                                value={warehouseDetails.subLocations}
+                                onChange={(e) =>
+                                  setWarehouseDetails({
+                                    ...warehouseDetails,
+                                    subLocations: e.target.value,
+                                  })
+                                }
+                                placeholder="Enter Sub Loaction"
+                              />
+                            </div>
+                          </div>
+                        )}
                         <div className="col-4 d-flex flex-column form-group">
                           <label htmlFor="status" className="form-label">
                             Status

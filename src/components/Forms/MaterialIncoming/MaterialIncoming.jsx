@@ -197,6 +197,22 @@ const MaterialIncoming = () => {
         if (response.data && response.data.status) {
           console.log("Batch verified successfully:", response.data);
 
+          const fetchedBatchData = response.data.data;
+
+          // Determine the warehouse ID
+          let warehouseId;
+          let warehouseName;
+          if (fetchedBatchData.warehouseId) {
+            warehouseId = fetchedBatchData.warehouseId;
+          } else {
+            const defaultWarehouse = getDefaultWarehouse(
+              fetchedBatchData.isInventory,
+              fetchedBatchData.isIqc
+            );
+            warehouseId = defaultWarehouse.warehouseId;
+            warehouseName = defaultWarehouse.warehouseName;
+          }
+
           // Use the data returned from the API
           const batchData = response.data.data;
 
@@ -218,10 +234,10 @@ const MaterialIncoming = () => {
             itemCode: batchData.itemCode,
             warehouse: batchData.batchNo
               ? batchData.warehouseName
-              : findStoreWarehouseName(),
+              : warehouseName,
             warehouseId: batchData.batchNo
               ? batchData.warehouseId
-              : findStoreWarehouseId(),
+              : warehouseId,
             quantity: isStdQty ? batchData.quantity : formData.quantity,
             batchNo: batchData.batchNo || "",
             vendorCode: formData.code || batchData.vendorCode,
@@ -537,17 +553,13 @@ const MaterialIncoming = () => {
       console.log("Going to save receipt");
       console.log("Receipt list:", receiptList);
 
-      // Use vendor information from the first item in the receipt list
-      // This ensures we're using the correct vendor info even if the form state has changed
       const firstItem = receiptList[0];
-
       const payload = {
         invoice: invoiceNumber,
         mode: mode,
         vendor: firstItem.vendorName || formData.vendorName,
         vendorCode: firstItem.vendorCode || formData.code,
         items: receiptList.map((item) => {
-          // Find the corresponding vendor item to get isInventory and isIqc values
           const vendorItem = vendorItems.find(
             (vi) => vi.itemCode === item.itemCode
           );
@@ -565,15 +577,8 @@ const MaterialIncoming = () => {
             };
           }
 
-          // If warehouse is not set or empty, use the default warehouse
           const warehouseId = item.warehouseId || defaultWarehouse.warehouseId;
           const warehouse = item.warehouse || defaultWarehouse.warehouseName;
-
-          console.log(
-            `Item ${item.itemCode} using warehouse:`,
-            warehouse,
-            warehouseId
-          );
 
           return {
             ...item,
@@ -583,51 +588,62 @@ const MaterialIncoming = () => {
         }),
       };
 
-      payload.items.map(async (item) => {
-        console.log(item.quantity !== item.batchNo.substring(21, 27));
-        if (item.quantity !== item.batchNo.substring(21, 27)) {
-          const data = {
-            batchNo: item.batchNo,
-            requestedQty: item.quantity,
-            reason:
-              "Quantity updated from " +
-              item.batchNo.substring(21, 27) +
-              " to " +
-              item.quantity,
-            warehouseId: item.warehouseId || item.warehouse,
-          };
-          console.log("item: " + JSON.stringify(item));
-          console.log("approval data: " + JSON.stringify(data));
-          const response = await api.post(
-            "/api/approvals/stock-adjustment",
-            data
-          );
-
-          console.log(
-            `Stock adjustment done for ${item.batchNo}`,
-            response.data
-          );
-        }
-      });
-
-      console.log("Submitting receipt data:", payload);
-
-      if (!payload.vendor || !payload.vendorCode) {
-        toast.error("Vendor information is missing. Please select a vendor.");
-        setLoading(false);
-        return;
-      }
-
+      // Save the receipt first
       const response = await api.post("/api/receipt/save", payload);
+      let approvalsSent = 0;
+
+      // After saving successfully, check each item for quantity changes
+      await Promise.all(
+        payload.items.map(async (item) => {
+          // Extract original quantity from batch number if available and convert to number
+          const originalQty = item.batchNo
+            ? parseInt(item.batchNo.substring(21, 27))
+            : null;
+          // Convert current quantity to number for comparison
+          const currentQty = parseInt(item.quantity);
+
+          if (originalQty && currentQty !== originalQty) {
+            const approvalData = {
+              batchNo: item.batchNo,
+              requestedQty: currentQty,
+              reason: `Quantity updated from ${originalQty} to ${currentQty}`,
+              warehouseId: item.warehouseId,
+            };
+
+            console.log("Sending approval request:", approvalData);
+            await api.post("/api/approvals/stock-adjustment", approvalData);
+            approvalsSent++;
+
+            toast.info(
+              `Approval request sent for ${item.itemName} (${item.itemCode}) - Quantity change from ${originalQty} to ${currentQty}`,
+              {
+                autoClose: 5000,
+              }
+            );
+          }
+        })
+      );
+
       console.log(
         "Material receipt entry added successfully:",
         response.data.data
       );
-      toast.success("Material receipt added successfully");
+
+      // Show summary notification
+      if (approvalsSent > 0) {
+        toast.success(
+          `Material receipt saved with ${approvalsSent} approval request${
+            approvalsSent > 1 ? "s" : ""
+          }`
+        );
+      } else {
+        toast.success("Material receipt saved successfully");
+      }
+
       handleReset(e);
     } catch (error) {
-      toast.error(error.response.data.message);
-      console.error(error.response.data.message);
+      toast.error(error.response?.data?.message || "An error occurred");
+      console.error(error.response?.data?.message || error);
     } finally {
       setLoading(false);
     }
@@ -783,14 +799,6 @@ const MaterialIncoming = () => {
 
   // Function to determine default warehouse based on isInventory and isIqc flags
   const getDefaultWarehouse = (isInventory, isIqc) => {
-    console.log(
-      "Getting default warehouse for isInventory:",
-      isInventory,
-      "isIqc:",
-      isIqc
-    );
-    console.log("Available warehouses:", warehouses);
-
     if (isInventory && isIqc) {
       const warehouseId = findIqcWarehouseId();
       const warehouseName = findIqcWarehouseName();
@@ -1134,15 +1142,12 @@ const MaterialIncoming = () => {
                                   type="text"
                                   className="form-control text-8"
                                   value={receipt.quantity}
-                                  onChange={(e) =>
-                                    setReceiptList((prev) =>
-                                      prev.map((r) =>
-                                        r.id === receipt.id // or any unique key
-                                          ? { ...r, quantity: e.target.value }
-                                          : r
-                                      )
-                                    )
-                                  }
+                                  onChange={(e) => {
+                                    const updatedList = [...receiptList];
+                                    updatedList[index].quantity =
+                                      e.target.value;
+                                    setReceiptList(updatedList);
+                                  }}
                                 />
                               ) : (
                                 receipt.quantity
