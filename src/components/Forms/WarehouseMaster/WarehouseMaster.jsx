@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { AppContext } from "../../../context/AppContext";
 import api from "../../../services/api";
 import { Link } from "react-router-dom";
@@ -6,13 +6,14 @@ import { Modal } from "bootstrap";
 import { toast } from "react-toastify";
 import { AbilityContext } from "../../../utils/AbilityContext";
 import exportToExcel from "../../../utils/exportToExcel";
+import Select from "react-select";
 
 const WarehouseMaster = () => {
   const [errors, setErrors] = useState({});
   const warehouseModalRef = useRef(null);
   const warehouseEditModalRef = useRef(null);
   const { isAddWarehouse, setIsAddWarehouse } = useContext(AppContext);
-
+  const [isLoading, setIsLoading] = useState(false);
   const [isAddSubLocation, setIsAddSubLocation] = useState([{ id: 1 }]);
   // Confirm modal states
   const [message, setMesssage] = useState("");
@@ -21,23 +22,80 @@ const WarehouseMaster = () => {
   const [warehouseIdState, setWarehouseIdState] = useState("");
   const [isConfirmModal, setIsConfirmModal] = useState(false);
   const [confirmModal, setConfirmModal] = useState(null);
-
+  const [items, setItems] = useState([]);
   const [selectedWarehouses, setSelectedWarehouses] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [status, setStatus] = useState("active");
   const [isChecked, setIsChecked] = useState(true);
+  const [subLocations, setSubLocations] = useState([
+    {
+      id: Date.now(),
+      name: "",
+      itemName: "",
+      itemCode: "",
+      racks: "",
+    },
+  ]);
   const [formData, setFormData] = useState({
     trno: "",
     name: "",
     code: "",
     type: "",
     status: "active",
-    subLocations: isAddSubLocation.map((location) => ({
-      id: location.id,
-      name: "",
-      itemName: "",
-    })),
+    subLocations: [],
   });
+  const itemOptions = useMemo(
+    () =>
+      items.map((item) => (
+        <option key={item.id} value={item.id}>
+          ({item.code}) {item.name}
+        </option>
+      )),
+    [items]
+  );
+
+  const handleLocationChange = (index, field, value) => {
+    setSubLocations((prev) => {
+      const updated = [...prev];
+      if (field === null && typeof value === "object") {
+        updated[index] = { ...updated[index], ...value };
+      } else {
+        updated[index] = { ...updated[index], [field]: value };
+      }
+      return updated;
+    });
+  };
+
+  const handleAddSubLocation = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setSubLocations((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          name: "",
+          itemName: "",
+          itemCode: "",
+          racks: "",
+        },
+      ]);
+      setIsLoading(false);
+    }, 300);
+  };
+
+  const handleDeleteSubLocation = (id) => {
+    if (subLocations.length > 1) {
+      setSubLocations(subLocations.filter((loc) => loc.id !== id));
+    }
+  };
+  // Check if all existing rows are filled
+  const isAllFilled = subLocations.every(
+    (loc) =>
+      loc.name.trim() !== "" &&
+      loc.itemName.trim() !== "" &&
+      loc.itemCode.trim() !== "" &&
+      loc.racks.toString().trim() !== ""
+  );
   const [isShowWarehouseDetails, setIsShowWarehouseDetails] = useState(false);
   const [isEditWarehouseDetails, setIsEditWarehouseDetails] = useState(false);
   const [warehouseDetails, setWarehouseDetails] = useState({
@@ -64,54 +122,12 @@ const WarehouseMaster = () => {
           id: location.id,
           name: "",
           itemName: "",
+          itemCode: "",
+          racks: "",
         })),
       }));
     }
   }, []);
-
-  const handleDeleteSubLocation = (locationId) => {
-    setIsAddSubLocation((prevLocation) =>
-      prevLocation.filter((location) => location.id !== locationId)
-    );
-
-    setFormData((prev) => ({
-      ...prev,
-      subLocations: prev.subLocations.filter(
-        (location) => location.id !== locationId
-      ),
-    }));
-  };
-
-  const handleLocationChange = (index, field, value) => {
-    const updatedItems = [...formData.subLocations];
-
-    if (field === "item") {
-      const selectedItem = items.find((item) => item.id === parseInt(value));
-      if (selectedItem) {
-        updatedItems[index] = {
-          ...updatedItems[index],
-          item: value,
-          code: selectedItem.code,
-          uom: selectedItem.uom,
-        };
-      }
-    } else if (field === "warehouse") {
-      updatedItems[index] = {
-        ...updatedItems[index],
-        warehouse: value,
-      };
-    } else if (field === "quantity") {
-      updatedItems[index] = {
-        ...updatedItems[index],
-        quantity: value,
-      };
-    }
-
-    setFormData({
-      ...formData,
-      items: updatedItems,
-    });
-  };
 
   useEffect(() => {
     fetchWarehouses();
@@ -283,6 +299,29 @@ const WarehouseMaster = () => {
     setIsAddWarehouse(true);
   };
 
+  // Fetch items data
+  const fetchItems = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/api/items/all");
+
+      if (response.data.status && response.data.data) {
+        const allItems = response.data.data;
+        setItems(allItems);
+      } else {
+        setItems([]);
+      }
+    } catch (error) {
+      console.error("Error fetching items:", error);
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchItems();
+  }, []);
   const handleViewDetails = (warehouse, e) => {
     e.preventDefault();
 
@@ -452,15 +491,31 @@ const WarehouseMaster = () => {
 
     if (Object.keys(newErrors).length === 0) {
       e.preventDefault();
+      // const finalData = {
+      //   name: formData.name,
+      //   code: formData.code,
+      //   type: formData.type,
+      //   subLocations,
+      //   status: formData.status,
+      // };
       const finalData = {
         name: formData.name,
         code: formData.code,
         type: formData.type,
-        subLocations: formData.subLocations,
         status: formData.status,
+        subLocations: subLocations.map(
+          ({ name, racks, itemCode, itemName }) => ({
+            subLocationCode: name,
+            rackNumber: racks,
+            itemCode,
+            itemName,
+          })
+        ),
       };
 
-      console.log("Submitting add warehouse form");
+      console.log(
+        "Submitting add warehouse form: " + JSON.stringify(finalData)
+      );
       api
         .post("/api/warehouses/add", finalData)
         .then((response) => {
@@ -510,6 +565,8 @@ const WarehouseMaster = () => {
         id: location.id,
         name: "",
         itemName: "",
+        itemCode: "",
+        racks: "",
       })),
       status: "active",
     });
@@ -596,8 +653,43 @@ const WarehouseMaster = () => {
   // RBAC
   const ability = useContext(AbilityContext);
 
+  const customStyles = {
+    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+    menu: (base) => ({ ...base, zIndex: 9999 }),
+    option: (provided) => ({
+      ...provided,
+      fontSize: "0.8rem",
+      padding: "6px 10px",
+    }),
+  };
+
   return (
     <div>
+      {isLoading && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            backgroundColor: "rgba(0, 0, 0, 0.6)",
+            zIndex: 9999,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            pointerEvents: "all",
+          }}
+        >
+          <div className="orbit-loader">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      )}
+
       {/* Header section */}
       <nav className="navbar bg-light border-body" data-bs-theme="light">
         <div className="container-fluid">
@@ -817,81 +909,145 @@ const WarehouseMaster = () => {
 
               <div className="parts-section">
                 <div className="bom-list-header">
-                  <h2>Add Sub Locations</h2>
+                  <h2>
+                    <i className="fa-solid fa-location-arrow"></i>
+                    Add Sub Locations
+                  </h2>
                 </div>
                 <div className="item-table-container mt-3">
-                  <table>
+                  <table className="table">
                     <thead>
                       <tr>
                         <th>Location Name</th>
                         <th>Item</th>
+                        <th>Racks</th>
+                        <th>Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="text-break">
-                      {" "}
-                      {isAddSubLocation.map((location, index) => {
-                        const currentLocation = formData.subLocations.find(
-                          (item) => item.id === location.id
-                        ) || {
-                          id: location.id,
-                          name: "",
-                          itemName: "",
-                        };
+                    <tbody>
+                      {subLocations.map((location, index) => (
+                        <tr key={location.id}>
+                          <td>
+                            <div className="position-relative w-100">
+                              <i className="fa-solid fa-location-dot position-absolute z-0 input-icon"></i>
+                              <input
+                                className="form-control text-8 ps-5"
+                                placeholder="Enter Sub Location"
+                                value={location.name}
+                                onChange={(e) =>
+                                  handleLocationChange(
+                                    index,
+                                    "name",
+                                    e.target.value
+                                  )
+                                }
+                              />
+                            </div>
+                          </td>
+                          <td>
+                            <Select
+                              styles={customStyles}
+                              classNamePrefix="react-select"
+                              placeholder="Select Item"
+                              value={
+                                location.itemName
+                                  ? items
+                                      .map((item) => ({
+                                        id: item.id,
+                                        value: item.id,
+                                        label: `(${item.code}) ${item.name}`,
+                                        name: item.name, // for matching by name
+                                      }))
+                                      .find(
+                                        (option) =>
+                                          option.name === location.itemName
+                                      ) || null
+                                  : null
+                              }
+                              onChange={(selectedOption) => {
+                                handleLocationChange(index, null, {
+                                  itemName: selectedOption
+                                    ? selectedOption.name
+                                    : "",
+                                  itemCode: selectedOption
+                                    ? selectedOption.code
+                                    : "",
+                                });
+                              }}
+                              options={items.map((item) => ({
+                                id: item.id,
+                                value: item.id,
+                                label: `(${item.code}) ${item.name}`,
+                                name: item.name,
+                                code: item.code,
+                              }))}
+                              isSearchable
+                              menuPortalTarget={document.body}
+                            />
+                          </td>
 
-                        return (
-                          <tr key={location.id}>
-                            <td>
-                              <div className="field-wrapper">
-                                <div className="position-relative w-100">
-                                  <i className="fas fa-cogs position-absolute z-0 input-icon"></i>
-                                  <select
-                                    className="form-control text-font w-100 ps-5"
-                                    required
-                                    value={currentLocation.item}
-                                    onChange={(e) =>
-                                      handleItemChange(
-                                        index,
-                                        "item",
-                                        e.target.value
-                                      )
-                                    }
-                                  >
-                                    <option value="">Select Item</option>
-                                    {items.map((item) => (
-                                      <option key={item.id} value={item.id}>
-                                        {item.name} ({item.code})
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="actions">
-                              <div className="field-wrapper">
-                                <button
-                                  type="button"
-                                  className="btn-icon btn-danger ms-2"
-                                  title="Remove Sub Location"
-                                  onClick={() =>
-                                    handleDeleteSubLocation(location.id)
-                                  }
-                                  disabled={isAddSubLocation.length <= 1}
-                                >
-                                  <i className="fas fa-trash"></i>
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
+                          {/* <td>
+                            <div className="position-relative w-100">
+                              <i className="fas fa-box position-absolute z-0 input-icon"></i>
+                              <select
+                                className="form-select text-8 ps-5"
+                                value={location.itemName}
+                                onChange={(e) =>
+                                  handleLocationChange(
+                                    index,
+                                    "itemName",
+                                    e.target.value
+                                  )
+                                }
+                              >
+                                <option value="">Select Item</option>
+                                {itemOptions}
+                              </select>
+                            </div>
+                          </td> */}
+                          <td>
+                            <div className="position-relative w-100">
+                              <i className="fa-solid fa-boxes-stacked position-absolute z-0 input-icon"></i>
+                              <input
+                                type="number"
+                                className="form-control text-8 ps-5"
+                                placeholder="Enter Racks"
+                                value={location.racks}
+                                onChange={(e) =>
+                                  handleLocationChange(
+                                    index,
+                                    "racks",
+                                    e.target.value
+                                  )
+                                }
+                                min="0"
+                              />
+                            </div>
+                          </td>
+                          <td style={{ minWidth: "4rem" }}>
+                            <button
+                              type="button"
+                              className="btn btn-outline-danger text-8"
+                              onClick={() =>
+                                handleDeleteSubLocation(location.id)
+                              }
+                              disabled={subLocations.length <= 1}
+                            >
+                              <i className="fas fa-trash"></i>
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
+
                   <button
                     type="button"
-                    className="btn btn-secondary text-font m-3"
+                    className="btn btn-secondary text-8 ms-2"
+                    onClick={handleAddSubLocation}
+                    // disabled={!isAllFilled || isLoading}
                   >
-                    <i className="fas fa-plus me-2"></i>
-                    Add Sub Loaction
+                    <i className="fas fa-plus me-2"></i>Add More
                   </button>
                 </div>
               </div>
@@ -971,7 +1127,7 @@ const WarehouseMaster = () => {
             <tbody className="text-break">
               {loading ? (
                 <tr>
-                  <td colSpan="6" className="text-center">
+                  <td colSpan="7" className="text-center">
                     <div className="spinner-border text-primary" role="status">
                       <span className="visually-hidden">Loading...</span>
                     </div>
@@ -979,7 +1135,7 @@ const WarehouseMaster = () => {
                 </tr>
               ) : filteredWarehouses.length === 0 ? (
                 <tr className="no-data-row">
-                  <td colSpan="6" className="no-data-cell">
+                  <td colSpan="7" className="no-data-cell">
                     <div className="no-data-content">
                       <i className="fas fa-warehouse no-data-icon"></i>
                       <p className="no-data-text">

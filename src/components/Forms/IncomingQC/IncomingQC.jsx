@@ -406,31 +406,27 @@ const IncomingQC = () => {
     // console.log("IQC payload: " + JSON.stringify(payload));
 
     try {
+      // Build payload for JSON part
+      const payload = {
+        transactionNumber: trno,
+        batchUpdates: batchDetails.map((batch) => {
+          const batchData = batchStatuses[batch.id] || {};
+          return {
+            itemId: batch.id, // must match DTO field name
+            qcStatus: batchData.status,
+            warehouseId: batchData.warehouseId,
+            defectCategory: batchData.defectCategory,
+            remarks: batchData.remarks,
+          };
+        }),
+      };
+
       const formData = new FormData();
-      formData.append("transactionNumber", trno);
-      formData.append("attachment", selectedFile);
+      formData.append("data", JSON.stringify(payload)); // JSON for batches + transaction number
+      formData.append("attachment", selectedFile); // file part
 
-      batchDetails.forEach((batch, index) => {
-        const batchData = batchStatuses[batch.id] || {};
-        formData.append(`batches[${index}].id`, batch.id);
-        formData.append(`batches[${index}].qcStatus`, batchData.status);
-        if (batchData.warehouseId)
-          formData.append(
-            `batches[${index}].warehouseId`,
-            batchData.warehouseId
-          );
-        if (batchData.defectCategory)
-          formData.append(
-            `batches[${index}].defectCategory`,
-            batchData.defectCategory
-          );
-        if (batchData.remarks)
-          formData.append(`batches[${index}].remarks`, batchData.remarks);
-      });
-
-      formData.forEach((value, key) => {
-        console.log(key, value);
-      });
+      // Debug log
+      formData.forEach((value, key) => console.log(key, value));
 
       const response = await api.put(
         "/api/receipt/qc-status/update",
@@ -441,19 +437,6 @@ const IncomingQC = () => {
           },
         }
       );
-      // const formData = new FormData();
-      // // formData.append("attachment", selectedFile);
-      // formData.append("data", JSON.stringify(payload));
-
-      // const response = await api.put(
-      //   "/api/receipt/qc-status/update",
-      //   formData,
-      //   {
-      //     headers: {
-      //       "Content-Type": "multipart/form-data",
-      //     },
-      //   }
-      // );
 
       // Refresh tables
       fetchPassFailQC();

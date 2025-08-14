@@ -127,7 +127,7 @@ const MaterialIssueRequest = () => {
         toast.error(response.data.message || "Error saving request");
       }
     } catch (error) {
-      toast.error("Error submitting request");
+      toast.error(error.response.data.message || "Error submitting request");
       console.error("Error submitting material request:", error);
     }
   };
