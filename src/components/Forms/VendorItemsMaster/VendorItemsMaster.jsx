@@ -12,28 +12,8 @@ import { saveAs } from "file-saver";
 import "./VendorItemsMaster.css";
 
 const VendorItemsMaster = () => {
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-
-  const totalEntries = data.length;
-  const totalPages = Math.ceil(totalEntries / itemsPerPage);
-
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = Math.min(startIndex + itemsPerPage, totalEntries);
-  const currentItems = data.slice(startIndex, endIndex);
-
-  const handlePageChange = (page) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  };
-
-  const handleItemsPerPageChange = (e) => {
-    setItemsPerPage(Number(e.target.value));
-    setCurrentPage(1);
-  };
-
+  const [loading, setLoading] = useState(true);
+  const [dataFetched, setDataFetched] = useState(false);
   const [vendorItems, setVendorItems] = useState([]);
   const [errors, setErrors] = useState({});
   const { isAddVendorItem, setIsAddVendorItem } = useContext(AppContext);
@@ -241,6 +221,7 @@ const VendorItemsMaster = () => {
 
   // Function to fetch vendor items from API
   const fetchVendorItems = () => {
+    setLoading(true);
     api
       .get("/api/vendor-item/all")
       .then((response) => {
@@ -257,6 +238,10 @@ const VendorItemsMaster = () => {
       .catch((error) => {
         toast.error("Error fetching vendor items");
         console.error("Error fetching vendor items:", error);
+      })
+      .finally(() => {
+        setLoading(false);
+        setDataFetched(true);
       });
   };
 
@@ -904,6 +889,17 @@ const VendorItemsMaster = () => {
     }
   };
 
+  // States for pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  const totalEntries = filteredVendorItems.length;
+  const totalPages = Math.ceil(totalEntries / itemsPerPage);
+
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, totalEntries);
+  const currentItems = filteredVendorItems.slice(startIndex, endIndex);
+
   return (
     <div>
       {isLoading && (
@@ -1315,7 +1311,25 @@ const VendorItemsMaster = () => {
               </tr>
             </thead>
             <tbody className="text-break">
-              {filteredVendorItems.length === 0 ? (
+              {loading || vendorItems.length === 0 ? (
+                // Still loading data
+                <tr>
+                  <td colSpan="12" className="text-center">
+                    <div className="my-3">
+                      <i className="fas fa-spinner fa-spin me-2"></i> Loading
+                      vendor items...
+                    </div>
+                  </td>
+                </tr>
+              ) : !dataFetched ? (
+                // Before data is fetched, just keep loader
+                <tr>
+                  <td colSpan="12" className="text-center">
+                    Loading vendor items...
+                  </td>
+                </tr>
+              ) : filteredVendorItems.length === 0 ? (
+                // Data fetched but empty
                 <tr className="no-data-row">
                   <td colSpan="8" className="no-data-cell">
                     <div className="no-data-content">
@@ -1325,16 +1339,11 @@ const VendorItemsMaster = () => {
                           ? "No vendor-item assignments found"
                           : "No matching assignments found"}
                       </p>
-                      <p className="no-data-subtext">
-                        {vendorItems.length === 0
-                          ? 'Click the "Add New Assignment" button to create your first assignment'
-                          : "Try adjusting your search or filters"}
-                      </p>
                     </div>
                   </td>
                 </tr>
               ) : (
-                filteredVendorItems.map((assignment) => (
+                currentItems.map((assignment) => (
                   <tr key={assignment.id}>
                     <td className="checkbox-cell ps-4">
                       <input
@@ -1421,18 +1430,40 @@ const VendorItemsMaster = () => {
 
           {/* Pagination */}
           <div className="pagination-container">
-            <div className="pagination-info">Showing 1-2 of 25 entries</div>
+            <div className="pagination-info">
+              Showing {totalEntries === 0 ? 0 : startIndex + 1}-{endIndex} of{" "}
+              {totalEntries} entries
+            </div>
+
             <div className="pagination">
-              <button className="btn-page" disabled>
+              <button
+                className="btn-page"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((prev) => prev - 1)}
+              >
                 <i className="fas fa-chevron-left"></i>
               </button>
-              <button className="btn-page active">1</button>
-              <button className="btn-page" disabled>
+
+              {/* Show only current page number */}
+              <button className="btn-page active">{currentPage}</button>
+
+              <button
+                className="btn-page"
+                disabled={currentPage === totalPages || totalPages === 0}
+                onClick={() => setCurrentPage((prev) => prev + 1)}
+              >
                 <i className="fas fa-chevron-right"></i>
               </button>
             </div>
+
             <div className="items-per-page">
-              <select>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+              >
                 <option value="10">10 per page</option>
                 <option value="25">25 per page</option>
                 <option value="50">50 per page</option>
