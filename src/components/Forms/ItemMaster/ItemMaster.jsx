@@ -582,48 +582,46 @@ const ItemMaster = () => {
     const newErrors = validateForm(itemDetails);
     setErrors(newErrors);
 
-    if (Object.keys(newErrors).length === 0) {
-      const finalData = {
-        name: itemDetails.name,
-        code: itemDetails.code,
-        uom: itemDetails.uom,
-        groupName: itemDetails.groupName,
-        status: itemDetails.status || "active",
-        price: itemDetails.price || null,
-        stQty: parseInt(itemDetails.stQty) || 0,
-        life: parseInt(itemDetails.life) || 0,
-        inventoryItem: itemDetails.inventoryItem || false,
-        iqc: itemDetails.iqc,
-      };
+    const finalData = {
+      name: itemDetails.name,
+      code: itemDetails.code,
+      uom: itemDetails.uom,
+      groupName: itemDetails.groupName,
+      status: itemDetails.status || "active",
+      price: itemDetails.price || null,
+      stQty: parseInt(itemDetails.stQty) || 0,
+      life: parseInt(itemDetails.life) || 0,
+      inventoryItem: itemDetails.inventoryItem || false,
+      iqc: itemDetails.iqc,
+    };
 
-      console.log(finalData);
+    console.log(finalData);
 
-      api
-        .put(`/api/items/update/${itemDetails.id}`, finalData)
-        .then((response) => {
-          console.log("Item updated response:", response.data);
-          // Check for success status in the API response structure
-          if (response.data.status) {
-            // Show success message
-            toast.success(response.data.message || "Item Updated Successfully");
+    api
+      .put(`/api/items/update/${itemDetails.id}`, finalData)
+      .then((response) => {
+        console.log("Item updated response:", response.data);
+        // Check for success status in the API response structure
+        if (response.data.status) {
+          // Show success message
+          toast.success(response.data.message || "Item Updated Successfully");
 
-            // Close the modal
-            setIsEditItemDetails(false);
-            // Reset item details
-            setItemDetails({});
-            // Refresh the items list
-            fetchItems();
-          } else {
-            // Show error message from API
-            toast.error(response.data.message || "Error updating item");
-          }
-        })
-        .catch((error) => {
-          console.error("Error updating item:", error);
-          // Show generic error message
-          toast.error("Error updating item. Please try again.");
-        });
-    }
+          // Close the modal
+          setIsEditItemDetails(false);
+          // Reset item details
+          setItemDetails({});
+          // Refresh the items list
+          fetchItems();
+        } else {
+          // Show error message from API
+          toast.error(response.data.message || "Error updating item");
+        }
+      })
+      .catch((error) => {
+        console.error("Error updating item:", error);
+        // Show generic error message
+        toast.error("Error updating item. Please try again.");
+      });
   };
 
   useEffect(() => {
@@ -1892,10 +1890,10 @@ const ItemMaster = () => {
                           Inventory Item
                         </label>
                         <div className="position-relative w-100">
-                          {itemDetails.inventoryItem === "true" && (
+                          {String(itemDetails.inventoryItem) === "true" && (
                             <i className="fas fa-square-check position-absolute z-0 input-icon ms-2"></i>
                           )}
-                          {itemDetails.inventoryItem === "false" && (
+                          {String(itemDetails.inventoryItem) === "false" && (
                             <i className="fas fa-square-xmark position-absolute z-0 input-icon ms-2"></i>
                           )}
                           {itemDetails.inventoryItem === "" && (
@@ -1918,11 +1916,11 @@ const ItemMaster = () => {
                             <option value="true">Yes</option>
                             <option value="false">No</option>
                           </select>
-                          <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                         </div>
                       </div>
                     </div>
-                    {itemDetails.inventoryItem === "true" && (
+                    {(itemDetails.inventoryItem === true ||
+                      itemDetails.inventoryItem === "true") && (
                       <div className="row form-style">
                         <div className="col-4 d-flex flex-column form-group">
                           <div className="d-flex align-items-center gap-2">

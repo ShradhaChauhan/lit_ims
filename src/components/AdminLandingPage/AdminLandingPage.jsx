@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./AdminLandingPage.css";
+import { Modal, Button } from "react-bootstrap";
 import {
   FaBoxOpen,
   FaClock,
@@ -59,6 +60,7 @@ const frames = [
 const AdminLandingPage = () => {
   // All states
   const [totalItems, setTotalItems] = useState(0);
+  const [totalItemsData, setTotalItemsData] = useState([]);
   const [pendingApprovals, setPendingApprovals] = useState(0);
   const [pendingQC, setPendingQC] = useState(0);
   const [qcPassCount, setQcPassCount] = useState(0);
@@ -350,6 +352,7 @@ const AdminLandingPage = () => {
     try {
       const date = format(Date.now(), "yyyy-MM-dd");
       const response = await api.get(`/api/receipt/items-by-date?date=${date}`);
+      setTotalItemsData(response.data.data.items);
       setTotalItems(response.data.data.count);
       const rawData = response.data.data.items;
       const today = new Date();
@@ -627,60 +630,66 @@ const AdminLandingPage = () => {
   const cardData = [
     {
       title: "Incoming Material",
-      value: totalItems,
+      data: totalItemsData,
+      value: totalItems === 0 ? totalItems : "+" + totalItems,
       change:
         totalItems === 0
           ? "0 incoming material from yesterday"
           : "+" + totalItems + " from yesterday",
       icon: <FaBoxOpen />,
       iconColor: "bg-primary",
-      changeColor: "text-success",
+      changeColor: "text-secondary",
     },
     {
       title: "QC Pending",
-      value: pendingQC,
+      data: totalItemsData,
+      value: pendingQC === 0 ? pendingQC : "+" + pendingQC,
       change:
         pendingQC === 0 ? "0 pending QC" : "+" + pendingQC + " from yesterday",
       icon: <FaClipboardList />,
       iconColor: pendingQC === 0 ? "bg-warning" : "bg-danger",
-      changeColor: pendingQC === 0 ? "text-success" : "text-danger",
+      changeColor: pendingQC === 0 ? "text-secondary" : "text-danger",
     },
     {
       title: "Material Request",
-      value: materialRequest,
+      data: totalItemsData,
+      value: materialRequest === 0 ? materialRequest : "+" + materialRequest,
       change:
         materialRequest === 0
           ? "0 material request from yesterday"
           : "+" + materialRequest + " material request from yesterday",
       icon: <FaIndustry />,
       iconColor: materialRequest === 0 ? "bg-success" : "bg-danger",
-      changeColor: materialRequest === 0 ? "text-success" : "text-danger",
+      changeColor: materialRequest === 0 ? "text-secondary" : "text-danger",
     },
     {
       title: "Pending Approvals",
-      value: pendingApprovals,
+      data: totalItemsData,
+      value: pendingApprovals === 0 ? pendingApprovals : "+" + pendingApprovals,
       change:
         pendingApprovals === 0
           ? "0 pending approvals from yesterday"
           : "+" + pendingApprovals + " pending approvals from yesterday",
       icon: <FaClock />,
       iconColor: pendingApprovals === 0 ? "bg-warning" : "bg-danger",
-      changeColor: pendingApprovals === 0 ? "text-success" : "text-danger",
+      changeColor: pendingApprovals === 0 ? "text-secondary" : "text-danger",
     },
     {
       title: "Material Transfer",
-      value: materialTransfer,
+      data: totalItemsData,
+      value: materialTransfer === 0 ? materialTransfer : "+" + materialTransfer,
       change:
         materialTransfer === 0
           ? "0 material transfer from yesterday"
           : "+" + materialTransfer + " material transfer from yesterday",
       icon: <FaArrowAltCircleRight />,
       iconColor: materialTransfer === 0 ? "bg-primary" : "bg-success",
-      changeColor: materialTransfer === 0 ? "text-primary" : "text-success",
+      changeColor: materialTransfer === 0 ? "text-secondary" : "text-success",
     },
     {
       title: "Material Receipt",
-      value: materialReceipt,
+      data: totalItemsData,
+      value: materialReceipt === 0 ? materialReceipt : "+" + materialReceipt,
       change:
         materialReceipt === 0
           ? "0 material receipt from yesterday"
@@ -689,40 +698,43 @@ const AdminLandingPage = () => {
             " confirmed material receipt from yesterday",
       icon: <FaReceipt />,
       iconColor: "bg-success",
-      changeColor: "text-success",
+      changeColor: "text-secondary",
     },
     {
       title: "WIP Returns",
-      value: wipReturn,
+      data: totalItemsData,
+      value: wipReturn === 0 ? wipReturn : "+" + wipReturn,
       change:
         wipReturn === 0
           ? "0 WIP return from yesterday"
           : "+" + wipReturn + " WIP return from yesterday",
       icon: <FaUndoAlt />,
       iconColor: wipReturn === 0 ? "bg-warning" : "bg-success",
-      changeColor: wipReturn === 0 ? "text-danger" : "text-success",
+      changeColor: wipReturn === 0 ? "text-secondary" : "text-success",
     },
     {
       title: "Rejected Items (IQC)",
-      value: qcFailCount,
+      data: totalItemsData,
+      value: qcFailCount === 0 ? qcFailCount : "+" + qcFailCount,
       change:
         qcFailCount === 0
           ? "0 items rejected from yesterday"
           : "+" + qcFailCount + " items rejected from yesterday",
       icon: <FaTimes />,
       iconColor: qcFailCount === 0 ? "bg-info" : "bg-danger",
-      changeColor: qcFailCount === 0 ? "text-success" : "text-danger",
+      changeColor: qcFailCount === 0 ? "text-secondary" : "text-danger",
     },
     {
       title: "Rejected Items (WIP)",
-      value: wipRejectedItems,
+      data: totalItemsData,
+      value: wipRejectedItems === 0 ? wipRejectedItems : "+" + wipRejectedItems,
       change:
         wipRejectedItems === 0
           ? "0 items rejected from yesterday"
           : "+" + wipRejectedItems + " items rejected from yesterday",
       icon: <FaExclamationTriangle />,
       iconColor: wipRejectedItems === 0 ? "bg-info" : "bg-danger",
-      changeColor: wipRejectedItems === 0 ? "text-success" : "text-danger",
+      changeColor: wipRejectedItems === 0 ? "text-secondary" : "text-danger",
     },
   ];
 
@@ -758,6 +770,20 @@ const AdminLandingPage = () => {
   const handleBellClick = () => {
     // Mark all as read (count becomes 0 but keep list for viewing)
     setUnreadCount(0);
+  };
+
+  // View details modal
+  const [showModal, setShowModal] = useState(false);
+  const [selectedCard, setSelectedCard] = useState(null);
+
+  const handleShow = (card) => {
+    setSelectedCard(card);
+    setShowModal(true);
+  };
+
+  const handleClose = () => {
+    setSelectedCard(null);
+    setShowModal(false);
   };
 
   return (
@@ -823,14 +849,90 @@ const AdminLandingPage = () => {
                     {card.icon}
                   </div>
                 </div>
-                <h4 className="fw-bold">{card.value}</h4>
-                <p className={`mb-0 small ${card.changeColor}`}>
-                  {card.change}
-                </p>
+                <h4 className={`fw-bold ${card.changeColor}`}>{card.value}</h4>
+
+                <button
+                  className="btn btn-outline-primary text-8 w-75 mt-2"
+                  type="button"
+                  onClick={() => handleShow(card)} // ✅ important
+                >
+                  <i className="fas fa-eye me-2"></i>View Full Report
+                </button>
               </div>
             </div>
           </div>
         ))}
+        {/* Modal */}
+        <Modal show={showModal} onHide={handleClose} size="lg" centered>
+          <Modal.Header closeButton>
+            <Modal.Title>
+              <i className="fa-solid fa-clipboard-list me-2"></i>
+              {selectedCard?.title} - Full Report
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            {selectedCard?.data && selectedCard.data.length > 0 ? (
+              <>
+                {selectedCard.title === "Incoming Material" && (
+                  <table className="table table-bordered table-striped">
+                    <thead>
+                      <tr>
+                        <th>Vendor Code</th>
+                        <th>Vendor Name</th>
+                        <th>Item Code</th>
+                        <th>Item Name</th>
+                        <th>Inward Time</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedCard.data.map((row, i) => (
+                        <tr key={i}>
+                          <td>{row.vendorCode}</td>
+                          <td>{row.vendorName}</td>
+                          <td>{row.itemCode}</td>
+                          <td>{row.itemName}</td>
+                          <td>{row.createdAt}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+
+                {selectedCard.type === "order" && (
+                  <table className="table table-bordered table-striped">
+                    <thead>
+                      <tr>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedCard.data.map((row, i) => (
+                        <tr key={i}>
+                          <td>{row.orderId}</td>
+                          <td>{row.customer}</td>
+                          <td>{row.status}</td>
+                          <td>{row.date}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </>
+            ) : (
+              <p className="d-flex justify-content-center">
+                No details available.
+              </p>
+            )}
+          </Modal.Body>
+          <Modal.Footer>
+            <button className="btn btn-secondary text-8" onClick={handleClose}>
+              <i className="fa-solid fa-xmark me-1"></i>Close
+            </button>
+          </Modal.Footer>
+        </Modal>
       </div>
       {/* Banner */}
       <div className="container-fluid">

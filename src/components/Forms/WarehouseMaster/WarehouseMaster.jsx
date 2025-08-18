@@ -105,6 +105,7 @@ const WarehouseMaster = () => {
     code: "",
     type: "",
     status: "",
+    subLocations: [],
   });
   const [warehouses, setWarehouses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -336,6 +337,7 @@ const WarehouseMaster = () => {
             name: response.data.data.name,
             code: response.data.data.code,
             type: response.data.data.type,
+            subLocations: response.data.data.subLocations,
             status: response.data.data.status,
           });
           setIsShowWarehouseDetails(true);
@@ -383,6 +385,7 @@ const WarehouseMaster = () => {
             name: warehouseData.name,
             code: warehouseData.code,
             type: warehouseData.type,
+            subLocations: warehouseData.subLocations,
             status: warehouseData.status,
           });
           setIsEditWarehouseDetails(true);
@@ -943,8 +946,8 @@ const WarehouseMaster = () => {
                 </div>
               </div>
 
-              <div className="parts-section">
-                <div className="bom-list-header">
+              <div className="subLocation-section">
+                <div className="form-header">
                   <h2>
                     <i className="fa-solid fa-location-arrow"></i>
                     Add Sub Locations
@@ -1021,26 +1024,6 @@ const WarehouseMaster = () => {
                               menuPortalTarget={document.body}
                             />
                           </td>
-
-                          {/* <td>
-                            <div className="position-relative w-100">
-                              <i className="fas fa-box position-absolute z-0 input-icon"></i>
-                              <select
-                                className="form-select text-8 ps-5"
-                                value={location.itemName}
-                                onChange={(e) =>
-                                  handleLocationChange(
-                                    index,
-                                    "itemName",
-                                    e.target.value
-                                  )
-                                }
-                              >
-                                <option value="">Select Item</option>
-                                {itemOptions}
-                              </select>
-                            </div>
-                          </td> */}
                           <td>
                             <div className="position-relative w-100">
                               <i className="fa-solid fa-boxes-stacked position-absolute z-0 input-icon"></i>
@@ -1363,7 +1346,7 @@ const WarehouseMaster = () => {
           aria-labelledby="warehouseDetailModalLabel"
           aria-hidden="true"
         >
-          <div className="modal-dialog">
+          <div className="modal-dialog modal-lg">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title" id="warehouseDetailModalLabel">
@@ -1401,10 +1384,6 @@ const WarehouseMaster = () => {
                     <span>{warehouseDetails.type}</span>
                   </div>
                   <div className="detail-item">
-                    <strong>Sub Location:</strong>
-                    <span>{warehouseDetails.subLocations}</span>
-                  </div>
-                  <div className="detail-item">
                     <strong>Status:</strong>
                     <span
                       className={`badge status ${warehouseDetails.status?.toLowerCase()} w-50`}
@@ -1413,6 +1392,34 @@ const WarehouseMaster = () => {
                         warehouseDetails.status?.slice(1)}
                     </span>
                   </div>
+                  {/* Sub Locations Section */}
+                  {warehouseDetails.subLocations &&
+                    warehouseDetails.subLocations.length > 0 && (
+                      <div className="mt-3 detail-item">
+                        <strong className="mb-2">Sub Locations:</strong>
+                        {warehouseDetails.subLocations.map((subLoc) => (
+                          <div
+                            key={subLoc.id}
+                            className="card p-2 mb-2 border shadow-sm"
+                            style={{ fontSize: "0.9rem" }}
+                          >
+                            <div>
+                              <strong>Location:</strong>{" "}
+                              {subLoc.subLocationCode}
+                            </div>
+                            <div>
+                              <strong>Rack No:</strong> {subLoc.rackNumber}
+                            </div>
+                            <div>
+                              <strong>Item Code:</strong> {subLoc.itemCode}
+                            </div>
+                            <div>
+                              <strong>Item Name:</strong> {subLoc.itemName}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                 </div>
               </div>
               <div className="modal-footer">
@@ -1570,32 +1577,6 @@ const WarehouseMaster = () => {
                             </select>
                           </div>
                         </div>
-                        {warehouseDetails.subLocations && (
-                          <div className="col-4 d-flex flex-column form-group">
-                            <label
-                              htmlFor="subLocations"
-                              className="form-label"
-                            >
-                              Sub Location{" "}
-                              <span className="text-danger fs-6">*</span>
-                            </label>
-                            <div className="position-relative w-100">
-                              <i className="fa-solid fa-location-dot position-absolute z-0 input-icon"></i>
-                              <inout
-                                className="form-control text-font switch-padding"
-                                id="subLocations"
-                                value={warehouseDetails.subLocations}
-                                onChange={(e) =>
-                                  setWarehouseDetails({
-                                    ...warehouseDetails,
-                                    subLocations: e.target.value,
-                                  })
-                                }
-                                placeholder="Enter Sub Loaction"
-                              />
-                            </div>
-                          </div>
-                        )}
                         <div className="col-4 d-flex flex-column form-group">
                           <label htmlFor="status" className="form-label">
                             Status
