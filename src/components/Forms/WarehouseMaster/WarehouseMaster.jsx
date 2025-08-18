@@ -674,30 +674,33 @@ const WarehouseMaster = () => {
       setSelectedFile(file);
     }
   };
+const handleSaveToAPI = async () => {
+  if (!selectedFile) {
+    toast.error("Please select an excel file");
+    return;
+  }
+  try {
+    setIsLoading(true);
 
-  const handleSaveToAPI = async () => {
-    if (!selectedFile) {
-      toast.error("Please select an excel file");
-      return;
-    }
-    try {
-      setIsLoading(true);
+    const formData = new FormData();
+    formData.append("file", selectedFile); // "file" must match @RequestParam name in backend
 
-      await api.post("/api/warehouses/import-excel", selectedFile, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+    await api.post("/api/warehouses/import-excel", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
 
-      fetchWarehouses();
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error saving excel data:", error);
-      toast.error(error.response.data.message || "Error saving excel data");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    fetchWarehouses();
+    setIsLoading(false);
+  } catch (error) {
+    console.error("Error saving excel data:", error);
+    toast.error(error.response?.data?.message || "Error saving excel data");
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   return (
     <div>
