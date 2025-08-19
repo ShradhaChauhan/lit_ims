@@ -80,6 +80,7 @@ const AdminLandingPage = () => {
   const [wipReturnData, setWipReturnData] = useState([]);
   const [wipRejectedItems, setWipRejectedItems] = useState([]);
   const [incomingMaterialToday, setIncomingMaterialToday] = useState([]);
+  const [pendingQCData, setPendingQCData] = useState([]);
   const { istoken } = useContext(AppContext);
   // Sliding window
   const [index, setIndex] = useState(0);
@@ -114,6 +115,7 @@ const AdminLandingPage = () => {
     try {
       const response = await api.get("/api/receipt/qc-status/result");
       const rawData = response.data.data;
+      console.log("Raw QC Data:", rawData);
       const today = new Date();
 
       // Step 1: Initialize all time slots (1 AM to 12 PM)
@@ -153,6 +155,7 @@ const AdminLandingPage = () => {
         (a, b) =>
           new Date(`2000-01-01 ${a.time}`) - new Date(`2000-01-01 ${b.time}`)
       );
+      console.log("Processed QC Chart Data:", chartDataArray);
 
       setLineChartData(chartDataArray);
     } catch (error) {
@@ -549,6 +552,22 @@ const AdminLandingPage = () => {
     fetchPendingApprovals();
   }, []);
 
+  // Fetch Pending QC Data
+  const fetchPendingQCData = async () => {
+    try {
+      const response = await api.get("/api/receipt/pending-qc");
+      console.log("Pending QC Data:", response.data.data);
+      setPendingQCData(response.data.data);
+    } catch (error) {
+      toast.error("Error in fetching pending QC data");
+      console.error("Error fetching pending QC data:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchPendingQCData();
+  }, []);
+
   // Fetch Pending QC
   const fetchPendingQC = async () => {
     try {
@@ -638,11 +657,11 @@ const AdminLandingPage = () => {
           : "+" + totalItems + " from yesterday",
       icon: <FaBoxOpen />,
       iconColor: "bg-primary",
-      changeColor: "text-secondary",
+      changeColor: totalItems === 0 ? "text-secondary" : "text-success",
     },
     {
       title: "QC Pending",
-      data: totalItemsData,
+      data: pendingQCData,
       value: pendingQC === 0 ? pendingQC : "+" + pendingQC,
       change:
         pendingQC === 0 ? "0 pending QC" : "+" + pendingQC + " from yesterday",
@@ -898,23 +917,51 @@ const AdminLandingPage = () => {
                   </table>
                 )}
 
-                {selectedCard.type === "order" && (
+                {selectedCard.title === "QC Pending" && (
                   <table className="table table-bordered table-striped">
                     <thead>
                       <tr>
-                        <th>Order ID</th>
-                        <th>Customer</th>
-                        <th>Status</th>
-                        <th>Date</th>
+                        <th>Transaction Number</th>
+                        <th>Pending Items</th>
                       </tr>
                     </thead>
                     <tbody>
                       {selectedCard.data.map((row, i) => (
                         <tr key={i}>
-                          <td>{row.orderId}</td>
-                          <td>{row.customer}</td>
-                          <td>{row.status}</td>
-                          <td>{row.date}</td>
+                          <td>{row.transactionNumber}</td>
+                          <td>
+                            {row.pendingItems.map((p, index) => (
+                              <table
+                                key={index}
+                                className="table table-sm table-bordered mt-2"
+                              >
+                                <thead>
+                                  <tr>
+                                    <th>Batch Number</th>
+                                    <th>Item</th>
+                                    <th>Quantity</th>
+                                    <th>Vendor</th>
+                                    <th>Created At</th>
+                                    <th>Attachment</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  <tr>
+                                    <td>{p.batchNumber}</td>
+                                    <td>
+                                      ({p.itemCode}) {p.itemName}
+                                    </td>
+                                    <td>{p.quantity}</td>
+                                    <td>
+                                      ({p.vendorCode}) {p.vendorName}
+                                    </td>
+                                    <td>{p.createdAt}</td>
+                                    <td>{p.attachmentFileName}</td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            ))}
+                          </td>
                         </tr>
                       ))}
                     </tbody>

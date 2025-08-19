@@ -213,6 +213,9 @@ const MaterialIncoming = () => {
             warehouseName = defaultWarehouse.warehouseName;
           }
 
+          console.log("Warehouse ID:", warehouseId);
+          console.log("Warehouse Name:", warehouseName);
+
           // Use the data returned from the API
           const batchData = response.data.data;
 
@@ -1009,7 +1012,7 @@ const MaterialIncoming = () => {
                           setFormData((prev) => ({
                             ...prev,
                             vendorItem: selectedId,
-                            quantity: selectedItem.quantity || "",
+                            quantity: selectedItem.quantity || 0,
                             itemCode: selectedItem.itemCode,
                             itemName: selectedItem.itemName,
                           }));
