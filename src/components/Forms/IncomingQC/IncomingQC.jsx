@@ -11,6 +11,7 @@ const IncomingQC = () => {
   const [isShowQualityCheckForm, setIsShowQualityCheckForm] = useState(false);
   const [searchBatchNo, setSearchBatchNo] = useState("");
   const [iqc, setIqc] = useState([]);
+  const [holdQC, setHoldQC] = useState([]);
   const [passFailQC, setPassFailQC] = useState([]);
   const [batchDetails, setBatchDetails] = useState([]);
   const [isFail, setIsFail] = useState(false);
@@ -160,8 +161,20 @@ const IncomingQC = () => {
     }
   };
 
+  // Fetch hold IQC from API
+  const fetchHoldQC = async () => {
+    try {
+      const response = await api.get("/api/receipt/on-hold");
+      setHoldQC(response.data.data);
+    } catch (error) {
+      toast.error("Error in fetching hold IQC");
+      console.error("Error fetching hold IQC:", error);
+    }
+  };
+
   // Initial data fetch
   useEffect(() => {
+    fetchHoldQC();
     fetchPendingQC();
     fetchWarehouses();
   }, []);
@@ -219,6 +232,28 @@ const IncomingQC = () => {
         return unique;
       });
 
+      setIsShowQualityCheckForm(true);
+    } catch (error) {
+      toast.error("Error in fetching batch details");
+      console.error("Error fetching batch details:", error);
+    }
+  };
+
+  const handleSearchHoldBatchNo = async (batchNo) => {
+    try {
+      const response = await api.get(
+        `/api/receipt/qc/item-by-batch?batchNo=${batchNo}`
+      );
+      const data = response.data.data;
+      setBatchDetails((prev) => {
+        // merge and deduplicate by batchNumber
+        const merged = [...prev, data];
+        const unique = merged.filter(
+          (obj, index, self) =>
+            index === self.findIndex((o) => o.batchNumber === obj.batchNumber)
+        );
+        return unique;
+      });
       setIsShowQualityCheckForm(true);
     } catch (error) {
       toast.error("Error in fetching batch details");
@@ -499,15 +534,6 @@ const IncomingQC = () => {
   //     setIsShowQualityCheckForm(false);
   //   }
   // };
-
-  // QC delete related functions
-  const handleItemCheckboxChange = (qcId) => {
-    setSelectedItems((prevSelected) =>
-      prevSelected.includes(qcId)
-        ? prevSelected.filter((id) => id !== qcId)
-        : [...prevSelected, qcId]
-    );
-  };
 
   const handleSelectAllChange = (e) => {
     const checked = e.target.checked;
@@ -1342,6 +1368,85 @@ const IncomingQC = () => {
                     </React.Fragment>
                   );
                 })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          <div className="pagination-container">
+            <div className="pagination-info">
+              Showing 1 to 5 of 10 pending items
+            </div>
+            <div className="pagination">
+              <button className="btn-page" disabled>
+                <i className="fas fa-chevron-left"></i>
+              </button>
+              {/* Generate page buttons */}
+
+              <button className="btn btn-primary">1</button>
+
+              <button className="btn-page" disabled>
+                <i className="fas fa-chevron-right"></i>
+              </button>
+            </div>
+            <div className="items-per-page">
+              <select>
+                <option value="10">10 per page</option>
+                <option value="25">25 per page</option>
+                <option value="50">50 per page</option>
+                <option value="100">100 per page</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Hold Transactions Table Section */}
+      <div>
+        <div className="table-form-container mx-2 mt-4">
+          <div className="form-header">
+            <h2>
+              {" "}
+              <i className="fa-solid fa-box-archive"></i>Hold Transactions
+            </h2>
+          </div>
+
+          <div className="item-table-container mt-3">
+            <table className="table table-hover">
+              <thead>
+                <tr>
+                  <th>Batch Number</th>
+                  <th>Item</th>
+                  <th>Quantity</th>
+                  <th>Vendor</th>
+                  <th>Created At</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="holdTransactionsTable" className="accordion">
+                {holdQC.map((pfqc) => (
+                  <tr key={pfqc.id}>
+                    <td>{pfqc.batchNumber}</td>
+                    <td>{"(" + pfqc.itemCode + ") " + pfqc.itemName}</td>
+                    <td>{pfqc.quantity}</td>
+                    <td>{pfqc.vendorName}</td>
+                    <td>{pfqc.createdAt}</td>
+                    <td className="actions">
+                      <button
+                        className="btn btn-warning"
+                        style={{ fontSize: "0.7rem" }}
+                        onClick={() => {
+                          handleSearchHoldBatchNo(pfqc.batchNumber);
+                          setTrno(pfqc.trNo);
+                          setIsShowQualityCheckForm(true);
+                        }}
+                      >
+                        <i className="fa-solid fa-clipboard-check me-1"></i>{" "}
+                        Start QC
+                      </button>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>

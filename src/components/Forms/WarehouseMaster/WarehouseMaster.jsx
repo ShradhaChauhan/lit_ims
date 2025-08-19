@@ -119,13 +119,16 @@ const WarehouseMaster = () => {
     if (formData.subLocations.length === 0) {
       setFormData((prev) => ({
         ...prev,
-        subLocations: isAddSubLocation.map((location) => ({
-          id: location.id,
-          name: "",
-          itemName: "",
-          itemCode: "",
-          racks: "",
-        })),
+        subLocations:
+          isAddSubLocation.length > 0
+            ? isAddSubLocation.map((location) => ({
+                id: location.id,
+                name: "",
+                itemName: "",
+                itemCode: "",
+                racks: "",
+              }))
+            : [],
       }));
     }
   }, []);
@@ -506,14 +509,14 @@ const WarehouseMaster = () => {
         code: formData.code,
         type: formData.type,
         status: formData.status,
-        subLocations: subLocations.map(
-          ({ name, racks, itemCode, itemName }) => ({
-            subLocationCode: name,
-            rackNumber: racks,
-            itemCode,
-            itemName,
-          })
-        ),
+        subLocations: subLocations.name
+          ? subLocations.map(({ name, racks, itemCode, itemName }) => ({
+              subLocationCode: name,
+              rackNumber: racks,
+              itemCode,
+              itemName,
+            }))
+          : [],
       };
 
       console.log(
@@ -540,7 +543,8 @@ const WarehouseMaster = () => {
         })
         .catch((error) => {
           toast.error(
-            error.message || "Error in adding warehouse. Please try again."
+            error.response.data.message ||
+              "Error in adding warehouse. Please try again."
           );
           console.error("Error adding warehouse:", error);
         });
