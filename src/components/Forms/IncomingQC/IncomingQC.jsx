@@ -222,15 +222,17 @@ const IncomingQC = () => {
 
       const allDetails = responses.flat();
 
-      setBatchDetails((prev) => {
-        // merge and deduplicate by batchNumber
-        const merged = [...prev, ...allDetails];
-        const unique = merged.filter(
-          (obj, index, self) =>
-            index === self.findIndex((o) => o.batchNumber === obj.batchNumber)
-        );
-        return unique;
-      });
+      setBatchDetails(items);
+
+      // setBatchDetails((prev) => {
+      //   // merge and deduplicate by batchNumber
+      //   const merged = [...prev, ...allDetails];
+      //   const unique = merged.filter(
+      //     (obj, index, self) =>
+      //       index === self.findIndex((o) => o.batchNumber === obj.batchNumber)
+      //   );
+      //   return unique;
+      // });
 
       setIsShowQualityCheckForm(true);
     } catch (error) {
@@ -486,7 +488,9 @@ const IncomingQC = () => {
       toast.success("Batch details submitted successfully!");
     } catch (error) {
       console.error("Error submitting batch details:", error);
-      toast.error("Error submitting batch details");
+      toast.error(
+        error.response.data.message || "Error submitting batch details"
+      );
     }
   };
   // const handlePassBatch = async (e) => {
@@ -849,6 +853,33 @@ const IncomingQC = () => {
                               type="text"
                               className="form-control text-8"
                               value={batch.batchNumber}
+                              disabled
+                            />
+                          </div>
+                          {/* Item Name */}
+                          <div className="text-8 me-3">
+                            <label className="form-label text-8">
+                              Item Name
+                            </label>
+                            <input
+                              type="text"
+                              className="form-control text-8"
+                              value={
+                                "(" + batch.itemCode + ") " + batch.itemName
+                              }
+                              disabled
+                            />
+                          </div>
+
+                          {/* Quantity */}
+                          <div className="text-8 me-3">
+                            <label className="form-label text-8">
+                              Quantity
+                            </label>
+                            <input
+                              type="text"
+                              className="form-control text-8"
+                              value={batch.quantity}
                               disabled
                             />
                           </div>
@@ -1334,7 +1365,7 @@ const IncomingQC = () => {
 
                       {/* Accordion Content Row */}
                       <tr className="p-0">
-                        <td colSpan={4} className="p-0 border-0">
+                        <td colSpan={4} className="p-4 border-0">
                           <div
                             id={collapseId}
                             className="accordion-collapse collapse"
@@ -1424,20 +1455,37 @@ const IncomingQC = () => {
                 </tr>
               </thead>
               <tbody id="holdTransactionsTable" className="accordion">
-                {holdQC.map((pfqc) => (
-                  <tr key={pfqc.id}>
-                    <td>{pfqc.batchNumber}</td>
-                    <td>{"(" + pfqc.itemCode + ") " + pfqc.itemName}</td>
-                    <td>{pfqc.quantity}</td>
-                    <td>{pfqc.vendorName}</td>
-                    <td>{pfqc.createdAt}</td>
+                {holdQC.map((pfqc, index) => (
+                  <tr key={index}>
+                    <td>{pfqc.items[0].batchNumber}</td>
+                    <td>
+                      {"(" +
+                        pfqc.items[0].itemCode +
+                        ") " +
+                        pfqc.items[0].itemName}
+                    </td>
+                    <td>{pfqc.items[0].quantity}</td>
+                    <td>
+                      {" "}
+                      {pfqc.items[0].vendorCode
+                        ? "(" +
+                          pfqc.items[0].vendorCode +
+                          ") " +
+                          pfqc.items[0].vendorName
+                        : "-----"}
+                    </td>
+                    <td>
+                      {pfqc.items[0].createdAt
+                        ? pfqc.items[0].createdAt
+                        : "-----"}
+                    </td>
                     <td className="actions">
                       <button
                         className="btn btn-warning"
                         style={{ fontSize: "0.7rem" }}
                         onClick={() => {
-                          handleSearchHoldBatchNo(pfqc.batchNumber);
-                          setTrno(pfqc.trNo);
+                          handleSearchHoldBatchNo(pfqc.items[0].batchNumber);
+                          setTrno(pfqc.trNumber);
                           setIsShowQualityCheckForm(true);
                         }}
                       >
