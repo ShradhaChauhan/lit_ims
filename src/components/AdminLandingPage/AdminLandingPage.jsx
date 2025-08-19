@@ -36,6 +36,8 @@ import {
   PieChart,
   Pie,
   Cell,
+  BarChart,
+  Bar,
 } from "recharts";
 import {
   format,
@@ -664,7 +666,7 @@ const AdminLandingPage = () => {
       data: pendingQCData,
       value: pendingQC === 0 ? pendingQC : "+" + pendingQC,
       change:
-        pendingQC === 0 ? "0 pending QC" : "+" + pendingQC + " from yesterday",
+        pendingQC === 0 ? "0 pending QC" : "+" + pendingQC + " pending QC",
       icon: <FaClipboardList />,
       iconColor: pendingQC === 0 ? "bg-warning" : "bg-danger",
       changeColor: pendingQC === 0 ? "text-secondary" : "text-danger",
@@ -737,8 +739,8 @@ const AdminLandingPage = () => {
       value: qcFailCount === 0 ? qcFailCount : "+" + qcFailCount,
       change:
         qcFailCount === 0
-          ? "0 items rejected from yesterday"
-          : "+" + qcFailCount + " items rejected from yesterday",
+          ? "0 rejected from yesterday"
+          : "+" + qcFailCount + " rejected from yesterday",
       icon: <FaTimes />,
       iconColor: qcFailCount === 0 ? "bg-info" : "bg-danger",
       changeColor: qcFailCount === 0 ? "text-secondary" : "text-danger",
@@ -749,8 +751,8 @@ const AdminLandingPage = () => {
       value: wipRejectedItems === 0 ? wipRejectedItems : "+" + wipRejectedItems,
       change:
         wipRejectedItems === 0
-          ? "0 items rejected from yesterday"
-          : "+" + wipRejectedItems + " items rejected from yesterday",
+          ? "0 rejected from yesterday"
+          : "+" + wipRejectedItems + " rejected from yesterday",
       icon: <FaExclamationTriangle />,
       iconColor: wipRejectedItems === 0 ? "bg-info" : "bg-danger",
       changeColor: wipRejectedItems === 0 ? "text-secondary" : "text-danger",
@@ -805,6 +807,99 @@ const AdminLandingPage = () => {
     setShowModal(false);
   };
 
+  // Monthly Bar Chart Data
+  const [currentMonth, setCurrentMonth] = useState(0);
+  const handleMonthNext = () =>
+    setCurrentMonth((prev) => (prev + 1) % monthlyReports.length);
+  const handleMonthPrev = () =>
+    setCurrentMonth((prev) =>
+      prev === 0 ? monthlyReports.length - 1 : prev - 1
+    );
+  // Auto-slide
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentMonth((prev) => (prev + 1) % monthlyReports.length);
+    }, 10000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const monthlyReports = [
+    {
+      title: "Material Movement",
+      data: [
+        { week: "W1", inward: 400, outward: 240 },
+        { week: "W2", inward: 300, outward: 139 },
+        { week: "W3", inward: 200, outward: 980 },
+        { week: "W4", inward: 278, outward: 390 },
+      ],
+      bars: [
+        { key: "inward", label: "Inward", color: "#1e99dbff" },
+        { key: "outward", label: "Outward", color: "#0fc1a3ff" },
+      ],
+    },
+    {
+      title: "QC Status",
+      data: [
+        { week: "W1", pass: 120, fail: 20 },
+        { week: "W2", pass: 100, fail: 15 },
+        { week: "W3", pass: 150, fail: 25 },
+        { week: "W4", pass: 130, fail: 10 },
+      ],
+      bars: [
+        { key: "pass", label: "Pass", color: "#03c703ff" },
+        { key: "fail", label: "Fail", color: "#f60505ff" },
+      ],
+    },
+  ];
+
+  // Weekly Bar Chart Data
+  const [currentWeekly, setCurrentWeekly] = useState(0);
+
+  const handleWeeklyNext = () =>
+    setCurrentWeekly((prev) => (prev + 1) % weeklyReports.length);
+
+  const handleWeeklyPrev = () =>
+    setCurrentWeekly((prev) =>
+      prev === 0 ? weeklyReports.length - 1 : prev - 1
+    );
+
+  // Auto-slide
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentWeekly((prev) => (prev + 1) % weeklyReports.length);
+    }, 10000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const weeklyReports = [
+    {
+      title: "Material Movement",
+      data: [
+        { week: "W1", inward: 400, outward: 240 },
+        { week: "W2", inward: 300, outward: 139 },
+        { week: "W3", inward: 200, outward: 980 },
+        { week: "W4", inward: 278, outward: 390 },
+      ],
+      bars: [
+        { key: "inward", label: "Inward", color: "#3bc7f6ff" },
+        { key: "outward", label: "Outward", color: "#16d797ff" },
+      ],
+    },
+    {
+      title: "QC Status",
+      data: [
+        { week: "W1", pass: 120, fail: 20 },
+        { week: "W2", pass: 100, fail: 15 },
+        { week: "W3", pass: 150, fail: 25 },
+        { week: "W4", pass: 130, fail: 10 },
+      ],
+      bars: [
+        { key: "pass", label: "Pass", color: "#8ce53aff" },
+        { key: "fail", label: "Fail", color: "#ee3333ff" },
+      ],
+    },
+  ];
+
   return (
     <div>
       {/* Header section */}
@@ -852,7 +947,7 @@ const AdminLandingPage = () => {
           </div>
         </div>
       </nav>
-
+      <h5 className="text-dark py-2">Daily Report</h5>
       {/* Card  */}
       <div className="summary row g-4">
         {cardData.map((card, index) => (
@@ -869,14 +964,17 @@ const AdminLandingPage = () => {
                   </div>
                 </div>
                 <h4 className={`fw-bold ${card.changeColor}`}>{card.value}</h4>
+                <div className="d-flex justify-content-between align-items-center">
+                  <p className={`${card.changeColor} mb-0`}>{card.change}</p>
 
-                <button
-                  className="btn btn-outline-primary text-8 w-75 mt-2"
-                  type="button"
-                  onClick={() => handleShow(card)} // ✅ important
-                >
-                  <i className="fas fa-eye me-2"></i>View Full Report
-                </button>
+                  <button
+                    className="btn btn-outline-primary p-2 w-auto d-inline-flex text-8"
+                    type="button"
+                    onClick={() => handleShow(card)}
+                  >
+                    <i className="fas fa-eye"></i>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -969,8 +1067,8 @@ const AdminLandingPage = () => {
                 )}
               </>
             ) : (
-              <p className="d-flex justify-content-center">
-                No details available.
+              <p className="d-flex justify-content-center text-secondary">
+                No data available for today !
               </p>
             )}
           </Modal.Body>
@@ -981,7 +1079,7 @@ const AdminLandingPage = () => {
           </Modal.Footer>
         </Modal>
       </div>
-      {/* Banner */}
+      {/* Daily Line Chart Data */}
       <div className="container-fluid">
         <div className="row" style={{ overflow: "visible" }}>
           {/* Banner Carousel */}
@@ -1170,6 +1268,84 @@ const AdminLandingPage = () => {
                 <Legend content={<CustomLegend />} />
               </PieChart>
             )}
+          </div>
+        </div>
+      </div>
+      <div className="row mt-4">
+        <div className="col-6">
+          {/* Weekly Bar Chart Data */}
+          <h5 className="text-dark py-2">Weekly Report</h5>
+          <div className="col-12 graph-carousel border rounded p-3 bg-white shadow-sm mt-3">
+            {/* Carousel arrows */}
+            <button className="carousel-arrow left" onClick={handleWeeklyPrev}>
+              &#8249;
+            </button>
+            <button className="carousel-arrow right" onClick={handleWeeklyNext}>
+              &#8250;
+            </button>
+
+            <h6 className="text-center text-dark mb-3">
+              {weeklyReports[currentWeekly].title}
+            </h6>
+
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart
+                data={weeklyReports[currentWeekly].data}
+                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="week" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                {weeklyReports[currentWeekly].bars.map((bar, i) => (
+                  <Bar
+                    key={i}
+                    dataKey={bar.key}
+                    fill={bar.color}
+                    name={bar.label}
+                  />
+                ))}
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+        <div className="col-6">
+          {/* Monthly Bar Chart Data */}
+          <h5 className="text-dark py-2">Monthly Report</h5>
+          <div className="col-12 graph-carousel border rounded p-3 bg-white shadow-sm mt-3">
+            {/* Carousel arrows */}
+            <button className="carousel-arrow left" onClick={handleMonthPrev}>
+              &#8249;
+            </button>
+            <button className="carousel-arrow right" onClick={handleMonthNext}>
+              &#8250;
+            </button>
+
+            <h6 className="text-center text-dark mb-3">
+              {monthlyReports[currentMonth].title}
+            </h6>
+
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart
+                data={monthlyReports[currentMonth].data}
+                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="week" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                {monthlyReports[currentMonth].bars.map((bar, i) => (
+                  <Bar
+                    key={i}
+                    dataKey={bar.key}
+                    fill={bar.color}
+                    name={bar.label}
+                  />
+                ))}
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
       </div>
