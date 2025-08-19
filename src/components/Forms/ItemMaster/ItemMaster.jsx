@@ -58,6 +58,7 @@ const ItemMaster = () => {
     groupName: "",
     price: "",
     stQty: "",
+    minQty: "",
     life: "",
     inventoryItem: "",
     iqc: false,
@@ -385,6 +386,7 @@ const ItemMaster = () => {
         groupName: formData.groupName,
         price: formData.price,
         stQty: formData.stQty,
+        minQty: formData.minQty,
         life: formData.life,
         inventoryItem: formData.inventoryItem || false,
         iqc: formData.iqc,
@@ -444,13 +446,19 @@ const ItemMaster = () => {
     if (!data.price) {
       errors.price = "Price is required";
     } else if (!/^\d+$/.test(data.price)) {
-      errors.price = "Price must be digits";
+      errors.price = "Price must be in digits";
     }
 
     if (!data.stQty) {
       errors.stQty = "ST Qty is required";
     } else if (!/^\d+$/.test(data.stQty)) {
-      errors.stQty = "ST QTY must be digits";
+      errors.stQty = "ST QTY must be in digits";
+    }
+
+    if (!data.minQty) {
+      errors.minQty = "Minimum Qty is required";
+    } else if (!/^\d+$/.test(data.minQty)) {
+      errors.minQty = "Minimum Qty must be in digits";
     }
 
     if (!data.life) {
@@ -536,6 +544,7 @@ const ItemMaster = () => {
       uom: "",
       price: "",
       stQty: "",
+      minQty: "",
       life: "",
       inventoryItem: "",
       iqc: false,
@@ -590,6 +599,7 @@ const ItemMaster = () => {
       status: itemDetails.status || "active",
       price: itemDetails.price || null,
       stQty: parseInt(itemDetails.stQty) || 0,
+      minQty: parseInt(itemDetails.minQty) || 0,
       life: parseInt(itemDetails.life) || 0,
       inventoryItem: itemDetails.inventoryItem || false,
       iqc: itemDetails.iqc,
@@ -732,6 +742,7 @@ const ItemMaster = () => {
         status: row.status,
         price: row.price,
         stQty: row.stQty,
+        minQty: row.minQty,
         life: row.life,
         inventoryItem: row.inventoryItem,
         iqc: row.iqc,
@@ -783,6 +794,7 @@ const ItemMaster = () => {
             rowData.status,
             rowData.price,
             rowData.stQty,
+            rowData.minQty,
             rowData.life,
             rowData.inventoryItem,
             rowData.iqc,
@@ -1160,6 +1172,27 @@ const ItemMaster = () => {
               </div>
               <div className="row form-style">
                 <div className="col-4 d-flex flex-column form-group">
+                  <label htmlFor="minQty" className="form-label mb-0">
+                    Minimum Quantity <span className="text-danger fs-6">*</span>
+                  </label>
+                  <div className="position-relative w-100">
+                    <i className="fa-solid fa-arrow-down-9-1 position-absolute z-0 input-icon"></i>
+                    <input
+                      type="number"
+                      className="form-control ps-5 text-font"
+                      id="minQty"
+                      placeholder="Enter minimum quantity"
+                      value={formData.minQty}
+                      onChange={(e) =>
+                        setFormData({ ...formData, minQty: e.target.value })
+                      }
+                    />
+                  </div>
+                  {errors.minQty && (
+                    <span className="error-message">{errors.minQty}</span>
+                  )}
+                </div>
+                <div className="col-4 d-flex flex-column form-group">
                   <label htmlFor="life" className="form-label ms-2">
                     Life (In Days) <span className="text-danger fs-6">*</span>
                   </label>
@@ -1231,6 +1264,8 @@ const ItemMaster = () => {
                     <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                   </div>
                 </div>
+              </div>
+              <div className="row form-style">
                 <div className="col-4 d-flex flex-column form-group">
                   <label className="form-label" htmlFor="inventoryItem">
                     Inventory Item
@@ -1264,10 +1299,8 @@ const ItemMaster = () => {
                     </select>
                   </div>
                 </div>
-              </div>
-              {formData.inventoryItem === "true" && (
-                <div className="row form-style">
-                  <div className="col-4 d-flex flex-column form-group">
+                {formData.inventoryItem === "true" && (
+                  <div className="col-4 d-flex flex-column form-group mt-4">
                     <div className="d-flex align-items-center gap-2">
                       <label className="form-label ms-2 mt-2" htmlFor="iqc">
                         IQC Required
@@ -1286,8 +1319,8 @@ const ItemMaster = () => {
                       />
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
             <div className="form-actions">
               <button
@@ -1385,6 +1418,7 @@ const ItemMaster = () => {
                 <th>Code</th>
                 <th>UOM</th>
                 <th>ST Qty</th>
+                <th>Min Qty</th>
                 <th>Life</th>
                 <th>Group</th>
                 <th>Status</th>
@@ -1441,6 +1475,7 @@ const ItemMaster = () => {
                       </div>
                     </td>
                     <td className="ps-4">{item.stQty}</td>
+                    <td className="ps-4">{item.minQty}</td>
                     <td className="ps-4">
                       <div>
                         <span>{item.life}</span>
@@ -1789,7 +1824,8 @@ const ItemMaster = () => {
                       </div>
                       <div className="col-4 d-flex flex-column form-group">
                         <label htmlFor="stQty" className="form-label mb-0">
-                          ST QTY <span className="text-danger fs-6">*</span>
+                          Standard Quantity{" "}
+                          <span className="text-danger fs-6">*</span>
                         </label>
                         <div className="position-relative w-100">
                           <i className="fas fa-cubes position-absolute z-0 input-icon"></i>
@@ -1810,6 +1846,28 @@ const ItemMaster = () => {
                       </div>
                     </div>
                     <div className="row form-style">
+                      <div className="col-4 d-flex flex-column form-group">
+                        <label htmlFor="minQty" className="form-label mb-0">
+                          Minimum Quantity{" "}
+                          <span className="text-danger fs-6">*</span>
+                        </label>
+                        <div className="position-relative w-100">
+                          <i className="fas fa-cubes position-absolute z-0 input-icon"></i>
+                          <input
+                            type="text"
+                            className="form-control ps-5 text-font"
+                            id="minQty"
+                            placeholder="Enter minimum quantity"
+                            value={itemDetails.minQty}
+                            onChange={(e) =>
+                              setItemDetails({
+                                ...itemDetails,
+                                minQty: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                      </div>
                       <div className="col-4 d-flex flex-column form-group">
                         <label htmlFor="life" className="form-label mb-0  ms-2">
                           Life (In Days){" "}
@@ -1885,6 +1943,8 @@ const ItemMaster = () => {
                           <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                         </div>
                       </div>
+                    </div>
+                    <div className="row form-style">
                       <div className="col-4 d-flex flex-column form-group">
                         <label className="form-label" htmlFor="inventoryItem">
                           Inventory Item
@@ -1918,10 +1978,8 @@ const ItemMaster = () => {
                           </select>
                         </div>
                       </div>
-                    </div>
-                    {(itemDetails.inventoryItem === true ||
-                      itemDetails.inventoryItem === "true") && (
-                      <div className="row form-style">
+                      {(itemDetails.inventoryItem === true ||
+                        itemDetails.inventoryItem === "true") && (
                         <div className="col-4 d-flex flex-column form-group">
                           <div className="d-flex align-items-center gap-2">
                             <label
@@ -1944,8 +2002,8 @@ const ItemMaster = () => {
                             />
                           </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </form>
               </div>
