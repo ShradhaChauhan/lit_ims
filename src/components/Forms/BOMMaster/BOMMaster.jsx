@@ -888,7 +888,7 @@ const BOMMaster = () => {
                           <td>
                             <div className="field-wrapper">
                               <input
-                                type="number"
+                                type="text"
                                 className="form-control text-font w-100"
                                 min="0.01"
                                 step="0.01"
@@ -1523,7 +1523,7 @@ const BOMMaster = () => {
                                   <td>
                                     <div className="field-wrapper">
                                       <input
-                                        type="number"
+                                        type="text"
                                         className="form-control text-font w-100"
                                         min="0.01"
                                         step="0.01"
