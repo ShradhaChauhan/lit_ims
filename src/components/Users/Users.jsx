@@ -564,7 +564,7 @@ const Users = () => {
     },
     {
       id: 5,
-      name: "Approve Items Quantity",
+      name: "My Approvals",
       type: "approveItemsQuantity",
     },
   ];

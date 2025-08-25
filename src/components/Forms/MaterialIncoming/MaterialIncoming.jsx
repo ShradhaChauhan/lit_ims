@@ -720,6 +720,53 @@ const MaterialIncoming = () => {
   };
 
   // Fetch vendor by vendor code
+  // const handleFetchVendorByCode = async (batchno) => {
+  //   try {
+  //     console.log("Verifying batch:", batchno);
+  //     const response = await api.get(
+  //       `/api/receipt/verify-batch?batchNo=${batchno}`
+  //     );
+
+  //     if (response.data && response.data.status) {
+  //       const batchData = response.data.data;
+
+  //       // Determine the warehouse ID and name based on isInventory and isIqc flags
+  //       let warehouseId, warehouseName;
+  //       if (batchData.warehouseId) {
+  //         warehouseId = batchData.warehouseId;
+  //         warehouseName = batchData.warehouseName;
+  //       } else {
+  //         // Use the getDefaultWarehouse function to determine the warehouse based on flags
+  //         const defaultWarehouse = getDefaultWarehouse(
+  //           batchData.isInventory,
+  //           batchData.isIqc
+  //         );
+  //         warehouseId = defaultWarehouse.warehouseId;
+  //         warehouseName = defaultWarehouse.warehouseName;
+  //       }
+  //       console.log("Vendor name: " + batchData.vendorName);
+  //       setVendor(batchData.vendorName);
+  //       setFormData({
+  //         ...formData,
+  //         vendor: batchData.id,
+  //         vendorName: batchData.vendorName,
+  //         code: batchData.vendorCode,
+  //         barcode: batchno,
+  //         quantity: batchData.quantity,
+  //         itemCode: batchData.itemCode,
+  //         warehouse: warehouseName,
+  //         warehouseId: warehouseId,
+  //         itemName: batchData.itemName,
+  //       });
+  //       console.log("Batch verified:", batchData);
+  //     } else {
+  //       toast.error("Invalid batch number");
+  //     }
+  //   } catch (error) {
+  //     toast.error("Unable to fetch vendor name");
+  //     console.error(error);
+  //   }
+  // };
   const handleFetchVendorByCode = async (batchno) => {
     try {
       console.log("Verifying batch:", batchno);
@@ -730,13 +777,12 @@ const MaterialIncoming = () => {
       if (response.data && response.data.status) {
         const batchData = response.data.data;
 
-        // Determine the warehouse ID and name based on isInventory and isIqc flags
+        // Determine the warehouse ID and name
         let warehouseId, warehouseName;
         if (batchData.warehouseId) {
           warehouseId = batchData.warehouseId;
           warehouseName = batchData.warehouseName;
         } else {
-          // Use the getDefaultWarehouse function to determine the warehouse based on flags
           const defaultWarehouse = getDefaultWarehouse(
             batchData.isInventory,
             batchData.isIqc
@@ -744,8 +790,8 @@ const MaterialIncoming = () => {
           warehouseId = defaultWarehouse.warehouseId;
           warehouseName = defaultWarehouse.warehouseName;
         }
-        console.log("Vendor name: " + batchData.vendorName);
-        setVendor(batchData.vendorName);
+
+        // Update formData (if needed for other UI parts)
         setFormData({
           ...formData,
           vendor: batchData.id,
@@ -758,7 +804,21 @@ const MaterialIncoming = () => {
           warehouseId: warehouseId,
           itemName: batchData.itemName,
         });
-        console.log("Batch verified:", batchData);
+
+        // ✅ Add this batch as a new row in the receipt list
+        setReceiptList((prev) => [
+          ...prev,
+          {
+            itemName: batchData.itemName,
+            itemCode: batchData.itemCode,
+            quantity: batchData.quantity || 1,
+            batchNo: batchno,
+            warehouse: warehouseName,
+            warehouseId: warehouseId,
+          },
+        ]);
+
+        console.log("Batch verified & added:", batchData);
       } else {
         toast.error("Invalid batch number");
       }
@@ -842,6 +902,22 @@ const MaterialIncoming = () => {
       );
     }
   }, [isPreviewModalOpen]);
+
+  // Batch scan
+  const handleScan = async (value) => {
+    // Normalize separators if needed
+    let scannedValue = value.trim().replace(/[;|]/g, ",");
+
+    // Split into batch numbers
+    const batches = scannedValue
+      .split(",")
+      .map((b) => b.trim())
+      .filter(Boolean);
+
+    for (const batchNo of batches) {
+      await handleFetchVendorByCode(batchNo); // fetch details for each batch
+    }
+  };
 
   return (
     <div>
@@ -1045,8 +1121,9 @@ const MaterialIncoming = () => {
                     value={formData.barcode}
                     placeholder="Scan QR code"
                     onChange={(e) => {
-                      setFormData({ ...formData, barcode: e.target.value });
-                      handleFetchVendorByCode(e.target.value);
+                      const scannedCode = e.target.value;
+                      setFormData({ ...formData, barcode: scannedCode });
+                      handleScan(scannedCode);
                     }}
                   />
                 </div>
