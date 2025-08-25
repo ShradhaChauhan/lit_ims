@@ -816,8 +816,8 @@ const BOMMaster = () => {
                 <table>
                   <thead>
                     <tr>
-                      <th>Item</th>
-                      <th>Code</th>
+                      <th>Item Name</th>
+                      <th>Item Code</th>
                       <th>UOM</th>
                       <th>Quantity</th>
                       <th>Warehouse</th>
@@ -1462,8 +1462,8 @@ const BOMMaster = () => {
                         <table>
                           <thead>
                             <tr>
-                              <th>Item</th>
-                              <th>Code</th>
+                              <th>Item Name</th>
+                              <th>Item Code</th>
                               <th>UOM</th>
                               <th>Quantity</th>
                               <th>Warehouse</th>

@@ -270,13 +270,14 @@ const MaterialIssueRequest = () => {
         const bomResponse = await api.get("/api/bom/all");
         const bomData = bomResponse.data.data;
         setBomList(bomData);
-
+        //  console.log("BOM Data:", bomData);
         // Extract BOM names for dropdown
         const bomNames = bomData.map((bom) => ({
           id: bom.id,
           name: bom.name,
           code: bom.code,
         }));
+        //  console.log("BOM Names:", bomNames);
         setAvailableBOMs(bomNames);
 
         // Fetch Item data
@@ -349,15 +350,23 @@ const MaterialIssueRequest = () => {
         return;
       }
 
+      console.log("WIP warehouse id: " + warehouse);
+      // console.log("selected BOM: " + JSON.stringify(selectedBOM));
       await Promise.all(
         selectedBOM.items.map(async (i) => {
+          console.log(
+            `Fetching stock quantity for item ${i.itemCode} in warehouse ${i.warehouseId}`
+          );
           const response = await api.post(
             `/api/inventory/itemQuantity/${i.warehouseId}/${i.itemCode}`
           );
+          // console.log(
+          //   `Stock quantity for item ${i.itemCode}:`,
+          //   response.data
+          // );
           i.stockQty = response.data.data[0].quantity;
         })
       );
-
       await Promise.all(
         selectedBOM.items.map(async (i) => {
           const response = await api.post(
@@ -382,6 +391,7 @@ const MaterialIssueRequest = () => {
         })),
         // selectedBOM.items,
       };
+      console.log("newBOM:" + newBOM);
       setTempQuantity(quantity);
       setRequest((prev) => [...prev, newBOM]);
       setIsBOMAdded(true);
