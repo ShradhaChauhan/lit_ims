@@ -7,6 +7,9 @@ import { toast } from "react-toastify";
 import exportToExcel from "../../../utils/exportToExcel";
 import { AbilityContext } from "../../../utils/AbilityContext";
 import Select from "react-select";
+import * as XLSX from "xlsx";
+import axios from "axios";
+import js from "@eslint/js";
 
 const BOMMaster = () => {
   const [errors, setErrors] = useState({});
@@ -632,6 +635,70 @@ const BOMMaster = () => {
   // RBAC
   const ability = useContext(AbilityContext);
 
+  // Import excel
+  const [jsonData, setJsonData] = useState(null);
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const data = new Uint8Array(event.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+
+      // Always read "Sheet1" from your llyodbom.xlsx
+      const worksheet = workbook.Sheets["Sheet1"];
+      const rows = XLSX.utils.sheet_to_json(worksheet);
+
+      // Group by Parent Item
+      const grouped = {};
+      rows.forEach((row) => {
+        const parentCode = row["Parent Item"];
+        if (!grouped[parentCode]) {
+          grouped[parentCode] = {
+            name: row["Product Description"],
+            code: String(parentCode),
+            status: "active",
+            items: [],
+          };
+        }
+
+        grouped[parentCode].items.push({
+          itemId: Number(row["Component Code"]),
+          itemName: row["Item Description"],
+          itemCode: String(row["Component Code"]),
+          uom: "PCS", // default
+          quantity: Number(row["Quantity"]),
+          warehouseId: 1, // default
+          warehouseName: "Store1",
+        });
+      });
+
+      setJsonData(Object.values(grouped));
+    };
+    console.log(jsonData);
+    reader.readAsArrayBuffer(file);
+  };
+
+  const handleUpload = async () => {
+    if (!jsonData) {
+      alert("Please upload a file first!");
+      return;
+    }
+
+    try {
+      for (const bom of jsonData) {
+        console.log(bom);
+        await api.post("/api/bom/add", bom);
+      }
+      alert("Upload successful!");
+    } catch (error) {
+      console.error(error);
+      alert("Error uploading BOM data.");
+    }
+  };
+
   return (
     <div>
       <nav className="navbar bg-light border-body" data-bs-theme="light">
@@ -1039,6 +1106,17 @@ const BOMMaster = () => {
               <label htmlFor="select-all">{selectedBoms.length} Selected</label>
             </div>
             <div className="bulk-actions">
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={handleFileUpload}
+              />
+              <button
+                onClick={handleUpload}
+                className="btn btn-outline-secondary text-8"
+              >
+                Import Excel
+              </button>
               <button
                 className="btn btn-outline-success text-8"
                 onClick={() => {
