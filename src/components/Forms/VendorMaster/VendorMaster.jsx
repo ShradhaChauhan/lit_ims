@@ -333,6 +333,7 @@ const VendorMaster = () => {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
         (vendor) =>
+          vendor.code?.toLowerCase().includes(query) ||
           vendor.name?.toLowerCase().includes(query) ||
           vendor.email?.toLowerCase().includes(query) ||
           vendor.city?.toLowerCase().includes(query) ||
