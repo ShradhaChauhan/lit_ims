@@ -6,6 +6,7 @@ import { Modal } from "bootstrap";
 import { toast } from "react-toastify";
 import exportToExcel from "../../../utils/exportToExcel";
 import { AbilityContext } from "../../../utils/AbilityContext";
+import Select from "react-select";
 
 const BOMMaster = () => {
   const [errors, setErrors] = useState({});
@@ -816,8 +817,8 @@ const BOMMaster = () => {
                 <table>
                   <thead>
                     <tr>
-                      <th>Item</th>
-                      <th>Code</th>
+                      <th>Item Name</th>
+                      <th>Item Code</th>
                       <th>UOM</th>
                       <th>Quantity</th>
                       <th>Warehouse</th>
@@ -842,26 +843,47 @@ const BOMMaster = () => {
                           <td>
                             <div className="field-wrapper">
                               <div className="position-relative w-100">
-                                <i className="fas fa-cogs position-absolute z-0 input-icon"></i>
-                                <select
-                                  className="form-control text-font w-100 ps-5"
-                                  required
-                                  value={currentItem.item}
-                                  onChange={(e) =>
+                                <i
+                                  className="fas fa-cogs position-absolute input-icon"
+                                  style={{
+                                    top: "50%",
+                                    left: "10px",
+                                    transform: "translateY(-50%)",
+                                    zIndex: 1,
+                                  }}
+                                ></i>
+                                <Select
+                                  className="w-100 text-font ps-5"
+                                  classNamePrefix="react-select"
+                                  placeholder="Select Item"
+                                  isSearchable
+                                  options={items.map((item) => ({
+                                    value: item.id,
+                                    label: `${item.name} (${item.code})`,
+                                    code: item.code,
+                                    uom: item.uom,
+                                  }))}
+                                  // find the correct option from items to show as selected
+                                  value={
+                                    items
+                                      .map((item) => ({
+                                        value: item.id,
+                                        label: `${item.name} (${item.code})`,
+                                        code: item.code,
+                                        uom: item.uom,
+                                      }))
+                                      .find(
+                                        (opt) => opt.value === currentItem.item
+                                      ) || null
+                                  }
+                                  onChange={(selected) =>
                                     handleItemChange(
                                       index,
                                       "item",
-                                      e.target.value
+                                      selected ? selected.value : ""
                                     )
                                   }
-                                >
-                                  <option value="">Select Item</option>
-                                  {items.map((item) => (
-                                    <option key={item.id} value={item.id}>
-                                      {item.name} ({item.code})
-                                    </option>
-                                  ))}
-                                </select>
+                                />
                               </div>
                             </div>
                           </td>
@@ -1462,8 +1484,8 @@ const BOMMaster = () => {
                         <table>
                           <thead>
                             <tr>
-                              <th>Item</th>
-                              <th>Code</th>
+                              <th>Item Name</th>
+                              <th>Item Code</th>
                               <th>UOM</th>
                               <th>Quantity</th>
                               <th>Warehouse</th>

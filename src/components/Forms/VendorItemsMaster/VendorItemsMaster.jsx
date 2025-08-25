@@ -10,6 +10,7 @@ import * as XLSX from "xlsx";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import "./VendorItemsMaster.css";
+import Select from "react-select";
 
 const VendorItemsMaster = () => {
   const [loading, setLoading] = useState(true);
@@ -646,6 +647,7 @@ const VendorItemsMaster = () => {
         (item) =>
           item.vendorName.toLowerCase().includes(query) ||
           item.itemName.toLowerCase().includes(query) ||
+          item.itemCode.toLowerCase().includes(query) ||
           item.days.toString().includes(query) ||
           item.quantity.toString().includes(query) ||
           item.price.toString().includes(query)
@@ -1035,65 +1037,165 @@ const VendorItemsMaster = () => {
             <div className="form-grid border-bottom pt-0">
               <div className="row form-style">
                 <div className="col-3 d-flex flex-column form-group">
-                  <label htmlFor="vendor" className="form-label ms-2">
+                  <label htmlFor="vendor" className="form-label">
                     Vendor <span className="text-danger fs-6">*</span>
                   </label>
+
                   <div className="position-relative w-100">
-                    <i className="fas fa-user-tie position-absolute z-0 input-icon"></i>
-                    <select
-                      className={`form-select ps-5 text-font ${
-                        formData.vendor ? "" : "text-secondary"
-                      }`}
+                    <i
+                      className="fas fa-user-tie position-absolute input-icon"
+                      style={{
+                        top: "50%",
+                        left: "10px",
+                        transform: "translateY(-50%)",
+                        zIndex: 1,
+                      }}
+                    ></i>
+
+                    <Select
                       id="vendor"
-                      value={formData.vendor}
-                      onChange={(e) =>
-                        setFormData({ ...formData, vendor: e.target.value })
+                      placeholder="Select Vendor"
+                      value={
+                        vendors
+                          .map((vendor) => ({
+                            value: String(vendor.id),
+                            label: vendor.name,
+                          }))
+                          .find((option) => option.value === formData.vendor) ||
+                        null
                       }
-                    >
-                      <option value="" disabled hidden className="text-muted">
-                        Select Vendor
-                      </option>
-                      {vendors.map((vendor) => (
-                        <option key={vendor.id} value={vendor.id}>
-                          {vendor.name}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(selectedOption) =>
+                        setFormData({
+                          ...formData,
+                          vendor: selectedOption?.value || "",
+                        })
+                      }
+                      options={vendors.map((vendor) => ({
+                        value: String(vendor.id),
+                        label: vendor.name,
+                      }))}
+                      classNamePrefix="react-select"
+                      styles={{
+                        control: (base) => ({
+                          ...base,
+                          minHeight: "32px",
+                          height: "32px",
+                          fontSize: "0.8rem",
+                          paddingLeft: "30px",
+                        }),
+                        valueContainer: (base) => ({
+                          ...base,
+                          height: "32px",
+                          padding: "0 6px",
+                        }),
+                        indicatorsContainer: (base) => ({
+                          ...base,
+                          height: "32px",
+                        }),
+                        menu: (base) => ({
+                          ...base,
+                          fontSize: "0.8rem",
+                        }),
+                        option: (base, state) => ({
+                          ...base,
+                          fontSize: "0.8rem",
+                          padding: "6px 10px",
+                          backgroundColor: state.isSelected
+                            ? "#e9ecef"
+                            : state.isFocused
+                            ? "#f8f9fa"
+                            : "white",
+                          color: "black",
+                        }),
+                      }}
+                    />
                   </div>
+
                   {errors.vendor && (
                     <span className="error-message ms-2">{errors.vendor}</span>
                   )}
                 </div>
                 <div className="col-3 d-flex flex-column form-group">
-                  <label htmlFor="item" className="form-label ms-2">
+                  <label htmlFor="item" className="form-label">
                     Item <span className="text-danger fs-6">*</span>
                   </label>
+
                   <div className="position-relative w-100">
-                    <i className="fas fa-box position-absolute z-0 input-icon"></i>
-                    <select
-                      className={`form-select ps-5 text-font ${
-                        formData.item ? "" : "text-secondary"
-                      }`}
+                    {/* Left icon */}
+                    <i
+                      className="fas fa-box position-absolute input-icon"
+                      style={{
+                        top: "50%",
+                        left: "10px",
+                        transform: "translateY(-50%)",
+                        zIndex: 1,
+                      }}
+                    ></i>
+
+                    <Select
                       id="item"
-                      value={formData.item}
-                      onChange={(e) =>
-                        setFormData({ ...formData, item: e.target.value })
+                      placeholder="Select Item"
+                      value={
+                        items
+                          .map((item) => ({
+                            value: String(item.id),
+                            label: item.name,
+                          }))
+                          .find((option) => option.value === formData.item) ||
+                        null
                       }
-                    >
-                      <option value="" disabled hidden className="text-muted">
-                        Select Item
-                      </option>
-                      {items.map((item) => (
-                        <option key={item.id} value={item.id}>
-                          {item.name}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(selectedOption) =>
+                        setFormData({
+                          ...formData,
+                          item: selectedOption?.value || "",
+                        })
+                      }
+                      options={items.map((item) => ({
+                        value: String(item.id),
+                        label: item.name,
+                      }))}
+                      classNamePrefix="react-select"
+                      styles={{
+                        control: (base) => ({
+                          ...base,
+                          minHeight: "32px",
+                          height: "32px",
+                          fontSize: "0.8rem",
+                          paddingLeft: "30px",
+                        }),
+                        valueContainer: (base) => ({
+                          ...base,
+                          height: "32px",
+                          padding: "0 6px",
+                        }),
+                        indicatorsContainer: (base) => ({
+                          ...base,
+                          height: "32px",
+                        }),
+                        menu: (base) => ({
+                          ...base,
+                          fontSize: "0.8rem",
+                        }),
+                        option: (base, state) => ({
+                          ...base,
+                          fontSize: "0.8rem",
+                          padding: "6px 10px",
+                          backgroundColor: state.isSelected
+                            ? "#e9ecef"
+                            : state.isFocused
+                            ? "#f8f9fa"
+                            : "white",
+                          color: "black",
+                        }),
+                      }}
+                    />
                   </div>
+
                   {errors.item && (
                     <span className="error-message ms-2">{errors.item}</span>
                   )}
                 </div>
+
                 <div className="col-3 d-flex flex-column form-group">
                   <label htmlFor="leadTime" className="form-label">
                     Lead Time (Days) <span className="text-danger fs-6">*</span>
@@ -1302,7 +1404,8 @@ const VendorItemsMaster = () => {
                   <input type="checkbox" id="select-all" disabled />
                 </th>
                 <th>Vendor</th>
-                <th>Item</th>
+                <th>Item Name</th>
+                <th>Item Code</th>
                 <th>Lead Time</th>
                 <th>Std Qty</th>
                 <th>Price</th>
@@ -1361,12 +1464,12 @@ const VendorItemsMaster = () => {
                     </td>
                     <td className="ps-4">
                       <div>
-                        <span>
-                          {" (" +
-                            assignment.itemCode +
-                            ") " +
-                            assignment.itemName}
-                        </span>
+                        <span>{assignment.itemName}</span>
+                      </div>
+                    </td>
+                    <td className="ps-4">
+                      <div>
+                        <span>{assignment.itemCode}</span>
                       </div>
                     </td>
                     <td className="ps-4">

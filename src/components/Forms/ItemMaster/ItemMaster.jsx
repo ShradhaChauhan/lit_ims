@@ -13,6 +13,7 @@ import autoTable from "jspdf-autotable";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import "./ItemMaster.css";
+import Select from "react-select";
 
 const ItemMaster = () => {
   const [errors, setErrors] = useState({});
@@ -849,6 +850,11 @@ const ItemMaster = () => {
     }
   };
 
+  const groupOptions = groups.map((g) => ({
+    value: g.groupCode,
+    label: `${g.name} - ${g.groupCode}`,
+  }));
+
   return (
     <div>
       {isLoading && (
@@ -967,30 +973,72 @@ const ItemMaster = () => {
             <div className="form-grid border-bottom pt-0">
               <div className="row form-style">
                 <div className="col-4 d-flex flex-column form-group">
-                  <label htmlFor="groupName" className="form-label mb-0 ms-2">
+                  <label htmlFor="groupName" className="form-label mb-0">
                     Group <span className="text-danger fs-6">*</span>
                   </label>
                   <div className="position-relative w-100">
-                    <i className="fas fa-layer-group position-absolute z-0 input-icon"></i>
-                    <select
-                      className="form-control ps-5 ms-2 text-font"
-                      id="groupName"
-                      placeholder="Group"
-                      value={formData.groupName}
-                      onChange={(e) =>
-                        setFormData({ ...formData, groupName: e.target.value })
+                    <i
+                      className="fas fa-layer-group position-absolute input-icon"
+                      style={{
+                        top: "50%",
+                        left: "10px",
+                        transform: "translateY(-50%)",
+                        zIndex: 1,
+                      }}
+                    ></i>
+                    <Select
+                      options={groupOptions}
+                      value={
+                        groupOptions.find(
+                          (o) => o.value === formData.groupName
+                        ) || null
                       }
-                    >
-                      <option value="" disabled hidden className="text-muted">
-                        Select Group
-                      </option>
-                      {groups.map((group) => (
-                        <option key={group.id} value={group.groupCode}>
-                          {group.name} - {group.groupCode}
-                        </option>
-                      ))}
-                    </select>
-                    <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
+                      onChange={(selected) =>
+                        setFormData({
+                          ...formData,
+                          groupName: selected?.value || "",
+                        })
+                      }
+                      placeholder="Select or search group..."
+                      isSearchable
+                      classNamePrefix="react-select"
+                      styles={{
+                        control: (base) => ({
+                          ...base,
+                          minHeight: "32px",
+                          height: "32px",
+                          fontSize: "0.8rem",
+                          paddingLeft: "30px",
+                        }),
+                        valueContainer: (base) => ({
+                          ...base,
+                          height: "32px",
+                          padding: "0 6px",
+                        }),
+                        indicatorsContainer: (base) => ({
+                          ...base,
+                          height: "32px",
+                        }),
+                        menu: (base) => ({
+                          ...base,
+                          fontSize: "0.8rem",
+                        }),
+                        option: (base, state) => ({
+                          ...base,
+                          fontSize: "0.8rem",
+                          padding: "6px 10px",
+                          backgroundColor: state.isSelected
+                            ? "#e9ecef"
+                            : state.isFocused
+                            ? "#f8f9fa"
+                            : "white",
+                          color: "black",
+                        }),
+                      }}
+                    />
+                    {errors.groupName && (
+                      <span className="error-message">{errors.groupName}</span>
+                    )}
                   </div>
                   {errors.groupName && (
                     <span className="error-message">{errors.groupName}</span>

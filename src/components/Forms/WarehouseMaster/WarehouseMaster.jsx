@@ -1401,32 +1401,36 @@ const handleSaveToAPI = async () => {
                   </div>
                   {/* Sub Locations Section */}
                   {warehouseDetails.subLocations &&
-                    warehouseDetails.subLocations.length > 0 && (
-                      <div className="mt-3 detail-item">
-                        <strong className="mb-2">Sub Locations:</strong>
-                        {warehouseDetails.subLocations.map((subLoc) => (
-                          <div
-                            key={subLoc.id}
-                            className="card p-2 mb-2 border shadow-sm"
-                            style={{ fontSize: "0.9rem" }}
-                          >
-                            <div>
-                              <strong>Location:</strong>{" "}
-                              {subLoc.subLocationCode}
-                            </div>
-                            <div>
-                              <strong>Rack No:</strong> {subLoc.rackNumber}
-                            </div>
-                            <div>
-                              <strong>Item Code:</strong> {subLoc.itemCode}
-                            </div>
-                            <div>
-                              <strong>Item Name:</strong> {subLoc.itemName}
-                            </div>
+                  warehouseDetails.subLocations.length > 0 ? (
+                    <div className="mt-3 detail-item">
+                      <strong className="mb-2">Sub Locations:</strong>
+                      {warehouseDetails.subLocations.map((subLoc) => (
+                        <div
+                          key={subLoc.id}
+                          className="card p-2 mb-2 border shadow-sm"
+                          style={{ fontSize: "0.9rem" }}
+                        >
+                          <div>
+                            <strong>Location:</strong> {subLoc.subLocationCode}
                           </div>
-                        ))}
-                      </div>
-                    )}
+                          <div>
+                            <strong>Rack No:</strong> {subLoc.rackNumber}
+                          </div>
+                          <div>
+                            <strong>Item Code:</strong> {subLoc.itemCode}
+                          </div>
+                          <div>
+                            <strong>Item Name:</strong> {subLoc.itemName}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="mt-3 detail-item">
+                      <strong className="mb-2">Sub Locations:</strong>
+                      <span>No sub locations added</span>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="modal-footer">
