@@ -805,7 +805,7 @@ const MaterialIncoming = () => {
           itemName: batchData.itemName,
         });
 
-        // ✅ Add this batch as a new row in the receipt list
+        // Add this batch as a new row in the receipt list
         setReceiptList((prev) => [
           ...prev,
           {
