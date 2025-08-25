@@ -93,10 +93,10 @@ const SideBar = () => {
         //   icon: "fas fa-newspaper",
         // },
         {
-          label: "Approve Items Quantity",
+          label: "My Approvals",
           compName: "ApproveItemsQuantity",
           newPath: "approve-items-quantity",
-          path: "Administrations / Approve Items Quantity",
+          path: "Administrations / My Approvals",
           icon: "fas fa-thumbs-up",
         },
       ],
@@ -319,8 +319,7 @@ const SideBar = () => {
       permissions.some((p) => p.pageName.includes("Report") && p.canView) &&
       setRightSideComponent(<div>Reports Coming Soon</div>);
     name === "Activity Logs" && setRightSideComponent(<ActivityLogs />);
-    name === "Approve Items Quantity" &&
-      setRightSideComponent(<ApproveItemsQuantity />);
+    name === "My Approvals" && setRightSideComponent(<ApproveItemsQuantity />);
   };
 
   // RBAC

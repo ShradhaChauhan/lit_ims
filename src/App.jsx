@@ -210,7 +210,7 @@ function App() {
           <Route
             path="/approve-items-quantity"
             element={
-              <ProtectedRoute page="Approve Items Quantity">
+              <ProtectedRoute page="My Approvals">
                 <ApproveItemsQuantity />
               </ProtectedRoute>
             }
