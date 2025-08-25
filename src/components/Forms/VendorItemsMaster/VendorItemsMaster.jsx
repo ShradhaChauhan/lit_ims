@@ -1059,7 +1059,7 @@ const VendorItemsMaster = () => {
                         vendors
                           .map((vendor) => ({
                             value: String(vendor.id),
-                            label: vendor.name,
+                            label: vendor.name + " (" + vendor.code + ")",
                           }))
                           .find((option) => option.value === formData.vendor) ||
                         null
@@ -1072,7 +1072,7 @@ const VendorItemsMaster = () => {
                       }
                       options={vendors.map((vendor) => ({
                         value: String(vendor.id),
-                        label: vendor.name,
+                        label: vendor.name + " (" + vendor.code + ")",
                       }))}
                       classNamePrefix="react-select"
                       styles={{
@@ -1139,7 +1139,7 @@ const VendorItemsMaster = () => {
                         items
                           .map((item) => ({
                             value: String(item.id),
-                            label: item.name,
+                            label: item.name + " (" + item.code + ")",
                           }))
                           .find((option) => option.value === formData.item) ||
                         null
@@ -1152,7 +1152,7 @@ const VendorItemsMaster = () => {
                       }
                       options={items.map((item) => ({
                         value: String(item.id),
-                        label: item.name,
+                        label: item.name + " (" + item.code + ")",
                       }))}
                       classNamePrefix="react-select"
                       styles={{
