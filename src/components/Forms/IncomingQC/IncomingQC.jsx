@@ -1359,19 +1359,19 @@ const IncomingQC = () => {
                           </a>
                         </td>
                       </tr>
-                      <tr className="collapse" id={collapseId}>
+                      <tr className="collapse p-0" id={collapseId}>
                         <td colSpan="8">{/* Your item details here */}</td>
                       </tr>
 
                       {/* Accordion Content Row */}
                       <tr className="p-0">
-                        <td colSpan={4} className="p-4 border-0">
+                        <td colSpan={4} className="p-0 border-0">
                           <div
                             id={collapseId}
                             className="accordion-collapse collapse"
                             data-bs-parent="#transactionsTable"
                           >
-                            <table className="table table-hover table-sm mb-0">
+                            <table className="table table-sm mb-0 mx-4">
                               <thead className="table-light">
                                 <tr className="text-primary">
                                   <th>Item Name</th>

@@ -418,8 +418,8 @@ const BOMMaster = () => {
   const handleEditItemChange = (index, field, value) => {
     setBomDetails((prev) => {
       const updatedItems = [...prev.items];
-      if (field === "item") {
-        const selectedItem = items.find((item) => item.id === parseInt(value));
+      if (field === "itemId") {
+        const selectedItem = items.find((i) => i.id === parseInt(value));
         if (selectedItem) {
           updatedItems[index] = {
             ...updatedItems[index],
@@ -463,6 +463,9 @@ const BOMMaster = () => {
   const handleEditDetails = (bom, e) => {
     e.preventDefault();
     console.log(bom);
+    console.log("bomDetails.items from API:", bom.items);
+    console.log("items from /api/items/all:", items);
+
     setBomDetails(bom);
     setIsEditBomDetails(true);
   };
@@ -554,13 +557,14 @@ const BOMMaster = () => {
   const handleItemChange = (index, field, value) => {
     const updatedItems = [...formData.items];
 
-    if (field === "item") {
-      const selectedItem = items.find((item) => item.id === parseInt(value));
+    if (field === "itemId") {
+      const selectedItem = items.find((i) => String(i.id) === value); // compare as string
       if (selectedItem) {
         updatedItems[index] = {
           ...updatedItems[index],
-          item: value,
-          code: selectedItem.code,
+          itemId: selectedItem.id,
+          itemName: selectedItem.name,
+          itemCode: selectedItem.code,
           uom: selectedItem.uom,
         };
       }
@@ -1108,6 +1112,7 @@ const BOMMaster = () => {
             <div className="bulk-actions">
               <input
                 type="file"
+                className="form-control form-control-sm w-auto text-8"
                 accept=".xlsx,.xls"
                 onChange={handleFileUpload}
               />
@@ -1572,118 +1577,150 @@ const BOMMaster = () => {
                           </thead>
                           <tbody className="text-break">
                             {bomDetails.items &&
-                              bomDetails.items.map((item, index) => (
-                                <tr key={index}>
-                                  <td>
-                                    <div className="field-wrapper">
-                                      <div className="position-relative w-100">
-                                        <i className="fas fa-cogs position-absolute z-0 input-icon"></i>
-                                        <select
-                                          className="form-control text-font w-100 ps-5"
+                              bomDetails.items.map((item, index) => {
+                                // 🔍 Debug logs
+                                console.log("Row index:", index);
+                                console.log(
+                                  "item.itemId:",
+                                  item.itemId,
+                                  typeof item.itemId
+                                );
+                                console.log(
+                                  "Available item ids:",
+                                  items.map((i) => i.id)
+                                );
+
+                                return (
+                                  <tr key={index}>
+                                    <td>
+                                      <div className="field-wrapper">
+                                        <div className="position-relative w-100">
+                                          <Select
+                                            className="w-100 text-font"
+                                            classNamePrefix="react-select"
+                                            placeholder="Select Item"
+                                            isSearchable
+                                            options={items.map((i) => ({
+                                              value: i.id, // keep number
+                                              label: `${i.name} (${i.code})`,
+                                              code: i.code,
+                                              uom: i.uom,
+                                            }))}
+                                            value={
+                                              items
+                                                .map((i) => ({
+                                                  value: i.id,
+                                                  label: `${i.name} (${i.code})`,
+                                                  code: i.code,
+                                                  uom: i.uom,
+                                                }))
+                                                .find(
+                                                  (opt) =>
+                                                    opt.code === item.itemCode
+                                                ) || null
+                                            }
+                                            onChange={(selected) =>
+                                              handleEditItemChange(
+                                                index,
+                                                "itemId",
+                                                selected ? selected.value : "" // value will be number
+                                              )
+                                            }
+                                          />
+                                        </div>
+                                      </div>
+                                    </td>
+                                    <td>
+                                      <div className="field-wrapper">
+                                        <input
+                                          type="text"
+                                          className="form-control text-font w-100"
+                                          style={{
+                                            whiteSpace: "normal",
+                                            wordBreak: "break-all",
+                                          }}
+                                          disabled
+                                          value={item.itemCode || ""}
+                                        />
+                                      </div>
+                                    </td>
+                                    <td>
+                                      <div className="field-wrapper">
+                                        <input
+                                          type="text"
+                                          className="form-control text-font w-100"
+                                          disabled
+                                          value={item.uom || ""}
+                                        />
+                                      </div>
+                                    </td>
+                                    <td>
+                                      <div className="field-wrapper">
+                                        <input
+                                          type="number"
+                                          className="form-control text-font w-100"
+                                          min="0.01"
+                                          step="0.01"
                                           required
-                                          value={item.itemId}
+                                          value={item.quantity || ""}
                                           onChange={(e) =>
                                             handleEditItemChange(
                                               index,
-                                              "item",
+                                              "quantity",
                                               e.target.value
                                             )
                                           }
-                                        >
-                                          <option value="">Select Item</option>
-                                          {items.map((i) => (
-                                            <option key={i.id} value={i.id}>
-                                              {i.name} ({i.code})
-                                            </option>
-                                          ))}
-                                        </select>
+                                        />
                                       </div>
-                                    </div>
-                                  </td>
-                                  <td>
-                                    <div className="field-wrapper">
-                                      <input
-                                        type="text"
-                                        className="form-control text-font w-100"
-                                        disabled
-                                        value={item.itemCode || ""}
-                                      />
-                                    </div>
-                                  </td>
-                                  <td>
-                                    <div className="field-wrapper">
-                                      <input
-                                        type="text"
-                                        className="form-control text-font w-100"
-                                        disabled
-                                        value={item.uom || ""}
-                                      />
-                                    </div>
-                                  </td>
-                                  <td>
-                                    <div className="field-wrapper">
-                                      <input
-                                        type="number"
-                                        className="form-control text-font w-100"
-                                        min="0.01"
-                                        step="0.01"
-                                        required
-                                        value={item.quantity || ""}
-                                        onChange={(e) =>
-                                          handleEditItemChange(
-                                            index,
-                                            "quantity",
-                                            e.target.value
-                                          )
-                                        }
-                                      />
-                                    </div>
-                                  </td>
-                                  <td>
-                                    <div className="field-wrapper">
-                                      <div className="position-relative w-100">
-                                        <i className="fas fa-warehouse position-absolute z-0 input-icon"></i>
-                                        <select
-                                          className="form-control text-font w-100 ps-5"
-                                          required
-                                          value={item.warehouseId || ""}
-                                          onChange={(e) =>
-                                            handleEditItemChange(
-                                              index,
-                                              "warehouse",
-                                              e.target.value
-                                            )
+                                    </td>
+                                    <td>
+                                      <div className="field-wrapper">
+                                        <div className="position-relative w-100">
+                                          <i className="fas fa-warehouse position-absolute z-0 input-icon"></i>
+                                          <select
+                                            className="form-control text-font w-100 ps-5"
+                                            required
+                                            value={item.warehouseId || ""}
+                                            onChange={(e) =>
+                                              handleEditItemChange(
+                                                index,
+                                                "warehouse",
+                                                e.target.value
+                                              )
+                                            }
+                                          >
+                                            <option value="">
+                                              Select Warehouse
+                                            </option>
+                                            {warehouses.map((w) => (
+                                              <option key={w.id} value={w.id}>
+                                                {w.name} ({w.code})
+                                              </option>
+                                            ))}
+                                          </select>
+                                        </div>
+                                      </div>
+                                    </td>
+                                    <td className="actions">
+                                      <div className="field-wrapper">
+                                        <button
+                                          type="button"
+                                          className="btn-icon btn-danger ms-2"
+                                          title="Remove Item"
+                                          onClick={() =>
+                                            handleRemoveItemFromEdit(index)
+                                          }
+                                          disabled={
+                                            bomDetails.items.length <= 1
                                           }
                                         >
-                                          <option value="">
-                                            Select Warehouse
-                                          </option>
-                                          {warehouses.map((w) => (
-                                            <option key={w.id} value={w.id}>
-                                              {w.name} ({w.code})
-                                            </option>
-                                          ))}
-                                        </select>
+                                          <i className="fas fa-trash"></i>
+                                        </button>
                                       </div>
-                                    </div>
-                                  </td>
-                                  <td className="actions">
-                                    <div className="field-wrapper">
-                                      <button
-                                        type="button"
-                                        className="btn-icon btn-danger ms-2"
-                                        title="Remove Item"
-                                        onClick={() =>
-                                          handleRemoveItemFromEdit(index)
-                                        }
-                                        disabled={bomDetails.items.length <= 1}
-                                      >
-                                        <i className="fas fa-trash"></i>
-                                      </button>
-                                    </div>
-                                  </td>
-                                </tr>
-                              ))}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
                           </tbody>
                         </table>
                         <button
