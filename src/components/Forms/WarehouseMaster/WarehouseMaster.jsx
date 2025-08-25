@@ -1423,6 +1423,7 @@ const WarehouseMaster = () => {
                     <strong>Type:</strong>
                     <span>{warehouseDetails.type}</span>
                   </div>
+                  {/* Status Row */}
                   <div className="detail-item">
                     <strong>Status:</strong>
                     <span
@@ -1432,35 +1433,45 @@ const WarehouseMaster = () => {
                         warehouseDetails.status?.slice(1)}
                     </span>
                   </div>
+                </div>
+                <div className="detail-item">
                   {/* Sub Locations Section */}
                   {warehouseDetails.subLocations &&
                   warehouseDetails.subLocations.length > 0 ? (
-                    <div className="mt-3 detail-item">
-                      <strong className="mb-2">Sub Locations:</strong>
-                      {warehouseDetails.subLocations.map((subLoc) => (
-                        <div
-                          key={subLoc.id}
-                          className="card p-2 mb-2 border shadow-sm"
-                          style={{ fontSize: "0.9rem" }}
-                        >
-                          <div>
-                            <strong>Location:</strong> {subLoc.subLocationCode}
-                          </div>
-                          <div>
-                            <strong>Rack No:</strong> {subLoc.rackNumber}
-                          </div>
-                          <div>
-                            <strong>Item Code:</strong> {subLoc.itemCode}
-                          </div>
-                          <div>
-                            <strong>Item Name:</strong> {subLoc.itemName}
-                          </div>
-                        </div>
-                      ))}
+                    <div className="mt-4 w-100">
+                      <strong className="mb-2 d-block">Sub Locations:</strong>
+                      <div className="table-responsive">
+                        <table className="table table-bordered table-striped table-sm w-100 align-middle">
+                          <thead className="table-light">
+                            <tr>
+                              <th scope="col" style={{ width: "5%" }}>
+                                #
+                              </th>
+                              <th scope="col">Sub Location Code</th>
+                              <th scope="col">Rack No</th>
+                              <th scope="col">Item Code</th>
+                              <th scope="col">Item Name</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {warehouseDetails.subLocations.map(
+                              (subLoc, index) => (
+                                <tr key={subLoc.id}>
+                                  <td>{index + 1}</td>
+                                  <td>{subLoc.subLocationCode || "—"}</td>
+                                  <td>{subLoc.rackNumber || "—"}</td>
+                                  <td>{subLoc.itemCode || "—"}</td>
+                                  <td>{subLoc.itemName || "—"}</td>
+                                </tr>
+                              )
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   ) : (
-                    <div className="detail-item">
-                      <strong>Status:</strong>
+                    <div className="mt-4 w-100">
+                      <strong className="d-block">Sub Locations:</strong>
                       <span>No Sub Locations Available</span>
                     </div>
                   )}
