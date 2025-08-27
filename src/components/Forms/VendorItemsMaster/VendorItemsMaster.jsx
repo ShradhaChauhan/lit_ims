@@ -413,7 +413,7 @@ const VendorItemsMaster = () => {
             // Reset form
             handleReset(e);
             // Close the form
-            setIsAddVendorItem(false);
+            // setIsAddVendorItem(false);
             // Refresh the vendor-items list
             fetchVendorItems();
           } else {

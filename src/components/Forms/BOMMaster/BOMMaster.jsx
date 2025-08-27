@@ -418,8 +418,8 @@ const BOMMaster = () => {
   const handleEditItemChange = (index, field, value) => {
     setBomDetails((prev) => {
       const updatedItems = [...prev.items];
-      if (field === "itemId") {
-        const selectedItem = items.find((i) => i.id === parseInt(value));
+      if (field === "item") {
+        const selectedItem = items.find((item) => item.id === parseInt(value));
         if (selectedItem) {
           updatedItems[index] = {
             ...updatedItems[index],
@@ -463,9 +463,6 @@ const BOMMaster = () => {
   const handleEditDetails = (bom, e) => {
     e.preventDefault();
     console.log(bom);
-    console.log("bomDetails.items from API:", bom.items);
-    console.log("items from /api/items/all:", items);
-
     setBomDetails(bom);
     setIsEditBomDetails(true);
   };
@@ -557,14 +554,13 @@ const BOMMaster = () => {
   const handleItemChange = (index, field, value) => {
     const updatedItems = [...formData.items];
 
-    if (field === "itemId") {
-      const selectedItem = items.find((i) => String(i.id) === value); // compare as string
+    if (field === "item") {
+      const selectedItem = items.find((item) => item.id === parseInt(value));
       if (selectedItem) {
         updatedItems[index] = {
           ...updatedItems[index],
-          itemId: selectedItem.id,
-          itemName: selectedItem.name,
-          itemCode: selectedItem.code,
+          item: value,
+          code: selectedItem.code,
           uom: selectedItem.uom,
         };
       }
@@ -1110,18 +1106,20 @@ const BOMMaster = () => {
               <label htmlFor="select-all">{selectedBoms.length} Selected</label>
             </div>
             <div className="bulk-actions">
-              <input
-                type="file"
-                className="form-control form-control-sm w-auto text-8"
-                accept=".xlsx,.xls"
-                onChange={handleFileUpload}
-              />
-              <button
-                onClick={handleUpload}
-                className="btn btn-outline-secondary text-8"
-              >
-                Import Excel
-              </button>
+              <div className="d-flex align-items-center gap-2">
+                <input
+                  className="form-control form-control-sm w-auto text-8"
+                  type="file"
+                  accept=".xlsx,.xls"
+                  onChange={handleFileUpload}
+                />
+                <button
+                  onClick={handleUpload}
+                  className="btn btn-outline-secondary text-8"
+                >
+                  Import Excel
+                </button>
+              </div>
               <button
                 className="btn btn-outline-success text-8"
                 onClick={() => {
@@ -1153,8 +1151,8 @@ const BOMMaster = () => {
                 <th className="checkbox-cell">
                   <input type="checkbox" id="select-all" disabled />
                 </th>
-                <th>BOM Name</th>
                 <th>BOM Code</th>
+                <th>BOM Name</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -1186,12 +1184,12 @@ const BOMMaster = () => {
                     </td>
                     <td className="ps-4">
                       <div>
-                        <span>{bom.name}</span>
+                        <span>{bom.code}</span>
                       </div>
                     </td>
                     <td className="ps-4">
                       <div>
-                        <span>{bom.code}</span>
+                        <span>{bom.name}</span>
                       </div>
                     </td>
                     <td className="ps-4">
@@ -1577,150 +1575,118 @@ const BOMMaster = () => {
                           </thead>
                           <tbody className="text-break">
                             {bomDetails.items &&
-                              bomDetails.items.map((item, index) => {
-                                // 🔍 Debug logs
-                                console.log("Row index:", index);
-                                console.log(
-                                  "item.itemId:",
-                                  item.itemId,
-                                  typeof item.itemId
-                                );
-                                console.log(
-                                  "Available item ids:",
-                                  items.map((i) => i.id)
-                                );
-
-                                return (
-                                  <tr key={index}>
-                                    <td>
-                                      <div className="field-wrapper">
-                                        <div className="position-relative w-100">
-                                          <Select
-                                            className="w-100 text-font"
-                                            classNamePrefix="react-select"
-                                            placeholder="Select Item"
-                                            isSearchable
-                                            options={items.map((i) => ({
-                                              value: i.id, // keep number
-                                              label: `${i.name} (${i.code})`,
-                                              code: i.code,
-                                              uom: i.uom,
-                                            }))}
-                                            value={
-                                              items
-                                                .map((i) => ({
-                                                  value: i.id,
-                                                  label: `${i.name} (${i.code})`,
-                                                  code: i.code,
-                                                  uom: i.uom,
-                                                }))
-                                                .find(
-                                                  (opt) =>
-                                                    opt.code === item.itemCode
-                                                ) || null
-                                            }
-                                            onChange={(selected) =>
-                                              handleEditItemChange(
-                                                index,
-                                                "itemId",
-                                                selected ? selected.value : "" // value will be number
-                                              )
-                                            }
-                                          />
-                                        </div>
-                                      </div>
-                                    </td>
-                                    <td>
-                                      <div className="field-wrapper">
-                                        <input
-                                          type="text"
-                                          className="form-control text-font w-100"
-                                          style={{
-                                            whiteSpace: "normal",
-                                            wordBreak: "break-all",
-                                          }}
-                                          disabled
-                                          value={item.itemCode || ""}
-                                        />
-                                      </div>
-                                    </td>
-                                    <td>
-                                      <div className="field-wrapper">
-                                        <input
-                                          type="text"
-                                          className="form-control text-font w-100"
-                                          disabled
-                                          value={item.uom || ""}
-                                        />
-                                      </div>
-                                    </td>
-                                    <td>
-                                      <div className="field-wrapper">
-                                        <input
-                                          type="number"
-                                          className="form-control text-font w-100"
-                                          min="0.01"
-                                          step="0.01"
+                              bomDetails.items.map((item, index) => (
+                                <tr key={index}>
+                                  <td>
+                                    <div className="field-wrapper">
+                                      <div className="position-relative w-100">
+                                        <i className="fas fa-cogs position-absolute z-0 input-icon"></i>
+                                        <select
+                                          className="form-control text-font w-100 ps-5"
                                           required
-                                          value={item.quantity || ""}
+                                          value={item.itemId}
                                           onChange={(e) =>
                                             handleEditItemChange(
                                               index,
-                                              "quantity",
+                                              "item",
                                               e.target.value
                                             )
                                           }
-                                        />
-                                      </div>
-                                    </td>
-                                    <td>
-                                      <div className="field-wrapper">
-                                        <div className="position-relative w-100">
-                                          <i className="fas fa-warehouse position-absolute z-0 input-icon"></i>
-                                          <select
-                                            className="form-control text-font w-100 ps-5"
-                                            required
-                                            value={item.warehouseId || ""}
-                                            onChange={(e) =>
-                                              handleEditItemChange(
-                                                index,
-                                                "warehouse",
-                                                e.target.value
-                                              )
-                                            }
-                                          >
-                                            <option value="">
-                                              Select Warehouse
+                                        >
+                                          <option value="">Select Item</option>
+                                          {items.map((i) => (
+                                            <option key={i.id} value={i.id}>
+                                              {i.name} ({i.code})
                                             </option>
-                                            {warehouses.map((w) => (
-                                              <option key={w.id} value={w.id}>
-                                                {w.name} ({w.code})
-                                              </option>
-                                            ))}
-                                          </select>
-                                        </div>
+                                          ))}
+                                        </select>
                                       </div>
-                                    </td>
-                                    <td className="actions">
-                                      <div className="field-wrapper">
-                                        <button
-                                          type="button"
-                                          className="btn-icon btn-danger ms-2"
-                                          title="Remove Item"
-                                          onClick={() =>
-                                            handleRemoveItemFromEdit(index)
-                                          }
-                                          disabled={
-                                            bomDetails.items.length <= 1
+                                    </div>
+                                  </td>
+                                  <td>
+                                    <div className="field-wrapper">
+                                      <input
+                                        type="text"
+                                        className="form-control text-font w-100"
+                                        disabled
+                                        value={item.itemCode || ""}
+                                      />
+                                    </div>
+                                  </td>
+                                  <td>
+                                    <div className="field-wrapper">
+                                      <input
+                                        type="text"
+                                        className="form-control text-font w-100"
+                                        disabled
+                                        value={item.uom || ""}
+                                      />
+                                    </div>
+                                  </td>
+                                  <td>
+                                    <div className="field-wrapper">
+                                      <input
+                                        type="number"
+                                        className="form-control text-font w-100"
+                                        min="0.01"
+                                        step="0.01"
+                                        required
+                                        value={item.quantity || ""}
+                                        onChange={(e) =>
+                                          handleEditItemChange(
+                                            index,
+                                            "quantity",
+                                            e.target.value
+                                          )
+                                        }
+                                      />
+                                    </div>
+                                  </td>
+                                  <td>
+                                    <div className="field-wrapper">
+                                      <div className="position-relative w-100">
+                                        <i className="fas fa-warehouse position-absolute z-0 input-icon"></i>
+                                        <select
+                                          className="form-control text-font w-100 ps-5"
+                                          required
+                                          value={item.warehouseId || ""}
+                                          onChange={(e) =>
+                                            handleEditItemChange(
+                                              index,
+                                              "warehouse",
+                                              e.target.value
+                                            )
                                           }
                                         >
-                                          <i className="fas fa-trash"></i>
-                                        </button>
+                                          <option value="">
+                                            Select Warehouse
+                                          </option>
+                                          {warehouses.map((w) => (
+                                            <option key={w.id} value={w.id}>
+                                              {w.name} ({w.code})
+                                            </option>
+                                          ))}
+                                        </select>
                                       </div>
-                                    </td>
-                                  </tr>
-                                );
-                              })}
+                                    </div>
+                                  </td>
+                                  <td className="actions">
+                                    <div className="field-wrapper">
+                                      <button
+                                        type="button"
+                                        className="btn-icon btn-danger ms-2"
+                                        title="Remove Item"
+                                        onClick={() =>
+                                          handleRemoveItemFromEdit(index)
+                                        }
+                                        disabled={bomDetails.items.length <= 1}
+                                      >
+                                        <i className="fas fa-trash"></i>
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
                           </tbody>
                         </table>
                         <button
