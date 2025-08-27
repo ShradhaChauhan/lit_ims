@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import { AbilityContext } from "../../../utils/AbilityContext";
 import exportToExcel from "../../../utils/exportToExcel";
 import Select from "react-select";
+import * as XLSX from "xlsx";
 
 const WarehouseMaster = () => {
   const [errors, setErrors] = useState({});
@@ -742,6 +743,65 @@ const WarehouseMaster = () => {
     setEditSubLocations(editSubLocations.filter((loc) => loc.id !== id));
   };
 
+  // Download template
+  const downloadTemplateWarehouse = () => {
+    // Define headers
+    const headers = [
+      "code",
+      "name",
+      "status",
+      "type",
+      "subLocationCode",
+      "rackNumber",
+      "itemCode",
+      "itemName",
+    ];
+
+    // Dummy warehouse JSON with multiple subLocations
+    const warehouse = {
+      code: "WH001",
+      name: "Main Warehouse",
+      status: "ACTIVE",
+      type: "STR",
+      subLocations: [
+        {
+          subLocationCode: "R1A1",
+          rackNumber: "1",
+          itemCode: "ITEM001",
+          itemName: "Steel Rod 12mm",
+        },
+        {
+          subLocationCode: "R1A1",
+          rackNumber: "2",
+          itemCode: "ITEM002",
+          itemName: "Aluminium Sheet",
+        },
+      ],
+    };
+
+    // Flatten JSON → one row per subLocation
+    const data = warehouse.subLocations.map((sub) => ({
+      code: warehouse.code,
+      name: warehouse.name,
+      status: warehouse.status,
+      type: warehouse.type,
+      subLocationCode: sub.subLocationCode,
+      rackNumber: sub.rackNumber,
+      itemCode: sub.itemCode,
+      itemName: sub.itemName,
+    }));
+
+    // Convert JSON → worksheet
+    const ws = XLSX.utils.json_to_sheet(data, { header: headers });
+
+    // Create workbook
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Warehouses");
+
+    // Trigger download
+    XLSX.writeFile(wb, "Warehouse_Template.xlsx");
+  };
+
   return (
     <div>
       {isLoading && (
@@ -1160,6 +1220,13 @@ const WarehouseMaster = () => {
                   <i className="fas fa-file-import me-1"></i> Import Excel
                 </button>
               </div>
+              <button
+                className="btn btn-outline-dark text-8"
+                onClick={downloadTemplateWarehouse}
+              >
+                <i className="fa-solid fa-download me-1"></i>
+                Download Template
+              </button>
               <button
                 className="btn btn-outline-success text-8"
                 onClick={() => {

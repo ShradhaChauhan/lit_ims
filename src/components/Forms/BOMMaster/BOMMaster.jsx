@@ -8,8 +8,6 @@ import exportToExcel from "../../../utils/exportToExcel";
 import { AbilityContext } from "../../../utils/AbilityContext";
 import Select from "react-select";
 import * as XLSX from "xlsx";
-import axios from "axios";
-import js from "@eslint/js";
 
 const BOMMaster = () => {
   const [errors, setErrors] = useState({});
@@ -668,7 +666,7 @@ const BOMMaster = () => {
           itemId: Number(row["Component Code"]),
           itemName: row["Item Description"],
           itemCode: String(row["Component Code"]),
-          uom: "PCS", // default
+          uom: row["UOM"], // default
           quantity: Number(row["Quantity"]),
           warehouseId: 1, // default
           warehouseName: "Store1",
@@ -697,6 +695,57 @@ const BOMMaster = () => {
       console.error(error);
       alert("Error uploading BOM data.");
     }
+  };
+
+  // Download template
+  const downloadBOMTemplate = () => {
+    // Define headers
+    const headers = [
+      "Parent Item",
+      "Product Description",
+      "Component Code",
+      "Item Description",
+      "Quantity",
+      "UOM",
+    ];
+
+    // Dummy rows
+    const dummyData = [
+      [
+        "10010001",
+        "Split AC Indoor Unit",
+        "20020011",
+        "Copper Pipe 10mm",
+        2,
+        "PCS",
+      ],
+      [
+        "10010001",
+        "Split AC Indoor Unit",
+        "20020022",
+        "Remote Control AC",
+        1,
+        "PCS",
+      ],
+      [
+        "10010001",
+        "Split AC Indoor Unit",
+        "20020033",
+        "Mounting Bracket Set",
+        1,
+        "SET",
+      ],
+    ];
+
+    // Create worksheet with headers + data
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...dummyData]);
+
+    // Create workbook
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "BOM Template");
+
+    // Trigger file download
+    XLSX.writeFile(wb, "BOM_Template.xlsx");
   };
 
   return (
@@ -1117,7 +1166,7 @@ const BOMMaster = () => {
                   onClick={handleUpload}
                   className="btn btn-outline-secondary text-8"
                 >
-                  Import Excel
+                  <i className="fas fa-file-import me-1"></i> Import Excel
                 </button>
               </div>
               <button
@@ -1132,6 +1181,14 @@ const BOMMaster = () => {
                 <i className="fas fa-file-export me-1"></i>
                 Export Selected
               </button>
+              <button
+                className="btn btn-outline-dark text-8"
+                onClick={downloadBOMTemplate}
+              >
+                <i className="fa-solid fa-download me-1"></i>
+                Download BOM Template
+              </button>
+
               <button
                 className="btn-action btn-danger"
                 onClick={() => {

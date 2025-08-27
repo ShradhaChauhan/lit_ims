@@ -855,6 +855,61 @@ const ItemMaster = () => {
     label: `${g.name} - ${g.groupCode}`,
   }));
 
+  // Download template
+  const downloadTemplateItemMaster = () => {
+    // Headers from your uploaded file
+    const headers = [
+      "name",
+      "code",
+      "uom",
+      "groupName",
+      "status",
+      "price",
+      "stQty",
+      "life",
+      "iqc",
+      "inventoryItem",
+    ];
+
+    // Two dummy rows
+    const data = [
+      {
+        name: "Adaptor For 12V 1AMP",
+        code: "10101001",
+        uom: "PCS",
+        groupName: "Finished Goods",
+        status: "active",
+        price: 100,
+        stQty: 500,
+        life: 12,
+        iqc: true,
+        inventoryItem: true,
+      },
+      {
+        name: "HDMI Cable 1.5m",
+        code: "10102001",
+        uom: "PCS",
+        groupName: "Electronics",
+        status: "inactive",
+        price: 50,
+        stQty: 1000,
+        life: 24,
+        iqc: false,
+        inventoryItem: true,
+      },
+    ];
+
+    // Convert JSON to worksheet
+    const ws = XLSX.utils.json_to_sheet(data, { header: headers });
+
+    // Create workbook
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Vendors");
+
+    // Trigger download
+    XLSX.writeFile(wb, "ItemMaster_Template.xlsx");
+  };
+
   return (
     <div>
       {isLoading && (
@@ -1433,6 +1488,13 @@ const ItemMaster = () => {
               >
                 <i className="fas fa-file-export me-1"></i>
                 Export Selected
+              </button>
+              <button
+                className="btn btn-outline-dark text-8"
+                onClick={downloadTemplateItemMaster}
+              >
+                <i className="fa-solid fa-download me-1"></i>
+                Download Template
               </button>
               <button
                 className="btn-action btn-danger"

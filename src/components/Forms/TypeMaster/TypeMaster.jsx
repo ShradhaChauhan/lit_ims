@@ -554,6 +554,27 @@ const TypeMaster = () => {
     }
   };
 
+  // Download template
+  const downloadTemplateTypeMaster = () => {
+    // Define headers + dummy rows
+    const data = [
+      ["name", "status"], // headers
+      ["Type 1", "active"], // dummy row 1
+      ["Type 2", "inactive"], // dummy row 2
+      ["Type 3", "active"], // dummy row 3
+    ];
+
+    // Create a worksheet from data
+    const worksheet = XLSX.utils.aoa_to_sheet(data);
+
+    // Create workbook and append the worksheet
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Vendors");
+
+    // Trigger download
+    XLSX.writeFile(workbook, "TypeMaster_Template.xlsx");
+  };
+
   return (
     <div>
       {isLoading && (
@@ -807,6 +828,13 @@ const TypeMaster = () => {
                   Export Selected
                 </button>
               </div>
+              <button
+                className="btn btn-outline-dark text-8"
+                onClick={downloadTemplateTypeMaster}
+              >
+                <i className="fa-solid fa-download me-1"></i>
+                Download Template
+              </button>
               <button
                 className="btn-action btn-danger"
                 onClick={() => {
