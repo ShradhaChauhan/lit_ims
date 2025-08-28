@@ -476,8 +476,14 @@ const IssueProduction = () => {
                       >
                         <option value="">Select Requisition</option>
                         {requisitionNumbers.map((reqNumber, index) => (
-                          <option key={index} value={reqNumber}>
-                            {reqNumber}
+                          <option
+                            key={index}
+                            value={reqNumber.transactionNumber}
+                          >
+                            {"(" +
+                              reqNumber.warehouseName +
+                              ") - " +
+                              reqNumber.transactionNumber}
                           </option>
                         ))}
                       </select>
