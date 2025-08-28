@@ -960,6 +960,69 @@ const MaterialIncoming = () => {
     }
   };
 
+  const [selectedRows, setSelectedRows] = useState([]); // store selected row indexes
+  const [printedRows, setPrintedRows] = useState([]); // permanently disabled row indexes
+  const [lockedItemCode, setLockedItemCode] = useState(null); // active itemCode for current cycle
+
+  // get selected item codes
+  const selectedItemCodes = [
+    ...new Set(selectedRows.map((i) => receiptList[i]?.itemCode)),
+  ];
+
+  const toggleRowSelection = (index) => {
+    const row = receiptList[index];
+    if (!row) return;
+
+    setSelectedRows((prev) => {
+      let newSelected;
+      if (prev.includes(index)) {
+        newSelected = prev.filter((i) => i !== index);
+      } else {
+        newSelected = [...prev, index];
+      }
+
+      // if nothing selected → unlock
+      if (newSelected.length === 0) {
+        setLockedItemCode(null);
+      } else {
+        // otherwise lock to the current item's code
+        setLockedItemCode(receiptList[newSelected[0]].itemCode);
+      }
+
+      return newSelected;
+    });
+  };
+
+  const handlePrint = (e) => {
+    e.preventDefault();
+
+    if (selectedRows.length === 0) {
+      toast.error("Please select at least one item to print");
+      return;
+    }
+
+    // Mark selected rows as permanently printed (disabled)
+    const updatedPrinted = [...printedRows, ...selectedRows];
+    setPrintedRows(updatedPrinted);
+
+    // Remove from selection
+    setSelectedRows([]);
+
+    // check if all rows of lockedItemCode are printed
+    const allIndexesForLocked = receiptList
+      .map((r, i) => (r.itemCode === lockedItemCode ? i : null))
+      .filter((i) => i !== null);
+
+    const allPrinted = allIndexesForLocked.every((i) =>
+      updatedPrinted.includes(i)
+    );
+
+    if (allPrinted) {
+      // unlock for next itemCode
+      setLockedItemCode(null);
+    }
+  };
+
   return (
     <div>
       {/* Header section */}
@@ -1389,13 +1452,20 @@ const MaterialIncoming = () => {
           {mode && (
             <div>
               <div className="table-form-container mx-2 mt-4">
-                <div className="form-header">
+                <div className="form-header d-flex justify-content-between align-items-center">
                   <h2>Receipt Items</h2>
+                  <button
+                    className="btn btn-outline-dark text-8"
+                    onClick={handlePrint}
+                  >
+                    <i className="fa-solid fa-print me-1"></i> Print
+                  </button>
                 </div>
                 <div className="item-table-container mt-3">
                   <table className="align-middle">
                     <thead>
                       <tr>
+                        <th></th>
                         <th>Item Name</th>
                         <th>Item Code</th>
                         <th>Quantity</th>
@@ -1407,7 +1477,7 @@ const MaterialIncoming = () => {
                     <tbody>
                       {receiptList.length === 0 ? (
                         <tr className="no-data-row">
-                          <td colSpan="6" className="no-data-cell">
+                          <td colSpan="7" className="no-data-cell">
                             <div className="no-data-content">
                               <i className="fas fa-box-open no-data-icon"></i>
                               <p className="no-data-text">No Items Added</p>
@@ -1418,106 +1488,112 @@ const MaterialIncoming = () => {
                           </td>
                         </tr>
                       ) : (
-                        receiptList.map((receipt, index) => (
-                          <tr key={index}>
-                            <td>{receipt.itemName}</td>
-                            <td>{receipt.itemCode}</td>
-                            <td>
-                              {mode == "scan" ? (
+                        receiptList.map((receipt, index) => {
+                          const isSelected = selectedRows.includes(index);
+                          const isPrinted = printedRows.includes(index);
+
+                          // disable condition:
+                          // 1. already printed
+                          // 2. locked to a different itemCode
+                          const shouldDisable =
+                            isPrinted ||
+                            (lockedItemCode &&
+                              lockedItemCode !== receipt.itemCode);
+
+                          return (
+                            <tr
+                              key={index}
+                              className={isPrinted ? "printed-row" : ""}
+                            >
+                              <td>
                                 <input
-                                  type="text"
-                                  className="form-control text-8"
-                                  value={receipt.quantity}
-                                  onChange={(e) => {
-                                    const updatedList = [...receiptList];
-                                    updatedList[index].quantity =
-                                      e.target.value;
-                                    setReceiptList(updatedList);
-                                  }}
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => toggleRowSelection(index)}
+                                  disabled={shouldDisable}
                                 />
-                              ) : (
-                                receipt.quantity
-                              )}
-                            </td>
-                            <td>{receipt.batchNo}</td>
-                            <td>
-                              <select
-                                className={`form-control text-font ${
-                                  receipt.warehouseId ? "" : "text-secondary"
-                                }`}
-                                value={
-                                  receipt.warehouseId
-                                    ? `${receipt.warehouseId}|${receipt.warehouse}`
-                                    : ""
-                                }
-                                onChange={(e) => {
-                                  const selectedValue = e.target.value;
-                                  if (selectedValue) {
-                                    const [selectedId, selectedName] =
-                                      selectedValue.split("|");
-                                    const updatedList = [...receiptList];
-                                    updatedList[index].warehouse = selectedName;
-                                    updatedList[index].warehouseId = selectedId;
-                                    setReceiptList(updatedList);
+                              </td>
+                              <td>{receipt.itemName}</td>
+                              <td>{receipt.itemCode}</td>
+                              <td>
+                                {mode === "scan" ? (
+                                  <input
+                                    type="text"
+                                    className="form-control text-8"
+                                    value={receipt.quantity}
+                                    onChange={(e) => {
+                                      const updatedList = [...receiptList];
+                                      updatedList[index].quantity =
+                                        e.target.value;
+                                      setReceiptList(updatedList);
+                                    }}
+                                    disabled={isPrinted}
+                                  />
+                                ) : (
+                                  receipt.quantity
+                                )}
+                              </td>
+                              <td>{receipt.batchNo}</td>
+                              <td>
+                                <select
+                                  className={`form-control text-font ${
+                                    receipt.warehouseId ? "" : "text-secondary"
+                                  }`}
+                                  value={
+                                    receipt.warehouseId
+                                      ? `${receipt.warehouseId}|${receipt.warehouse}`
+                                      : ""
                                   }
-                                }}
-                                disabled
-                              >
-                                {warehouses.map((w) => (
-                                  <option
-                                    key={w.id}
-                                    value={`${w.id}|${w.name}`}
-                                  >
-                                    {w.name}
-                                  </option>
-                                ))}
-                              </select>
-                            </td>
-                            <td className="actions ps-3">
-                              <button
-                                className="btn-icon btn-primary"
-                                title="View Details"
-                                onClick={(e) => handleViewDetails(receipt, e)}
-                              >
-                                <i className="fas fa-eye"></i>
-                              </button>
-                              <button
-                                className="btn-icon btn-danger"
-                                title="Delete"
-                                onClick={(e) => handleDeleteItem(index, e)}
-                              >
-                                <i className="fas fa-trash"></i>
-                              </button>
-                            </td>
-                          </tr>
-                        ))
+                                  onChange={(e) => {
+                                    const selectedValue = e.target.value;
+                                    if (selectedValue) {
+                                      const [selectedId, selectedName] =
+                                        selectedValue.split("|");
+                                      const updatedList = [...receiptList];
+                                      updatedList[index].warehouse =
+                                        selectedName;
+                                      updatedList[index].warehouseId =
+                                        selectedId;
+                                      setReceiptList(updatedList);
+                                    }
+                                  }}
+                                  disabled
+                                >
+                                  {warehouses.map((w) => (
+                                    <option
+                                      key={w.id}
+                                      value={`${w.id}|${w.name}`}
+                                    >
+                                      {w.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </td>
+                              <td className="actions ps-3">
+                                <button
+                                  className="btn-icon btn-primary"
+                                  title="View Details"
+                                  onClick={(e) => handleViewDetails(receipt, e)}
+                                  disabled={isPrinted}
+                                >
+                                  <i className="fas fa-eye"></i>
+                                </button>
+                                <button
+                                  className="btn-icon btn-danger"
+                                  title="Delete"
+                                  onClick={(e) => handleDeleteItem(index, e)}
+                                  disabled={isPrinted}
+                                >
+                                  <i className="fas fa-trash"></i>
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })
                       )}
                     </tbody>
                   </table>
                 </div>
-              </div>
-              <div className="form-actions">
-                <button
-                  className="btn btn-primary border border-0 text-8 px-3 fw-medium py-2 me-3 float-end"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (receiptList.length === 0) {
-                      toast.error(
-                        "Please add at least one item to the receipt"
-                      );
-                      return;
-                    }
-                    setIsPreviewModalOpen(true);
-                  }}
-                >
-                  <i className="fa-solid fa-floppy-disk me-1"></i> Save Receipt
-                </button>
-                <button
-                  className="btn btn-secondary border border-0 text-8 px-3 fw-medium py-2 bg-secondary me-3 float-end"
-                  onClick={handleReset}
-                >
-                  <i className="fa-solid fa-xmark me-1"></i> Clear
-                </button>
               </div>
             </div>
           )}

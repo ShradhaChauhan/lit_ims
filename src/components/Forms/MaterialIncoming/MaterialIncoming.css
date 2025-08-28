@@ -56,3 +56,11 @@
   max-height: 60vh;
   overflow-y: auto;
 }
+
+.printed-row {
+  background-color: #d4edda !important;
+  color: #155724;
+}
+.printed-row td {
+  opacity: 0.9;
+}

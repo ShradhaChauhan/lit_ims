@@ -3,3 +3,4 @@ services/
 dist/
 vite.config.js
 api.jsx
+IncomingQC.jsx
