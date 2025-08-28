@@ -993,7 +993,7 @@ const MaterialIncoming = () => {
     });
   };
 
-  const handlePrint = (e) => {
+  const handlePrint = async (e) => {
     e.preventDefault();
 
     if (selectedRows.length === 0) {
@@ -1001,25 +1001,38 @@ const MaterialIncoming = () => {
       return;
     }
 
-    // Mark selected rows as permanently printed (disabled)
-    const updatedPrinted = [...printedRows, ...selectedRows];
-    setPrintedRows(updatedPrinted);
+    try {
+      // prepare plain array of batch numbers
+      const payload = selectedRows.map((i) => receiptList[i].batchNo);
+      console.log("Printing labels for batches:", payload);
+      // call API with payload
+      const response = await api.post("/api/qr/save", payload);
 
-    // Remove from selection
-    setSelectedRows([]);
+      toast.success("Labels printed successfully!");
 
-    // check if all rows of lockedItemCode are printed
-    const allIndexesForLocked = receiptList
-      .map((r, i) => (r.itemCode === lockedItemCode ? i : null))
-      .filter((i) => i !== null);
+      // Mark selected rows as permanently printed (disabled)
+      const updatedPrinted = [...printedRows, ...selectedRows];
+      setPrintedRows(updatedPrinted);
 
-    const allPrinted = allIndexesForLocked.every((i) =>
-      updatedPrinted.includes(i)
-    );
+      // Clear selection
+      setSelectedRows([]);
 
-    if (allPrinted) {
-      // unlock for next itemCode
-      setLockedItemCode(null);
+      // check if all rows of lockedItemCode are printed
+      const allIndexesForLocked = receiptList
+        .map((r, i) => (r.itemCode === lockedItemCode ? i : null))
+        .filter((i) => i !== null);
+
+      const allPrinted = allIndexesForLocked.every((i) =>
+        updatedPrinted.includes(i)
+      );
+
+      if (allPrinted) {
+        // unlock for next itemCode
+        setLockedItemCode(null);
+      }
+    } catch (error) {
+      toast.error("Error printing labels: " + error.message);
+      console.error("Print error:", error);
     }
   };
 
@@ -1594,6 +1607,29 @@ const MaterialIncoming = () => {
                     </tbody>
                   </table>
                 </div>
+              </div>
+              <div className="form-actions">
+                <button
+                  className="btn btn-primary border border-0 text-8 px-3 fw-medium py-2 me-3 float-end"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (receiptList.length === 0) {
+                      toast.error(
+                        "Please add at least one item to the receipt"
+                      );
+                      return;
+                    }
+                    setIsPreviewModalOpen(true);
+                  }}
+                >
+                  <i className="fa-solid fa-floppy-disk me-1"></i> Save Receipt
+                </button>
+                <button
+                  className="btn btn-secondary border border-0 text-8 px-3 fw-medium py-2 bg-secondary me-3 float-end"
+                  onClick={handleReset}
+                >
+                  <i className="fa-solid fa-xmark me-1"></i> Clear
+                </button>
               </div>
             </div>
           )}
