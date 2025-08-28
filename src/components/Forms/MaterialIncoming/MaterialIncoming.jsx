@@ -1156,8 +1156,90 @@ const MaterialIncoming = () => {
                   Select Item <span className="text-danger fs-6">*</span>
                 </label>
                 <div className="position-relative w-100">
-                  <i className="fas fa-box position-absolute ms-2 z-0 input-icon"></i>
-                  <select
+                  <i
+                    className="fas fa-box position-absolute ms-2 input-icon"
+                    style={{
+                      top: "50%",
+                      left: "10px",
+                      transform: "translateY(-50%)",
+                      zIndex: 1,
+                    }}
+                  ></i>
+                  <Select
+                    id="item"
+                    className="text-font ms-1"
+                    classNamePrefix="react-select"
+                    placeholder="Select Item"
+                    value={
+                      vendorItems
+                        .map((item) => ({
+                          value: item.id,
+                          label: `${item.itemName}${
+                            item.itemCode ? ` (${item.itemCode})` : ""
+                          }`,
+                        }))
+                        .find((option) => option.value === vendorItem) || null
+                    }
+                    onChange={(selectedOption) => {
+                      if (selectedOption) {
+                        const selectedId = selectedOption.value;
+                        const selectedItem = vendorItems.find(
+                          (v) => v.id === selectedId
+                        );
+
+                        if (selectedItem) {
+                          setVendorItem(selectedId);
+                          setFormData((prev) => ({
+                            ...prev,
+                            vendorItem: selectedId,
+                            quantity: selectedItem.quantity || 0,
+                            itemCode: selectedItem.itemCode,
+                            itemName: selectedItem.itemName,
+                          }));
+                        }
+                      }
+                    }}
+                    options={vendorItems.map((item) => ({
+                      value: item.id,
+                      label: `${item.itemName}${
+                        item.itemCode ? ` (${item.itemCode})` : ""
+                      }`,
+                    }))}
+                    styles={{
+                      control: (base) => ({
+                        ...base,
+                        minHeight: "32px",
+                        height: "32px",
+                        fontSize: "0.8rem",
+                        paddingLeft: "30px",
+                      }),
+                      valueContainer: (base) => ({
+                        ...base,
+                        height: "32px",
+                        padding: "0 6px",
+                      }),
+                      indicatorsContainer: (base) => ({
+                        ...base,
+                        height: "32px",
+                      }),
+                      menu: (base) => ({
+                        ...base,
+                        fontSize: "0.8rem",
+                      }),
+                      option: (base, state) => ({
+                        ...base,
+                        fontSize: "0.8rem",
+                        padding: "6px 10px",
+                        backgroundColor: state.isSelected
+                          ? "#e9ecef"
+                          : state.isFocused
+                          ? "#f8f9fa"
+                          : "white",
+                        color: "black",
+                      }),
+                    }}
+                  />
+                  {/* <select
                     className={`form-select ps-5 ms-1 text-font ${
                       vendorItem ? "" : "text-secondary"
                     }`}
@@ -1192,7 +1274,7 @@ const MaterialIncoming = () => {
                         {item.itemCode && `(${item.itemCode})`}
                       </option>
                     ))}
-                  </select>
+                  </select> */}
                 </div>
               </div>
             ) : mode == "scan" ? (
