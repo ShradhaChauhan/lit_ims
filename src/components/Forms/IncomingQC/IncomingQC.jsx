@@ -8,7 +8,6 @@ import "./IncomingQC.css";
 import _ from "lodash";
 
 const IncomingQC = () => {
-  const [batchFiles, setBatchFiles] = useState({});
   const [isShowQualityCheckForm, setIsShowQualityCheckForm] = useState(false);
   const [searchBatchNo, setSearchBatchNo] = useState("");
   const [iqc, setIqc] = useState([]);
@@ -597,29 +596,23 @@ const IncomingQC = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const MAX_FILE_SIZE_MB = 2;
 
-  const handleFileChange = (batchId, file) => {
-    setBatchFiles((prev) => ({
-      ...prev,
-      [batchId]: file,
-    }));
+  const handleFileChange = (event) => {
+    event.preventDefault();
+    const file = event.target.files[0];
+
+    if (file) {
+      const fileSizeInMB = file.size / (1024 * 1024); // Convert bytes to MB
+      if (fileSizeInMB > MAX_FILE_SIZE_MB) {
+        toast.warning("File size must be less than or equal to 2MB.");
+        setSelectedFile(null);
+
+        return;
+      }
+
+      setSelectedFile(file);
+    }
+    // setSelectedFile(event.target.files[0]);
   };
-
-  // const handleFileChange = (event) => {
-  //   event.preventDefault();
-  //   const file = event.target.files[0];
-
-  //   if (file) {
-  //     const fileSizeInMB = file.size / (1024 * 1024); // Convert bytes to MB
-  //     if (fileSizeInMB > MAX_FILE_SIZE_MB) {
-  //       toast.warning("File size must be less than or equal to 2MB.");
-  //       setSelectedFile(null);
-
-  //       return;
-  //     }
-
-  //     setSelectedFile(file);
-  //   }
-  // };
 
   // Shortcut keys
   useEffect(() => {
@@ -865,7 +858,7 @@ const IncomingQC = () => {
                   <label className="text-8 font-weight p-0">
                     Trno: <span className="text-primary text-8">{trno}</span>
                   </label>
-                  {/* <div className="mt-3 mb-3">
+                  <div className="mt-3 mb-3">
                     <label
                       htmlFor="formFile"
                       className="form-label mb-0 text-8 font-weight py-2"
@@ -887,7 +880,7 @@ const IncomingQC = () => {
                         {selectedFile.name}
                       </div>
                     )}
-                  </div> */}
+                  </div>
 
                   {/* Bulk Action Buttons */}
                   {Array.isArray(batchDetails) && batchDetails.length > 0 && (
@@ -1053,35 +1046,6 @@ const IncomingQC = () => {
                             </div>
                           )}
 
-                          <div className="mt-3 mb-3">
-                            <label
-                              htmlFor={`formFile-${batch.id}`}
-                              className="form-label mb-0 text-8 font-weight py-2"
-                            >
-                              Add Attachment{" "}
-                              <span className="text-danger fs-6">*</span>
-                            </label>
-                            <div className="position-relative w-100">
-                              <input
-                                className="form-control text-8"
-                                type="file"
-                                id={`formFile-${batch.id}`}
-                                accept=".pdf, .jpg, .jpeg, .heic"
-                                onChange={(e) =>
-                                  handleFileChange(batch.id, e.target.files[0])
-                                }
-                              />
-                            </div>
-                            {batchFiles[batch.id] && (
-                              <div className="mt-3 text-8">
-                                <span className="fw-medium">
-                                  Selected File:
-                                </span>{" "}
-                                {batchFiles[batch.id].name}
-                              </div>
-                            )}
-                          </div>
-
                           {/* Buttons */}
                           <div className="mt-3 d-flex">
                             <button
@@ -1127,7 +1091,229 @@ const IncomingQC = () => {
                         </div>
                       );
                     })}
+
+                  {/* <div>
+                    <label className="text-8 font-weight p-0 mt-3">
+                      Quality Status <span className="text-danger fs-6">*</span>
+                    </label>
+                    <div className="row">
+                      <div className="col-4">
+                        <button
+                          type="button"
+                          className={`btn w-100 text-8 ${
+                            isPass === "PASS"
+                              ? "btn-success"
+                              : isFail === "FAIL" || isHold === "HOLD"
+                              ? "btn-secondary"
+                              : "btn-outline-success"
+                          }`}
+                          onClick={() => {
+                            setIsPass("PASS");
+                            setIsFail(false);
+                            setIsHold(false);
+                            const storeWarehouse = warehouses.find(
+                              (w) => w.type === "STR"
+                            );
+                            if (storeWarehouse) {
+                              setSelectedWarehouse(storeWarehouse.id);
+                            }
+                          }}
+                        >
+                          Pass (Alt + P)
+                        </button>
+                      </div>
+                      <div className="col-4">
+                        <button
+                          type="button"
+                          className={`btn w-100 text-8 ${
+                            isFail
+                              ? "btn-danger"
+                              : isPass === "PASS" || isHold === "HOLD"
+                              ? "btn-secondary"
+                              : "btn-outline-danger"
+                          }`}
+                          onClick={() => {
+                            setIsFail("FAIL");
+                            setIsPass(false);
+                            setIsHold(false);
+                            const rejectionWarehouse = warehouses.find(
+                              (w) => w.type === "REJ"
+                            );
+                            if (rejectionWarehouse) {
+                              setSelectedWarehouse(rejectionWarehouse.id);
+                            }
+                          }}
+                        >
+                          Fail (Alt + F)
+                        </button>
+                      </div>
+                      <div className="col-4">
+                        <button
+                          type="button"
+                          className={`btn w-100 text-8 ${
+                            isHold
+                              ? "btn-warning"
+                              : isPass === "PASS" || isFail === "FAIL"
+                              ? "btn-secondary"
+                              : "btn-outline-warning"
+                          }`}
+                          onClick={() => {
+                            setIsFail(false);
+                            setIsHold("HOLD");
+                            setIsPass(false);
+                            const storeWarehouse = warehouses.find(
+                              (w) => w.type === "IQC"
+                            );
+                            if (storeWarehouse) {
+                              setSelectedWarehouse(storeWarehouse.id);
+                            }
+                          }}
+                        >
+                          Hold (Alt + H)
+                        </button>
+                      </div>
+                    </div>
+                  </div>{" "} */}
                 </div>
+                {/* <div className={`${isFail ? "col-md-3" : "col-md-3"}`}>
+                  <div className="mt-3">
+                    <label
+                      htmlFor="warehouse"
+                      className="form-label mb-0 text-8 font-weight py-2"
+                    >
+                      Warehouse <span className="text-danger fs-6">*</span>
+                    </label>
+                    <div className="position-relative w-100">
+                      <i className="fas fa-warehouse position-absolute z-0 input-icon text-font"></i>
+                      <select
+                        className={`form-control ps-5 text-font ${
+                          selectedWarehouse ? "" : "text-secondary"
+                        }`}
+                        id="warehouse"
+                        placeholder="Select warehouse"
+                        value={selectedWarehouse}
+                        onChange={(e) => setSelectedWarehouse(e.target.value)}
+                        disabled
+                      >
+                        <option value="" disabled hidden className="text-muted">
+                          Select warehouse
+                        </option>
+                        {warehouses.map((warehouse) => (
+                          <option key={warehouse.id} value={warehouse.id}>
+                            {warehouse.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    <label
+                      htmlFor="formFile"
+                      className="form-label mb-0 text-8 font-weight py-2"
+                    >
+                      Add Attachment <span className="text-danger fs-6">*</span>
+                    </label>
+                    <div className="position-relative w-100">
+                      <input
+                        className="form-control text-8"
+                        type="file"
+                        id="formFile"
+                        accept=".pdf, .jpg, .jpeg, .heic"
+                        onChange={handleFileChange}
+                      />
+                    </div>
+                    {selectedFile && (
+                      <div className="mt-3 text-8">
+                        <span className="fw-medium ">Selected File:</span>{" "}
+                        {selectedFile.name}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className={`${fieldClass} form-group`}>
+                  {isFail && (
+                    <div>
+                      <label
+                        htmlFor="category"
+                        className="form-label mb-0 text-8 font-weight py-3"
+                      >
+                        Defect Category{" "}
+                        <span className="text-danger fs-6">*</span>
+                      </label>
+                      <div className="position-relative w-100">
+                        <i
+                          className="fa-solid fa-triangle-exclamation position-absolute input-icon text-font"
+                          style={{
+                            top: "80%",
+                            left: "12px",
+                            transform: "translateY(-50%)",
+                            zIndex: "2",
+                          }}
+                        ></i>
+                        <select
+                          className={`form-select ps-5 text-font ${
+                            defectCategory ? "" : "text-secondary"
+                          }`}
+                          id="category"
+                          value={defectCategory}
+                          onChange={(e) => setDefectCategory(e.target.value)}
+                        >
+                          <option
+                            value=""
+                            disabled
+                            hidden
+                            className="text-muted"
+                          >
+                            Select defect category
+                          </option>
+                          <option value="Broken/Damaged">Broken/Damaged</option>
+                          <option value="Color Mismatch">Color Mismatch</option>
+                          <option value="Dimensional Issue">
+                            Dimensional Issue
+                          </option>
+                          <option value="Issue Label">Issue Label</option>
+                          <option value="Material Defect">
+                            Material Defect
+                          </option>
+                          <option value="Missing Components">
+                            Missing Components
+                          </option>
+                          <option value="Packaging Damage">
+                            Packaging Damage
+                          </option>
+                          <option value="Quality Below Spec">
+                            Quality Below Spec
+                          </option>
+                          <option value="Surface Defect">Surface Defect</option>
+                          <option value="Wrong Item">Wrong Item</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
+
+                  {(isFail || isHold) && (
+                    <div>
+                      <label
+                        htmlFor="remarks"
+                        className="form-label mb-0 text-8 font-weight py-3"
+                      >
+                        Remarks
+                      </label>
+                      <div className="position-relative w-100">
+                        <i
+                          className="fas fa-comment position-absolute input-icon text-font"
+                          style={{ top: "70%", left: "12px", zIndex: "2" }}
+                        ></i>
+                        <textarea
+                          className="form-control ps-5 text-font pt-3"
+                          id="remarks"
+                          placeholder="Enter additional remarks"
+                          onChange={(e) => setRemarks(e.target.value)}
+                        ></textarea>
+                      </div>
+                    </div>
+                  )}
+                </div> */}
               </div>
             </div>
 
