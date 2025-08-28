@@ -155,13 +155,13 @@ const SideBar = () => {
           path: "Masters / Group Master",
           icon: "fas fa-layer-group",
         },
-        {
-          label: "Part Master",
-          compName: "PartMaster",
-          newPath: "part-master",
-          path: "Masters / Part Master",
-          icon: "fas fa-cog",
-        },
+        // {
+        //   label: "Part Master",
+        //   compName: "PartMaster",
+        //   newPath: "part-master",
+        //   path: "Masters / Part Master",
+        //   icon: "fas fa-cog",
+        // },
       ],
     },
     {

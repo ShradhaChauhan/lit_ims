@@ -413,7 +413,7 @@ const VendorItemsMaster = () => {
             // Reset form
             handleReset(e);
             // Close the form
-            setIsAddVendorItem(false);
+            // setIsAddVendorItem(false);
             // Refresh the vendor-items list
             fetchVendorItems();
           } else {
@@ -902,6 +902,55 @@ const VendorItemsMaster = () => {
   const endIndex = Math.min(startIndex + itemsPerPage, totalEntries);
   const currentItems = filteredVendorItems.slice(startIndex, endIndex);
 
+  // Download template
+  const downloadTemplateVendorItems = () => {
+    // Headers from your uploaded file
+    const headers = [
+      "vendor_code",
+      "vendor_name",
+      "item_code",
+      "item_name",
+      "days",
+      "quantity",
+      "price",
+      "status",
+    ];
+
+    // Two dummy rows
+    const data = [
+      {
+        vendor_code: "V00001",
+        vendor_name: "ABC Enterprises",
+        item_code: "10101001",
+        item_name: "Adaptor 12V 1AMP",
+        days: 10,
+        quantity: 500,
+        price: 50,
+        status: "Active",
+      },
+      {
+        vendor_code: "V00002",
+        vendor_name: "XYZ Traders",
+        item_code: "10102005",
+        item_name: "HDMI Cable 1.5m",
+        days: 15,
+        quantity: 1000,
+        price: 100,
+        status: "Inactive",
+      },
+    ];
+
+    // Convert JSON to worksheet
+    const ws = XLSX.utils.json_to_sheet(data, { header: headers });
+
+    // Create workbook
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Vendors");
+
+    // Trigger download
+    XLSX.writeFile(wb, "VendorItemsMater_Template.xlsx");
+  };
+
   return (
     <div>
       {isLoading && (
@@ -1384,6 +1433,13 @@ const VendorItemsMaster = () => {
               >
                 <i className="fas fa-file-export me-1"></i>
                 Export Selected
+              </button>
+              <button
+                className="btn btn-outline-dark text-8"
+                onClick={downloadTemplateVendorItems}
+              >
+                <i className="fa-solid fa-download me-1"></i>
+                Download Template
               </button>
               <button
                 className="btn-action btn-danger"

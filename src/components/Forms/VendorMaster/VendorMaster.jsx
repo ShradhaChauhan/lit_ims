@@ -860,6 +860,64 @@ const VendorMaster = () => {
     }
   };
 
+  // Download Template
+  const downloadTemplate = () => {
+    // Define the headers exactly like in your uploaded Excel
+    const headers = [
+      "type",
+      "name",
+      "address",
+      "city",
+      "pincode",
+      "country",
+      "state",
+      "mobile",
+      "email",
+      "status",
+      "code",
+    ];
+
+    // Create two dummy rows
+    const data = [
+      {
+        type: "Vendor",
+        name: "ABC Enterprises",
+        address: "123 Street",
+        city: "Delhi",
+        pincode: "110001",
+        country: "IN",
+        state: "Delhi",
+        mobile: "9999999999",
+        email: "abc@company.com",
+        status: "active",
+        code: "V00001",
+      },
+      {
+        type: "Customer",
+        name: "XYZ Traders",
+        address: "456 Avenue",
+        city: "Mumbai",
+        pincode: "400001",
+        country: "IN",
+        state: "Maharashtra",
+        mobile: "8888888888",
+        email: "xyz@company.com",
+        status: "inactive",
+        code: "C00001",
+      },
+    ];
+
+    // Convert JSON to worksheet
+    const ws = XLSX.utils.json_to_sheet(data, { header: headers });
+
+    // Create a workbook and append worksheet
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Vendor details");
+
+    // Download Excel file
+    XLSX.writeFile(wb, "Vendor_Template.xlsx");
+  };
+
   return (
     <div>
       {isLoading && (
@@ -1412,6 +1470,13 @@ const VendorMaster = () => {
               >
                 <i className="fas fa-file-export me-1"></i>
                 Export Selected
+              </button>
+              <button
+                className="btn btn-outline-dark text-8"
+                onClick={downloadTemplate}
+              >
+                <i className="fa-solid fa-download me-1"></i>
+                Download Template
               </button>
               <button
                 className="btn-action btn-danger"

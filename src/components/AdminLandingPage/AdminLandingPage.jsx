@@ -966,14 +966,14 @@ const AdminLandingPage = () => {
                 <h4 className={`fw-bold ${card.changeColor}`}>{card.value}</h4>
                 <div className="d-flex justify-content-between align-items-center">
                   <p className={`${card.changeColor} mb-0`}>{card.change}</p>
-
+                  {/* 
                   <button
                     className="btn btn-outline-primary p-2 w-auto d-inline-flex text-8"
                     type="button"
                     onClick={() => handleShow(card)}
                   >
                     <i className="fas fa-eye"></i>
-                  </button>
+                  </button> */}
                 </div>
               </div>
             </div>

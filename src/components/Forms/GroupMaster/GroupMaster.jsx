@@ -620,6 +620,27 @@ const GroupMaster = () => {
     }
   };
 
+  // Download template
+  const downloadTemplateGroupMaster = () => {
+    // Define headers + dummy rows
+    const data = [
+      ["groupCode", "name", "status"], // headers
+      ["100", "Items", "active"], // dummy row 1
+      ["101", "10101-FINISHED GOOD ADAPTER", "active"], // dummy row 2
+      ["102", "10201-FINISHED GOOD REMOTE", "inactive"], // dummy row 3
+    ];
+
+    // Create a worksheet from data
+    const worksheet = XLSX.utils.aoa_to_sheet(data);
+
+    // Create workbook and append the worksheet
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Group");
+
+    // Trigger download
+    XLSX.writeFile(workbook, "GroupMaster_Template.xlsx");
+  };
+
   return (
     <div>
       {isLoading && (
@@ -916,6 +937,13 @@ const GroupMaster = () => {
               >
                 <i className="fas fa-file-export me-1"></i>
                 Export Selected
+              </button>
+              <button
+                className="btn btn-outline-dark text-8"
+                onClick={downloadTemplateGroupMaster}
+              >
+                <i className="fa-solid fa-download me-1"></i>
+                Download Template
               </button>
               <button
                 className="btn-action btn-danger text-8"
