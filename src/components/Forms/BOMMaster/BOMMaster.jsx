@@ -6,6 +6,8 @@ import { Modal } from "bootstrap";
 import { toast } from "react-toastify";
 import exportToExcel from "../../../utils/exportToExcel";
 import { AbilityContext } from "../../../utils/AbilityContext";
+import Select from "react-select";
+import * as XLSX from "xlsx";
 
 const BOMMaster = () => {
   const [errors, setErrors] = useState({});
@@ -631,6 +633,121 @@ const BOMMaster = () => {
   // RBAC
   const ability = useContext(AbilityContext);
 
+  // Import excel
+  const [jsonData, setJsonData] = useState(null);
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const data = new Uint8Array(event.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+
+      // Always read "Sheet1" from your llyodbom.xlsx
+      const worksheet = workbook.Sheets["Sheet1"];
+      const rows = XLSX.utils.sheet_to_json(worksheet);
+
+      // Group by Parent Item
+      const grouped = {};
+      rows.forEach((row) => {
+        const parentCode = row["Parent Item"];
+        if (!grouped[parentCode]) {
+          grouped[parentCode] = {
+            name: row["Product Description"],
+            code: String(parentCode),
+            status: "active",
+            items: [],
+          };
+        }
+
+        grouped[parentCode].items.push({
+          itemId: Number(row["Component Code"]),
+          itemName: row["Item Description"],
+          itemCode: String(row["Component Code"]),
+          uom: row["UOM"], // default
+          quantity: Number(row["Quantity"]),
+          warehouseId: 1, // default
+          warehouseName: "Store1",
+        });
+      });
+
+      setJsonData(Object.values(grouped));
+    };
+    console.log(jsonData);
+    reader.readAsArrayBuffer(file);
+  };
+
+  const handleUpload = async () => {
+    if (!jsonData) {
+      alert("Please upload a file first!");
+      return;
+    }
+
+    try {
+      for (const bom of jsonData) {
+        console.log(bom);
+        await api.post("/api/bom/add", bom);
+      }
+      alert("Upload successful!");
+    } catch (error) {
+      console.error(error);
+      alert("Error uploading BOM data.");
+    }
+  };
+
+  // Download template
+  const downloadBOMTemplate = () => {
+    // Define headers
+    const headers = [
+      "Parent Item",
+      "Product Description",
+      "Component Code",
+      "Item Description",
+      "Quantity",
+      "UOM",
+    ];
+
+    // Dummy rows
+    const dummyData = [
+      [
+        "10010001",
+        "Split AC Indoor Unit",
+        "20020011",
+        "Copper Pipe 10mm",
+        2,
+        "PCS",
+      ],
+      [
+        "10010001",
+        "Split AC Indoor Unit",
+        "20020022",
+        "Remote Control AC",
+        1,
+        "PCS",
+      ],
+      [
+        "10010001",
+        "Split AC Indoor Unit",
+        "20020033",
+        "Mounting Bracket Set",
+        1,
+        "SET",
+      ],
+    ];
+
+    // Create worksheet with headers + data
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...dummyData]);
+
+    // Create workbook
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "BOM Template");
+
+    // Trigger file download
+    XLSX.writeFile(wb, "BOM_Template.xlsx");
+  };
+
   return (
     <div>
       <nav className="navbar bg-light border-body" data-bs-theme="light">
@@ -816,8 +933,8 @@ const BOMMaster = () => {
                 <table>
                   <thead>
                     <tr>
-                      <th>Item</th>
-                      <th>Code</th>
+                      <th>Item Name</th>
+                      <th>Item Code</th>
                       <th>UOM</th>
                       <th>Quantity</th>
                       <th>Warehouse</th>
@@ -842,26 +959,47 @@ const BOMMaster = () => {
                           <td>
                             <div className="field-wrapper">
                               <div className="position-relative w-100">
-                                <i className="fas fa-cogs position-absolute z-0 input-icon"></i>
-                                <select
-                                  className="form-control text-font w-100 ps-5"
-                                  required
-                                  value={currentItem.item}
-                                  onChange={(e) =>
+                                <i
+                                  className="fas fa-cogs position-absolute input-icon"
+                                  style={{
+                                    top: "50%",
+                                    left: "10px",
+                                    transform: "translateY(-50%)",
+                                    zIndex: 1,
+                                  }}
+                                ></i>
+                                <Select
+                                  className="w-100 text-font ps-5"
+                                  classNamePrefix="react-select"
+                                  placeholder="Select Item"
+                                  isSearchable
+                                  options={items.map((item) => ({
+                                    value: item.id,
+                                    label: `${item.name} (${item.code})`,
+                                    code: item.code,
+                                    uom: item.uom,
+                                  }))}
+                                  // find the correct option from items to show as selected
+                                  value={
+                                    items
+                                      .map((item) => ({
+                                        value: item.id,
+                                        label: `${item.name} (${item.code})`,
+                                        code: item.code,
+                                        uom: item.uom,
+                                      }))
+                                      .find(
+                                        (opt) => opt.value === currentItem.item
+                                      ) || null
+                                  }
+                                  onChange={(selected) =>
                                     handleItemChange(
                                       index,
                                       "item",
-                                      e.target.value
+                                      selected ? selected.value : ""
                                     )
                                   }
-                                >
-                                  <option value="">Select Item</option>
-                                  {items.map((item) => (
-                                    <option key={item.id} value={item.id}>
-                                      {item.name} ({item.code})
-                                    </option>
-                                  ))}
-                                </select>
+                                />
                               </div>
                             </div>
                           </td>
@@ -1017,6 +1155,20 @@ const BOMMaster = () => {
               <label htmlFor="select-all">{selectedBoms.length} Selected</label>
             </div>
             <div className="bulk-actions">
+              <div className="d-flex align-items-center gap-2">
+                <input
+                  className="form-control form-control-sm w-auto text-8"
+                  type="file"
+                  accept=".xlsx,.xls"
+                  onChange={handleFileUpload}
+                />
+                <button
+                  onClick={handleUpload}
+                  className="btn btn-outline-secondary text-8"
+                >
+                  <i className="fas fa-file-import me-1"></i> Import Excel
+                </button>
+              </div>
               <button
                 className="btn btn-outline-success text-8"
                 onClick={() => {
@@ -1029,6 +1181,14 @@ const BOMMaster = () => {
                 <i className="fas fa-file-export me-1"></i>
                 Export Selected
               </button>
+              <button
+                className="btn btn-outline-dark text-8"
+                onClick={downloadBOMTemplate}
+              >
+                <i className="fa-solid fa-download me-1"></i>
+                Download BOM Template
+              </button>
+
               <button
                 className="btn-action btn-danger"
                 onClick={() => {
@@ -1048,8 +1208,8 @@ const BOMMaster = () => {
                 <th className="checkbox-cell">
                   <input type="checkbox" id="select-all" disabled />
                 </th>
-                <th>BOM Name</th>
                 <th>BOM Code</th>
+                <th>BOM Name</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -1081,12 +1241,12 @@ const BOMMaster = () => {
                     </td>
                     <td className="ps-4">
                       <div>
-                        <span>{bom.name}</span>
+                        <span>{bom.code}</span>
                       </div>
                     </td>
                     <td className="ps-4">
                       <div>
-                        <span>{bom.code}</span>
+                        <span>{bom.name}</span>
                       </div>
                     </td>
                     <td className="ps-4">
@@ -1462,8 +1622,8 @@ const BOMMaster = () => {
                         <table>
                           <thead>
                             <tr>
-                              <th>Item</th>
-                              <th>Code</th>
+                              <th>Item Name</th>
+                              <th>Item Code</th>
                               <th>UOM</th>
                               <th>Quantity</th>
                               <th>Warehouse</th>

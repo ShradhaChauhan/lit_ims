@@ -26,7 +26,7 @@ import Reports from "./components/Reports/Reports";
 import Unauthorized from "./components/Unauthorized/Unauthorized";
 import useAutoLogout from "./utils/useAutoLogout";
 import { toast } from "react-toastify";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import StoreLandingPage from "./components/StoreLandingPage/StoreLandingPage";
 
 function App() {
@@ -41,6 +41,20 @@ function App() {
   };
 
   useAutoLogout(handleLogout, 15 * 60 * 1000); // 20 min timeout
+
+  // Logout if user closes the tab or browser
+  // useEffect(() => {
+  //   const handleBeforeUnload = (e) => {
+  //     handleLogout();
+  //   };
+
+  //   window.addEventListener("beforeunload", handleBeforeUnload);
+
+  //   return () => {
+  //     window.removeEventListener("beforeunload", handleBeforeUnload);
+  //   };
+  // }, []);
+
   return (
     <Routes>
       <Route path="/" element={<Login />} />
@@ -196,7 +210,7 @@ function App() {
           <Route
             path="/approve-items-quantity"
             element={
-              <ProtectedRoute page="Approve Items Quantity">
+              <ProtectedRoute page="My Approvals">
                 <ApproveItemsQuantity />
               </ProtectedRoute>
             }

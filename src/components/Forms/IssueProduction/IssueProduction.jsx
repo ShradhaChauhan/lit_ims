@@ -525,11 +525,11 @@ const IssueProduction = () => {
                 <table>
                   <thead>
                     <tr className="text-break">
-                      <th>Item Name</th>
                       <th>Item Code</th>
+                      <th>Item Name</th>
                       <th>Stock Qty</th>
                       <th>Requested Qty</th>
-                      <th>Standard Qty</th>
+                      {/* <th>Standard Qty</th> */}
                       <th>Issued Qty</th>
                       <th>Variance</th>
                       <th>Status</th>
@@ -553,12 +553,12 @@ const IssueProduction = () => {
                         <tr key={item.id}>
                           <td className="ps-4">
                             <div>
-                              <span>{item.itemName}</span>
+                              <span>{item.code}</span>
                             </div>
                           </td>
                           <td className="ps-4">
                             <div>
-                              <span>{item.code}</span>
+                              <span>{item.itemName}</span>
                             </div>
                           </td>
                           <td className="ps-4">
@@ -571,11 +571,11 @@ const IssueProduction = () => {
                               <span>{item.requestedQty}</span>
                             </div>
                           </td>
-                          <td className="ps-4">
+                          {/* <td className="ps-4">
                             <div>
                               <span>{item.standardQty}</span>
                             </div>
-                          </td>
+                          </td> */}
                           <td className="ps-4">
                             <div>
                               <span>{item.issuedQty}</span>

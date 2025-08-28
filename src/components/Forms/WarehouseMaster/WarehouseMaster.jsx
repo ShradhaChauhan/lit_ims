@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import { AbilityContext } from "../../../utils/AbilityContext";
 import exportToExcel from "../../../utils/exportToExcel";
 import Select from "react-select";
+import * as XLSX from "xlsx";
 
 const WarehouseMaster = () => {
   const [errors, setErrors] = useState({});
@@ -27,6 +28,7 @@ const WarehouseMaster = () => {
   const [selectAll, setSelectAll] = useState(false);
   const [status, setStatus] = useState("active");
   const [isChecked, setIsChecked] = useState(true);
+  const [editSubLocations, setEditSubLocations] = useState([]);
   const [subLocations, setSubLocations] = useState([
     {
       id: Date.now(),
@@ -426,15 +428,17 @@ const WarehouseMaster = () => {
 
     // Clear previous errors
     setEditErrors({});
-
+    console.log("Editing warehouse with subLocations:", editSubLocations);
     const updatedData = {
       id: warehouseDetails.id,
       name: warehouseDetails.name,
       code: warehouseDetails.code,
       type: warehouseDetails.type,
-      subLocations: warehouseDetails.subLocations,
+      subLocations: editSubLocations,
       status: warehouseDetails.status,
     };
+
+    console.log(updatedData);
 
     api
       .put(`/api/warehouses/update/${warehouseDetails.id}`, updatedData)
@@ -708,6 +712,98 @@ const handleSaveToAPI = async () => {
   }
 };
 
+
+  useEffect(() => {
+    if (warehouseDetails?.subLocations) {
+      setEditSubLocations(warehouseDetails.subLocations);
+    }
+  }, [warehouseDetails]);
+
+  const handleEditLocationChange = (index, field, value) => {
+    const updated = [...editSubLocations];
+    if (field) {
+      updated[index][field] = value;
+    } else if (typeof value === "object") {
+      updated[index] = { ...updated[index], ...value };
+    }
+    setEditSubLocations(updated);
+  };
+
+  const handleAddEditSubLocation = () => {
+    setEditSubLocations([
+      ...editSubLocations,
+      {
+        id: Date.now(),
+        subLocationCode: "",
+        itemName: "",
+        itemCode: "",
+        rackNumber: "",
+      },
+    ]);
+  };
+
+  const handleDeleteEditSubLocation = (id) => {
+    setEditSubLocations(editSubLocations.filter((loc) => loc.id !== id));
+  };
+
+  // Download template
+  const downloadTemplateWarehouse = () => {
+    // Define headers
+    const headers = [
+      "code",
+      "name",
+      "status",
+      "type",
+      "subLocationCode",
+      "rackNumber",
+      "itemCode",
+      "itemName",
+    ];
+
+    // Dummy warehouse JSON with multiple subLocations
+    const warehouse = {
+      code: "WH001",
+      name: "Main Warehouse",
+      status: "ACTIVE",
+      type: "STR",
+      subLocations: [
+        {
+          subLocationCode: "R1A1",
+          rackNumber: "1",
+          itemCode: "ITEM001",
+          itemName: "Steel Rod 12mm",
+        },
+        {
+          subLocationCode: "R1A1",
+          rackNumber: "2",
+          itemCode: "ITEM002",
+          itemName: "Aluminium Sheet",
+        },
+      ],
+    };
+
+    // Flatten JSON → one row per subLocation
+    const data = warehouse.subLocations.map((sub) => ({
+      code: warehouse.code,
+      name: warehouse.name,
+      status: warehouse.status,
+      type: warehouse.type,
+      subLocationCode: sub.subLocationCode,
+      rackNumber: sub.rackNumber,
+      itemCode: sub.itemCode,
+      itemName: sub.itemName,
+    }));
+
+    // Convert JSON → worksheet
+    const ws = XLSX.utils.json_to_sheet(data, { header: headers });
+
+    // Create workbook
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Warehouses");
+
+    // Trigger download
+    XLSX.writeFile(wb, "Warehouse_Template.xlsx");
+  };
 
   return (
     <div>
@@ -1128,6 +1224,13 @@ const handleSaveToAPI = async () => {
                 </button>
               </div>
               <button
+                className="btn btn-outline-dark text-8"
+                onClick={downloadTemplateWarehouse}
+              >
+                <i className="fa-solid fa-download me-1"></i>
+                Download Template
+              </button>
+              <button
                 className="btn btn-outline-success text-8"
                 onClick={() => {
                   const rowData = filteredWarehouses.filter((row) =>
@@ -1390,6 +1493,7 @@ const handleSaveToAPI = async () => {
                     <strong>Type:</strong>
                     <span>{warehouseDetails.type}</span>
                   </div>
+                  {/* Status Row */}
                   <div className="detail-item">
                     <strong>Status:</strong>
                     <span
@@ -1399,34 +1503,48 @@ const handleSaveToAPI = async () => {
                         warehouseDetails.status?.slice(1)}
                     </span>
                   </div>
+                </div>
+                <div className="detail-item">
                   {/* Sub Locations Section */}
                   {warehouseDetails.subLocations &&
-                    warehouseDetails.subLocations.length > 0 && (
-                      <div className="mt-3 detail-item">
-                        <strong className="mb-2">Sub Locations:</strong>
-                        {warehouseDetails.subLocations.map((subLoc) => (
-                          <div
-                            key={subLoc.id}
-                            className="card p-2 mb-2 border shadow-sm"
-                            style={{ fontSize: "0.9rem" }}
-                          >
-                            <div>
-                              <strong>Location:</strong>{" "}
-                              {subLoc.subLocationCode}
-                            </div>
-                            <div>
-                              <strong>Rack No:</strong> {subLoc.rackNumber}
-                            </div>
-                            <div>
-                              <strong>Item Code:</strong> {subLoc.itemCode}
-                            </div>
-                            <div>
-                              <strong>Item Name:</strong> {subLoc.itemName}
-                            </div>
-                          </div>
-                        ))}
+                  warehouseDetails.subLocations.length > 0 ? (
+                    <div className="mt-4 w-100">
+                      <strong className="mb-2 d-block">Sub Locations:</strong>
+                      <div className="table-responsive">
+                        <table className="table table-bordered table-striped table-sm w-100 align-middle">
+                          <thead className="table-light">
+                            <tr>
+                              <th scope="col" style={{ width: "5%" }}>
+                                #
+                              </th>
+                              <th scope="col">Sub Location Code</th>
+                              <th scope="col">Rack No</th>
+                              <th scope="col">Item Code</th>
+                              <th scope="col">Item Name</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {warehouseDetails.subLocations.map(
+                              (subLoc, index) => (
+                                <tr key={subLoc.id}>
+                                  <td>{index + 1}</td>
+                                  <td>{subLoc.subLocationCode || "—"}</td>
+                                  <td>{subLoc.rackNumber || "—"}</td>
+                                  <td>{subLoc.itemCode || "—"}</td>
+                                  <td>{subLoc.itemName || "—"}</td>
+                                </tr>
+                              )
+                            )}
+                          </tbody>
+                        </table>
                       </div>
-                    )}
+                    </div>
+                  ) : (
+                    <div className="mt-4 w-100">
+                      <strong className="d-block">Sub Locations:</strong>
+                      <span>No Sub Locations Available</span>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="modal-footer">
@@ -1632,6 +1750,131 @@ const handleSaveToAPI = async () => {
                             </select>
                             <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                           </div>
+                        </div>
+                      </div>
+                      <div className="subLocation-section mt-3">
+                        <div className="form-header">
+                          <h2>
+                            <i className="fa-solid fa-location-arrow"></i>
+                            Edit Sub Locations
+                          </h2>
+                        </div>
+                        <div className="item-table-container mt-3">
+                          <table className="table">
+                            <thead>
+                              <tr>
+                                <th>Location Name</th>
+                                <th>Item</th>
+                                <th>Racks</th>
+                                <th>Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {editSubLocations.map((location, index) => (
+                                <tr key={location.id}>
+                                  <td>
+                                    <div className="position-relative w-100">
+                                      <i className="fa-solid fa-location-dot position-absolute z-0 input-icon"></i>
+                                      <input
+                                        className="form-control text-8 ps-5"
+                                        placeholder="Enter Sub Location"
+                                        value={location.subLocationCode}
+                                        onChange={(e) =>
+                                          handleEditLocationChange(
+                                            index,
+                                            "subLocationCode",
+                                            e.target.value
+                                          )
+                                        }
+                                      />
+                                    </div>
+                                  </td>
+                                  <td>
+                                    <Select
+                                      styles={customStyles}
+                                      classNamePrefix="react-select"
+                                      placeholder="Select Item"
+                                      value={
+                                        location.itemName
+                                          ? items
+                                              .map((item) => ({
+                                                id: item.id,
+                                                value: item.id,
+                                                label: `(${item.code}) ${item.name}`,
+                                                name: item.name,
+                                                code: item.code,
+                                              }))
+                                              .find(
+                                                (option) =>
+                                                  option.name ===
+                                                  location.itemName
+                                              ) || null
+                                          : null
+                                      }
+                                      onChange={(selectedOption) => {
+                                        handleEditLocationChange(index, null, {
+                                          itemName: selectedOption
+                                            ? selectedOption.name
+                                            : "",
+                                          itemCode: selectedOption
+                                            ? selectedOption.code
+                                            : "",
+                                        });
+                                      }}
+                                      options={items.map((item) => ({
+                                        id: item.id,
+                                        value: item.id,
+                                        label: `(${item.code}) ${item.name}`,
+                                        name: item.name,
+                                        code: item.code,
+                                      }))}
+                                      isSearchable
+                                      menuPortalTarget={document.body}
+                                    />
+                                  </td>
+                                  <td>
+                                    <div className="position-relative w-100">
+                                      <i className="fa-solid fa-boxes-stacked position-absolute z-0 input-icon"></i>
+                                      <input
+                                        type="number"
+                                        className="form-control text-8 ps-5"
+                                        placeholder="Enter Racks"
+                                        value={location.rackNumber}
+                                        onChange={(e) =>
+                                          handleEditLocationChange(
+                                            index,
+                                            "rackNumber",
+                                            e.target.value
+                                          )
+                                        }
+                                        min="0"
+                                      />
+                                    </div>
+                                  </td>
+                                  <td style={{ minWidth: "4rem" }}>
+                                    <button
+                                      type="button"
+                                      className="btn btn-outline-danger text-8"
+                                      onClick={() =>
+                                        handleDeleteEditSubLocation(location.id)
+                                      }
+                                      disabled={editSubLocations.length <= 1}
+                                    >
+                                      <i className="fas fa-trash"></i>
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+
+                          <button
+                            type="button"
+                            className="btn btn-secondary text-8 ms-2"
+                            onClick={handleAddEditSubLocation}
+                          >
+                            <i className="fas fa-plus me-2"></i>Add More
+                          </button>
                         </div>
                       </div>
                     </div>

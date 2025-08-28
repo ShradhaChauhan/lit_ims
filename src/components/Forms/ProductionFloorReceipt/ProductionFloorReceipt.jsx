@@ -546,7 +546,7 @@ const ProductionFloorReceipt = () => {
                               <span>
                                 {"(" +
                                   issuedItem.itemCode +
-                                  ") " +
+                                  ") - " +
                                   issuedItem.itemName}
                               </span>
                             </div>
@@ -706,7 +706,7 @@ const ProductionFloorReceipt = () => {
                       <ul className="mb-0 ps-3">
                         {r.items.map((item, index) => (
                           <li key={index}>
-                            {"(" + item.itemName + ") "} {item.itemCode}
+                            {"(" + item.itemCode + ") "} {item.itemName}
                           </li>
                         ))}
                       </ul>

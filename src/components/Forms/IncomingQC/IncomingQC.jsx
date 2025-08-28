@@ -195,7 +195,10 @@ const IncomingQC = () => {
   const fetchPassFailQC = async () => {
     try {
       const response = await api.get("/api/receipt/qc-status/result");
-      setPassFailQC(response.data.data);
+      const sortedData = response.data.data.sort((a, b) => b.id - a.id);
+
+      setPassFailQC(sortedData);
+      // setPassFailQC(response.data.data);
     } catch (error) {
       toast.error("Error in fetching pass/fail IQC");
       console.error("Error fetching pass/fail IQC:", error);
@@ -737,6 +740,52 @@ const IncomingQC = () => {
     }));
   };
 
+  // Bulk action handlers for all batches
+  const handleBulkPass = () => {
+    const newBatchStatuses = {};
+    batchDetails.forEach((batch) => {
+      const storeWarehouse = warehouses.find((w) => w.type === "STR");
+      newBatchStatuses[batch.id] = {
+        status: "PASS",
+        warehouseId: storeWarehouse?.id || "",
+        defectCategory: "",
+        remarks: "",
+      };
+    });
+    setBatchStatuses(newBatchStatuses);
+    toast.success("All items marked as PASS");
+  };
+
+  const handleBulkFail = () => {
+    const newBatchStatuses = {};
+    batchDetails.forEach((batch) => {
+      const rejectionWarehouse = warehouses.find((w) => w.type === "REJ");
+      newBatchStatuses[batch.id] = {
+        status: "FAIL",
+        warehouseId: rejectionWarehouse?.id || "",
+        defectCategory: "Material Defect", // Default defect category
+        remarks: "Bulk fail - please review individual items",
+      };
+    });
+    setBatchStatuses(newBatchStatuses);
+    toast.success("All items marked as FAIL");
+  };
+
+  const handleBulkHold = () => {
+    const newBatchStatuses = {};
+    batchDetails.forEach((batch) => {
+      const iqcWarehouse = warehouses.find((w) => w.type === "IQC");
+      newBatchStatuses[batch.id] = {
+        status: "HOLD",
+        warehouseId: iqcWarehouse?.id || "",
+        defectCategory: "",
+        remarks: "Bulk hold - pending review",
+      };
+    });
+    setBatchStatuses(newBatchStatuses);
+    toast.success("All items marked as HOLD");
+  };
+
   return (
     <div>
       {/* Header section */}
@@ -832,6 +881,49 @@ const IncomingQC = () => {
                       </div>
                     )}
                   </div>
+
+                  {/* Bulk Action Buttons */}
+                  {Array.isArray(batchDetails) && batchDetails.length > 0 && (
+                    <div className="mt-4 mb-3">
+                      <label className="text-8 font-weight p-0 mb-2">
+                        Bulk Actions{" "}
+                        <span className="text-muted">(Apply to all items)</span>
+                      </label>
+                      <div className="row">
+                        <div className="col-md-4">
+                          <button
+                            type="button"
+                            className="btn w-100 text-8 btn-outline-success"
+                            onClick={handleBulkPass}
+                          >
+                            <i className="fas fa-check-circle me-1"></i>
+                            Pass All Items
+                          </button>
+                        </div>
+                        <div className="col-md-4">
+                          <button
+                            type="button"
+                            className="btn w-100 text-8 btn-outline-danger"
+                            onClick={handleBulkFail}
+                          >
+                            <i className="fas fa-times-circle me-1"></i>
+                            Fail All Items
+                          </button>
+                        </div>
+                        <div className="col-md-4">
+                          <button
+                            type="button"
+                            className="btn w-100 text-8 btn-outline-warning"
+                            onClick={handleBulkHold}
+                          >
+                            <i className="fas fa-pause-circle me-1"></i>
+                            Hold All Items
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {Array.isArray(batchDetails) &&
                     batchDetails.map((batch) => {
                       const status = batchStatuses[batch.id]?.status || "";
@@ -1306,7 +1398,7 @@ const IncomingQC = () => {
               </button>
             </div>
           </div>
-          <div className="item-table-container mt-3">
+          <div className="item-table-container mt-3 overflow-hidden">
             <table className="table table-hover">
               <thead>
                 <tr>
@@ -1359,13 +1451,13 @@ const IncomingQC = () => {
                           </a>
                         </td>
                       </tr>
-                      <tr className="collapse" id={collapseId}>
+                      <tr className="collapse p-0" id={collapseId}>
                         <td colSpan="8">{/* Your item details here */}</td>
                       </tr>
 
                       {/* Accordion Content Row */}
                       <tr className="p-0">
-                        <td colSpan={4} className="p-4 border-0">
+                        <td colSpan={4} className="p-0 border-0">
                           <div
                             id={collapseId}
                             className="accordion-collapse collapse"
@@ -1598,6 +1690,7 @@ const IncomingQC = () => {
               {totalCompletedItems} items
             </div>
             <div className="pagination">
+              {/* Left Arrow */}
               <button
                 className="btn-page"
                 disabled={currentPage === 1}
@@ -1606,20 +1699,12 @@ const IncomingQC = () => {
                 <i className="fas fa-chevron-left"></i>
               </button>
 
-              {[...Array(totalPages)].map((_, index) => (
-                <button
-                  key={index + 1}
-                  className={`btn btn-sm mx-1 ${
-                    currentPage === index + 1
-                      ? "btn-primary"
-                      : "btn-outline-primary"
-                  }`}
-                  onClick={() => setCurrentPage(index + 1)}
-                >
-                  {index + 1}
-                </button>
-              ))}
+              {/* Show only current active page */}
+              <button className="btn btn-sm btn-primary mx-1">
+                {currentPage}
+              </button>
 
+              {/* Right Arrow */}
               <button
                 className="btn-page"
                 disabled={currentPage === totalPages}

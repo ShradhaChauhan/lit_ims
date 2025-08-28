@@ -50,6 +50,11 @@ const ItemMasterModal = ({ item, onClose }) => {
           </div>
 
           <div className="detail-item">
+            <strong>Min Qty:</strong>
+            <span>{item?.minQty || "-"}</span>
+          </div>
+
+          <div className="detail-item">
             <strong>Life:</strong>
             <span>{item?.life ? `${item.life} days` : "-"}</span>
           </div>
@@ -67,13 +72,13 @@ const ItemMasterModal = ({ item, onClose }) => {
 
           <div className="detail-item">
             <strong>Inventory Item:</strong>
-            <span>{item?.inventoryItem || "-"}</span>
+            <span>{item.inventoryItem ? "Yes" : "No"}</span>
           </div>
 
           {item?.iqc && (
             <div className="detail-item">
               <strong>IQC Required:</strong>
-              <span>{item?.iqc || "-"}</span>
+              <span>{item.inventoryItem && item.iqc ? "Yes" : "No"}</span>
             </div>
           )}
         </div>
