@@ -46,6 +46,7 @@ const MaterialIncoming = () => {
     warehouse: "",
     batchno: "",
     invoice: "",
+    numberOfBatches: "1", // Add new field for number of batch numbers to generate
   });
 
   const handleReset = (e) => {
@@ -63,6 +64,7 @@ const MaterialIncoming = () => {
       batchno: "",
       warehouse: "",
       invoice: "",
+      numberOfBatches: "1", // Reset to default value
     });
     setMode("");
     setVendor("");
@@ -159,6 +161,14 @@ const MaterialIncoming = () => {
 
     if (!data.vendor && mode === "manual") {
       errors.vendor = "Please select vendor name";
+    }
+
+    // Validate numberOfBatches for manual mode
+    if (mode === "manual") {
+      const numberOfBatches = parseInt(data.numberOfBatches);
+      if (!numberOfBatches || numberOfBatches < 1 || numberOfBatches > 100) {
+        errors.numberOfBatches = "Number of batch numbers must be between 1 and 100";
+      }
     }
 
     // if (!data.item) {
@@ -260,17 +270,25 @@ const MaterialIncoming = () => {
           toast.error("Invalid batch number. Please try again.");
         }
       } else if (mode === "manual") {
-        // Manual mode - generate batch number
+        // Manual mode - generate multiple batch numbers
         if (!vendorItem || !formData.itemCode) {
           toast.error("Please select an item first");
           setLoading(false);
           return;
         }
 
-        console.log("Sending request to generate batch no with:", {
+        const numberOfBatches = parseInt(formData.numberOfBatches) || 1;
+        if (numberOfBatches < 1 || numberOfBatches > 100) {
+          toast.error("Number of batch numbers must be between 1 and 100");
+          setLoading(false);
+          return;
+        }
+
+        console.log("Sending request to generate batch numbers with:", {
           vendorCode: formData.code,
           itemCode: formData.itemCode,
           quantity: formData.quantity,
+          numberOfBatches: numberOfBatches,
           warehouse: formData.warehouse,
         });
 
@@ -299,21 +317,33 @@ const MaterialIncoming = () => {
         }
 
         try {
-          const response = await api.post(
-            `/api/receipt/generate-batch?vendorCode=${formData.code}&itemCode=${formData.itemCode}&quantity=${formData.quantity}`
-          );
+          // Generate multiple batch numbers
+          const batchNumbers = [];
+          for (let i = 0; i < numberOfBatches; i++) {
+            try {
+              const response = await api.post(
+                `/api/receipt/generate-batch?vendorCode=${formData.code}&itemCode=${formData.itemCode}&quantity=${formData.quantity}`
+              );
 
-          let batchNo = "";
-          if (response.data) {
-            batchNo = response.data;
-            console.log("Generated batch:", batchNo);
-          } else {
-            console.warn(
-              "No batch number returned from API, proceeding with empty batch"
-            );
+              let batchNo = "";
+              if (response.data) {
+                batchNo = response.data;
+                console.log(`Generated batch ${i + 1}:`, batchNo);
+                batchNumbers.push(batchNo);
+              } else {
+                console.warn(
+                  `No batch number returned from API for batch ${i + 1}, proceeding with empty batch`
+                );
+                batchNumbers.push("");
+              }
+            } catch (error) {
+              console.warn(`Failed to generate batch number ${i + 1}:`, error);
+              batchNumbers.push("");
+            }
           }
 
-          const newItem = {
+          // Create multiple items with different batch numbers
+          const newItems = batchNumbers.map((batchNo, index) => ({
             itemName: formData.itemName,
             itemCode: formData.itemCode,
             quantity: formData.quantity,
@@ -322,11 +352,11 @@ const MaterialIncoming = () => {
             vendorName: formData.vendorName,
             warehouse: defaultWarehouse.warehouseName,
             warehouseId: defaultWarehouse.warehouseId,
-          };
+          }));
 
-          console.log("Adding new item with warehouse:", newItem);
-          setReceiptList((prev) => [...prev, newItem]);
-          toast.success("Item added successfully");
+          console.log("Adding new items with warehouses:", newItems);
+          setReceiptList((prev) => [...prev, ...newItems]);
+          toast.success(`${newItems.length} item(s) added successfully with ${batchNumbers.filter(b => b).length} batch number(s)`);
 
           // Reset item selection but keep vendor information
           setVendorItem("");
@@ -337,10 +367,11 @@ const MaterialIncoming = () => {
             itemCode: "",
             quantity: "",
             warehouse: "",
+            numberOfBatches: "1", // Reset to default
           }));
         } catch (error) {
           // Even if batch generation fails, still add the item with empty batch
-          console.warn("Failed to generate batch number:", error);
+          console.warn("Failed to generate batch numbers:", error);
 
           const newItem = {
             itemName: formData.itemName,
@@ -366,6 +397,7 @@ const MaterialIncoming = () => {
             itemCode: "",
             quantity: "",
             warehouse: "",
+            numberOfBatches: "1", // Reset to default
           }));
         }
       } else {
@@ -713,6 +745,7 @@ const MaterialIncoming = () => {
       quantity: "",
       warehouse: "",
       batchno: "",
+      numberOfBatches: "1", // Reset to default value
     }));
 
     // Optionally clear item list if you're managing added items
@@ -1163,6 +1196,34 @@ const MaterialIncoming = () => {
               </div>
             )}
           </div>
+          {mode == "manual" && (
+            <div className="row">
+              <div className="col-4 d-flex flex-column form-group">
+                <label htmlFor="numberOfBatches" className="form-label ms-2">
+                  Number of Batch Numbers <span className="text-danger fs-6">*</span>
+                </label>
+                <small className="text-muted ms-2 mb-1">Enter how many batch numbers to generate for this item</small>
+                <div className="position-relative w-100">
+                  <i className="fas fa-hashtag position-absolute ms-2 z-0 input-icon"></i>
+                  <input
+                    type="number"
+                    className="form-control ps-5 ms-1 text-font"
+                    id="numberOfBatches"
+                    placeholder="Enter number of batch numbers"
+                    min="1"
+                    max="100"
+                    value={formData.numberOfBatches}
+                    onChange={(e) =>
+                      setFormData({ ...formData, numberOfBatches: e.target.value })
+                    }
+                  />
+                </div>
+                {errors.numberOfBatches && (
+                  <span className="error-message">{errors.numberOfBatches}</span>
+                )}
+              </div>
+            </div>
+          )}
           <div>
             <div className="row">
               <div className="col-3 d-flex flex-column form-group">

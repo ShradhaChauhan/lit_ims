@@ -737,6 +737,52 @@ const IncomingQC = () => {
     }));
   };
 
+  // Bulk action handlers for all batches
+  const handleBulkPass = () => {
+    const newBatchStatuses = {};
+    batchDetails.forEach((batch) => {
+      const storeWarehouse = warehouses.find((w) => w.type === "STR");
+      newBatchStatuses[batch.id] = {
+        status: "PASS",
+        warehouseId: storeWarehouse?.id || "",
+        defectCategory: "",
+        remarks: "",
+      };
+    });
+    setBatchStatuses(newBatchStatuses);
+    toast.success("All items marked as PASS");
+  };
+
+  const handleBulkFail = () => {
+    const newBatchStatuses = {};
+    batchDetails.forEach((batch) => {
+      const rejectionWarehouse = warehouses.find((w) => w.type === "REJ");
+      newBatchStatuses[batch.id] = {
+        status: "FAIL",
+        warehouseId: rejectionWarehouse?.id || "",
+        defectCategory: "Material Defect", // Default defect category
+        remarks: "Bulk fail - please review individual items",
+      };
+    });
+    setBatchStatuses(newBatchStatuses);
+    toast.success("All items marked as FAIL");
+  };
+
+  const handleBulkHold = () => {
+    const newBatchStatuses = {};
+    batchDetails.forEach((batch) => {
+      const iqcWarehouse = warehouses.find((w) => w.type === "IQC");
+      newBatchStatuses[batch.id] = {
+        status: "HOLD",
+        warehouseId: iqcWarehouse?.id || "",
+        defectCategory: "",
+        remarks: "Bulk hold - pending review",
+      };
+    });
+    setBatchStatuses(newBatchStatuses);
+    toast.success("All items marked as HOLD");
+  };
+
   return (
     <div>
       {/* Header section */}
@@ -832,6 +878,48 @@ const IncomingQC = () => {
                       </div>
                     )}
                   </div>
+
+                  {/* Bulk Action Buttons */}
+                  {Array.isArray(batchDetails) && batchDetails.length > 0 && (
+                    <div className="mt-4 mb-3">
+                      <label className="text-8 font-weight p-0 mb-2">
+                        Bulk Actions <span className="text-muted">(Apply to all items)</span>
+                      </label>
+                      <div className="row">
+                        <div className="col-md-4">
+                          <button
+                            type="button"
+                            className="btn w-100 text-8 btn-outline-success"
+                            onClick={handleBulkPass}
+                          >
+                            <i className="fas fa-check-circle me-1"></i>
+                            Pass All Items
+                          </button>
+                        </div>
+                        <div className="col-md-4">
+                          <button
+                            type="button"
+                            className="btn w-100 text-8 btn-outline-danger"
+                            onClick={handleBulkFail}
+                          >
+                            <i className="fas fa-times-circle me-1"></i>
+                            Fail All Items
+                          </button>
+                        </div>
+                        <div className="col-md-4">
+                          <button
+                            type="button"
+                            className="btn w-100 text-8 btn-outline-warning"
+                            onClick={handleBulkHold}
+                          >
+                            <i className="fas fa-pause-circle me-1"></i>
+                            Hold All Items
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {Array.isArray(batchDetails) &&
                     batchDetails.map((batch) => {
                       const status = batchStatuses[batch.id]?.status || "";
