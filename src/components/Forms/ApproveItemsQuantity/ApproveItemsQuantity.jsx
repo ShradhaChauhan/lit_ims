@@ -254,7 +254,7 @@ const ApproveItemsQuantity = () => {
               <tr>
                 <th>ID</th>
                 <th>Reference Type</th>
-                <th>Reference ID</th>
+                {/* <th>Reference ID</th> */}
                 <th>Requested By</th>
                 <th>Requested To</th>
                 <th>Status</th>
@@ -281,7 +281,7 @@ const ApproveItemsQuantity = () => {
                     <td className="text-wrap ps-4">
                       {val.referenceType.replace(/_/g, " ")}
                     </td>
-                    <td className="text-wrap ps-4">{val.referenceId}</td>
+                    {/* <td className="text-wrap ps-4">{val.referenceId}</td> */}
                     <td className="text-wrap ps-4">{val.requestedBy}</td>
                     <td className="text-wrap ps-4">{val.requestedTo}</td>
                     <td className="text-wrap ps-4">{val.status}</td>

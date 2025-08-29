@@ -1,5 +1,5 @@
 import { createContext, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import Cookies from "js-cookie";
 
 export const AppContext = createContext();
 
@@ -17,20 +17,48 @@ const AppContextProvider = (props) => {
   const [isAddBom, setIsAddBom] = useState(false);
   const [branchDropdownValues, setBranchDropdownValues] = useState([{}]);
   const [isAddVendorItem, setIsAddVendorItem] = useState(false);
+
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [role, setRole] = useState(null);
   const [permissions, setPermissions] = useState([]);
   const [istoken, setIsToken] = useState("");
   const [permissionsLoaded, setPermissionsLoaded] = useState(false);
 
+  // ---- Reset Auth State ----
+  const resetAuthState = () => {
+    setIsAuthenticated(false);
+    setIsToken("");
+    setPermissions([]);
+    setRole(null);
+
+    // Remove cookies
+    Cookies.remove("authToken");
+    Cookies.remove("permissions");
+    Cookies.remove("username");
+    Cookies.remove("isLoggedIn");
+  };
+
+  // ---- Load permissions and auth state on mount ----
   useEffect(() => {
-    const savedPermissions = JSON.parse(
-      localStorage.getItem("permissions") || "[]"
-    );
-    setPermissions(savedPermissions);
-    setPermissionsLoaded(true); // Once loaded
+    const token = Cookies.get("authToken");
+    if (!token) {
+      resetAuthState(); // User is logged out
+    } else {
+      setIsAuthenticated(true);
+      setIsToken(token);
+
+      const savedPermissions = Cookies.get("permissions")
+        ? JSON.parse(Cookies.get("permissions"))
+        : [];
+      setPermissions(savedPermissions);
+
+      const savedRole = Cookies.get("role") || null;
+      setRole(savedRole);
+    }
+    setPermissionsLoaded(true);
   }, []);
 
+  // ---- Helper: get permissions for a page ----
   const getPermission = (pageName) => {
     return (
       permissions.find((p) => p.pageName === pageName) || {
@@ -40,40 +68,11 @@ const AppContextProvider = (props) => {
     );
   };
 
-  useEffect(() => {
-    const savedPermissions = JSON.parse(
-      localStorage.getItem("permissions") || "[]"
-    );
-    setPermissions(savedPermissions);
-  }, []);
-
+  // ---- Update permissions and save to cookies ----
   const updatePermissions = (newPermissions) => {
     setPermissions(newPermissions);
-    localStorage.setItem("permissions", JSON.stringify(newPermissions));
+    Cookies.set("permissions", JSON.stringify(newPermissions), { expires: 1 });
   };
-
-  // Sync changes to localStorage
-  // useEffect(() => {
-  //   localStorage.setItem("isAuthenticated", isAuthenticated);
-  // }, [isAuthenticated]);
-
-  // useEffect(() => {
-  //   const storedPermissions = localStorage.getItem("permissions");
-  //   try {
-  //     if (storedPermissions) {
-  //       const parsedPermissions = JSON.parse(storedPermissions);
-  //       setPermissions(parsedPermissions);
-  //     }
-  //   } catch (e) {
-  //     console.error("Failed to parse stored permissions:", e);
-  //     localStorage.removeItem("permissions");
-  //   }
-  // }, []);
-
-  useEffect(() => {
-    const storedRole = localStorage.getItem("role");
-    if (storedRole) setRole(storedRole);
-  }, []);
 
   const value = {
     rightSideComponent,
@@ -100,19 +99,20 @@ const AppContextProvider = (props) => {
     setIsAddBom,
     branchDropdownValues,
     setBranchDropdownValues,
-    isAuthenticated,
-    setIsAuthenticated,
     isAddVendorItem,
     setIsAddVendorItem,
+    isAuthenticated,
+    setIsAuthenticated,
+    role,
+    setRole,
     permissions,
     setPermissions,
     updatePermissions,
     getPermission,
-    role,
-    setRole,
     istoken,
     setIsToken,
     permissionsLoaded,
+    resetAuthState, // Expose to use in logout
   };
 
   return (

@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import api from "../../services/api";
 import "./ActivityLogs.css";
 import { Modal } from "bootstrap";
+import Cookies from "js-cookie";
 
 const ActivityLogs = () => {
   const [logs, setLogs] = useState([]);
@@ -61,12 +62,29 @@ const ActivityLogs = () => {
   const totalPages = Math.ceil(filteredLogs.length / rowsPerPage);
   const currentLogs = filteredLogs.slice(indexOfFirstLog, indexOfLastLog);
 
+  // const getActivityLogs = async () => {
+  //   try {
+  //     const response =
+  //       localStorage.getItem("username") === "owner"
+  //         ? await api.get("/api/logs")
+  //         : await api.get("/api/logs/me");
+  //     const logData = response?.data ?? [];
+  //     setLogs(logData);
+  //   } catch (error) {
+  //     toast.error("Error: Unable to fetch activity logs.");
+  //     console.error("Error fetching activity logs:", error);
+  //   }
+  // };
+
   const getActivityLogs = async () => {
     try {
-      const response =
-        localStorage.getItem("username") === "owner"
-          ? await api.get("/api/logs")
-          : await api.get("/api/logs/me");
+      // const isOwner = localStorage.getItem("username") === "owner";
+      const isOwner = Cookies.get("username") === "owner";
+
+      const response = isOwner
+        ? await api.get("/api/logs")
+        : await api.get("/api/logs/me");
+
       const logData = response?.data ?? [];
       setLogs(logData);
     } catch (error) {
