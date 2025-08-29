@@ -80,10 +80,11 @@ function App() {
 
   // Tab close or browser close detection
   useEffect(() => {
-    const handleVisibilityChange = () => {
+    const handleVisibilityChange = async () => {
+      console.log("Visibility changed:", document.visibilityState);
       if (document.visibilityState === "hidden") {
         console.log("Tab hidden or closing");
-        navigator.sendBeacon("/api/logout");
+        await api.post("/api/auth/logout");
 
         Object.keys(Cookies.get()).forEach((cookieName) => {
           Cookies.remove(cookieName, { path: "/" });
