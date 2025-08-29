@@ -134,7 +134,7 @@ const ProductionFloorReceipt = () => {
   const fetchIssueNoList = async () => {
     try {
       const response = await api.get("/api/issue-production/all-issue-numbers");
-      setIssueNoList(response.data.data.map((issueNo) => ({ issueNo })));
+      setIssueNoList(response.data.data);
     } catch (error) {
       toast.error("Error in fetching issue number list");
       console.error("Error fetching issue number list:", error);

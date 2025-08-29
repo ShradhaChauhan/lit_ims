@@ -1002,11 +1002,25 @@ const MaterialIncoming = () => {
     }
 
     try {
-      // prepare plain array of batch numbers
-      const payload = selectedRows.map((i) => receiptList[i].batchNo);
-      console.log("Printing labels for batches:", payload);
-      // call API with payload
-      const response = await api.post("/api/qr/save", payload);
+      // Use first selected row as reference for item/vendor details
+      const firstRow = receiptList[selectedRows[0]];
+
+      // Collect batch numbers from all selected rows
+      const batchNumbers = selectedRows.map((i) => receiptList[i].batchNo);
+
+      // Prepare payload
+      const payload = {
+        vendorCode: firstRow.vendorCode,
+        vendorName: firstRow.vendorName,
+        itemCode: firstRow.itemCode,
+        itemName: firstRow.itemName,
+        batchNumbers: batchNumbers.join(","), // convert array → comma separated string
+      };
+
+      console.log("Payload JSON:", JSON.stringify(payload));
+
+      // Call API with structured payload
+      const response = await api.post("/api/vendor-master-batch", payload);
 
       toast.success("Labels printed successfully!");
 
@@ -1027,7 +1041,6 @@ const MaterialIncoming = () => {
       );
 
       if (allPrinted) {
-        // unlock for next itemCode
         setLockedItemCode(null);
       }
     } catch (error) {
