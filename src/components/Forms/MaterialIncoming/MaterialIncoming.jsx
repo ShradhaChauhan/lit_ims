@@ -7,6 +7,9 @@ import "./MaterialIncoming.css";
 import Select from "react-select";
 
 const MaterialIncoming = () => {
+  const [selectedRows, setSelectedRows] = useState([]); // store selected row indexes
+  const [printedRows, setPrintedRows] = useState([]); // permanently disabled row indexes
+  const [lockedItemCode, setLockedItemCode] = useState(null); // active itemCode for current cycle
   const modalRef = useRef(null);
   const [errors, setErrors] = useState({});
   const [confirmState, setConfirmState] = useState(false);
@@ -682,8 +685,11 @@ const MaterialIncoming = () => {
       } else {
         toast.success("Material receipt saved successfully");
       }
-
       handleReset(e);
+      setSelectedRows([]);
+      setPrintedRows([]);
+      setLockedItemCode(null);
+      setInvoiceNumber("");
     } catch (error) {
       toast.error(error.response?.data?.message || "An error occurred");
       console.error(error.response?.data?.message || error);
@@ -959,10 +965,6 @@ const MaterialIncoming = () => {
       await handleFetchVendorByCode(batchNo); // fetch details for each batch
     }
   };
-
-  const [selectedRows, setSelectedRows] = useState([]); // store selected row indexes
-  const [printedRows, setPrintedRows] = useState([]); // permanently disabled row indexes
-  const [lockedItemCode, setLockedItemCode] = useState(null); // active itemCode for current cycle
 
   // get selected item codes
   const selectedItemCodes = [
