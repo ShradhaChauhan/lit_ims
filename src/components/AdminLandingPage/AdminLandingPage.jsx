@@ -103,7 +103,7 @@ const AdminLandingPage = () => {
       const response = await api.get("/api/items/all");
       setItems(response.data.data);
     } catch (error) {
-      toast.error("Error in fetching items list");
+      //toast.error("Error in fetching items list");
       console.error("Error fetching items list:", error);
     }
   };
@@ -161,7 +161,7 @@ const AdminLandingPage = () => {
 
       setLineChartData(chartDataArray);
     } catch (error) {
-      toast.error("Error in fetching QC pass and fail list");
+      //toast.error("Error in fetching QC pass and fail list");
       console.error("Error fetching QC pass and fail list:", error);
     }
   };
@@ -274,7 +274,7 @@ const AdminLandingPage = () => {
       const fullMonthData = prepareReceiptChartData(response.data.data);
       setMaterialReceiptData(fullMonthData);
     } catch (error) {
-      toast.error("Error in fetching material receipt data");
+      //toast.error("Error in fetching material receipt data");
       console.error("Error fetching material receipt data:", error);
     }
   };
@@ -344,7 +344,7 @@ const AdminLandingPage = () => {
       const fullMonthData = prepareWIPChartData(response.data.data);
       setWipReturnData(fullMonthData);
     } catch (error) {
-      toast.error("Error in fetching material receipt data");
+      //toast.error("Error in fetching material receipt data");
       console.error("Error fetching material receipt data:", error);
     }
   };
@@ -393,7 +393,7 @@ const AdminLandingPage = () => {
       const chartDataArray = Object.values(chartMap);
       setIncomingMaterialToday(chartDataArray);
     } catch (error) {
-      toast.error("Error in fetching material receipt data");
+      //toast.error("Error in fetching material receipt data");
       console.error("Error fetching material receipt data:", error);
     }
   };
@@ -408,7 +408,7 @@ const AdminLandingPage = () => {
       console.log(response.data.data);
       setWipRejectedItems(response.data.data);
     } catch (error) {
-      toast.error("Error in fetching wip rejected items");
+      //toast.error("Error in fetching wip rejected items");
       console.error("Error fetching wip rejected items:", error);
     }
   };
@@ -528,7 +528,7 @@ const AdminLandingPage = () => {
   //     const response = await api.get("/api/items/all");
   //     setTotalItems(response.data.data.length);
   //   } catch (error) {
-  //     toast.error("Error in fetching total items");
+  //     //toast.error("Error in fetching total items");
   //     console.error("Error fetching total items:", error);
   //   }
   // };
@@ -545,7 +545,7 @@ const AdminLandingPage = () => {
       );
       setPendingApprovals(response.data.data.length);
     } catch (error) {
-      toast.error("Error in fetching pending approvals");
+      //toast.error("Error in fetching pending approvals");
       console.error("Error fetching pending approvals:", error);
     }
   };
@@ -561,7 +561,7 @@ const AdminLandingPage = () => {
       console.log("Pending QC Data:", response.data.data);
       setPendingQCData(response.data.data);
     } catch (error) {
-      toast.error("Error in fetching pending QC data");
+      //toast.error("Error in fetching pending QC data");
       console.error("Error fetching pending QC data:", error);
     }
   };
@@ -578,7 +578,7 @@ const AdminLandingPage = () => {
       setQcPassCount(response.data.data.passCount);
       setQcFailCount(response.data.data.failCount);
     } catch (error) {
-      toast.error("Error in fetching pending QC");
+      //toast.error("Error in fetching pending QC");
       console.error("Error fetching pending QC:", error);
     }
   };
@@ -593,7 +593,7 @@ const AdminLandingPage = () => {
       const response = await api.get("/api/requisitions/recent");
       setMaterialRequest(response.data.data.length);
     } catch (error) {
-      toast.error("Error in fetching material request");
+      //toast.error("Error in fetching material request");
       console.error("Error fetching material request:", error);
     }
   };
@@ -608,7 +608,7 @@ const AdminLandingPage = () => {
       const response = await api.get("/api/production-receipt/table");
       setMaterialReceipt(response.data.data.length);
     } catch (error) {
-      toast.error("Error in fetching material receipt");
+      //toast.error("Error in fetching material receipt");
       console.error("Error fetching material receipt:", error);
     }
   };
@@ -623,7 +623,7 @@ const AdminLandingPage = () => {
       const response = await api.get("/api/wip-return/recent/summary");
       setWipReturn(response.data.data.length);
     } catch (error) {
-      toast.error("Error in fetching wip return");
+      //toast.error("Error in fetching wip return");
       console.error("Error fetching wip return:", error);
     }
   };
@@ -638,7 +638,7 @@ const AdminLandingPage = () => {
       const response = await api.get("/api/issue-production/all-issue");
       setMaterialTransfer(response.data.data.length);
     } catch (error) {
-      toast.error("Error in fetching material transfer");
+      //toast.error("Error in fetching material transfer");
       console.error("Error fetching material transfer:", error);
     }
   };
@@ -767,10 +767,10 @@ const AdminLandingPage = () => {
       if (response.data.status) {
         setNotification(response.data.data);
       } else {
-        toast.error(response.data.message || "Failed to fetch notifications");
+        //toast.error(response.data.message || "Failed to fetch notifications");
       }
     } catch (error) {
-      toast.error("Error in getting notifications");
+      //toast.error("Error in getting notifications");
       console.error(error);
     }
   };
