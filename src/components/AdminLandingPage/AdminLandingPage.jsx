@@ -557,7 +557,6 @@ const AdminLandingPage = () => {
   // Fetch Pending QC Data
   const fetchPendingQCData = async () => {
     try {
-      console.log(localStorage.getItem("permissions"));
       const response = await api.get("/api/receipt/pending-qc");
       console.log("Pending QC Data:", response.data.data);
       setPendingQCData(response.data.data);
