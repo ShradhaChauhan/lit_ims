@@ -80,24 +80,46 @@ function App() {
 
   // Tab close or browser close detection
   useEffect(() => {
-    const handlePageHide = (event) => {
-      // If the page is being persisted in bfcache (like refresh or back/forward), skip logout
-      if (event.persisted) return;
+    const handleVisibilityChange = async () => {
+      console.log("Visibility changed:", document.visibilityState);
+      if (document.visibilityState === "hidden") {
+        console.log("Tab hidden or closing");
+        await api.post("/api/auth/logout");
 
-      // Now it's a real close, not refresh
-      navigator.sendBeacon("/api/logout");
-
-      Object.keys(Cookies.get()).forEach((cookieName) => {
-        Cookies.remove(cookieName, { path: "/" });
-      });
+        Object.keys(Cookies.get()).forEach((cookieName) => {
+          Cookies.remove(cookieName, { path: "/" });
+        });
+      } else {
+        console.log("Tab active again");
+      }
     };
 
-    window.addEventListener("pagehide", handlePageHide);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      window.removeEventListener("pagehide", handlePageHide);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
+
+  // useEffect(() => {
+  //   const handlePageHide = (event) => {
+  //     // If the page is being persisted in bfcache (like refresh or back/forward), skip logout
+  //     if (event.persisted) return;
+
+  //     // Now it's a real close, not refresh
+  //     navigator.sendBeacon("/api/logout");
+
+  //     Object.keys(Cookies.get()).forEach((cookieName) => {
+  //       Cookies.remove(cookieName, { path: "/" });
+  //     });
+  //   };
+
+  //   window.addEventListener("pagehide", handlePageHide);
+
+  //   return () => {
+  //     window.removeEventListener("pagehide", handlePageHide);
+  //   };
+  // }, []);
 
   // useEffect(() => {
   //   const handleVisibilityChange = () => {

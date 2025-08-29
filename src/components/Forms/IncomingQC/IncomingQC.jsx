@@ -992,7 +992,7 @@ const IncomingQC = () => {
                             onClick={handleBulkFail}
                           >
                             <i className="fas fa-times-circle me-1"></i>
-                            Fail All Items
+                            Reject All Items
                           </button>
                         </div>
                         <div className="col-md-4">
@@ -1186,7 +1186,7 @@ const IncomingQC = () => {
                                 handleStatusChange(batch.id, "FAIL")
                               }
                             >
-                              Fail
+                              Reject
                             </button>
                             <button
                               type="button"
