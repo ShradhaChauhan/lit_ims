@@ -8,6 +8,7 @@ import api from "../../services/api";
 import { AppContext } from "../../context/AppContext";
 import { toast } from "react-toastify";
 import checklist from "../../assets/images/blackhole.gif";
+import Cookies from "js-cookie";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -44,7 +45,7 @@ const LoginPage = () => {
         setBranches(response.data.data.branches);
         setResponseUsername(response.data.data.username);
         setBranch(""); // Clear any previous branch selection
-        localStorage.setItem("role", response.data.data.username);
+        Cookies.set("role", response.data.data.username, { expires: 1 }); // 1 day (matches backend expiry)
         setRole(response.data.data.username);
       } else {
         setError("No branches found for this user.");
@@ -58,10 +59,15 @@ const LoginPage = () => {
 
   // If already logged in
   useEffect(() => {
-    if (localStorage.getItem("authToken")) {
+    if (Cookies.get("authToken")) {
       navigate("/dashboard");
     }
   }, []);
+  // useEffect(() => {
+  //   if (localStorage.getItem("authToken")) {
+  //     navigate("/dashboard");
+  //   }
+  // }, []);
 
   // IP address
   function getLocalIP(callback) {
@@ -83,15 +89,83 @@ const LoginPage = () => {
     getLocalIP((ip) => setLocalIp(ip));
   }, []);
 
+  // const handleLogin = async (e) => {
+  //   if (e?.preventDefault) e.preventDefault();
+  //   setError("");
+  //   if (!branch) {
+  //     setError("Please select a branch.");
+  //     return;
+  //   }
+  //   localStorage.clear();
+  //   console.log("Local IP: " + localIp);
+  //   try {
+  //     const response = await api.post("/api/auth/select-branch", {
+  //       username: responseUsername,
+  //       branchId: branch,
+  //       localIp,
+  //     });
+
+  //     const { token, permissions } = response.data.data;
+  //     Cookies.set("isLoggedIn", "true");
+
+  //     const logoutType = Cookies.get("logoutType");
+  //     const lastVisitedRoute = Cookies.get("lastVisitedRoute");
+
+  //     if (logoutType === "auto" && lastVisitedRoute) {
+  //       navigate(lastVisitedRoute);
+  //     } else {
+  //       navigate("/dashboard");
+  //     }
+
+  //     // cleanup
+  //     Cookies.remove("logoutType");
+  //     Cookies.remove("lastVisitedRoute");
+  //     // Start the session
+  //     localStorage.setItem("isLoggedIn", "true");
+  //     // After successful login or switch
+  //     updatePermissions(permissions); // this sets both context and localStorage
+  //     setIsToken(token);
+  //     setIsAuthenticated(true);
+  //     setRole(responseUsername);
+
+  //     localStorage.setItem("username", username);
+  //     localStorage.setItem("token", token);
+  //     localStorage.setItem("authToken", token);
+  //     setPermissions(permissions); // ← update sidebar-rendering state
+  //     localStorage.setItem("permissions", JSON.stringify(permissions));
+
+  //     if (rememberMe) {
+  //       localStorage.setItem("rememberedUsername", username);
+  //     } else {
+  //       localStorage.removeItem("rememberedUsername");
+  //     }
+
+  //     toast.success("Login successful");
+
+  //     //  Only navigate if not already on dashboard, and after re-render
+  //     if (window.location.pathname !== "/dashboard") {
+  //       setTimeout(() => navigate("/dashboard"), 0);
+  //     }
+  //   } catch (err) {
+  //     setIsAuthenticated(false);
+  //     console.error(err);
+  //     setError("Login failed. Please contact support.");
+  //   }
+  // };
+
   const handleLogin = async (e) => {
     if (e?.preventDefault) e.preventDefault();
     setError("");
+
     if (!branch) {
       setError("Please select a branch.");
       return;
     }
-    localStorage.clear();
-    console.log("Local IP: " + localIp);
+
+    // Read lastVisitedRoute before removing cookies
+    const lastVisitedRoute = Cookies.get("lastVisitedRoute");
+    const logoutType = Cookies.get("logoutType");
+
     try {
       const response = await api.post("/api/auth/select-branch", {
         username: responseUsername,
@@ -100,32 +174,48 @@ const LoginPage = () => {
       });
 
       const { token, permissions } = response.data.data;
-      // Start the session
-      localStorage.setItem("isLoggedIn", "true");
-      // After successful login or switch
-      updatePermissions(permissions); // this sets both context and localStorage
+
+      // ✅ Clear only old session cookies, NOT lastVisitedRoute
+      ["isLoggedIn", "username", "token", "authToken", "permissions"].forEach(
+        (name) => Cookies.remove(name)
+      );
+
+      // ✅ Set essential session cookies
+      Cookies.set("isLoggedIn", "true", { path: "/" });
+      Cookies.set("username", responseUsername, { path: "/" });
+      Cookies.set("token", token, { expires: 1, path: "/" });
+      Cookies.set("authToken", token, { expires: 1, path: "/" });
+      Cookies.set("permissions", JSON.stringify(permissions), {
+        expires: 1,
+        path: "/",
+      });
+
+      // rememberMe logic
+      if (rememberMe) {
+        Cookies.set("rememberedUsername", username, { expires: 7, path: "/" });
+      } else {
+        Cookies.remove("rememberedUsername", { path: "/" });
+      }
+
+      // Update states
+      updatePermissions(permissions);
       setIsToken(token);
       setIsAuthenticated(true);
       setRole(responseUsername);
-
-      localStorage.setItem("username", username);
-      localStorage.setItem("token", token);
-      localStorage.setItem("authToken", token);
-      setPermissions(permissions); // ← update sidebar-rendering state
-      localStorage.setItem("permissions", JSON.stringify(permissions));
-
-      if (rememberMe) {
-        localStorage.setItem("rememberedUsername", username);
-      } else {
-        localStorage.removeItem("rememberedUsername");
-      }
+      setPermissions(permissions);
 
       toast.success("Login successful");
 
-      //  Only navigate if not already on dashboard, and after re-render
-      if (window.location.pathname !== "/dashboard") {
-        setTimeout(() => navigate("/dashboard"), 0);
+      // Navigate to last visited route if auto-logout, otherwise dashboard
+      if (logoutType === "auto" && lastVisitedRoute) {
+        navigate(lastVisitedRoute);
+      } else {
+        navigate("/dashboard");
       }
+
+      // Cleanup logout cookies after redirect
+      Cookies.remove("logoutType", { path: "/" });
+      Cookies.remove("lastVisitedRoute", { path: "/" });
     } catch (err) {
       setIsAuthenticated(false);
       console.error(err);
@@ -135,14 +225,23 @@ const LoginPage = () => {
 
   const isBranchSelection = branches.length > 0;
 
-  // Load stored username on mount
+  // // Load stored username on mount
   useEffect(() => {
-    const savedUsername = localStorage.getItem("rememberedUsername");
+    // const savedUsername = localStorage.getItem("rememberedUsername");
+    const savedUsername = Cookies.get("rememberedUsername");
+
     if (savedUsername) {
       setUsername(savedUsername);
       setRememberMe(true);
     }
   }, []);
+  // useEffect(() => {
+  //   const savedUsername = localStorage.getItem("rememberedUsername");
+  //   if (savedUsername) {
+  //     setUsername(savedUsername);
+  //     setRememberMe(true);
+  //   }
+  // }, []);
 
   return (
     <div className="container-fluid container-bg min-vh-100 d-flex align-items-center justify-content-center bg-light">

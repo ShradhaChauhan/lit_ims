@@ -28,19 +28,103 @@ import useAutoLogout from "./utils/useAutoLogout";
 import { toast } from "react-toastify";
 import { useEffect, useState } from "react";
 import StoreLandingPage from "./components/StoreLandingPage/StoreLandingPage";
+import Cookies from "js-cookie";
+import { useLocation } from "react-router-dom";
+import { useIdleTimer } from "./utils/useIdleTimer";
+import api from "./services/api";
+import { useNavigate } from "react-router-dom";
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(
-    localStorage.getItem("isLoggedIn") === "true"
-  );
+  // const [isLoggedIn, setIsLoggedIn] = useState(
+  //   localStorage.getItem("isLoggedIn") === "true"
+  // );
 
-  const handleLogout = () => {
-    localStorage.removeItem("authToken"); // clear token instead of isLoggedIn
-    toast.info("You have been logged out due to inactivity.");
-    window.location.href = "/"; // redirect to login
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Auto logout after 15 minutes of inactivity
+  const handleLogout = async (type = "manual", currentPath = null) => {
+    try {
+      await api.post("/api/auth/logout"); // call API
+
+      if (type === "auto" && currentPath) {
+        Cookies.set("logoutType", "auto", { path: "/" });
+        Cookies.set("lastVisitedRoute", currentPath, { path: "/" });
+      } else if (type === "manual") {
+        Cookies.set("logoutType", "manual", { path: "/" });
+        Cookies.remove("lastVisitedRoute", { path: "/" });
+      } else if (type === "closed") {
+        Cookies.set("logoutType", "closed", { path: "/" });
+        Cookies.remove("lastVisitedRoute", { path: "/" });
+      }
+
+      // remove frontend session flags
+      Cookies.remove("authToken", { path: "/" });
+      Cookies.remove("permissions", { path: "/" });
+      Cookies.remove("username", { path: "/" });
+      Cookies.remove("isLoggedIn", { path: "/" });
+
+      toast.info("You have been logged out.");
+
+      // only now redirect
+      window.location.href = "/";
+    } catch (err) {
+      console.error("Logout Failed", err);
+    }
   };
 
-  useAutoLogout(handleLogout, 15 * 60 * 1000); // 20 min timeout
+  useIdleTimer(() => {
+    const currentPath = window.location.pathname; // reliable
+    handleLogout("auto", currentPath);
+  }, 15 * 60 * 1000); // 15 min or your chosen duration
+
+  // Tab close or browser close detection
+  useEffect(() => {
+    const handlePageHide = (event) => {
+      // If the page is being persisted in bfcache (like refresh or back/forward), skip logout
+      if (event.persisted) return;
+
+      // Now it's a real close, not refresh
+      navigator.sendBeacon("/api/logout");
+
+      Object.keys(Cookies.get()).forEach((cookieName) => {
+        Cookies.remove(cookieName, { path: "/" });
+      });
+    };
+
+    window.addEventListener("pagehide", handlePageHide);
+
+    return () => {
+      window.removeEventListener("pagehide", handlePageHide);
+    };
+  }, []);
+
+  // useEffect(() => {
+  //   const handleVisibilityChange = () => {
+  //     if (document.visibilityState === "hidden") {
+  //       // Tab is being closed (not refreshed)
+  //       navigator.sendBeacon("/api/logout");
+
+  //       Object.keys(Cookies.get()).forEach((cookieName) => {
+  //         Cookies.remove(cookieName, { path: "/" });
+  //       });
+  //     }
+  //   };
+
+  //   document.addEventListener("visibilitychange", handleVisibilityChange);
+
+  //   return () => {
+  //     document.removeEventListener("visibilitychange", handleVisibilityChange);
+  //   };
+  // }, []);
+
+  // const handleLogout = () => {
+  //   localStorage.removeItem("authToken"); // clear token instead of isLoggedIn
+  //   toast.info("You have been logged out due to inactivity.");
+  //   window.location.href = "/"; // redirect to login
+  // };
+
+  // useAutoLogout(handleLogout, 15 * 60 * 1000); // 20 min timeout
 
   // Logout if user closes the tab or browser
   // useEffect(() => {

@@ -419,8 +419,14 @@ const ProductionFloorReceipt = () => {
                       </option>
                     )}
                     {issueNoList.map((issueNo) => (
-                      <option key={issueNo.issueNo} value={issueNo.issueNo}>
-                        {issueNo.issueNo}
+                      <option
+                        key={issueNo.issueNumber}
+                        value={issueNo.issueNumber}
+                      >
+                        {"(" +
+                          issueNo.warehouseName +
+                          ") - " +
+                          issueNo.issueNumber}
                       </option>
                     ))}
                   </select>

@@ -6,7 +6,7 @@ import ims_logo from "../../assets/images/ims_logo.png";
 import api from "../../services/api";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-
+import Cookies from "js-cookie";
 import VendorMaster from "../Forms/VendorMaster/VendorMaster";
 import ItemMaster from "../Forms/ItemMaster/ItemMaster";
 import WarehouseMaster from "../Forms/WarehouseMaster/WarehouseMaster";
@@ -263,8 +263,11 @@ const SideBar = () => {
     try {
       await api.post("/api/auth/logout");
 
-      // Clear all localStorage
-      localStorage.clear();
+      // Clear cookies
+      Cookies.remove("authToken");
+      Cookies.remove("permissions");
+      Cookies.remove("username");
+      Cookies.remove("rememberedUsername");
 
       // Reset auth state
       setIsAuthenticated(false);
@@ -276,6 +279,24 @@ const SideBar = () => {
       console.error("Logout Failed", err);
     }
   };
+
+  // const handleLogout = async () => {
+  //   try {
+  //     await api.post("/api/auth/logout");
+
+  //     // Clear all localStorage
+  //     localStorage.clear();
+
+  //     // Reset auth state
+  //     setIsAuthenticated(false);
+  //     setIsToken(null);
+  //     setPermissions([]);
+
+  //     navigate("/");
+  //   } catch (err) {
+  //     console.error("Logout Failed", err);
+  //   }
+  // };
 
   const toggleSubmenu = (label) => {
     setOpenSubmenus((prev) => {
