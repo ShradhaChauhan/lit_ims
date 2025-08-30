@@ -3,10 +3,3 @@ services/
 dist/
 vite.config.js
 api.jsx
-ActivityLogs.jsx
-AdminLandingPage.jsx
-Login.jsx
-SideBar.jsx
-PrivateRoute.jsx
-AppContext.jsx
-App.jsx
