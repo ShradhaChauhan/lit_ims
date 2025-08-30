@@ -1010,13 +1010,13 @@ const IncomingQC = () => {
       </nav>
 
       {/* Form Header Section */}
-      <div className="table-form-container mx-2 mb-4">
+      {/* <div className="table-form-container mx-2 mb-4">
         <div className="form-header">
           <h2>
             <i className="fas fa-qrcode"></i> Scan Batch
           </h2>
         </div>
-        {/* Form Fields */}
+        
         <form autoComplete="off" className="padding-2">
           <div className="form-grid pt-0 m-0">
             <div className="row form-style">
@@ -1042,7 +1042,7 @@ const IncomingQC = () => {
             </div>
           </div>
         </form>
-      </div>
+      </div> */}
 
       {/* Quality Check Form */}
       {isShowQualityCheckForm && (
