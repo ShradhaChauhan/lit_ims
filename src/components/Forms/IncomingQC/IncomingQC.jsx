@@ -509,49 +509,51 @@ const IncomingQC = () => {
     }
 
     try {
-      // Convert files to Base64
-      const convertFileToBase64 = (file) =>
-        new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(file);
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = (error) => reject(error);
-        });
-
-      const batchUpdates = await Promise.all(
-        batchDetails.map(async (batch) => {
+      // 1. Prepare the JSON part (without files)
+      const dtoPayload = {
+        transactionNumber: trno,
+        batchUpdates: batchDetails.map((batch) => {
           const batchData = batchStatuses[batch.id] || {};
-          const file = batchFiles[batch.id];
-
-          let attachmentBase64 = null;
-          if (file) {
-            attachmentBase64 = await convertFileToBase64(file);
-          }
-
           return {
             itemId: batch.id,
             qcStatus: batchData.status,
             warehouseId: batchData.warehouseId,
             defectCategory: batchData.defectCategory,
             remarks: batchData.remarks,
-            attachment: attachmentBase64, // 🔑 file inside JSON
+            // Do not include attachment here, files are sent separately
           };
-        })
-      );
-
-      const payload = {
-        transactionNumber: trno,
-        batchUpdates,
+        }),
       };
 
-      console.log("Final payload:", payload);
+      const formData = new FormData();
+      formData.append("data", JSON.stringify(dtoPayload));
+
+      // 2. Append files in the SAME order as batchUpdates
+      batchDetails.forEach((batch) => {
+        const file = batchFiles[batch.id];
+        if (file) {
+          formData.append("files", file); // "files" matches @RequestPart List<MultipartFile> files
+        } else {
+          // Append empty slot to maintain index alignment if required
+          formData.append("files", new Blob([]), "");
+        }
+      });
+
+      // Debug: Log the exact JSON being sent
+      console.log("JSON payload being sent:", JSON.stringify(dtoPayload, null, 2));
+      
+      // Debug: Log FormData contents
+      console.log("FormData contents:");
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value);
+      }
 
       const response = await api.put(
         "/api/receipt/qc-status/update",
-        payload, // send JSON only
+        formData,
         {
           headers: {
-            "Content-Type": "application/json",
+            "Content-Type": "multipart/form-data",
           },
         }
       );
@@ -992,7 +994,7 @@ const IncomingQC = () => {
                             onClick={handleBulkFail}
                           >
                             <i className="fas fa-times-circle me-1"></i>
-                            Reject All Items
+                            Fail All Items
                           </button>
                         </div>
                         <div className="col-md-4">
@@ -1186,7 +1188,7 @@ const IncomingQC = () => {
                                 handleStatusChange(batch.id, "FAIL")
                               }
                             >
-                              Reject
+                              Fail
                             </button>
                             <button
                               type="button"
