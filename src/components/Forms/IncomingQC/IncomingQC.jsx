@@ -1557,7 +1557,13 @@ const IncomingQC = () => {
                                   <tr key={item.id}>
                                     <td className="px-3 py-2 ">{`(${item.itemCode}) ${item.itemName}`}</td>
                                     <td>{item.batchNumber}</td>
-                                    <td>{item.vendorName}</td>
+                                    <td>
+                                      {" "}
+                                      {"(" +
+                                        item.vendorCode +
+                                        ") " +
+                                        item.vendorName}
+                                    </td>
                                     <td>{item.quantity}</td>
                                     <td>{item.createdAt}</td>
                                   </tr>
@@ -1719,7 +1725,6 @@ const IncomingQC = () => {
               <thead>
                 <tr>
                   <th>Item Name</th>
-                  <th>Item Code</th>
                   <th>Batch No</th>
                   <th>Vendor Name</th>
                   <th>Quantity</th>
@@ -1731,10 +1736,9 @@ const IncomingQC = () => {
               <tbody className="text-break">
                 {currentCompletedItems.map((pfqc) => (
                   <tr key={pfqc.id}>
-                    <td>{pfqc.itemName}</td>
-                    <td>{pfqc.itemCode}</td>
+                    <td>{"(" + pfqc.itemCode + ") " + pfqc.itemName}</td>
                     <td>{pfqc.batchNumber}</td>
-                    <td>{pfqc.vendorName}</td>
+                    <td>{"(" + pfqc.vendorCode + ") " + pfqc.vendorName}</td>
                     <td>{pfqc.quantity}</td>
                     <td>{pfqc.createdAt}</td>
                     <td>
