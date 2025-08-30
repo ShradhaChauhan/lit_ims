@@ -3,7 +3,6 @@ services/
 dist/
 vite.config.js
 api.jsx
-IncomingQC.jsx
 ActivityLogs.jsx
 AdminLandingPage.jsx
 Login.jsx

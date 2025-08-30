@@ -25,6 +25,7 @@
     --secondary-color: #64748b;
     --lightGreen: #EEF9EB;
     --green: #36BC5D;
+    --lightGreen: #7dcc93;
     --success-color: #35c469;
     --lightRed: rgba(239, 68, 68, 0.1);
     --red: rgb(240, 53, 53);
@@ -671,6 +672,11 @@ tbody tr:hover {
 .badge.customer {
     background-color: var(--lightYellow);
     color: var(--yellow);
+}
+
+.badge.user {
+    background-color: var(--lightGreen);
+    color: var(--green);
 }
 
 .status {

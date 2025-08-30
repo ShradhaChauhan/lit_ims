@@ -535,7 +535,7 @@ const SideBar = () => {
               />
               <div className="user-details">
                 <p className="m-0 text-8">
-                  Hi, <span>{localStorage.getItem("username")}</span>
+                  Hi, <span>{Cookies.get("username")}</span>
                 </p>
               </div>
             </div>

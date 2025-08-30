@@ -8,7 +8,6 @@ import "./IncomingQC.css";
 import _ from "lodash";
 
 const IncomingQC = () => {
-  const [batchFiles, setBatchFiles] = useState({});
   const [isShowQualityCheckForm, setIsShowQualityCheckForm] = useState(false);
   const [searchBatchNo, setSearchBatchNo] = useState("");
   const [iqc, setIqc] = useState([]);
@@ -377,10 +376,16 @@ const IncomingQC = () => {
       }
     }
 
-    // if (!selectedFile) {
-    //   toast.error("Please select a file first.");
-    //   return;
-    // }
+    // Validate that all required group files are uploaded
+    const fileValidation = validateGroupFiles();
+    if (!fileValidation.isValid) {
+      toast.error(
+        `Please upload attachments for the following groups: ${fileValidation.missingFiles.join(
+          ", "
+        )}`
+      );
+      return;
+    }
 
     setShowPreviewModal(true);
   };
@@ -502,50 +507,79 @@ const IncomingQC = () => {
         );
         return;
       }
-      if (!batchFiles[batch.id]) {
-        toast.error(`Please upload attachment for batch ${batch.batchNumber}`);
-        return;
-      }
+    }
+
+    // ✅ Validate grouped attachments
+    const fileValidation = validateGroupFiles();
+    if (!fileValidation.isValid) {
+      toast.error(
+        `Please upload attachments for the following groups: ${fileValidation.missingFiles.join(
+          ", "
+        )}`
+      );
+      return;
     }
 
     try {
+      // Create FormData for multipart/form-data
+      const formData = new FormData();
+
       // 1. Prepare the JSON part (without files)
+      const batchUpdates = batchDetails.map((batch) => {
+        const batchData = batchStatuses[batch.id] || {};
+        return {
+          itemId: batch.id,
+          qcStatus: batchData.status,
+          warehouseId: batchData.warehouseId,
+          defectCategory: batchData.defectCategory,
+          remarks: batchData.remarks,
+        };
+      });
+
       const dtoPayload = {
         transactionNumber: trno,
-        batchUpdates: batchDetails.map((batch) => {
-          const batchData = batchStatuses[batch.id] || {};
-          return {
-            itemId: batch.id,
-            qcStatus: batchData.status,
-            warehouseId: batchData.warehouseId,
-            defectCategory: batchData.defectCategory,
-            remarks: batchData.remarks,
-            // Do not include attachment here, files are sent separately
-          };
-        }),
+        batchUpdates: batchUpdates,
       };
 
-      const formData = new FormData();
       formData.append("data", JSON.stringify(dtoPayload));
 
       // 2. Append files in the SAME order as batchUpdates
-      batchDetails.forEach((batch) => {
-        const file = batchFiles[batch.id];
-        if (file) {
-          formData.append("files", file); // "files" matches @RequestPart List<MultipartFile> files
+      // Each batch gets its corresponding group file
+      batchUpdates.forEach((batchUpdate, index) => {
+        const batch = batchDetails[index];
+        const groupKey = `${batch.vendorCode}_${batch.itemCode}`;
+        const groupFile = groupedBatchFiles[groupKey];
+
+        if (groupFile) {
+          formData.append("files", groupFile);
         } else {
           // Append empty slot to maintain index alignment if required
           formData.append("files", new Blob([]), "");
         }
       });
 
-      // Debug: Log the exact JSON being sent
-      console.log("JSON payload being sent:", JSON.stringify(dtoPayload, null, 2));
-      
-      // Debug: Log FormData contents
-      console.log("FormData contents:");
+      // Debug log to verify FormData contents
+      console.log("=== FormData Contents ===");
+      console.log("Transaction Number:", trno);
+      console.log("DTO Payload:", dtoPayload);
+      console.log("Batch Updates:", batchUpdates);
+      console.log("Grouped Files:", groupedBatchFiles);
+
+      console.log("FormData entries:");
       for (let [key, value] of formData.entries()) {
-        console.log(key, value);
+        if (value instanceof File) {
+          console.log(
+            key,
+            "File:",
+            value.name,
+            "Size:",
+            value.size,
+            "Type:",
+            value.type
+          );
+        } else {
+          console.log(key, value);
+        }
       }
 
       const response = await api.put(
@@ -564,7 +598,7 @@ const IncomingQC = () => {
 
       // Reset state
       setBatchStatuses({});
-      setBatchFiles({});
+      setGroupedBatchFiles({});
       setIsShowQualityCheckForm(false);
       setShowPreviewModal(false);
 
@@ -673,16 +707,8 @@ const IncomingQC = () => {
   // Dynamically calculate widths
   const fieldClass = isFail ? "flex-1" : "flex-1-3";
 
-  // Add Attachment
-  const [selectedFile, setSelectedFile] = useState(null);
+  // File size validation constant
   const MAX_FILE_SIZE_MB = 2;
-
-  const handleFileChange = (batchId, file) => {
-    setBatchFiles((prev) => ({
-      ...prev,
-      [batchId]: file,
-    }));
-  };
 
   // const handleFileChange = (event) => {
   //   event.preventDefault();
@@ -873,6 +899,95 @@ const IncomingQC = () => {
     toast.success("All items marked as HOLD");
   };
 
+  // Add new state for grouped batch files
+  const [groupedBatchFiles, setGroupedBatchFiles] = useState({});
+
+  // Function to group batch details by vendorCode and itemCode
+  const getGroupedBatchDetails = () => {
+    if (!Array.isArray(batchDetails) || batchDetails.length === 0) return [];
+
+    const grouped = {};
+    batchDetails.forEach((batch) => {
+      const key = `${batch.vendorCode}_${batch.itemCode}`;
+      if (!grouped[key]) {
+        grouped[key] = {
+          vendorCode: batch.vendorCode,
+          itemCode: batch.itemCode,
+          vendorName: batch.vendorName,
+          itemName: batch.itemName,
+          batches: [],
+          totalQuantity: 0,
+        };
+      }
+      grouped[key].batches.push(batch);
+      grouped[key].totalQuantity += Number(batch.quantity || 0);
+    });
+
+    return Object.values(grouped);
+  };
+
+  // Function to validate grouped files
+  const validateGroupFiles = () => {
+    const missingFiles = [];
+    const groupedDetails = getGroupedBatchDetails();
+
+    groupedDetails.forEach((group) => {
+      const groupKey = `${group.vendorCode}_${group.itemCode}`;
+      if (!groupedBatchFiles[groupKey]) {
+        missingFiles.push(`${group.vendorName} - ${group.itemName}`);
+      }
+    });
+
+    return {
+      isValid: missingFiles.length === 0,
+      missingFiles: missingFiles,
+    };
+  };
+
+  // Handle file change for grouped items
+  const handleGroupedFileChange = (groupKey, file) => {
+    if (file) {
+      const fileSizeInMB = file.size / (1024 * 1024); // Convert bytes to MB
+      if (fileSizeInMB > MAX_FILE_SIZE_MB) {
+        toast.warning("File size must be less than or equal to 2MB.");
+        return;
+      }
+    }
+
+    setGroupedBatchFiles((prev) => ({
+      ...prev,
+      [groupKey]: file,
+    }));
+  };
+
+  // Remove file from group
+  const handleRemoveGroupFile = (groupKey) => {
+    setGroupedBatchFiles((prev) => {
+      const newState = { ...prev };
+      delete newState[groupKey];
+      return newState;
+    });
+  };
+
+  // Bulk apply to a specific group
+  const handleGroupBulkPass = (group) => {
+    group.batches.forEach((batch) => {
+      handleStatusChange(batch.id, "PASS");
+    });
+  };
+
+  const handleGroupBulkFail = (group) => {
+    group.batches.forEach((batch) => {
+      handleStatusChange(batch.id, "FAIL");
+    });
+  };
+
+  const handleGroupBulkHold = (group) => {
+    group.batches.forEach((batch) => {
+      handleStatusChange(batch.id, "HOLD");
+    });
+  };
+
   return (
     <div>
       {/* Header section */}
@@ -937,6 +1052,7 @@ const IncomingQC = () => {
               <i className="fas fa-circle-check"></i> Quality Check
             </h2>
           </div>
+
           {/* Form Fields */}
           <form autoComplete="off" className="padding-2">
             <div className="form-grid pt-0">
@@ -945,268 +1061,338 @@ const IncomingQC = () => {
                   <label className="text-8 font-weight p-0">
                     Trno: <span className="text-primary text-8">{trno}</span>
                   </label>
-                  {/* <div className="mt-3 mb-3">
-                    <label
-                      htmlFor="formFile"
-                      className="form-label mb-0 text-8 font-weight py-2"
-                    >
-                      Add Attachment <span className="text-danger fs-6">*</span>
-                    </label>
-                    <div className="position-relative w-100">
-                      <input
-                        className="form-control text-8"
-                        type="file"
-                        id="formFile"
-                        accept=".pdf, .jpg, .jpeg, .heic"
-                        onChange={handleFileChange}
-                      />
-                    </div>
-                    {selectedFile && (
-                      <div className="mt-3 text-8">
-                        <span className="fw-medium ">Selected File:</span>{" "}
-                        {selectedFile.name}
-                      </div>
-                    )}
-                  </div> */}
 
-                  {/* Bulk Action Buttons */}
+                  {/* File Upload Summary */}
                   {Array.isArray(batchDetails) && batchDetails.length > 0 && (
-                    <div className="mt-4 mb-3">
-                      <label className="text-8 font-weight p-0 mb-2">
-                        Bulk Actions{" "}
-                        <span className="text-muted">(Apply to all items)</span>
-                      </label>
+                    <div className="mt-3 mb-3 p-3 bg-info bg-opacity-10 border border-info rounded">
                       <div className="row">
-                        <div className="col-md-4">
-                          <button
-                            type="button"
-                            className="btn w-100 text-8 btn-outline-success"
-                            onClick={handleBulkPass}
-                          >
-                            <i className="fas fa-check-circle me-1"></i>
-                            Pass All Items
-                          </button>
+                        <div className="col-md-3">
+                          <strong>Total Groups:</strong>{" "}
+                          {getGroupedBatchDetails().length}
                         </div>
-                        <div className="col-md-4">
-                          <button
-                            type="button"
-                            className="btn w-100 text-8 btn-outline-danger"
-                            onClick={handleBulkFail}
-                          >
-                            <i className="fas fa-times-circle me-1"></i>
-                            Fail All Items
-                          </button>
+                        <div className="col-md-3">
+                          <strong>Files Uploaded:</strong>{" "}
+                          {Object.keys(groupedBatchFiles).length}
                         </div>
-                        <div className="col-md-4">
-                          <button
-                            type="button"
-                            className="btn w-100 text-8 btn-outline-warning"
-                            onClick={handleBulkHold}
-                          >
-                            <i className="fas fa-pause-circle me-1"></i>
-                            Hold All Items
-                          </button>
+                        <div className="col-md-3">
+                          <strong>Files Remaining:</strong>{" "}
+                          {getGroupedBatchDetails().length -
+                            Object.keys(groupedBatchFiles).length}
+                        </div>
+                        <div className="col-md-3">
+                          <strong>Total Batches:</strong> {batchDetails.length}
                         </div>
                       </div>
                     </div>
                   )}
 
-                  {Array.isArray(batchDetails) &&
-                    batchDetails.map((batch) => {
-                      const status = batchStatuses[batch.id]?.status || "";
-                      const currentWarehouse =
-                        batchStatuses[batch.id]?.warehouseId || "";
+                  {/* Grouped Batch Items */}
+                  {Array.isArray(batchDetails) && batchDetails.length > 0 && (
+                    <div className="mt-4 mb-3">
+                      {getGroupedBatchDetails().map((group, groupIndex) => {
+                        const groupKey = `${group.vendorCode}_${group.itemCode}`;
+                        const groupFile = groupedBatchFiles[groupKey];
 
-                      return (
-                        <div
-                          key={batch.id}
-                          // className="batch-details p-2 border rounded mb-2"
-                          className="batch-details d-flex align-items-center justify-content-between flex-wrap p-2 border rounded mb-2"
-                        >
-                          {/* Batch No */}
-                          <div className="text-8 me-3">
-                            <label className="form-label text-8">
-                              Batch No
-                            </label>
-                            <input
-                              type="text"
-                              className="form-control text-8"
-                              value={batch.batchNumber}
-                              disabled
-                            />
-                          </div>
-                          {/* Item Name */}
-                          <div className="text-8 me-3">
-                            <label className="form-label text-8">
-                              Item Name
-                            </label>
-                            <input
-                              type="text"
-                              className="form-control text-8"
-                              value={
-                                "(" + batch.itemCode + ") " + batch.itemName
-                              }
-                              disabled
-                            />
-                          </div>
-
-                          {/* Quantity */}
-                          <div className="text-8 me-3">
-                            <label className="form-label text-8">
-                              Quantity
-                            </label>
-                            <input
-                              type="text"
-                              className="form-control text-8"
-                              value={batch.quantity}
-                              disabled
-                            />
-                          </div>
-
-                          {/* Warehouse */}
-                          <div className="me-3" style={{ minWidth: "150px" }}>
-                            <label className="form-label text-8">
-                              Warehouse <span className="text-danger">*</span>
-                            </label>
-                            <select
-                              className="form-control text-8"
-                              value={currentWarehouse}
-                              disabled
-                            >
-                              <option value="">Warehouse</option>
-                              {warehouses.map((wh) => (
-                                <option key={wh.id} value={wh.id}>
-                                  {wh.name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-
-                          {/* FAIL → Defect Category */}
-                          {status === "FAIL" && (
-                            <div className="">
-                              <label className="form-label text-8">
-                                Defect Category{" "}
-                                <span className="text-danger">*</span>
-                              </label>
-                              <select
-                                className="form-select text-8"
-                                value={
-                                  batchStatuses[batch.id]?.defectCategory || ""
-                                }
-                                onChange={(e) =>
-                                  handleDefectChange(batch.id, e.target.value)
-                                }
-                              >
-                                <option value="">Select defect category</option>
-                                <option value="Broken/Damaged">
-                                  Broken/Damaged
-                                </option>
-                                <option value="Color Mismatch">
-                                  Color Mismatch
-                                </option>
-                                <option value="Dimensional Issue">
-                                  Dimensional Issue
-                                </option>
-                                <option value="Material Defect">
-                                  Material Defect
-                                </option>
-                                <option value="Wrong Item">Wrong Item</option>
-                              </select>
-                            </div>
-                          )}
-
-                          {/* FAIL or HOLD → Remarks */}
-                          {(status === "FAIL" || status === "HOLD") && (
-                            <div className="mt-3">
-                              <label className="form-label text-8">
-                                Remarks
-                              </label>
-                              <textarea
-                                className="form-control text-8"
-                                placeholder="Enter remarks"
-                                value={batchStatuses[batch.id]?.remarks || ""}
-                                onChange={(e) =>
-                                  handleRemarksChange(batch.id, e.target.value)
-                                }
-                              />
-                            </div>
-                          )}
-
-                          <div className="mt-3 mb-3">
-                            <label
-                              htmlFor={`formFile-${batch.id}`}
-                              className="form-label mb-0 text-8 font-weight py-2"
-                            >
-                              Add Attachment{" "}
-                              <span className="text-danger fs-6">*</span>
-                            </label>
-                            <div className="position-relative w-100">
-                              <input
-                                className="form-control text-8"
-                                type="file"
-                                id={`formFile-${batch.id}`}
-                                accept=".pdf, .jpg, .jpeg, .heic"
-                                onChange={(e) =>
-                                  handleFileChange(batch.id, e.target.files[0])
-                                }
-                              />
-                            </div>
-                            {batchFiles[batch.id] && (
-                              <div className="mt-3 text-8">
-                                <span className="fw-medium">
-                                  Selected File:
-                                </span>{" "}
-                                {batchFiles[batch.id].name}
+                        return (
+                          <div
+                            key={groupKey}
+                            className="grouped-batch-container border rounded p-3 mb-3"
+                          >
+                            {/* Group Header */}
+                            <div className="group-header mb-3 p-2 bg-light rounded">
+                              <div className="row text-8">
+                                <div className="col-md-3">
+                                  <strong>Vendor:</strong> {group.vendorName} (
+                                  {group.vendorCode})
+                                </div>
+                                <div className="col-md-3">
+                                  <strong>Item:</strong> {group.itemName} (
+                                  {group.itemCode})
+                                </div>
+                                <div className="col-md-3">
+                                  <strong>Total Quantity:</strong>{" "}
+                                  {group.totalQuantity}
+                                </div>
+                                <div className="col-md-3">
+                                  <strong>Batch Count:</strong>{" "}
+                                  {group.batches.length}
+                                </div>
                               </div>
-                            )}
-                          </div>
+                            </div>
 
-                          {/* Buttons */}
-                          <div className="mt-3 d-flex">
-                            <button
-                              type="button"
-                              className={`btn me-2 text-8 ${
-                                status === "PASS"
-                                  ? "btn-success"
-                                  : "btn-outline-success"
-                              }`}
-                              onClick={() =>
-                                handleStatusChange(batch.id, "PASS")
-                              }
-                            >
-                              Pass
-                            </button>
-                            <button
-                              type="button"
-                              className={`btn me-2 text-8 ${
-                                status === "FAIL"
-                                  ? "btn-danger"
-                                  : "btn-outline-danger"
-                              }`}
-                              onClick={() =>
-                                handleStatusChange(batch.id, "FAIL")
-                              }
-                            >
-                              Fail
-                            </button>
-                            <button
-                              type="button"
-                              className={`btn text-8 ${
-                                status === "HOLD"
-                                  ? "btn-warning"
-                                  : "btn-outline-warning"
-                              }`}
-                              onClick={() =>
-                                handleStatusChange(batch.id, "HOLD")
-                              }
-                            >
-                              Hold
-                            </button>
+                            {/* Group Bulk Actions */}
+                            <div className="mt-3 mb-3">
+                              <label className="text-8 font-weight p-0 mb-2">
+                                Bulk Actions{" "}
+                                <span className="text-muted">
+                                  (Apply to this group only)
+                                </span>
+                              </label>
+                              <div className="row">
+                                <div className="col-md-4">
+                                  <button
+                                    type="button"
+                                    className="btn w-100 text-8 btn-outline-success"
+                                    onClick={() => handleGroupBulkPass(group)}
+                                  >
+                                    <i className="fas fa-check-circle me-1"></i>
+                                    Pass All in Group
+                                  </button>
+                                </div>
+                                <div className="col-md-4">
+                                  <button
+                                    type="button"
+                                    className="btn w-100 text-8 btn-outline-danger"
+                                    onClick={() => handleGroupBulkFail(group)}
+                                  >
+                                    <i className="fas fa-times-circle me-1"></i>
+                                    Reject All in Group
+                                  </button>
+                                </div>
+                                <div className="col-md-4">
+                                  <button
+                                    type="button"
+                                    className="btn w-100 text-8 btn-outline-warning"
+                                    onClick={() => handleGroupBulkHold(group)}
+                                  >
+                                    <i className="fas fa-pause-circle me-1"></i>
+                                    Hold All in Group
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Group Attachment */}
+                            <div className="group-attachment mb-3">
+                              <label className="form-label text-8 font-weight mb-2">
+                                Group Attachment{" "}
+                                <span className="text-danger fs-6">*</span>
+                                <span className="text-muted ms-2">
+                                  (One file for all batches in this group)
+                                </span>
+                              </label>
+                              <div className="position-relative w-100">
+                                <input
+                                  className="form-control text-8"
+                                  type="file"
+                                  accept=".pdf, .jpg, .jpeg, .heic"
+                                  onChange={(e) =>
+                                    handleGroupedFileChange(
+                                      groupKey,
+                                      e.target.files[0]
+                                    )
+                                  }
+                                />
+                              </div>
+                              {groupFile && (
+                                <div className="file-selection-display">
+                                  <div className="file-info">
+                                    <i className="fas fa-file-alt file-icon"></i>
+                                    <span className="fw-medium">
+                                      {groupFile.name}
+                                    </span>
+                                    <small className="text-muted">
+                                      (
+                                      {(groupFile.size / (1024 * 1024)).toFixed(
+                                        2
+                                      )}{" "}
+                                      MB)
+                                    </small>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    className="remove-btn"
+                                    onClick={() =>
+                                      handleRemoveGroupFile(groupKey)
+                                    }
+                                    title="Remove file"
+                                  >
+                                    <i className="fas fa-times"></i>
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Individual Batch Items */}
+                            <div className="batch-items">
+                              <h6 className="mb-2">Batch Details:</h6>
+                              {group.batches.map((batch) => {
+                                const status =
+                                  batchStatuses[batch.id]?.status || "";
+                                const currentWarehouse =
+                                  batchStatuses[batch.id]?.warehouseId || "";
+
+                                return (
+                                  <div
+                                    key={batch.id}
+                                    className="batch-details d-flex align-items-center justify-content-between flex-wrap p-2 border rounded mb-2"
+                                  >
+                                    {/* Batch No */}
+                                    <div className="text-8 me-3">
+                                      <label className="form-label text-8">
+                                        Batch No
+                                      </label>
+                                      <input
+                                        type="text"
+                                        className="form-control text-8"
+                                        value={batch.batchNumber}
+                                        disabled
+                                      />
+                                    </div>
+
+                                    {/* Quantity */}
+                                    <div className="text-8 me-3">
+                                      <label className="form-label text-8">
+                                        Quantity
+                                      </label>
+                                      <input
+                                        type="text"
+                                        className="form-control text-8"
+                                        value={batch.quantity}
+                                        disabled
+                                      />
+                                    </div>
+
+                                    {/* Warehouse */}
+                                    <div
+                                      className="me-3"
+                                      style={{ minWidth: "150px" }}
+                                    >
+                                      <label className="form-label text-8">
+                                        Warehouse{" "}
+                                        <span className="text-danger">*</span>
+                                      </label>
+                                      <select
+                                        className="form-control text-8"
+                                        value={currentWarehouse}
+                                        disabled
+                                      >
+                                        <option value="">Warehouse</option>
+                                        {warehouses.map((wh) => (
+                                          <option key={wh.id} value={wh.id}>
+                                            {wh.name}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </div>
+
+                                    {/* FAIL → Defect Category */}
+                                    {status === "FAIL" && (
+                                      <div className="">
+                                        <label className="form-label text-8">
+                                          Defect Category{" "}
+                                          <span className="text-danger">*</span>
+                                        </label>
+                                        <select
+                                          className="form-select text-8"
+                                          value={
+                                            batchStatuses[batch.id]
+                                              ?.defectCategory || ""
+                                          }
+                                          onChange={(e) =>
+                                            handleDefectChange(
+                                              batch.id,
+                                              e.target.value
+                                            )
+                                          }
+                                        >
+                                          <option value="">
+                                            Select defect category
+                                          </option>
+                                          <option value="Broken/Damaged">
+                                            Broken/Damaged
+                                          </option>
+                                          <option value="Color Mismatch">
+                                            Color Mismatch
+                                          </option>
+                                          <option value="Dimensional Issue">
+                                            Dimensional Issue
+                                          </option>
+                                          <option value="Material Defect">
+                                            Material Defect
+                                          </option>
+                                          <option value="Wrong Item">
+                                            Wrong Item
+                                          </option>
+                                        </select>
+                                      </div>
+                                    )}
+
+                                    {/* FAIL or HOLD → Remarks */}
+                                    {(status === "FAIL" ||
+                                      status === "HOLD") && (
+                                      <div className="mt-3">
+                                        <label className="form-label text-8">
+                                          Remarks
+                                        </label>
+                                        <textarea
+                                          className="form-control text-8"
+                                          placeholder="Enter remarks"
+                                          value={
+                                            batchStatuses[batch.id]?.remarks ||
+                                            ""
+                                          }
+                                          onChange={(e) =>
+                                            handleRemarksChange(
+                                              batch.id,
+                                              e.target.value
+                                            )
+                                          }
+                                        />
+                                      </div>
+                                    )}
+
+                                    {/* Buttons */}
+                                    <div className="mt-3 d-flex">
+                                      <button
+                                        type="button"
+                                        className={`btn me-2 text-8 ${
+                                          status === "PASS"
+                                            ? "btn-success"
+                                            : "btn-outline-success"
+                                        }`}
+                                        onClick={() =>
+                                          handleStatusChange(batch.id, "PASS")
+                                        }
+                                      >
+                                        Pass
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className={`btn me-2 text-8 ${
+                                          status === "FAIL"
+                                            ? "btn-danger"
+                                            : "btn-outline-danger"
+                                        }`}
+                                        onClick={() =>
+                                          handleStatusChange(batch.id, "FAIL")
+                                        }
+                                      >
+                                        Reject
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className={`btn text-8 ${
+                                          status === "HOLD"
+                                            ? "btn-warning"
+                                            : "btn-outline-warning"
+                                        }`}
+                                        onClick={() =>
+                                          handleStatusChange(batch.id, "HOLD")
+                                        }
+                                      >
+                                        Hold
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -1215,7 +1401,6 @@ const IncomingQC = () => {
               <button
                 type="button"
                 className="btn btn-primary add-btn"
-                // onClick={handlePassBatch}
                 onClick={handleShowModal}
               >
                 <i className="fa-solid fa-floppy-disk me-1"></i> Submit Quality
@@ -1704,79 +1889,120 @@ const IncomingQC = () => {
                       <strong>Transaction No:</strong> <span>{trno}</span>
                     </div>
                     <div className="col-sm-6 text-8">
-                      <strong>Attached File:</strong>{" "}
-                      <span>{selectedFile?.name || "N/A"}</span>
+                      <strong>Total Groups:</strong>{" "}
+                      <span>{getGroupedBatchDetails().length}</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Batch cards */}
-                {batchDetails.map((batch, index) => (
-                  <div
-                    key={index}
-                    className="card mb-3 shadow-sm border-secondary"
-                  >
-                    <div className="card-header bg-secondary text-white text-8">
-                      <strong>
-                        Batch {index + 1} — {batch.batchNumber}
-                      </strong>
-                    </div>
-                    <div className="card-body text-8">
-                      <div className="row">
-                        <div className="col-sm-6">
-                          <strong>QC Status:</strong>{" "}
-                          <span>
-                            {batchStatuses[batch.id]?.status || "N/A"}
-                          </span>
-                        </div>
-                        <div className="col-sm-6">
-                          <strong>Warehouse:</strong>{" "}
-                          <span>
-                            {warehouses.find(
-                              (w) =>
-                                w.id === batchStatuses[batch.id]?.warehouseId
-                            )?.name || "N/A"}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="row">
-                        <div className="col-sm-6">
-                          <strong>Item Code:</strong> {batch.itemCode}
-                        </div>
-                        <div className="col-sm-6">
-                          <strong>Item Name:</strong> {batch.itemName}
-                        </div>
-                        <div className="col-sm-6">
-                          <strong>Quantity:</strong> {batch.quantity}
-                        </div>
-                        <div className="col-sm-6">
-                          <strong>Vendor Name:</strong> {batch.vendorName}
-                        </div>
-                        <div className="col-sm-6">
-                          <strong>Created At:</strong> {batch.createdAt}
-                        </div>
-                      </div>
-                      {batchStatuses[batch.id]?.status === "FAIL" && (
-                        <div>
-                          <strong>Defect Category:</strong>{" "}
-                          <span>
-                            {batchStatuses[batch.id]?.defectCategory || "N/A"}
-                          </span>
-                        </div>
-                      )}
+                {/* Grouped Items */}
+                {getGroupedBatchDetails().map((group, groupIndex) => {
+                  const groupKey = `${group.vendorCode}_${group.itemCode}`;
+                  const groupFile = groupedBatchFiles[groupKey];
 
-                      {(batchStatuses[batch.id]?.status === "FAIL" ||
-                        batchStatuses[batch.id]?.status === "HOLD") && (
-                        <div>
-                          <strong>Remarks:</strong>{" "}
-                          <span>
-                            {batchStatuses[batch.id]?.remarks || "N/A"}
-                          </span>
+                  return (
+                    <div
+                      key={groupKey}
+                      className="card mb-3 shadow-sm border-primary"
+                    >
+                      <div className="card-header bg-primary text-white text-8">
+                        <strong>
+                          Group {groupIndex + 1} — {group.vendorName} -{" "}
+                          {group.itemName}
+                        </strong>
+                      </div>
+                      <div className="card-body text-8">
+                        <div className="row mb-3">
+                          <div className="col-sm-6">
+                            <strong>Vendor:</strong> {group.vendorName} (
+                            {group.vendorCode})
+                          </div>
+                          <div className="col-sm-6">
+                            <strong>Item:</strong> {group.itemName} (
+                            {group.itemCode})
+                          </div>
+                          <div className="col-sm-6">
+                            <strong>Total Quantity:</strong>{" "}
+                            {group.totalQuantity}
+                          </div>
+                          <div className="col-sm-6">
+                            <strong>Batch Count:</strong> {group.batches.length}
+                          </div>
+                          <div className="col-12">
+                            <strong>Group Attachment:</strong>{" "}
+                            <span className="text-primary">
+                              {groupFile?.name || "N/A"}
+                            </span>
+                          </div>
                         </div>
-                      )}
+
+                        <h6 className="mb-2">Batch Details:</h6>
+                        {group.batches.map((batch, batchIndex) => (
+                          <div
+                            key={batch.id}
+                            className="border rounded p-2 mb-2 bg-light"
+                          >
+                            <div className="row">
+                              <div className="col-sm-6">
+                                <strong>Batch {batchIndex + 1}:</strong>{" "}
+                                {batch.batchNumber}
+                              </div>
+                              <div className="col-sm-6">
+                                <strong>Quantity:</strong> {batch.quantity}
+                              </div>
+                              <div className="col-sm-6">
+                                <strong>QC Status:</strong>{" "}
+                                <span
+                                  className={`badge ${
+                                    batchStatuses[batch.id]?.status === "PASS"
+                                      ? "bg-success"
+                                      : batchStatuses[batch.id]?.status ===
+                                        "FAIL"
+                                      ? "bg-danger"
+                                      : batchStatuses[batch.id]?.status ===
+                                        "HOLD"
+                                      ? "bg-warning"
+                                      : "bg-secondary"
+                                  }`}
+                                >
+                                  {batchStatuses[batch.id]?.status || "N/A"}
+                                </span>
+                              </div>
+                              <div className="col-sm-6">
+                                <strong>Warehouse:</strong>{" "}
+                                <span>
+                                  {warehouses.find(
+                                    (w) =>
+                                      w.id ===
+                                      batchStatuses[batch.id]?.warehouseId
+                                  )?.name || "N/A"}
+                                </span>
+                              </div>
+                              {batchStatuses[batch.id]?.status === "FAIL" && (
+                                <div className="col-12">
+                                  <strong>Defect Category:</strong>{" "}
+                                  <span>
+                                    {batchStatuses[batch.id]?.defectCategory ||
+                                      "N/A"}
+                                  </span>
+                                </div>
+                              )}
+                              {(batchStatuses[batch.id]?.status === "FAIL" ||
+                                batchStatuses[batch.id]?.status === "HOLD") && (
+                                <div className="col-12">
+                                  <strong>Remarks:</strong>{" "}
+                                  <span>
+                                    {batchStatuses[batch.id]?.remarks || "N/A"}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Footer */}

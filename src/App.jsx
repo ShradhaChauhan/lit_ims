@@ -59,10 +59,13 @@ function App() {
       }
 
       // remove frontend session flags
-      Cookies.remove("authToken", { path: "/" });
-      Cookies.remove("permissions", { path: "/" });
-      Cookies.remove("username", { path: "/" });
-      Cookies.remove("isLoggedIn", { path: "/" });
+      Object.keys(Cookies.get()).forEach((cookieName) => {
+        Cookies.remove(cookieName, { path: "/" });
+      });
+      // Cookies.remove("authToken", { path: "/" });
+      // Cookies.remove("permissions", { path: "/" });
+      // Cookies.remove("username", { path: "/" });
+      // Cookies.remove("isLoggedIn", { path: "/" });
 
       toast.info("You have been logged out.");
 
@@ -80,26 +83,58 @@ function App() {
 
   // Tab close or browser close detection
   useEffect(() => {
-    const handleVisibilityChange = async () => {
-      console.log("Visibility changed:", document.visibilityState);
-      if (document.visibilityState === "hidden") {
-        console.log("Tab hidden or closing");
-        await api.post("/api/auth/logout");
+    const handlePageHide = (event) => {
+      // Detect if it's a refresh/navigation instead of close
+      const navEntry = performance.getEntriesByType("navigation")[0];
+      const isReload =
+        navEntry &&
+        navEntry.type &&
+        (navEntry.type === "reload" || navEntry.type === "back_forward");
 
+      if (isReload) {
+        console.log("Page reloaded/navigation → skip logout");
+        return;
+      }
+
+      if (!event.persisted) {
+        console.log("Tab/window closed → logging out");
+
+        // Use sendBeacon (fires reliably on unload/close)
+        navigator.sendBeacon("/api/auth/logout");
+
+        // Clear cookies
         Object.keys(Cookies.get()).forEach((cookieName) => {
           Cookies.remove(cookieName, { path: "/" });
         });
-      } else {
-        console.log("Tab active again");
       }
     };
 
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
+    window.addEventListener("pagehide", handlePageHide);
     return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("pagehide", handlePageHide);
     };
   }, []);
+  // useEffect(() => {
+  //   const handleVisibilityChange = async () => {
+  //     console.log("Visibility changed:", document.visibilityState);
+  //     if (document.visibilityState !== "visible") {
+  //       console.log("Tab hidden or closing");
+  //       await api.post("/api/auth/logout");
+
+  //       Object.keys(Cookies.get()).forEach((cookieName) => {
+  //         Cookies.remove(cookieName, { path: "/" });
+  //       });
+  //     } else {
+  //       console.log("Tab active again");
+  //     }
+  //   };
+
+  // document.addEventListener("visibilitychange", handleVisibilityChange);
+
+  //   return () => {
+  //     document.removeEventListener("visibilitychange", handleVisibilityChange);
+  //   };
+  // }, []);
 
   // useEffect(() => {
   //   const handlePageHide = (event) => {

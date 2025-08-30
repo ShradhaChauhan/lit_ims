@@ -175,12 +175,12 @@ const LoginPage = () => {
 
       const { token, permissions } = response.data.data;
 
-      // ✅ Clear only old session cookies, NOT lastVisitedRoute
+      // Clear only old session cookies, NOT lastVisitedRoute
       ["isLoggedIn", "username", "token", "authToken", "permissions"].forEach(
         (name) => Cookies.remove(name)
       );
 
-      // ✅ Set essential session cookies
+      // Set essential session cookies
       Cookies.set("isLoggedIn", "true", { path: "/" });
       Cookies.set("username", responseUsername, { path: "/" });
       Cookies.set("token", token, { expires: 1, path: "/" });
@@ -210,7 +210,7 @@ const LoginPage = () => {
       if (logoutType === "auto" && lastVisitedRoute) {
         navigate(lastVisitedRoute);
       } else {
-        navigate("/dashboard");
+        token && navigate("/dashboard");
       }
 
       // Cleanup logout cookies after redirect
