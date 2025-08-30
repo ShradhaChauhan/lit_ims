@@ -57,18 +57,6 @@ const LoginPage = () => {
     }
   };
 
-  // If already logged in
-  useEffect(() => {
-    if (Cookies.get("authToken")) {
-      navigate("/dashboard");
-    }
-  }, []);
-  // useEffect(() => {
-  //   if (localStorage.getItem("authToken")) {
-  //     navigate("/dashboard");
-  //   }
-  // }, []);
-
   // IP address
   function getLocalIP(callback) {
     const pc = new RTCPeerConnection({ iceServers: [] });
@@ -88,70 +76,6 @@ const LoginPage = () => {
   useEffect(() => {
     getLocalIP((ip) => setLocalIp(ip));
   }, []);
-
-  // const handleLogin = async (e) => {
-  //   if (e?.preventDefault) e.preventDefault();
-  //   setError("");
-  //   if (!branch) {
-  //     setError("Please select a branch.");
-  //     return;
-  //   }
-  //   localStorage.clear();
-  //   console.log("Local IP: " + localIp);
-  //   try {
-  //     const response = await api.post("/api/auth/select-branch", {
-  //       username: responseUsername,
-  //       branchId: branch,
-  //       localIp,
-  //     });
-
-  //     const { token, permissions } = response.data.data;
-  //     Cookies.set("isLoggedIn", "true");
-
-  //     const logoutType = Cookies.get("logoutType");
-  //     const lastVisitedRoute = Cookies.get("lastVisitedRoute");
-
-  //     if (logoutType === "auto" && lastVisitedRoute) {
-  //       navigate(lastVisitedRoute);
-  //     } else {
-  //       navigate("/dashboard");
-  //     }
-
-  //     // cleanup
-  //     Cookies.remove("logoutType");
-  //     Cookies.remove("lastVisitedRoute");
-  //     // Start the session
-  //     localStorage.setItem("isLoggedIn", "true");
-  //     // After successful login or switch
-  //     updatePermissions(permissions); // this sets both context and localStorage
-  //     setIsToken(token);
-  //     setIsAuthenticated(true);
-  //     setRole(responseUsername);
-
-  //     localStorage.setItem("username", username);
-  //     localStorage.setItem("token", token);
-  //     localStorage.setItem("authToken", token);
-  //     setPermissions(permissions); // ← update sidebar-rendering state
-  //     localStorage.setItem("permissions", JSON.stringify(permissions));
-
-  //     if (rememberMe) {
-  //       localStorage.setItem("rememberedUsername", username);
-  //     } else {
-  //       localStorage.removeItem("rememberedUsername");
-  //     }
-
-  //     toast.success("Login successful");
-
-  //     //  Only navigate if not already on dashboard, and after re-render
-  //     if (window.location.pathname !== "/dashboard") {
-  //       setTimeout(() => navigate("/dashboard"), 0);
-  //     }
-  //   } catch (err) {
-  //     setIsAuthenticated(false);
-  //     console.error(err);
-  //     setError("Login failed. Please contact support.");
-  //   }
-  // };
 
   const handleLogin = async (e) => {
     if (e?.preventDefault) e.preventDefault();
@@ -183,8 +107,8 @@ const LoginPage = () => {
       // Set essential session cookies
       Cookies.set("isLoggedIn", "true", { path: "/" });
       Cookies.set("username", responseUsername, { path: "/" });
-      Cookies.set("token", token, { expires: 1, path: "/" });
-      Cookies.set("authToken", token, { expires: 1, path: "/" });
+      Cookies.set("token", token, { path: "/" });
+      Cookies.set("authToken", token, { path: "/" });
       Cookies.set("permissions", JSON.stringify(permissions), {
         expires: 1,
         path: "/",
@@ -235,13 +159,6 @@ const LoginPage = () => {
       setRememberMe(true);
     }
   }, []);
-  // useEffect(() => {
-  //   const savedUsername = localStorage.getItem("rememberedUsername");
-  //   if (savedUsername) {
-  //     setUsername(savedUsername);
-  //     setRememberMe(true);
-  //   }
-  // }, []);
 
   return (
     <div className="container-fluid container-bg min-vh-100 d-flex align-items-center justify-content-center bg-light">

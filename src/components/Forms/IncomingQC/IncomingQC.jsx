@@ -1658,6 +1658,11 @@ const IncomingQC = () => {
                           handleSearchHoldBatchNo(pfqc.items[0].batchNumber);
                           setTrno(pfqc.trNumber);
                           setIsShowQualityCheckForm(true);
+                          setTimeout(() => {
+                            qcRef.current?.scrollIntoView({
+                              behavior: "smooth",
+                            });
+                          }, 100);
                         }}
                       >
                         <i className="fa-solid fa-clipboard-check me-1"></i>{" "}
