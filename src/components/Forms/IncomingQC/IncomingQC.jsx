@@ -11,6 +11,7 @@ const IncomingQC = () => {
   const [isShowQualityCheckForm, setIsShowQualityCheckForm] = useState(false);
   const [searchBatchNo, setSearchBatchNo] = useState("");
   const [iqc, setIqc] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [holdQC, setHoldQC] = useState([]);
   const [passFailQC, setPassFailQC] = useState([]);
   const [batchDetails, setBatchDetails] = useState([]);
@@ -402,19 +403,131 @@ const IncomingQC = () => {
   const qcStatus = isFail ? "FAIL" : isHold ? "HOLD" : "PASS";
 
   // Submit button function
+  const handlePassBatch = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    // 🔹 Step 1: Validate each batch
+    for (const batch of batchDetails) {
+      const batchData = batchStatuses[batch.id] || {};
+      if (!batchData.status) {
+        toast.error(`Please select QC status for batch ${batch.batchNumber}`);
+        setLoading(false);
+        return;
+      }
+      if (
+        (batchData.status === "FAIL" || batchData.status === "HOLD") &&
+        !batchData.remarks
+      ) {
+        toast.error(`Please enter remarks for batch ${batch.batchNumber}`);
+        setLoading(false);
+        return;
+      }
+      if (batchData.status === "FAIL" && !batchData.defectCategory) {
+        toast.error(
+          `Please select defect category for batch ${batch.batchNumber}`
+        );
+        setLoading(false);
+        return;
+      }
+    }
+
+    // 🔹 Step 2: Validate grouped attachments
+    const fileValidation = validateGroupFiles();
+    if (!fileValidation.isValid) {
+      toast.error(
+        `Please upload attachments for the following groups: ${fileValidation.missingFiles.join(
+          ", "
+        )}`
+      );
+      setLoading(false);
+      return;
+    }
+
+    // 🔹 Step 3: Chunk helper
+    const chunkArray = (arr, size) => {
+      const result = [];
+      for (let i = 0; i < arr.length; i += size) {
+        result.push(arr.slice(i, i + size));
+      }
+      return result;
+    };
+
+    try {
+      // Break batchDetails into groups of 5
+      const batchGroups = chunkArray(batchDetails, 5);
+
+      // 🔹 Step 4: Upload each group sequentially
+      for (let i = 0; i < batchGroups.length; i++) {
+        const group = batchGroups[i];
+        const formData = new FormData();
+
+        const batchUpdates = group.map((batch) => {
+          const batchData = batchStatuses[batch.id] || {};
+          return {
+            itemId: batch.id,
+            qcStatus: batchData.status,
+            warehouseId: batchData.warehouseId,
+            defectCategory: batchData.defectCategory,
+            remarks: batchData.remarks,
+          };
+        });
+
+        const dtoPayload = {
+          transactionNumber: trno,
+          batchUpdates,
+        };
+
+        formData.append("data", JSON.stringify(dtoPayload));
+
+        // Append files for this group
+        group.forEach((batch) => {
+          const groupKey = `${batch.vendorCode}_${batch.itemCode}`;
+          const groupFile = groupedBatchFiles[groupKey];
+          if (groupFile) {
+            formData.append("files", groupFile);
+          } else {
+            formData.append("files", new Blob([]), "");
+          }
+        });
+
+        console.log(`🚀 Uploading group ${i + 1}/${batchGroups.length}`);
+        await api.put("/api/receipt/qc-status/update", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+      }
+
+      // 🔹 Step 5: After all groups uploaded
+      fetchPassFailQC();
+      fetchPendingQC();
+
+      setBatchStatuses({});
+      setGroupedBatchFiles({});
+      setIsShowQualityCheckForm(false);
+      setShowPreviewModal(false);
+
+      toast.success("All batch details submitted successfully!");
+    } catch (error) {
+      console.error("Error submitting batch details:", error);
+      toast.error(
+        error.response?.data?.message || "Error submitting batch details"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // const handlePassBatch = async (e) => {
   //   e.preventDefault();
-
-  //   if (!selectedFile) {
-  //     toast.error("Please select a file first.");
-  //     return;
-  //   }
-
+  //   setLoading(true);
   //   // Validate each batch
   //   for (const batch of batchDetails) {
   //     const batchData = batchStatuses[batch.id] || {};
   //     if (!batchData.status) {
   //       toast.error(`Please select QC status for batch ${batch.batchNumber}`);
+  //       setLoading(false);
   //       return;
   //     }
   //     if (
@@ -422,38 +535,90 @@ const IncomingQC = () => {
   //       !batchData.remarks
   //     ) {
   //       toast.error(`Please enter remarks for batch ${batch.batchNumber}`);
+  //       setLoading(false);
   //       return;
   //     }
   //     if (batchData.status === "FAIL" && !batchData.defectCategory) {
   //       toast.error(
   //         `Please select defect category for batch ${batch.batchNumber}`
   //       );
+  //       setLoading(false);
   //       return;
   //     }
   //   }
 
+  //   // Validate grouped attachments
+  //   const fileValidation = validateGroupFiles();
+  //   if (!fileValidation.isValid) {
+  //     toast.error(
+  //       `Please upload attachments for the following groups: ${fileValidation.missingFiles.join(
+  //         ", "
+  //       )}`
+  //     );
+  //     setLoading(false);
+  //     return;
+  //   }
+
   //   try {
-  //     // Build payload for JSON part
-  //     const payload = {
+  //     // Create FormData for multipart/form-data
+  //     const formData = new FormData();
+
+  //     // 1. Prepare the JSON part (without files)
+  //     const batchUpdates = batchDetails.map((batch) => {
+  //       const batchData = batchStatuses[batch.id] || {};
+  //       return {
+  //         itemId: batch.id,
+  //         qcStatus: batchData.status,
+  //         warehouseId: batchData.warehouseId,
+  //         defectCategory: batchData.defectCategory,
+  //         remarks: batchData.remarks,
+  //       };
+  //     });
+
+  //     const dtoPayload = {
   //       transactionNumber: trno,
-  //       batchUpdates: batchDetails.map((batch) => {
-  //         const batchData = batchStatuses[batch.id] || {};
-  //         return {
-  //           itemId: batch.id,
-  //           qcStatus: batchData.status,
-  //           warehouseId: batchData.warehouseId,
-  //           defectCategory: batchData.defectCategory,
-  //           remarks: batchData.remarks,
-  //         };
-  //       }),
+  //       batchUpdates: batchUpdates,
   //     };
 
-  //     const formData = new FormData();
-  //     formData.append("data", JSON.stringify(payload)); // JSON for batches + transaction number
-  //     formData.append("attachment", selectedFile); // file part
+  //     formData.append("data", JSON.stringify(dtoPayload));
 
-  //     // Debug log
-  //     formData.forEach((value, key) => console.log(key, value));
+  //     // 2. Append files in the SAME order as batchUpdates
+  //     // Each batch gets its corresponding group file
+  //     batchUpdates.forEach((batchUpdate, index) => {
+  //       const batch = batchDetails[index];
+  //       const groupKey = `${batch.vendorCode}_${batch.itemCode}`;
+  //       const groupFile = groupedBatchFiles[groupKey];
+
+  //       if (groupFile) {
+  //         formData.append("files", groupFile);
+  //       } else {
+  //         // Append empty slot to maintain index alignment if required
+  //         formData.append("files", new Blob([]), "");
+  //       }
+  //     });
+
+  //     // Debug log to verify FormData contents
+  //     console.log("=== FormData Contents ===");
+  //     console.log("Transaction Number:", trno);
+  //     console.log("DTO Payload:", dtoPayload);
+  //     console.log("Batch Updates:", batchUpdates);
+  //     console.log("Grouped Files:", groupedBatchFiles);
+  //     console.log("FormData entries:");
+  //     for (let [key, value] of formData.entries()) {
+  //       if (value instanceof File) {
+  //         console.log(
+  //           key,
+  //           "File:",
+  //           value.name,
+  //           "Size:",
+  //           value.size,
+  //           "Type:",
+  //           value.type
+  //         );
+  //       } else {
+  //         console.log(key, value);
+  //       }
+  //     }
 
   //     const response = await api.put(
   //       "/api/receipt/qc-status/update",
@@ -471,7 +636,7 @@ const IncomingQC = () => {
 
   //     // Reset state
   //     setBatchStatuses({});
-  //     setSelectedFile(null);
+  //     setGroupedBatchFiles({});
   //     setIsShowQualityCheckForm(false);
   //     setShowPreviewModal(false);
 
@@ -479,181 +644,10 @@ const IncomingQC = () => {
   //   } catch (error) {
   //     console.error("Error submitting batch details:", error);
   //     toast.error(
-  //       error.response.data.message || "Error submitting batch details"
+  //       error.response?.data?.message || "Error submitting batch details"
   //     );
-  //   }
-  // };
-
-  const handlePassBatch = async (e) => {
-    e.preventDefault();
-
-    // ✅ Validate each batch
-    for (const batch of batchDetails) {
-      const batchData = batchStatuses[batch.id] || {};
-      if (!batchData.status) {
-        toast.error(`Please select QC status for batch ${batch.batchNumber}`);
-        return;
-      }
-      if (
-        (batchData.status === "FAIL" || batchData.status === "HOLD") &&
-        !batchData.remarks
-      ) {
-        toast.error(`Please enter remarks for batch ${batch.batchNumber}`);
-        return;
-      }
-      if (batchData.status === "FAIL" && !batchData.defectCategory) {
-        toast.error(
-          `Please select defect category for batch ${batch.batchNumber}`
-        );
-        return;
-      }
-    }
-
-    // ✅ Validate grouped attachments
-    const fileValidation = validateGroupFiles();
-    if (!fileValidation.isValid) {
-      toast.error(
-        `Please upload attachments for the following groups: ${fileValidation.missingFiles.join(
-          ", "
-        )}`
-      );
-      return;
-    }
-
-    try {
-      // Create FormData for multipart/form-data
-      const formData = new FormData();
-
-      // 1. Prepare the JSON part (without files)
-      const batchUpdates = batchDetails.map((batch) => {
-        const batchData = batchStatuses[batch.id] || {};
-        return {
-          itemId: batch.id,
-          qcStatus: batchData.status,
-          warehouseId: batchData.warehouseId,
-          defectCategory: batchData.defectCategory,
-          remarks: batchData.remarks,
-        };
-      });
-
-      const dtoPayload = {
-        transactionNumber: trno,
-        batchUpdates: batchUpdates,
-      };
-
-      formData.append("data", JSON.stringify(dtoPayload));
-
-      // 2. Append files in the SAME order as batchUpdates
-      // Each batch gets its corresponding group file
-      batchUpdates.forEach((batchUpdate, index) => {
-        const batch = batchDetails[index];
-        const groupKey = `${batch.vendorCode}_${batch.itemCode}`;
-        const groupFile = groupedBatchFiles[groupKey];
-
-        if (groupFile) {
-          formData.append("files", groupFile);
-        } else {
-          // Append empty slot to maintain index alignment if required
-          formData.append("files", new Blob([]), "");
-        }
-      });
-
-      // Debug log to verify FormData contents
-      console.log("=== FormData Contents ===");
-      console.log("Transaction Number:", trno);
-      console.log("DTO Payload:", dtoPayload);
-      console.log("Batch Updates:", batchUpdates);
-      console.log("Grouped Files:", groupedBatchFiles);
-
-      console.log("FormData entries:");
-      for (let [key, value] of formData.entries()) {
-        if (value instanceof File) {
-          console.log(
-            key,
-            "File:",
-            value.name,
-            "Size:",
-            value.size,
-            "Type:",
-            value.type
-          );
-        } else {
-          console.log(key, value);
-        }
-      }
-
-      const response = await api.put(
-        "/api/receipt/qc-status/update",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      // Refresh tables
-      fetchPassFailQC();
-      fetchPendingQC();
-
-      // Reset state
-      setBatchStatuses({});
-      setGroupedBatchFiles({});
-      setIsShowQualityCheckForm(false);
-      setShowPreviewModal(false);
-
-      toast.success("Batch details submitted successfully!");
-    } catch (error) {
-      console.error("Error submitting batch details:", error);
-      toast.error(
-        error.response?.data?.message || "Error submitting batch details"
-      );
-    }
-  };
-
-  // const handlePassBatch = async (e) => {
-  //   e.preventDefault();
-  //   if (!selectedWarehouse) {
-  //     toast.error("Please select a warehouse");
-  //     return;
-  //   }
-  //   if (selectedFile) {
-  //     console.log("File selected:", selectedFile);
-  //   } else {
-  //     toast.error("Please select a file first.");
-  //     return;
-  //   }
-  //   if (isFail === "FAIL" && !defectCategory) {
-  //     toast.error("Please select a defect category");
-  //     return;
-  //   }
-  //   try {
-  //     const data = {
-  //       id: batchDetails[0].id,
-  //       qcStatus: isFail ? "FAIL" : isHold ? "HOLD" : "PASS",
-  //       defectCategory: defectCategory,
-  //       remarks: remarks,
-  //       warehouseId: selectedWarehouse,
-  //       attachment: selectedFile,
-  //     };
-  //     console.log(data);
-  //     const response = await api.put("/api/receipt/qc-status/update", data, {
-  //       headers: {
-  //         "Content-Type": "multipart/form-data",
-  //       },
-  //     });
-  //     fetchPassFailQC();
-  //     fetchPendingQC();
-  //     setIsPass("");
-  //     setIsHold("");
-  //     setIsFail(false);
-  //     setSelectedFile("");
-  //     toast.success("Batch details are passed successfully");
-  //     setIsShowQualityCheckForm(false);
-  //   } catch (error) {
-  //     toast.error("Error in fetching batch details");
-  //     console.error("Error fetching batch details:", error);
-  //     setIsShowQualityCheckForm(false);
+  //   } finally {
+  //     setLoading(false);
   //   }
   // };
 
@@ -990,6 +984,31 @@ const IncomingQC = () => {
 
   return (
     <div>
+      {loading && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            backgroundColor: "rgba(0, 0, 0, 0.6)",
+            zIndex: 9999,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            pointerEvents: "all",
+          }}
+        >
+          <div className="orbit-loader">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      )}
+
       {/* Header section */}
       <nav className="navbar bg-light border-body" data-bs-theme="light">
         <div className="container-fluid">
