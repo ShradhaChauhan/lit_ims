@@ -1144,64 +1144,68 @@ const BOMMaster = () => {
       {/* Table Section */}
       <div className="margin-2 mx-2">
         <div className="table-container">
-          <div className="table-header">
-            <div className="selected-count">
-              <input
-                type="checkbox"
-                id="select-all"
-                checked={selectAll}
-                onChange={handleSelectAllChange}
-              />
-              <label htmlFor="select-all">{selectedBoms.length} Selected</label>
-            </div>
-            <div className="bulk-actions">
-              <div className="d-flex align-items-center gap-2">
+          {ability.can("edit", "Business Partner") && (
+            <div className="table-header">
+              <div className="selected-count">
                 <input
-                  className="form-control form-control-sm w-auto text-8"
-                  type="file"
-                  accept=".xlsx,.xls"
-                  onChange={handleFileUpload}
+                  type="checkbox"
+                  id="select-all"
+                  checked={selectAll}
+                  onChange={handleSelectAllChange}
                 />
+                <label htmlFor="select-all">
+                  {selectedBoms.length} Selected
+                </label>
+              </div>
+              <div className="bulk-actions">
+                <div className="d-flex align-items-center gap-2">
+                  <input
+                    className="form-control form-control-sm w-auto text-8"
+                    type="file"
+                    accept=".xlsx,.xls"
+                    onChange={handleFileUpload}
+                  />
+                  <button
+                    onClick={handleUpload}
+                    className="btn btn-outline-secondary text-8"
+                  >
+                    <i className="fas fa-file-import me-1"></i> Import Excel
+                  </button>
+                </div>
                 <button
-                  onClick={handleUpload}
-                  className="btn btn-outline-secondary text-8"
+                  className="btn btn-outline-success text-8"
+                  onClick={() => {
+                    const rowData = filteredBoms.filter((row) =>
+                      selectedBoms.includes(row.id)
+                    );
+                    exportToExcel(rowData, "BOM");
+                  }}
                 >
-                  <i className="fas fa-file-import me-1"></i> Import Excel
+                  <i className="fas fa-file-export me-1"></i>
+                  Export Selected
+                </button>
+                <button
+                  className="btn btn-outline-dark text-8"
+                  onClick={downloadBOMTemplate}
+                >
+                  <i className="fa-solid fa-download me-1"></i>
+                  Download BOM Template
+                </button>
+
+                <button
+                  className="btn-action btn-danger"
+                  onClick={() => {
+                    setConfirmType("multi");
+                    handleShowConfirm("multi");
+                  }}
+                  disabled={selectedBoms.length === 0}
+                >
+                  <i className="fas fa-trash"></i>
+                  Delete Selected
                 </button>
               </div>
-              <button
-                className="btn btn-outline-success text-8"
-                onClick={() => {
-                  const rowData = filteredBoms.filter((row) =>
-                    selectedBoms.includes(row.id)
-                  );
-                  exportToExcel(rowData, "BOM");
-                }}
-              >
-                <i className="fas fa-file-export me-1"></i>
-                Export Selected
-              </button>
-              <button
-                className="btn btn-outline-dark text-8"
-                onClick={downloadBOMTemplate}
-              >
-                <i className="fa-solid fa-download me-1"></i>
-                Download BOM Template
-              </button>
-
-              <button
-                className="btn-action btn-danger"
-                onClick={() => {
-                  setConfirmType("multi");
-                  handleShowConfirm("multi");
-                }}
-                disabled={selectedBoms.length === 0}
-              >
-                <i className="fas fa-trash"></i>
-                Delete Selected
-              </button>
             </div>
-          </div>
+          )}
           <table>
             <thead>
               <tr>

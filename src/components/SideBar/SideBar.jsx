@@ -267,7 +267,6 @@ const SideBar = () => {
       Cookies.remove("authToken");
       Cookies.remove("permissions");
       Cookies.remove("username");
-      Cookies.remove("rememberedUsername");
       Cookies.remove("token", { path: "/" });
 
       // Reset auth state

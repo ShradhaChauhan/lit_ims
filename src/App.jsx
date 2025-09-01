@@ -63,7 +63,6 @@ function App() {
       Cookies.remove("token", { path: "/" });
       Cookies.remove("permissions", { path: "/" });
       Cookies.remove("username", { path: "/" });
-      Cookies.remove("rememberedUsername", { path: "/" });
       Cookies.remove("isLoggedIn", { path: "/" });
 
       // Reset auth state
@@ -84,7 +83,7 @@ function App() {
   useIdleTimer(() => {
     const currentPath = window.location.pathname; // reliable
     handleLogout("auto", currentPath);
-  }, 15 * 60 * 1000); // 15 min or your chosen duration
+  }, 60 * 60 * 1000); // 60 min or your chosen duration
 
   // Tab close or browser close detection
   useEffect(() => {
@@ -112,7 +111,6 @@ function App() {
         Cookies.remove("token", { path: "/" });
         Cookies.remove("permissions", { path: "/" });
         Cookies.remove("username", { path: "/" });
-        Cookies.remove("rememberedUsername", { path: "/" });
         Cookies.remove("isLoggedIn", { path: "/" });
 
         // Reset auth state

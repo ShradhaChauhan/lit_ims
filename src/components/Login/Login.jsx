@@ -98,6 +98,7 @@ const LoginPage = () => {
       });
 
       const { token, permissions } = response.data.data;
+      console.log("Login Response:", response.data.data);
 
       // Clear only old session cookies, NOT lastVisitedRoute
       ["isLoggedIn", "username", "token", "authToken", "permissions"].forEach(
@@ -157,6 +158,16 @@ const LoginPage = () => {
     if (savedUsername) {
       setUsername(savedUsername);
       setRememberMe(true);
+    }
+  }, []);
+
+  // Auto refresh page on first load
+  useEffect(() => {
+    const hasRefreshed = sessionStorage.getItem("loginPageRefreshed");
+
+    if (!hasRefreshed) {
+      sessionStorage.setItem("loginPageRefreshed", "true");
+      window.location.reload(); // refresh once
     }
   }, []);
 

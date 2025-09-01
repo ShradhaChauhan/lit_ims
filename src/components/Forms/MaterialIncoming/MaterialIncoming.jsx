@@ -7,6 +7,7 @@ import "./MaterialIncoming.css";
 import Select from "react-select";
 
 const MaterialIncoming = () => {
+  const selectAllRef = useRef(null);
   const [selectedRows, setSelectedRows] = useState([]); // store selected row indexes
   const [printedRows, setPrintedRows] = useState([]); // permanently disabled row indexes
   const [lockedItemCode, setLockedItemCode] = useState(null); // active itemCode for current cycle
@@ -1031,7 +1032,14 @@ const MaterialIncoming = () => {
       setPrintedRows(updatedPrinted);
 
       // Clear selection
+      // Clear selection
       setSelectedRows([]);
+
+      // uncheck header checkbox if it was checked
+      if (selectAllRef.current) {
+        selectAllRef.current.checked = false;
+        selectAllRef.current.indeterminate = false;
+      }
 
       // check if all rows of lockedItemCode are printed
       const allIndexesForLocked = receiptList
@@ -1493,7 +1501,41 @@ const MaterialIncoming = () => {
                   <table className="align-middle">
                     <thead>
                       <tr>
-                        <th></th>
+                        <th>
+                          <input
+                            ref={selectAllRef}
+                            type="checkbox"
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                const selectable = receiptList
+                                  .map((_, idx) => idx)
+                                  .filter((idx) => {
+                                    const r = receiptList[idx];
+                                    const isPrinted = printedRows.includes(idx);
+                                    const wrongItem =
+                                      lockedItemCode &&
+                                      lockedItemCode !== r.itemCode;
+                                    return !isPrinted && !wrongItem;
+                                  });
+
+                                setSelectedRows(selectable);
+
+                                if (selectable.length > 0) {
+                                  setLockedItemCode(
+                                    receiptList[selectable[0]].itemCode
+                                  );
+                                }
+                              } else {
+                                setSelectedRows([]);
+                                setLockedItemCode(null);
+                              }
+                            }}
+                          />
+                          <span className="ms-1">
+                            {selectedRows.length > 0 &&
+                              `(${selectedRows.length})`}
+                          </span>
+                        </th>
                         <th>Item Name</th>
                         <th>Item Code</th>
                         <th>Quantity</th>
@@ -1502,6 +1544,7 @@ const MaterialIncoming = () => {
                         <th>Actions</th>
                       </tr>
                     </thead>
+
                     <tbody>
                       {receiptList.length === 0 ? (
                         <tr className="no-data-row">

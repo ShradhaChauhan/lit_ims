@@ -897,75 +897,77 @@ const GroupMaster = () => {
       {/* Table Section */}
       <div className="margin-2 mx-2">
         <div className="table-container">
-          <div className="table-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-            {/* Left side - selected count */}
-            <div className="selected-count d-flex align-items-center gap-2">
-              <input
-                type="checkbox"
-                id="select-all"
-                checked={selectAll}
-                onChange={handleSelectAllChange}
-              />
-              <label htmlFor="select-all">
-                {selectedGroups.length} Selected
-              </label>
-            </div>
+          {ability.can("edit", "Business Partner") && (
+            <div className="table-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+              {/* Left side - selected count */}
+              <div className="selected-count d-flex align-items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="select-all"
+                  checked={selectAll}
+                  onChange={handleSelectAllChange}
+                />
+                <label htmlFor="select-all">
+                  {selectedGroups.length} Selected
+                </label>
+              </div>
 
-            {/* Right side - buttons and file input */}
-            <div className="d-flex align-items-center gap-2 ms-auto">
-              <input
-                type="file"
-                accept=".xlsx, .xls"
-                className="form-control form-control-sm w-auto text-8"
-                onChange={handleFileUpload}
-              />
+              {/* Right side - buttons and file input */}
+              <div className="d-flex align-items-center gap-2 ms-auto">
+                <input
+                  type="file"
+                  accept=".xlsx, .xls"
+                  className="form-control form-control-sm w-auto text-8"
+                  onChange={handleFileUpload}
+                />
 
-              <button
-                className="btn btn-outline-secondary text-8"
-                onClick={handleSaveToAPI}
-              >
-                <i className="fas fa-file-import me-1"></i> Import Excel
-              </button>
-              <button
-                className="btn btn-outline-success text-8"
-                onClick={() => {
-                  const rowData = sortedFilteredTypes.filter((row) =>
-                    selectedGroups.includes(row.id)
-                  );
-                  exportToExcel(rowData, "Groups");
-                }}
-              >
-                <i className="fas fa-file-export me-1"></i>
-                Export Selected
-              </button>
-              <button
-                className="btn btn-outline-dark text-8"
-                onClick={downloadTemplateGroupMaster}
-              >
-                <i className="fa-solid fa-download me-1"></i>
-                Download Template
-              </button>
-              <button
-                className="btn-action btn-danger text-8"
-                onClick={() => {
-                  setConfirmType("multi");
-                  handleShowConfirm("multi");
-                }}
-                disabled={deleteLoading || selectedGroups.length === 0}
-              >
-                {deleteLoading ? (
-                  <span>
-                    <i className="fa-solid fa-spinner fa-spin me-1"></i>{" "}
-                    Deleting...
-                  </span>
-                ) : (
-                  <span>
-                    <i className="fas fa-trash me-1"></i> Delete Selected
-                  </span>
-                )}
-              </button>
+                <button
+                  className="btn btn-outline-secondary text-8"
+                  onClick={handleSaveToAPI}
+                >
+                  <i className="fas fa-file-import me-1"></i> Import Excel
+                </button>
+                <button
+                  className="btn btn-outline-success text-8"
+                  onClick={() => {
+                    const rowData = sortedFilteredTypes.filter((row) =>
+                      selectedGroups.includes(row.id)
+                    );
+                    exportToExcel(rowData, "Groups");
+                  }}
+                >
+                  <i className="fas fa-file-export me-1"></i>
+                  Export Selected
+                </button>
+                <button
+                  className="btn btn-outline-dark text-8"
+                  onClick={downloadTemplateGroupMaster}
+                >
+                  <i className="fa-solid fa-download me-1"></i>
+                  Download Template
+                </button>
+                <button
+                  className="btn-action btn-danger text-8"
+                  onClick={() => {
+                    setConfirmType("multi");
+                    handleShowConfirm("multi");
+                  }}
+                  disabled={deleteLoading || selectedGroups.length === 0}
+                >
+                  {deleteLoading ? (
+                    <span>
+                      <i className="fa-solid fa-spinner fa-spin me-1"></i>{" "}
+                      Deleting...
+                    </span>
+                  ) : (
+                    <span>
+                      <i className="fas fa-trash me-1"></i> Delete Selected
+                    </span>
+                  )}
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           {dataError && (
             <div className="alert alert-danger" role="alert">
