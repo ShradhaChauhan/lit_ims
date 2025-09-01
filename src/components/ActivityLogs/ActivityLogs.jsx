@@ -86,6 +86,7 @@ const ActivityLogs = () => {
         : await api.get("/api/logs/me");
 
       const logData = response?.data ?? [];
+      console.log(logData);
       setLogs(logData);
     } catch (error) {
       toast.error("Error: Unable to fetch activity logs.");

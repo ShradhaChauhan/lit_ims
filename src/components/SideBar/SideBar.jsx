@@ -528,7 +528,7 @@ const SideBar = () => {
           <div className="user-profile">
             <div className="profile-info" title="John Doe">
               <img
-                src={`https://ui-avatars.com/api/?name=${localStorage.getItem(
+                src={`https://ui-avatars.com/api/?name=${Cookies.get(
                   "username"
                 )}&background=2563eb&color=fff`}
                 alt="Profile"

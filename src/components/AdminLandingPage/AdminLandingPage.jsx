@@ -63,6 +63,7 @@ const frames = [
 
 const AdminLandingPage = () => {
   // All states
+  const [holdItems, setHoldItems] = useState([]);
   const [totalItems, setTotalItems] = useState(0);
   const [totalItemsData, setTotalItemsData] = useState([]);
   const [pendingApprovals, setPendingApprovals] = useState(0);
@@ -669,6 +670,20 @@ const AdminLandingPage = () => {
     fetchMaterialTransfer();
   }, []);
 
+  // Hold Items (IQC)
+  const fetchHoldItems = async () => {
+    try {
+      const response = await api.get("/api/receipt/on-hold");
+      setHoldItems(response.data.data);
+    } catch (error) {
+      console.error("Error fetching hold items:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchHoldItems();
+  }, []);
+
   // Card data for line chart
   const cardData = [
     {
@@ -774,6 +789,19 @@ const AdminLandingPage = () => {
       icon: <FaTimes />,
       iconColor: qcFailCount === 0 ? "bg-info" : "bg-danger",
       changeColor: qcFailCount === 0 ? "text-secondary" : "text-danger",
+    },
+    {
+      title: "Hold Items (IQC)",
+      pageName: "IQC",
+      data: holdItems,
+      value: holdItems.length === 0 ? holdItems.length : "+" + holdItems.length,
+      change:
+        holdItems.length === 0
+          ? "0 hold"
+          : "+" + holdItems.length + " rejected",
+      icon: <FaTimes />,
+      iconColor: holdItems.length === 0 ? "bg-info" : "bg-danger",
+      changeColor: holdItems.length === 0 ? "text-secondary" : "text-danger",
     },
     {
       title: "Rejected Items (WIP)",
