@@ -1,0 +1,43 @@
+/* Pulse effect for warning icon */
+.pulse-icon {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); color: #dc3545; }
+  50% { transform: scale(1.2); color: #a71d2a; }
+  100% { transform: scale(1); color: #dc3545; }
+}
+
+/* Smooth fade-in for text */
+.fade-in-text {
+  animation: fadeIn 1s ease-in-out;
+}
+
+.fade-in-table {
+  animation: fadeIn 1.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Highlight rows softly */
+.highlight-row {
+  background-color: #fff8f8;
+  transition: background-color 0.3s ease;
+}
+.highlight-row:hover {
+  background-color: #ffecec;
+}
+
+/* Scale-in modal */
+.animated-modal .modal-content {
+  animation: scaleIn 0.4s ease-out;
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}

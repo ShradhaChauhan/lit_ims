@@ -1195,55 +1195,56 @@ const handleSaveToAPI = async () => {
       {/* Table Section */}
       <div className="margin-2 mx-2">
         <div className="table-container">
-          <div className="table-header">
-            <div className="selected-count">
-              <input
-                type="checkbox"
-                id="select-all-count"
-                checked={selectAll}
-                onChange={handleSelectAllChange}
-              />
-              <label htmlFor="select-all-count">
-                {selectedWarehouses.length} Selected
-              </label>
-            </div>
-            <div className="bulk-actions">
-              <div className="d-flex align-items-center gap-2">
+          {ability.can("edit", "Business Partner") && (
+            <div className="table-header">
+              <div className="selected-count">
                 <input
-                  type="file"
-                  accept=".xlsx, .xls"
-                  className="form-control form-control-sm w-auto text-8"
-                  onChange={handleFileUpload}
+                  type="checkbox"
+                  id="select-all-count"
+                  checked={selectAll}
+                  onChange={handleSelectAllChange}
                 />
+                <label htmlFor="select-all-count">
+                  {selectedWarehouses.length} Selected
+                </label>
+              </div>
+              <div className="bulk-actions">
+                <div className="d-flex align-items-center gap-2">
+                  <input
+                    type="file"
+                    accept=".xlsx, .xls"
+                    className="form-control form-control-sm w-auto text-8"
+                    onChange={handleFileUpload}
+                  />
 
+                  <button
+                    className="btn btn-outline-secondary text-8"
+                    onClick={handleSaveToAPI}
+                  >
+                    <i className="fas fa-file-import me-1"></i> Import Excel
+                  </button>
+                </div>
                 <button
-                  className="btn btn-outline-secondary text-8"
-                  onClick={handleSaveToAPI}
+                  className="btn btn-outline-dark text-8"
+                  onClick={downloadTemplateWarehouse}
                 >
-                  <i className="fas fa-file-import me-1"></i> Import Excel
+                  <i className="fa-solid fa-download me-1"></i>
+                  Download Template
+                </button>
+                <button
+                  className="btn btn-outline-success text-8"
+                  onClick={() => {
+                    const rowData = filteredWarehouses.filter((row) =>
+                      selectedWarehouses.includes(row.id)
+                    );
+                    exportToExcel(rowData, "Warehouses");
+                  }}
+                >
+                  <i className="fas fa-file-export me-1"></i>
+                  Export Selected
                 </button>
               </div>
-              <button
-                className="btn btn-outline-dark text-8"
-                onClick={downloadTemplateWarehouse}
-              >
-                <i className="fa-solid fa-download me-1"></i>
-                Download Template
-              </button>
-              <button
-                className="btn btn-outline-success text-8"
-                onClick={() => {
-                  const rowData = filteredWarehouses.filter((row) =>
-                    selectedWarehouses.includes(row.id)
-                  );
-                  exportToExcel(rowData, "Warehouses");
-                }}
-              >
-                <i className="fas fa-file-export me-1"></i>
-                Export Selected
-              </button>
-            </div>
-            {/* <button
+              {/* <button
               className="btn-action btn-danger"
               onClick={() => {
                 setConfirmType("multi");
@@ -1253,7 +1254,8 @@ const handleSaveToAPI = async () => {
               <i className="fas fa-trash"></i>
               Delete Selected
             </button> */}
-          </div>
+            </div>
+          )}
           <table>
             <thead>
               <tr>

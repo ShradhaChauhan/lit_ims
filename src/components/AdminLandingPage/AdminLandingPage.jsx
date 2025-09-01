@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./AdminLandingPage.css";
+import Cookies from "js-cookie";
 import { Modal, Button } from "react-bootstrap";
 import {
   FaBoxOpen,
@@ -50,6 +51,7 @@ import {
   isValid,
 } from "date-fns";
 import { AppContext } from "../../context/AppContext";
+import LowStockAlert from "../LowStockAlert/LowStockAlert";
 
 // Sliding window dummy data
 const frames = [
@@ -86,6 +88,14 @@ const AdminLandingPage = () => {
   const { istoken } = useContext(AppContext);
   // Sliding window
   const [index, setIndex] = useState(0);
+
+  const permissions = JSON.parse(Cookies.get("permissions") || "[]");
+
+  // Check if user has view access
+  const hasViewPermission = (pageName, permissions) => {
+    const perm = permissions.find((p) => p.pageName === pageName);
+    return perm?.canView === true;
+  };
 
   useEffect(() => {
     // if (istoken) {
@@ -420,37 +430,49 @@ const AdminLandingPage = () => {
   const chartData = [
     {
       title: "Store Material Inward",
+      pageName: "Store Material Inward",
       lineColor1: "#3b82f6",
       lineColor2: "#efcd44ff",
       data: incomingMaterialToday,
     },
     {
       title: "IQC",
+      pageName: "IQC",
       lineColor1: "#0c8a40ff",
       lineColor2: "#d42f12ff",
       data: lineChartData,
     },
     {
       title: "Material Issue Request",
+      pageName: "Material Issue Request",
       lineColor1: "#550c8aff",
       lineColor2: "#e88711ff",
       data: qcLineChartData,
     },
     {
       title: "Material Receipt",
+      pageName: "Material Receipt",
       lineColor1: "#8a0c55ff",
       lineColor2: "#1edabaff",
       data: materialReceiptData,
     },
     {
       title: "WIP Return",
+      pageName: "WIP Return",
       lineColor1: "#04f962ff",
       lineColor2: "#1e50daff",
       data: wipReturnData,
     },
   ];
 
-  const total = chartData.length;
+  // Filter charts by permission
+  const filteredChartData = chartData.filter((chart) =>
+    hasViewPermission(chart.pageName, permissions)
+  );
+
+  // Total charts count after filtering
+  const total = filteredChartData.length;
+
   // Auto-slide
   useEffect(() => {
     // if (istoken) {
@@ -651,6 +673,7 @@ const AdminLandingPage = () => {
   const cardData = [
     {
       title: "Incoming Material",
+      pageName: "Store Material Inward", // 👈 map to your permission JSON
       data: totalItemsData,
       value: totalItems === 0 ? totalItems : "+" + totalItems,
       change:
@@ -663,6 +686,7 @@ const AdminLandingPage = () => {
     },
     {
       title: "QC Pending",
+      pageName: "IQC", // 👈 permission mapping
       data: pendingQCData,
       value: pendingQC === 0 ? pendingQC : "+" + pendingQC,
       change:
@@ -673,6 +697,7 @@ const AdminLandingPage = () => {
     },
     {
       title: "Material Request",
+      pageName: "Material Issue Request",
       data: totalItemsData,
       value: materialRequest === 0 ? materialRequest : "+" + materialRequest,
       change:
@@ -685,6 +710,7 @@ const AdminLandingPage = () => {
     },
     {
       title: "Pending Approvals",
+      pageName: "My Approvals",
       data: totalItemsData,
       value: pendingApprovals === 0 ? pendingApprovals : "+" + pendingApprovals,
       change:
@@ -697,6 +723,7 @@ const AdminLandingPage = () => {
     },
     {
       title: "Material Transfer",
+      pageName: "Material Issue Transfer",
       data: totalItemsData,
       value: materialTransfer === 0 ? materialTransfer : "+" + materialTransfer,
       change:
@@ -709,6 +736,7 @@ const AdminLandingPage = () => {
     },
     {
       title: "Material Receipt",
+      pageName: "Material Receipt",
       data: totalItemsData,
       value: materialReceipt === 0 ? materialReceipt : "+" + materialReceipt,
       change:
@@ -723,6 +751,7 @@ const AdminLandingPage = () => {
     },
     {
       title: "WIP Returns",
+      pageName: "WIP Return",
       data: totalItemsData,
       value: wipReturn === 0 ? wipReturn : "+" + wipReturn,
       change:
@@ -735,6 +764,7 @@ const AdminLandingPage = () => {
     },
     {
       title: "Rejected Items (IQC)",
+      pageName: "IQC", // same as QC Pending
       data: totalItemsData,
       value: qcFailCount === 0 ? qcFailCount : "+" + qcFailCount,
       change:
@@ -747,6 +777,7 @@ const AdminLandingPage = () => {
     },
     {
       title: "Rejected Items (WIP)",
+      pageName: "WIP Return", // maps to WIP Return
       data: totalItemsData,
       value: wipRejectedItems === 0 ? wipRejectedItems : "+" + wipRejectedItems,
       change:
@@ -758,6 +789,11 @@ const AdminLandingPage = () => {
       changeColor: wipRejectedItems === 0 ? "text-secondary" : "text-danger",
     },
   ];
+
+  // Filter based on permissions
+  const filteredCards = cardData.filter((card) =>
+    hasViewPermission(card.pageName, permissions)
+  );
 
   const [notification, setNotification] = useState([]);
 
@@ -825,30 +861,64 @@ const AdminLandingPage = () => {
 
   const monthlyReports = [
     {
-      title: "Material Movement",
+      title: "Incoming Material",
+      pageName: "Store Material Inward",
       data: [
-        { week: "W1", inward: 400, outward: 240 },
-        { week: "W2", inward: 300, outward: 139 },
-        { week: "W3", inward: 200, outward: 980 },
-        { week: "W4", inward: 278, outward: 390 },
+        { month: "Jan", value: 120 },
+        { month: "Feb", value: 95 },
+        { month: "Mar", value: 140 },
       ],
-      bars: [
-        { key: "inward", label: "Inward", color: "#1e99dbff" },
-        { key: "outward", label: "Outward", color: "#0fc1a3ff" },
-      ],
+      bars: [{ key: "value", label: "Incoming", color: "#3b82f6" }],
     },
     {
-      title: "QC Status",
+      title: "QC Pending",
+      pageName: "IQC",
       data: [
-        { week: "W1", pass: 120, fail: 20 },
-        { week: "W2", pass: 100, fail: 15 },
-        { week: "W3", pass: 150, fail: 25 },
-        { week: "W4", pass: 130, fail: 10 },
+        { month: "Jan", value: 15 },
+        { month: "Feb", value: 20 },
+        { month: "Mar", value: 10 },
       ],
-      bars: [
-        { key: "pass", label: "Pass", color: "#03c703ff" },
-        { key: "fail", label: "Fail", color: "#f60505ff" },
+      bars: [{ key: "value", label: "QC Pending", color: "#f97316" }],
+    },
+    {
+      title: "Material Request",
+      pageName: "Material Issue Request",
+      data: [
+        { month: "Jan", value: 30 },
+        { month: "Feb", value: 22 },
+        { month: "Mar", value: 28 },
       ],
+      bars: [{ key: "value", label: "Requests", color: "#8b5cf6" }],
+    },
+    {
+      title: "Pending Approvals",
+      pageName: "My Approvals",
+      data: [
+        { month: "Jan", value: 6 },
+        { month: "Feb", value: 4 },
+        { month: "Mar", value: 7 },
+      ],
+      bars: [{ key: "value", label: "Approvals", color: "#facc15" }],
+    },
+    {
+      title: "Material Transfer",
+      pageName: "Material Issue Transfer",
+      data: [
+        { month: "Jan", value: 12 },
+        { month: "Feb", value: 15 },
+        { month: "Mar", value: 10 },
+      ],
+      bars: [{ key: "value", label: "Transfers", color: "#10b981" }],
+    },
+    {
+      title: "WIP Returns",
+      pageName: "WIP Return",
+      data: [
+        { month: "Jan", value: 5 },
+        { month: "Feb", value: 8 },
+        { month: "Mar", value: 6 },
+      ],
+      bars: [{ key: "value", label: "Returns", color: "#ef4444" }],
     },
   ];
 
@@ -873,32 +943,122 @@ const AdminLandingPage = () => {
 
   const weeklyReports = [
     {
-      title: "Material Movement",
+      title: "Incoming Material",
+      pageName: "Store Material Inward",
       data: [
-        { week: "W1", inward: 400, outward: 240 },
-        { week: "W2", inward: 300, outward: 139 },
-        { week: "W3", inward: 200, outward: 980 },
-        { week: "W4", inward: 278, outward: 390 },
+        { week: "W1", value: 20 },
+        { week: "W2", value: 35 },
+        { week: "W3", value: 15 },
+        { week: "W4", value: 40 },
       ],
-      bars: [
-        { key: "inward", label: "Inward", color: "#3bc7f6ff" },
-        { key: "outward", label: "Outward", color: "#16d797ff" },
-      ],
+      bars: [{ key: "value", label: "Incoming", color: "#3b82f6" }],
     },
     {
-      title: "QC Status",
+      title: "QC Pending",
+      pageName: "IQC",
       data: [
-        { week: "W1", pass: 120, fail: 20 },
-        { week: "W2", pass: 100, fail: 15 },
-        { week: "W3", pass: 150, fail: 25 },
-        { week: "W4", pass: 130, fail: 10 },
+        { week: "W1", value: 5 },
+        { week: "W2", value: 12 },
+        { week: "W3", value: 7 },
+        { week: "W4", value: 10 },
       ],
-      bars: [
-        { key: "pass", label: "Pass", color: "#8ce53aff" },
-        { key: "fail", label: "Fail", color: "#ee3333ff" },
+      bars: [{ key: "value", label: "QC Pending", color: "#f97316" }],
+    },
+    {
+      title: "Material Request",
+      pageName: "Material Issue Request",
+      data: [
+        { week: "W1", value: 8 },
+        { week: "W2", value: 14 },
+        { week: "W3", value: 6 },
+        { week: "W4", value: 11 },
       ],
+      bars: [{ key: "value", label: "Requests", color: "#8b5cf6" }],
+    },
+    {
+      title: "Pending Approvals",
+      pageName: "My Approvals",
+      data: [
+        { week: "W1", value: 2 },
+        { week: "W2", value: 5 },
+        { week: "W3", value: 3 },
+        { week: "W4", value: 4 },
+      ],
+      bars: [{ key: "value", label: "Approvals", color: "#facc15" }],
+    },
+    {
+      title: "Material Transfer",
+      pageName: "Material Issue Transfer",
+      data: [
+        { week: "W1", value: 4 },
+        { week: "W2", value: 9 },
+        { week: "W3", value: 7 },
+        { week: "W4", value: 5 },
+      ],
+      bars: [{ key: "value", label: "Transfers", color: "#10b981" }],
+    },
+    {
+      title: "WIP Returns",
+      pageName: "WIP Return",
+      data: [
+        { week: "W1", value: 1 },
+        { week: "W2", value: 3 },
+        { week: "W3", value: 2 },
+        { week: "W4", value: 4 },
+      ],
+      bars: [{ key: "value", label: "Returns", color: "#ef4444" }],
     },
   ];
+
+  // Dummy stock data
+  const dummyItems = [
+    {
+      id: 1,
+      code: "STL-101",
+      name: "Steel Rods",
+      currentStock: 5,
+      minStock: 10,
+    },
+    {
+      id: 2,
+      code: "CEM-202",
+      name: "Cement Bags",
+      currentStock: 25,
+      minStock: 20,
+    },
+    { id: 3, code: "BRK-303", name: "Bricks", currentStock: 100, minStock: 50 },
+    {
+      id: 4,
+      code: "PNT-404",
+      name: "Paint Buckets",
+      currentStock: 2,
+      minStock: 5,
+    },
+    {
+      id: 5,
+      code: "WOD-505",
+      name: "Wood Planks",
+      currentStock: 15,
+      minStock: 30,
+    },
+  ];
+
+  const [itemsX, setItemsX] = useState([]);
+
+  useEffect(() => {
+    // Simulate API fetch
+    setTimeout(() => {
+      setItemsX(dummyItems);
+    }, 1000);
+  }, []);
+
+  const filteredWeeklyReports = weeklyReports.filter((r) =>
+    hasViewPermission(r.pageName, permissions)
+  );
+
+  const filteredMonthlyReports = monthlyReports.filter((r) =>
+    hasViewPermission(r.pageName, permissions)
+  );
 
   return (
     <div>
@@ -947,10 +1107,12 @@ const AdminLandingPage = () => {
           </div>
         </div>
       </nav>
+      {/* Only shows modal if low stock items exist */}
+      <LowStockAlert items={itemsX} />
       <h5 className="text-dark py-2">Daily Report</h5>
-      {/* Card  */}
+      {/* Cards  */}
       <div className="summary row g-4">
-        {cardData.map((card, index) => (
+        {filteredCards.map((card, index) => (
           <div className="col-sm-6 col-md-4 col-lg-3" key={index}>
             <div className="card h-100 shadow-sm border-0 rounded-3">
               <div className="card-body d-flex flex-column">
@@ -1084,54 +1246,29 @@ const AdminLandingPage = () => {
         <div className="row" style={{ overflow: "visible" }}>
           {/* Banner Carousel */}
           <div
-            className="col-8 graph-carousel border rounded p-3 bg-white shadow-sm mt-4 p-4"
+            className={`${
+              hasViewPermission("IQC", permissions) ? "col-8" : "col-12"
+            } graph-carousel border rounded p-3 bg-white shadow-sm mt-4 p-4`}
             onMouseEnter={stopAutoSlide}
             onMouseLeave={startAutoSlide}
           >
-            <button className="carousel-arrow left" onClick={handlePrev}>
-              &#8249;
-            </button>
-            <button className="carousel-arrow right" onClick={handleNext}>
-              &#8250;
-            </button>
+            {filteredChartData.length > 1 && (
+              <>
+                <button className="carousel-arrow left" onClick={handlePrev}>
+                  &#8249;
+                </button>
+                <button className="carousel-arrow right" onClick={handleNext}>
+                  &#8250;
+                </button>
+              </>
+            )}
 
             <div>
-              {/* {chartData[current].title === "Store Material Inward" && (
-                <select
-                  className="filter-select"
-                  value={selectedItem}
-                  onLoad={fetchStoreItems}
-                  onChange={(e) => {
-                    setSelectedItem(e.target.value);
-                  }}
-                >
-                  <option value="">Select Items</option>
-                  {items.map((items, index) => (
-                    <option key={index} value={items.id}>
-                      {items.name}
-                    </option>
-                  ))}
-                </select>
-              )} */}
               <h5 className="text-center text-dark">
                 {chartData[current].title}
               </h5>
             </div>
 
-            {/* Buttons on Right */}
-            {/* <div className="text-end flex-grow-1">
-              {["7", "30", "90"].map((day) => (
-                <button
-                  key={day}
-                  className={`btn btn-sm mx-1 ${
-                    range === day ? "btn-primary" : "btn-outline-secondary"
-                  }`}
-                  onClick={() => setRange(day)}
-                >
-                  {day} Days
-                </button>
-              ))}
-            </div> */}
             <ResponsiveContainer width="95%" height={300}>
               <LineChart data={chartData[current].data}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -1211,143 +1348,188 @@ const AdminLandingPage = () => {
           </div>
 
           {/* Pie Chart */}
-          <div className="col-md-4 d-flex align-items-center justify-content-center">
-            {data.length === 0 ? (
-              <PieChart width={400} height={300}>
-                <Pie
-                  data={[{ name: "No Data", value: 1 }]}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  dataKey="value"
-                  fill="#d6d8db" // Bootstrap gray-300
-                />
-                <text
-                  x="50%"
-                  y="50%"
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  fill="#6c757d" // Bootstrap text-secondary
-                  fontSize="14"
-                  fontWeight="bold"
-                >
-                  No QC data
-                </text>
-              </PieChart>
-            ) : (
-              <PieChart width={400} height={300}>
-                <Pie
-                  data={data}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  innerRadius={60}
-                  outerRadius={100}
-                  dataKey="value"
-                >
-                  {data.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
+          {hasViewPermission("IQC", permissions) && (
+            <div className="col-md-4 d-flex align-items-center justify-content-center">
+              {data.length === 0 ? (
+                <PieChart width={400} height={300}>
+                  <Pie
+                    data={[{ name: "No Data", value: 1 }]}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    dataKey="value"
+                    fill="#d6d8db"
+                  />
+                  <text
+                    x="50%"
+                    y="50%"
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    fill="#6c757d"
+                    fontSize="14"
+                    fontWeight="bold"
+                  >
+                    No QC data
+                  </text>
+                </PieChart>
+              ) : (
+                <PieChart width={400} height={300}>
+                  <Pie
+                    data={data}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    innerRadius={60}
+                    outerRadius={100}
+                    dataKey="value"
+                  >
+                    {data.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
                   <text
                     x="50%"
                     y="45%"
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    fill="#343a40" // Bootstrap text-dark
+                    fill="#343a40"
                     fontSize="14"
                     fontWeight="bold"
                   >
                     QC Status
                   </text>
-                </Pie>
-                <Tooltip />
-                <Legend content={<CustomLegend />} />
-              </PieChart>
-            )}
-          </div>
+                  <Tooltip />
+                  <Legend content={<CustomLegend />} />
+                </PieChart>
+              )}
+            </div>
+          )}
         </div>
       </div>
       <div className="row mt-4">
-        <div className="col-6">
-          {/* Weekly Bar Chart Data */}
-          <h5 className="text-dark py-2">Weekly Report</h5>
-          <div className="col-12 graph-carousel border rounded p-3 bg-white shadow-sm mt-3">
-            {/* Carousel arrows */}
-            <button className="carousel-arrow left" onClick={handleWeeklyPrev}>
-              &#8249;
-            </button>
-            <button className="carousel-arrow right" onClick={handleWeeklyNext}>
-              &#8250;
-            </button>
+        {filteredWeeklyReports.length > 0 && (
+          <div
+            className={filteredMonthlyReports.length > 0 ? "col-6" : "col-12"}
+          >
+            <h5 className="text-dark py-2">Weekly Report</h5>
+            <div className="col-12 graph-carousel border rounded p-3 bg-white shadow-sm mt-3">
+              {filteredWeeklyReports.length > 1 && (
+                <>
+                  <button
+                    className="carousel-arrow left"
+                    onClick={handleWeeklyPrev}
+                  >
+                    &#8249;
+                  </button>
+                  <button
+                    className="carousel-arrow right"
+                    onClick={handleWeeklyNext}
+                  >
+                    &#8250;
+                  </button>
+                </>
+              )}
 
-            <h6 className="text-center text-dark mb-3">
-              {weeklyReports[currentWeekly].title}
-            </h6>
+              <h6 className="text-center text-dark mb-3">
+                {
+                  filteredWeeklyReports[
+                    currentWeekly % filteredWeeklyReports.length
+                  ].title
+                }
+              </h6>
 
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart
-                data={weeklyReports[currentWeekly].data}
-                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="week" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                {weeklyReports[currentWeekly].bars.map((bar, i) => (
-                  <Bar
-                    key={i}
-                    dataKey={bar.key}
-                    fill={bar.color}
-                    name={bar.label}
-                  />
-                ))}
-              </BarChart>
-            </ResponsiveContainer>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart
+                  data={
+                    filteredWeeklyReports[
+                      currentWeekly % filteredWeeklyReports.length
+                    ].data
+                  }
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="week" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  {filteredWeeklyReports[
+                    currentWeekly % filteredWeeklyReports.length
+                  ].bars.map((bar, i) => (
+                    <Bar
+                      key={i}
+                      dataKey={bar.key}
+                      fill={bar.color}
+                      name={bar.label}
+                    />
+                  ))}
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-        </div>
-        <div className="col-6">
-          {/* Monthly Bar Chart Data */}
-          <h5 className="text-dark py-2">Monthly Report</h5>
-          <div className="col-12 graph-carousel border rounded p-3 bg-white shadow-sm mt-3">
-            {/* Carousel arrows */}
-            <button className="carousel-arrow left" onClick={handleMonthPrev}>
-              &#8249;
-            </button>
-            <button className="carousel-arrow right" onClick={handleMonthNext}>
-              &#8250;
-            </button>
+        )}
 
-            <h6 className="text-center text-dark mb-3">
-              {monthlyReports[currentMonth].title}
-            </h6>
+        {filteredMonthlyReports.length > 0 && (
+          <div
+            className={filteredWeeklyReports.length > 0 ? "col-6" : "col-12"}
+          >
+            <h5 className="text-dark py-2">Monthly Report</h5>
+            <div className="col-12 graph-carousel border rounded p-3 bg-white shadow-sm mt-3">
+              {filteredMonthlyReports.length > 1 && (
+                <>
+                  <button
+                    className="carousel-arrow left"
+                    onClick={handleMonthPrev}
+                  >
+                    &#8249;
+                  </button>
+                  <button
+                    className="carousel-arrow right"
+                    onClick={handleMonthNext}
+                  >
+                    &#8250;
+                  </button>
+                </>
+              )}
 
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart
-                data={monthlyReports[currentMonth].data}
-                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="week" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                {monthlyReports[currentMonth].bars.map((bar, i) => (
-                  <Bar
-                    key={i}
-                    dataKey={bar.key}
-                    fill={bar.color}
-                    name={bar.label}
-                  />
-                ))}
-              </BarChart>
-            </ResponsiveContainer>
+              <h6 className="text-center text-dark mb-3">
+                {
+                  filteredMonthlyReports[
+                    currentMonth % filteredMonthlyReports.length
+                  ].title
+                }
+              </h6>
+
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart
+                  data={
+                    filteredMonthlyReports[
+                      currentMonth % filteredMonthlyReports.length
+                    ].data
+                  }
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  {filteredMonthlyReports[
+                    currentMonth % filteredMonthlyReports.length
+                  ].bars.map((bar, i) => (
+                    <Bar
+                      key={i}
+                      dataKey={bar.key}
+                      fill={bar.color}
+                      name={bar.label}
+                    />
+                  ))}
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
