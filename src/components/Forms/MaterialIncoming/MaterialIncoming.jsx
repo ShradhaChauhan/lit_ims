@@ -159,13 +159,17 @@ const MaterialIncoming = () => {
 
   const validateForm = (data) => {
     const errors = {};
-
+    console.log(data);
     if (!mode) {
       errors.mode = "Please select a mode";
     }
 
     if (!data.vendor && mode === "manual") {
       errors.vendor = "Please select vendor name";
+    }
+
+    if (!data.quantity > 0) {
+      errors.quantity = "Please enter a valid quantity";
     }
 
     // Validate numberOfBatches for manual mode
@@ -1454,6 +1458,9 @@ const MaterialIncoming = () => {
                     onChange={(e) => setIsStdQty(!e.target.checked)}
                   />
                 </div>
+                {errors.quantity && (
+                  <span className="error-message">{errors.quantity}</span>
+                )}
               </div>
             )}
           </div>
