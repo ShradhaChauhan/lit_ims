@@ -816,16 +816,26 @@ const AdminLandingPage = () => {
   }, []);
 
   // Notifications
-  const [notifications, setNotifications] = useState([
-    { id: 1, referenceType: "Order #123 created" },
-    { id: 2, referenceType: "Stock updated" },
-    { id: 3, referenceType: "New message from Admin" },
-  ]);
+  const [notifications, setNotifications] = useState([]);
+
+  const fetchUnreadNotifications = async () => {
+    try {
+      const response = await api.get("/api/alerts/unread");
+      setNotifications(response.data.data);
+    } catch (error) {
+      console.error(
+        error.response?.data?.message || "Error fetching notifications"
+      );
+    }
+  };
+
+  useEffect(() => {
+    fetchUnreadNotifications();
+  }, [notifications]);
 
   const [unreadCount, setUnreadCount] = useState(notifications.length);
 
   const handleBellClick = () => {
-    // Mark all as read (count becomes 0 but keep list for viewing)
     setUnreadCount(0);
   };
 
@@ -1095,7 +1105,7 @@ const AdminLandingPage = () => {
               {notifications.length > 0 ? (
                 notifications.map((note) => (
                   <li key={note.id} className="dropdown-item">
-                    {note.referenceType}
+                    {note.message}
                   </li>
                 ))
               ) : (
