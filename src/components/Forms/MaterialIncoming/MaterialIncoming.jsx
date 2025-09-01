@@ -1061,6 +1061,31 @@ const MaterialIncoming = () => {
 
   return (
     <div>
+      {loading && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            backgroundColor: "rgba(0, 0, 0, 0.6)",
+            zIndex: 9999,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            pointerEvents: "all",
+          }}
+        >
+          <div className="orbit-loader">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      )}
+
       {/* Header section */}
       <nav className="navbar bg-light border-body" data-bs-theme="light">
         <div className="container-fluid">
