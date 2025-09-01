@@ -1010,13 +1010,13 @@ const IncomingQC = () => {
       </nav>
 
       {/* Form Header Section */}
-      <div className="table-form-container mx-2 mb-4">
+      {/* <div className="table-form-container mx-2 mb-4">
         <div className="form-header">
           <h2>
             <i className="fas fa-qrcode"></i> Scan Batch
           </h2>
         </div>
-        {/* Form Fields */}
+        
         <form autoComplete="off" className="padding-2">
           <div className="form-grid pt-0 m-0">
             <div className="row form-style">
@@ -1042,7 +1042,7 @@ const IncomingQC = () => {
             </div>
           </div>
         </form>
-      </div>
+      </div> */}
 
       {/* Quality Check Form */}
       {isShowQualityCheckForm && (
@@ -1557,7 +1557,13 @@ const IncomingQC = () => {
                                   <tr key={item.id}>
                                     <td className="px-3 py-2 ">{`(${item.itemCode}) ${item.itemName}`}</td>
                                     <td>{item.batchNumber}</td>
-                                    <td>{item.vendorName}</td>
+                                    <td>
+                                      {" "}
+                                      {"(" +
+                                        item.vendorCode +
+                                        ") " +
+                                        item.vendorName}
+                                    </td>
                                     <td>{item.quantity}</td>
                                     <td>{item.createdAt}</td>
                                   </tr>
@@ -1658,6 +1664,11 @@ const IncomingQC = () => {
                           handleSearchHoldBatchNo(pfqc.items[0].batchNumber);
                           setTrno(pfqc.trNumber);
                           setIsShowQualityCheckForm(true);
+                          setTimeout(() => {
+                            qcRef.current?.scrollIntoView({
+                              behavior: "smooth",
+                            });
+                          }, 100);
                         }}
                       >
                         <i className="fa-solid fa-clipboard-check me-1"></i>{" "}
@@ -1714,7 +1725,6 @@ const IncomingQC = () => {
               <thead>
                 <tr>
                   <th>Item Name</th>
-                  <th>Item Code</th>
                   <th>Batch No</th>
                   <th>Vendor Name</th>
                   <th>Quantity</th>
@@ -1726,10 +1736,9 @@ const IncomingQC = () => {
               <tbody className="text-break">
                 {currentCompletedItems.map((pfqc) => (
                   <tr key={pfqc.id}>
-                    <td>{pfqc.itemName}</td>
-                    <td>{pfqc.itemCode}</td>
+                    <td>{"(" + pfqc.itemCode + ") " + pfqc.itemName}</td>
                     <td>{pfqc.batchNumber}</td>
-                    <td>{pfqc.vendorName}</td>
+                    <td>{"(" + pfqc.vendorCode + ") " + pfqc.vendorName}</td>
                     <td>{pfqc.quantity}</td>
                     <td>{pfqc.createdAt}</td>
                     <td>

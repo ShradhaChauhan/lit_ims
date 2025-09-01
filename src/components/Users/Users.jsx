@@ -2040,8 +2040,11 @@ const Users = () => {
                         >
                           Select Department
                         </option>
-                        <option value="production">Production</option>
-                        <option value="store">Store</option>
+                        <option value="Sales">Sales</option>
+                        <option value="Production">Production</option>
+                        <option value="Store">Store</option>
+                        <option value="IQC">IQC</option>
+                        <option value="IT">IT</option>
                       </select>
                       {/* <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i> */}
                     </div>
@@ -3261,7 +3264,7 @@ const Users = () => {
                                 <option value="Sales">Sales</option>
                                 <option value="Production">Production</option>
                                 <option value="Store">Store</option>
-                                <option value="Quality">Quality</option>
+                                <option value="IQC">IQC</option>
                                 <option value="IT">IT</option>
                               </select>
                               <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
