@@ -776,7 +776,7 @@ const Reports = () => {
                                 <i className="fa-solid fa-sort-down"></i>
                               ))}
                           </th>
-                          <th
+                          {/* <th
                             onClick={() => handleModalSort("cumulativeValue")}
                             style={{ cursor: "pointer" }}
                           >
@@ -787,7 +787,7 @@ const Reports = () => {
                               ) : (
                                 <i className="fa-solid fa-sort-down"></i>
                               ))}
-                          </th>
+                          </th> */}
                           <th>Actions</th>
                         </tr>
                       </thead>
@@ -822,11 +822,11 @@ const Reports = () => {
                                     <span>{warehouseDetail.quantity}</span>
                                   </div>
                                 </td>
-                                <td className="ps-5">
+                                {/* <td className="ps-5">
                                   <div>
                                     <span>-</span>
                                   </div>
-                                </td>
+                                </td> */}
                                 <td className="actions ps-4">
                                   <button
                                     className="btn-icon btn-primary"
