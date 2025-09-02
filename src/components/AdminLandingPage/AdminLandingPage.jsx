@@ -367,6 +367,7 @@ const AdminLandingPage = () => {
   const fetchIncomingMaterialToday = async () => {
     try {
       const date = format(Date.now(), "yyyy-MM-dd");
+      console.log("Fetching data for date:", date);
       const response = await api.get(`/api/receipt/items-by-date?date=${date}`);
       setTotalItemsData(response.data.data.items);
       setTotalItems(response.data.data.count);
@@ -690,7 +691,7 @@ const AdminLandingPage = () => {
       title: "Incoming Material",
       pageName: "Store Material Inward", // 👈 map to your permission JSON
       data: totalItemsData,
-      value: totalItems === 0 ? totalItems : "+" + totalItems,
+      value: totalItemsData.length === 0 ? totalItems : "+" + totalItems,
       change:
         totalItems === 0
           ? "0 incoming material from yesterday"

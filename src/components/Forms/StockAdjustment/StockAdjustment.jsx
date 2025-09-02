@@ -16,7 +16,7 @@ const StockAdjustment = () => {
     }
     try {
       setIsLoading(true);
-      await api.post("/api/", batchNumber);
+      await api.post("/api/receipt/", batchNumber);
       setError("");
       toast.success("Process done successfully");
       setIsLoading(false);
