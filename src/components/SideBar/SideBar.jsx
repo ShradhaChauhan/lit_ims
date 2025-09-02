@@ -27,6 +27,7 @@ import ProductionMaterialUsage from "../Forms/ProductionMaterialUsage/Production
 import Users from "../Users/Users";
 import ApproveItemsQuantity from "../Forms/ApproveItemsQuantity/ApproveItemsQuantity";
 import { AbilityContext } from "../../utils/AbilityContext";
+import StockAdjustment from "../Forms/StockAdjustment/StockAdjustment";
 
 const SideBar = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -253,6 +254,11 @@ const SideBar = () => {
       path: "activity-logs",
       label: "Activity Logs",
     },
+    {
+      icon: "fa-solid fa-cubes",
+      path: "stock-adjustment",
+      label: "Stock Adjustment",
+    },
   ];
 
   useEffect(() => {
@@ -341,6 +347,7 @@ const SideBar = () => {
       setRightSideComponent(<div>Reports Coming Soon</div>);
     name === "Activity Logs" && setRightSideComponent(<ActivityLogs />);
     name === "My Approvals" && setRightSideComponent(<ApproveItemsQuantity />);
+    name === "Stock Adjustment" && setRightSideComponent(<StockAdjustment />);
   };
 
   // RBAC

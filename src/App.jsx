@@ -33,6 +33,7 @@ import { useLocation } from "react-router-dom";
 import { useIdleTimer } from "./utils/useIdleTimer";
 import api from "./services/api";
 import { useNavigate } from "react-router-dom";
+import StockAdjustment from "./components/Forms/StockAdjustment/StockAdjustment";
 
 function App() {
   // const [isLoggedIn, setIsLoggedIn] = useState(
@@ -283,6 +284,14 @@ function App() {
             element={
               <ProtectedRoute page="My Approvals">
                 <ApproveItemsQuantity />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/stock-adjustment"
+            element={
+              <ProtectedRoute page="Stock Adjustment">
+                <StockAdjustment />
               </ProtectedRoute>
             }
           />
