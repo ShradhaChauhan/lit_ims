@@ -2,34 +2,40 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import "./StockAdjustment.css";
 import { toast } from "react-toastify";
+import api from "../../../services/api";
 
 const StockAdjustment = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [batchNumber, setBatchNumber] = useState("");
   const [error, setError] = useState("");
 
-  const scanBathch = async () => {
+  const scanBatch = async () => {
     console.log("scanning batch:", batchNumber);
+
     if (!batchNumber.trim()) {
       setError("Batch number is required");
       return;
     }
+
     try {
       setIsLoading(true);
-      await api.post("/api/receipt/", batchNumber);
+
+      // delete with batchNumber in URL
+      await api.delete(`/api/receipt/${batchNumber}`);
+
       setError("");
       toast.success("Process done successfully");
-      setIsLoading(false);
-    } catch (error) {
-      toast.error(error.response.data.message);
+      setBatchNumber("");
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Something went wrong");
     } finally {
-      setError("");
       setIsLoading(false);
     }
   };
 
   return (
     <div>
+      {/* Full-screen loader overlay */}
       {isLoading && (
         <div
           style={{
@@ -43,7 +49,6 @@ const StockAdjustment = () => {
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            pointerEvents: "all",
           }}
         >
           <div className="orbit-loader">
@@ -71,6 +76,8 @@ const StockAdjustment = () => {
           </div>
         </div>
       </nav>
+
+      {/* Main card */}
       <div
         className="d-flex justify-content-center align-items-center bg-light"
         style={{ minHeight: "80vh" }}
@@ -81,7 +88,12 @@ const StockAdjustment = () => {
         >
           <h5 className="text-center mb-4 fw-bold">Stock Adjustment</h5>
 
-          <form>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              scanBatch();
+            }}
+          >
             <div className="mb-3">
               <label htmlFor="batchInput" className="form-label fw-semibold">
                 Scan Batch Number
@@ -107,11 +119,11 @@ const StockAdjustment = () => {
 
             <div className="d-grid">
               <button
-                type="button"
+                type="submit"
                 className="btn btn-primary text-8 mt-2"
-                onClick={() => scanBathch()}
+                disabled={isLoading}
               >
-                Submit
+                {isLoading ? "Processing..." : "Submit"}
               </button>
             </div>
           </form>
