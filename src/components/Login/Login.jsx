@@ -201,7 +201,7 @@ const LoginPage = () => {
                   style={{ animationDelay: "0.1s" }}
                 >
                   <label htmlFor="username" className="form-label">
-                    Username
+                    Username/Email
                   </label>
                   <div className="position-relative w-100">
                     <i className="fas fa-user position-absolute input-i"></i>
@@ -209,7 +209,7 @@ const LoginPage = () => {
                       type="text"
                       className="form-control text-font ps-5"
                       id="username"
-                      placeholder="Enter username"
+                      placeholder="Enter username or email"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       autoComplete="username"
