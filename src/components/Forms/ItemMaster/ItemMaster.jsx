@@ -1447,7 +1447,7 @@ const ItemMaster = () => {
       {/* Table Section */}
       <div className="margin-2 mx-2">
         <div className="table-container">
-          {ability.can("edit", "Business Partner") && (
+          {ability.can("edit", "Item Master") && (
             <div className="table-header d-flex justify-content-between align-items-center flex-wrap gap-2">
               <div className="selected-count">
                 <input

@@ -123,7 +123,7 @@ const SideBar = () => {
         },
         {
           label: "Item Master",
-          compName: "ItemMaster",
+          compName: "ItemMaster", 
           newPath: "item-master",
           path: "Masters / Item Master",
           icon: "fas fa-box",

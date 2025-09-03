@@ -1147,7 +1147,7 @@ const AdminLandingPage = () => {
         </div>
       </nav>
       {/* Only shows modal if low stock items exist */}
-      <LowStockAlert items={itemsX} />
+      {/* <LowStockAlert items={itemsX} /> */}
       <h5 className="text-dark py-2">Daily Report</h5>
       {/* Cards  */}
       <div className="summary row g-4">
