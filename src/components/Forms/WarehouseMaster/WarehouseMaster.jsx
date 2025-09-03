@@ -1192,7 +1192,7 @@ const WarehouseMaster = () => {
       {/* Table Section */}
       <div className="margin-2 mx-2">
         <div className="table-container">
-          {ability.can("edit", "Business Partner") && (
+          {ability.can("edit", "Warehouse Master") && (
             <div className="table-header">
               <div className="selected-count">
                 <input

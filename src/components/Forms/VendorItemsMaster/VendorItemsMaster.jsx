@@ -1393,7 +1393,7 @@ const VendorItemsMaster = () => {
       {/* Table Section */}
       <div className="margin-2 mx-2">
         <div className="table-container">
-          {ability.can("edit", "Business Partner") && (
+          {ability.can("edit", "Vendor Item Master") && (
             <div className="table-header">
               <div className="selected-count">
                 <input
