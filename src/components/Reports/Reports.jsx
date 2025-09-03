@@ -88,6 +88,18 @@ const Reports = () => {
     });
   };
 
+  // Unmount backdrop
+  useEffect(() => {
+    return () => {
+      // Force-remove bootstrap modal backdrop if stuck
+      const backdrops = document.querySelectorAll(".modal-backdrop");
+      backdrops.forEach((bd) => bd.remove());
+      document.body.classList.remove("modal-open");
+      document.body.style.overflow = ""; 
+    };
+  }, []);
+  
+
   // Filtered warehouses based on search query
   const filteredWarehouses = useMemo(() => {
     let result = warehouses.filter((w) => {

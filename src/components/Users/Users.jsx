@@ -82,6 +82,7 @@ const Users = () => {
   const [transactionEditPermissions, setTransactionEditPermissions] = useState(
     {}
   );
+  const [warehouse, setWarehouse] = useState([]);
   const [reportViewPermissions, setReportViewPermissions] = useState({});
   const [reportEditPermissions, setReportEditPermissions] = useState({});
   const [adminViewPermissions, setAdminViewPermissions] = useState({});
@@ -444,6 +445,29 @@ const Users = () => {
     const end = Math.min(start + itemsPerPage - 1, totalItems);
     return `${start}-${end}`;
   };
+
+  const fetchWarehouses = () => {
+    api
+      .get("/api/warehouses")
+      .then((response) => {
+        console.log("Warehouses response:", response.data);
+        if (response.data && response.data.status) {
+          setWarehouse(response.data.data || []);
+        } else {
+          console.error(
+            "Error fetching warehouses:",
+            response.data.message || "Unknown error"
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching warehouses:", error);
+      });
+  };
+
+  useEffect(() => {
+    fetchWarehouses();
+  }, []);
 
   const masters = [
     {
@@ -2032,21 +2056,17 @@ const Users = () => {
                           })
                         }
                       >
-                        <option
-                          value=""
-                          disabled
-                          hidden
-                          style={{ color: "#6c757d !important" }}
-                        >
+                        <option value="" disabled hidden>
                           Select Department
                         </option>
-                        <option value="Sales">Sales</option>
-                        <option value="Production">Production</option>
-                        <option value="Store">Store</option>
-                        <option value="IQC">IQC</option>
-                        <option value="IT">IT</option>
+
+                        {/* Map warehouse list */}
+                        {warehouse.map((w) => (
+                          <option key={w.id} value={w.name}>
+                            {w.name}
+                          </option>
+                        ))}
                       </select>
-                      {/* <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i> */}
                     </div>
                     {errors.department && (
                       <span className="error-message">{errors.department}</span>
