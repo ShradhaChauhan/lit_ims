@@ -2,11 +2,14 @@ import React, { useEffect, useState, useCallback, useContext } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../../../services/api";
-import { AppContext } from "../../../context/AppContext";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const IssueProduction = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [parentBomCode, setParentBomCode] = useState(null);
+  const [parentBomName, setParentBomName] = useState(null);
   const [requestedItems, setRequestedItems] = useState([]);
   const [requisitionNumbers, setRequisitionNumbers] = useState([]);
   const [selectedRequisition, setSelectedRequisition] = useState("");
@@ -107,6 +110,9 @@ const IssueProduction = () => {
 
       if (response.data.status) {
         const items = response.data.data[0].items;
+        setParentBomCode(response.data.data[0].parentBomCode);
+        setParentBomName(response.data.data[0].parentBomName);
+        // Assuming warehouseId is part of the requisition data
         const warehouseId = response.data.data[0].warehouseId;
         // Step 1: Fetch stockQty for each item in parallel
         const stockQtyPromises = items.map((item) =>
@@ -419,6 +425,46 @@ const IssueProduction = () => {
     toast.info("Form cleared successfully");
   };
 
+  // Print PDF
+  const handlePrint = (e) => {
+    e.preventDefault();
+    const doc = new jsPDF();
+
+    doc.setFontSize(14);
+    doc.text("(" + parentBomCode + ") " + parentBomName + " Report", 14, 15);
+
+    const now = new Date();
+    const dateTimeStr = now.toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+    doc.setFontSize(10);
+    doc.text(dateTimeStr, doc.internal.pageSize.getWidth() - 14, 15, {
+      align: "right",
+    });
+
+    const tableColumn = ["Code", "Name", "Quantity"];
+    const tableRows = [];
+    requestedItems.forEach((item) => {
+      const row = [item.code, item.itemName, item.requestedQty];
+      tableRows.push(row);
+    });
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 25,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [41, 128, 185] },
+    });
+
+    doc.save("(" + parentBomCode + ") " + parentBomName + ".pdf");
+  };
+
   return (
     <div>
       {" "}
@@ -527,6 +573,13 @@ const IssueProduction = () => {
                         type.parentBomCode +
                         ") - BOM Items"}
                   </h6>
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-sm px-2 py-1 text-8"
+                    onClick={handlePrint}
+                  >
+                    <i className="fa-solid fa-print me-1"></i> Print
+                  </button>
                 </div>
                 <table>
                   <thead>

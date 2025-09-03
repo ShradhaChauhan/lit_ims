@@ -7,7 +7,6 @@ import Select from "react-select";
 
 const MaterialIssueRequest = () => {
   const [tempQuantity, setTempQuantity] = useState(0);
-  const [qty, setQty] = useState(0);
   // Helper function to check requisition type restriction
   const getRequisitionTypeOptions = () => {
     // If no items have been added yet, allow both types
@@ -52,85 +51,6 @@ const MaterialIssueRequest = () => {
 
     // Generate new transaction number
     setTransactionNumber(generateTransactionNumber());
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (request.length === 0) {
-      toast.error("Please add at least one item to the request");
-      return;
-    }
-
-    try {
-      // Determine type based on the first item
-      const requestType = request[0].type === "BOM" ? "bom" : "items";
-      console.log("Warehouse: " + warehouse);
-      // Format data for API
-      // const formattedItems = request.map((item) => ({
-      //   id: item.id,
-      //   name: item.name,
-      //   code: item.code,
-      //   type: item.type.toLowerCase(),
-      //   quantity: Number(item.quantity),
-      // }));
-      const formattedItems = request.flatMap((item) => {
-        if (item.type === "bom" || item.type === "BOM") {
-          // BOM - flatten the sub-items with calculated quantity
-          return item.items.map((subItem) => ({
-            id: subItem.itemId,
-            name: subItem.itemName,
-            code: subItem.itemCode,
-            type: "item", // sub-items are always individual items
-            quantity: Number(subItem.calculatedQuantity),
-          }));
-        } else {
-          // Individual item
-          return [
-            {
-              id: item.id,
-              name: item.name,
-              code: item.code,
-              type: "item",
-              quantity: Number(item.quantity),
-            },
-          ];
-        }
-      });
-
-      const payload = {
-        transactionNumber,
-        type: requestType,
-        warehouseId: Number(warehouse),
-        items: formattedItems,
-      };
-
-      console.log("Submitting payload:", payload);
-
-      const response = await api.post("/api/requisitions/save", payload);
-
-      if (response.data.status) {
-        toast.success("Material request saved successfully");
-
-        // Fetch updated recent requests
-        try {
-          const recentResponse = await api.get("/api/requisitions/recent");
-          if (recentResponse.data.status) {
-            setRecentRequests(recentResponse.data.data);
-          }
-        } catch (error) {
-          console.error("Error fetching updated recent requests:", error);
-        }
-
-        // Perform complete form reset
-        handleReset();
-      } else {
-        toast.error(response.data.message || "Error saving request");
-      }
-    } catch (error) {
-      toast.error(error.response.data.message || "Error submitting request");
-      console.error("Error submitting material request:", error);
-    }
   };
 
   const [requisitionType, setRequisitionType] = useState("");
@@ -319,6 +239,7 @@ const MaterialIssueRequest = () => {
 
   // Dynamically calculate widths
   const fieldClass = isCompleteBOM || isIndividualItems ? "flex-1" : "flex-1-3";
+  const [selectedOption, setSelectedOption] = useState([]);
 
   const handleAddRequest = async (e) => {
     e.preventDefault();
@@ -346,7 +267,7 @@ const MaterialIssueRequest = () => {
       // Find the selected BOM from the list
       console.log("Selected BOM ID: " + bom);
       const selectedBOM = bomList.find((b) => b.id === bom);
-
+      setSelectedOption(selectedBOM);
       if (!selectedBOM) {
         toast.error("Selected BOM not found");
         return;
@@ -442,6 +363,87 @@ const MaterialIssueRequest = () => {
       setType("");
       setQuantity("");
       setRequisitionType("");
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (request.length === 0) {
+      toast.error("Please add at least one item to the request");
+      return;
+    }
+
+    try {
+      // Determine type based on the first item
+      const requestType = request[0].type === "BOM" ? "bom" : "items";
+      console.log("Warehouse: " + warehouse);
+      // Format data for API
+      // const formattedItems = request.map((item) => ({
+      //   id: item.id,
+      //   name: item.name,
+      //   code: item.code,
+      //   type: item.type.toLowerCase(),
+      //   quantity: Number(item.quantity),
+      // }));
+      const formattedItems = request.flatMap((item) => {
+        if (item.type === "bom" || item.type === "BOM") {
+          // BOM - flatten the sub-items with calculated quantity
+          return item.items.map((subItem) => ({
+            id: subItem.itemId,
+            name: subItem.itemName,
+            code: subItem.itemCode,
+            type: "item", // sub-items are always individual items
+            quantity: Number(subItem.calculatedQuantity),
+          }));
+        } else {
+          // Individual item
+          return [
+            {
+              id: item.id,
+              name: item.name,
+              code: item.code,
+              type: "item",
+              quantity: Number(item.quantity),
+            },
+          ];
+        }
+      });
+
+      const payload = {
+        transactionNumber,
+        type: requestType,
+        bomName: selectedOption.name,
+        bomCode: selectedOption.code,
+        warehouseId: Number(warehouse),
+        items: formattedItems,
+      };
+
+      console.log("Submitting payload:", payload);
+
+      const response = await api.post("/api/requisitions/save", payload);
+
+      if (response.data.status) {
+        toast.success("Material request saved successfully");
+
+        // Fetch updated recent requests
+        try {
+          const recentResponse = await api.get("/api/requisitions/recent");
+          if (recentResponse.data.status) {
+            setRecentRequests(recentResponse.data.data);
+          }
+        } catch (error) {
+          console.error("Error fetching updated recent requests:", error);
+        }
+
+        // Perform complete form reset
+        handleReset();
+      } else {
+        toast.error(response.data.message || "Error saving request");
+      }
+    } catch (error) {
+      toast.error(error.response.data.message || "Error submitting request");
+      console.error("Error submitting material request:", error);
     }
   };
 
