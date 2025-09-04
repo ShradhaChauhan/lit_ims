@@ -77,6 +77,8 @@ const MaterialIssueRequest = () => {
   const [showModal, setShowModal] = useState(false);
   const [recent, setRecent] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
+  const [selectedRecentRequest, setSelectedRecentRequest] = useState(null);
+  const [showRecentItemsModal, setShowRecentItemsModal] = useState(false);
   // Pagination states
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -954,19 +956,18 @@ const MaterialIssueRequest = () => {
                           <td className="ps-4">{req.createdAt}</td>
                           <td className="ps-4 text-capitalize">{req.type}</td>
                           <td className="ps-4">
-                            {req.items && req.items.length > 0 ? (
-                              <ul className="mb-0 ps-3">
-                                {req.items.map((item, index) => (
-                                  <li key={index}>
-                                    {"(" + item.code + ") " + item.name}
-                                  </li>
-                                ))}
-                              </ul>
-                            ) : (
-                              "-"
-                            )}
+                            <button
+                              type="button"
+                              className="btn-icon btn-primary"
+                              title="View Items"
+                              onClick={() => {
+                                setSelectedRecentRequest(req);
+                                setShowRecentItemsModal(true);
+                              }}
+                            >
+                              <i className="fas fa-eye"></i>
+                            </button>
                           </td>
-
                           <td className="ps-4">
                             <span
                               className={`status-badge ${req.status.toLowerCase()}`}
@@ -1067,7 +1068,7 @@ const MaterialIssueRequest = () => {
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">
-                  <i class="fa-solid fa-circle-info me-2"></i>Item Details
+                  <i className="fa-solid fa-circle-info me-2"></i>Item Details
                 </h5>
                 <button
                   type="button"
@@ -1132,8 +1133,6 @@ const MaterialIssueRequest = () => {
                                   )
                                 }
                               />
-
-                              {/* {item.quantity * tempQuantity} */}
                             </td>
                             <td>
                               <input
@@ -1174,6 +1173,102 @@ const MaterialIssueRequest = () => {
                   }}
                 >
                   <i className="fa-solid fa-xmark me-1"></i> Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Recent Items Modal */}
+      {showRecentItemsModal && selectedRecentRequest && (
+        <div
+          className="modal show d-block modal-xl"
+          tabIndex="-1"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+        >
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  <i className="fa-solid fa-clipboard-list me-2"></i>Request
+                  Items
+                </h5>
+                <button
+                  type="button"
+                  className="btn"
+                  aria-label="Close"
+                  onClick={() => {
+                    setSelectedRecentRequest(null);
+                    setShowRecentItemsModal(false);
+                  }}
+                >
+                  <i className="fas fa-times"></i>
+                </button>
+              </div>
+              <div className="modal-body">
+                <div className="user-details-grid">
+                  <div className="detail-item">
+                    <strong>Transaction Number:</strong>
+                    <span>{selectedRecentRequest.transactionNumber}</span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Date:</strong>
+                    <span>{selectedRecentRequest.createdAt}</span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Type:</strong>
+                    <span className="text-capitalize">
+                      {selectedRecentRequest.type}
+                    </span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Status:</strong>
+                    <span
+                      className={`status-badge ${selectedRecentRequest.status.toLowerCase()}`}
+                    >
+                      {selectedRecentRequest.status}
+                    </span>
+                  </div>
+                </div>
+
+                {selectedRecentRequest.items &&
+                  selectedRecentRequest.items.length > 0 && (
+                    <>
+                      <hr />
+                      <h6>Items List:</h6>
+                      <table className="align-middle">
+                        <thead>
+                          <tr>
+                            <th>Item Name</th>
+                            <th>Item Code</th>
+                            <th>Type</th>
+                          </tr>
+                        </thead>
+                        <tbody className="text-break">
+                          {selectedRecentRequest.items.map((item, idx) => (
+                            <tr key={idx}>
+                              <td className="p-4">{item.name}</td>
+                              <td className="p-4">{item.code}</td>
+                              <td className="text-capitalize p-4">
+                                {item.type}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </>
+                  )}
+              </div>
+              <div className="modal-footer">
+                <button
+                  className="btn btn-secondary text-8"
+                  onClick={() => {
+                    setSelectedRecentRequest(null);
+                    setShowRecentItemsModal(false);
+                  }}
+                >
+                  <i className="fa-solid fa-xmark me-1"></i> Close
                 </button>
               </div>
             </div>
