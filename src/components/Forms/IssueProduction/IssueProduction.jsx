@@ -118,7 +118,7 @@ const IssueProduction = () => {
         const stockQtyPromises = items.map((item) =>
           api
             .post(`/api/inventory/itemQuantity/${warehouseId}/${item.code}`)
-            .then((res) => res.data.stockQty || 0)
+            .then((res) => res.data.data.quantity || 0)
             .catch((err) => {
               console.error(`Error fetching stockQty for ${item.code}`, err);
               return 0; // fallback to 0
@@ -578,7 +578,7 @@ const IssueProduction = () => {
                     className="btn btn-primary btn-sm px-2 py-1 text-8"
                     onClick={handlePrint}
                   >
-                    <i className="fa-solid fa-print me-1"></i> Print
+                    <i className="fa-solid fa-file-pdf me-1"></i> Generate PDF
                   </button>
                 </div>
                 <table>
