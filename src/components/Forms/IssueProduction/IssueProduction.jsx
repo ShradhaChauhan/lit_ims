@@ -113,15 +113,20 @@ const IssueProduction = () => {
         const items = response.data.data[0].items;
         setParentBomCode(response.data.data[0].parentBomCode);
         setParentBomName(response.data.data[0].parentBomName);
-        // Assuming warehouseId is part of the requisition data
+        // Get warehouseId from the requisition data
         const warehouseId = response.data.data[0].warehouseId;
+
         // Step 1: Fetch stockQty for each item in parallel
         const stockQtyPromises = items.map((item) =>
           api
             .post(`/api/inventory/itemQuantity/${warehouseId}/${item.code}`)
-            .then((res) => res.data.data.quantity || 0)
+            .then((stockResponse) => {
+              // Get quantity from the first item in the data array
+              const quantity = stockResponse.data.data[0]?.quantity || 0;
+              return quantity;
+            })
             .catch((err) => {
-              console.error(`Error fetching stockQty for ${item.code}`, err);
+              console.error(`Error fetching stockQty for ${item.code}:`, err);
               return 0; // fallback to 0
             })
         );
@@ -599,7 +604,13 @@ const IssueProduction = () => {
                                           r.transactionNumber ===
                                           selectedRequisition
                                       ).warehouseName
-                                    }) - ${selectedRequisition}`
+                                    }) - ${selectedRequisition} - (${
+                                      requisitionNumbers.find(
+                                        (r) =>
+                                          r.transactionNumber ===
+                                          selectedRequisition
+                                      ).date
+                                    })`
                                   : selectedRequisition,
                               }
                             : null
@@ -607,7 +618,7 @@ const IssueProduction = () => {
                         onChange={handleRequisitionChange}
                         options={requisitionNumbers.map((reqNumber) => ({
                           value: reqNumber.transactionNumber,
-                          label: `(${reqNumber.warehouseName}) - ${reqNumber.transactionNumber}`,
+                          label: `(${reqNumber.warehouseName}) - ${reqNumber.transactionNumber} - (${reqNumber.date})`,
                         }))}
                         placeholder="Select Requisition"
                         isClearable
@@ -666,7 +677,7 @@ const IssueProduction = () => {
                     <tr className="text-break">
                       <th>Item Code</th>
                       <th>Item Name</th>
-                      <th>Stock Qty</th>
+                      <th>WIP Stock Qty</th>
                       <th>Requested Qty</th>
                       {/* <th>Standard Qty</th> */}
                       <th>Issued Qty</th>
