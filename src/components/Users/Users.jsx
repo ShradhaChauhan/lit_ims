@@ -43,6 +43,7 @@ const Users = () => {
     confirmPassword: "",
     role: "",
     department: "",
+    warehouseId: "",
     status: "active",
     branch: "",
   });
@@ -169,8 +170,6 @@ const Users = () => {
       userDetails &&
       Object.keys(userDetails).length > 0
     ) {
-      console.log("User detail modal should show with data:", userDetails.name);
-
       // Ensure any previous modal instance is disposed
       if (userModal) {
         userModal.dispose();
@@ -188,7 +187,6 @@ const Users = () => {
 
         // Add event listeners
         modalElement.addEventListener("hidden.bs.modal", () => {
-          console.log("Modal was hidden, cleaning up state");
           cleanupModalArtifacts();
           setIsShowUserDetails(false);
           setUserDetails({});
@@ -216,7 +214,6 @@ const Users = () => {
     let modal = null;
 
     if (isEditUserDetails) {
-      console.log("Edit modal should show");
       const modalElement = document.getElementById("userEditModal");
 
       if (modalElement) {
@@ -236,7 +233,6 @@ const Users = () => {
 
         // Add event listener for when modal is hidden
         modalElement.addEventListener("hidden.bs.modal", () => {
-          console.log("Edit modal was hidden, cleaning up");
           cleanupModalArtifacts();
           setIsEditUserDetails(false);
         });
@@ -710,6 +706,7 @@ const Users = () => {
         role: formData.role.toUpperCase(),
         branchIds: selectedOptions.map((option) => option.value), // Get branch IDs from selectedOptions
         department: formData.department,
+        warehouseId: formData.warehouseId,
         status: formData.status,
         permissions: collectPermissions(),
       };
@@ -1058,6 +1055,7 @@ const Users = () => {
       confirmPassword: "", // Added this field which was missing
       role: "",
       department: "",
+      warehouseId: "",
       status: "active",
       branch: "",
     });
@@ -1225,11 +1223,12 @@ const Users = () => {
           email: userData.email,
           status: userData.status.toUpperCase(),
           department: userData.department,
+          warehouseId: userData.warehouseId || "",
           password: "", // Clear password field for security
           confirmPassword: "", // Clear confirm password field
         };
 
-        console.log("Setting user details to:", updatedUserDetails); // Log the updated user details
+        // console.log("Setting user details to:", updatedUserDetails); // Log the updated user details
         setUserDetails(updatedUserDetails);
 
         // Also update formData state to match
@@ -1240,6 +1239,7 @@ const Users = () => {
           confirmPassword: "",
           role: userData.role,
           department: userData.department,
+          warehouseId: userData.warehouseId || "",
           status: userData.status.toUpperCase(),
           branch: "",
         });
@@ -1257,7 +1257,7 @@ const Users = () => {
 
         // Set permissions based on user data
         if (userData.permissions && Array.isArray(userData.permissions)) {
-          console.log("Setting permissions from:", userData.permissions);
+          // console.log("Setting permissions from:", userData.permissions);
 
           // Reset all permissions first
           const newMasterViewPermissions = {};
@@ -1316,14 +1316,14 @@ const Users = () => {
             };
           });
 
-          console.log("Permission mapping:", permissionMapping);
+          // console.log("Permission mapping:", permissionMapping);
 
           // Set permissions based on user data
           userData.permissions.forEach((permission) => {
             const { pageName, canView, canEdit } = permission;
-            console.log(
-              `Processing permission: ${pageName}, canView: ${canView}, canEdit: ${canEdit}`
-            );
+            // console.log(
+            //   `Processing permission: ${pageName}, canView: ${canView}, canEdit: ${canEdit}`
+            // );
 
             // Find exact match first
             let moduleInfo = permissionMapping[pageName];
@@ -1343,7 +1343,7 @@ const Users = () => {
                   (key.includes(pageName) && pageName.length > 3)
                 ) {
                   moduleInfo = permissionMapping[key];
-                  console.log(`Fuzzy match found: ${pageName} -> ${key}`);
+                  // console.log(`Fuzzy match found: ${pageName} -> ${key}`);
                   break;
                 }
               }
@@ -1351,9 +1351,9 @@ const Users = () => {
 
             if (moduleInfo) {
               const { type: moduleType, category: moduleCategory } = moduleInfo;
-              console.log(
-                `Found match for ${pageName}: type=${moduleType}, category=${moduleCategory}`
-              );
+              // console.log(
+              //   `Found match for ${pageName}: type=${moduleType}, category=${moduleCategory}`
+              // );
 
               if (canView) {
                 if (moduleCategory === "master") {
@@ -1387,14 +1387,14 @@ const Users = () => {
             }
           });
 
-          console.log(
-            "Setting master view permissions:",
-            newMasterViewPermissions
-          );
-          console.log(
-            "Setting master edit permissions:",
-            newMasterEditPermissions
-          );
+          // console.log(
+          //   "Setting master view permissions:",
+          //   newMasterViewPermissions
+          // );
+          // console.log(
+          //   "Setting master edit permissions:",
+          //   newMasterEditPermissions
+          // );
 
           // Set all permissions at once
           setMasterViewPermissions(newMasterViewPermissions);
@@ -1452,8 +1452,8 @@ const Users = () => {
             setIsAllWarehousesViewChecked(allWarehousesView);
             setIsAllWarehousesEditChecked(allWarehousesEdit);
 
-            console.log("All masters view checked:", allMastersView);
-            console.log("All masters edit checked:", allMastersEdit);
+            // console.log("All masters view checked:", allMastersView);
+            // console.log("All masters edit checked:", allMastersEdit);
           }, 100);
         }
 
@@ -1552,9 +1552,9 @@ const Users = () => {
           toast.error(`Error deleting user ${userId}:`, error);
         }
       }
-      console.log(
-        `${successCount} users deleted successfully. ${errorCount} deletions failed.`
-      );
+      // console.log(
+      //   `${successCount} users deleted successfully. ${errorCount} deletions failed.`
+      // );
 
       toast.success("Users deleted successfully");
       fetchUsers(); // Refresh the user list
@@ -1593,7 +1593,7 @@ const Users = () => {
 
   // Add handleCloseEditModal function
   const handleCloseEditModal = (e) => {
-    console.log("Closing edit modal");
+    // console.log("Closing edit modal");
     handleReset(e);
     // First hide the modal using Bootstrap's API
     if (editModal) {
@@ -1624,6 +1624,7 @@ const Users = () => {
     setErrors(validationErrors);
 
     if (Object.keys(validationErrors).length > 0) {
+      toast.error("Please fix the validation errors before submitting.");
       console.log("Form has validation errors"); // Debug log
       return;
     }
@@ -1677,8 +1678,6 @@ const Users = () => {
       });
     });
 
-    console.log("Formatted permissions:", formattedPermissions); // Debug log
-
     // Prepare the update payload according to the API format
     const updatedUser = {
       id: userDetails.id, // Explicitly include the user ID in the payload
@@ -1686,6 +1685,7 @@ const Users = () => {
       email: userDetails.email,
       role: userDetails.role.toUpperCase(), // Ensure role is uppercase
       department: userDetails.department,
+      warehouseId: userDetails.warehouseId || null,
       status: userDetails.status.toUpperCase(), // Ensure status is uppercase
       branchIds: selectedOptions.map((option) => option.value),
       permissions: formattedPermissions,
@@ -1695,10 +1695,6 @@ const Users = () => {
     if (userDetails.password && userDetails.password.trim() !== "") {
       updatedUser.password = userDetails.password;
     }
-
-    console.log("Current user details:", userDetails); // Debug log
-    console.log("Updating user with data:", updatedUser); // Debug log
-    console.log("User ID being updated:", userDetails.id); // Debug log
 
     try {
       // Make sure we have a valid user ID
@@ -1710,8 +1706,7 @@ const Users = () => {
       // Try multiple API endpoint formats to ensure one works
       let response;
       let endpoint = `/api/users/update/${userDetails.id}`;
-      console.log("Trying API endpoint:", endpoint); // Debug log
-
+      console.log("updatedUser: ", updatedUser);
       try {
         response = await api({
           method: "put",
@@ -2053,6 +2048,9 @@ const Users = () => {
                           setFormData({
                             ...formData,
                             department: e.target.value,
+                            warehouseId:
+                              warehouse.find((w) => w.name === e.target.value)
+                                ?.id || "",
                           })
                         }
                       >
@@ -2506,7 +2504,7 @@ const Users = () => {
                       </tbody>
                     </table>
                   </div>
-                  <div className="table-list-container">
+                  {/* <div className="table-list-container">
                     <table>
                       <thead>
                         <tr>
@@ -2591,7 +2589,7 @@ const Users = () => {
                         ))}
                       </tbody>
                     </table>
-                  </div>
+                  </div> */}
                 </div>
               </div>
               <div className="form-actions">
@@ -3136,6 +3134,7 @@ const Users = () => {
                                   })
                                 }
                                 placeholder="Enter full name"
+                                disabled
                               />
                             </div>
                           </div>
@@ -3270,6 +3269,10 @@ const Users = () => {
                                   setUserDetails({
                                     ...userDetails,
                                     department: e.target.value,
+                                    warehouseId:
+                                      warehouse.find(
+                                        (w) => w.name === e.target.value
+                                      )?.id || "",
                                   })
                                 }
                               >
@@ -3281,11 +3284,11 @@ const Users = () => {
                                 >
                                   Select Department
                                 </option>
-                                <option value="Sales">Sales</option>
-                                <option value="Production">Production</option>
-                                <option value="Store">Store</option>
-                                <option value="IQC">IQC</option>
-                                <option value="IT">IT</option>
+                                {warehouse.map((w) => (
+                                  <option key={w.id} value={w.name}>
+                                    {w.name}
+                                  </option>
+                                ))}
                               </select>
                               <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                             </div>
@@ -3354,10 +3357,6 @@ const Users = () => {
                                 id="branch"
                                 value={selectedOptions}
                                 onChange={(options) => {
-                                  console.log(
-                                    "Branch selection changed:",
-                                    options
-                                  );
                                   setSelectedOptions(options || []);
                                 }}
                                 placeholder="Select branches..."
