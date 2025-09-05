@@ -1530,7 +1530,7 @@ const ItemMaster = () => {
                 <th>Code</th>
                 <th>UOM</th>
                 <th>ST Qty</th>
-                <th>Min Qty</th>
+                {/* <th>Min Qty</th> */}
                 <th>Life</th>
                 <th>Group</th>
                 <th>Status</th>
@@ -1587,7 +1587,7 @@ const ItemMaster = () => {
                       </div>
                     </td>
                     <td className="ps-4">{item.stQty}</td>
-                    <td className="ps-4">{item.minQty}</td>
+                    {/* <td className="ps-4">{item.minQty}</td> */}
                     <td className="ps-4">
                       <div>
                         <span>{item.life}</span>

@@ -56,11 +56,6 @@ const SideBar = () => {
 
   const menuItems = [
     {
-      icon: "fa-solid fa-house",
-      path: "dashboard",
-      label: "Dashboard",
-    },
-    {
       icon: "fas fa-user-tie",
       path: "Administrations",
       label: "Administrations",
@@ -123,7 +118,7 @@ const SideBar = () => {
         },
         {
           label: "Item Master",
-          compName: "ItemMaster", 
+          compName: "ItemMaster",
           newPath: "item-master",
           path: "Masters / Item Master",
           icon: "fas fa-box",
@@ -142,13 +137,13 @@ const SideBar = () => {
           path: "Masters / BOM Master",
           icon: "fas fa-cubes",
         },
-        {
-          label: "Type Master",
-          compName: "TypeMaster",
-          newPath: "type-master",
-          path: "Masters / Type Master",
-          icon: "fas fa-list-alt",
-        },
+        // {
+        //   label: "Type Master",
+        //   compName: "TypeMaster",
+        //   newPath: "type-master",
+        //   path: "Masters / Type Master",
+        //   icon: "fas fa-list-alt",
+        // },
         {
           label: "Group Master",
           compName: "GroupMaster",
@@ -443,9 +438,21 @@ const SideBar = () => {
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
         />
-
         {/* Menu Items */}
         {!isCollapsed && <p className="heading">MAIN MENU</p>}
+        <Link
+          to="/dashboard"
+          className="home-link mb-0 py-0 mt-2"
+          style={{ color: "#8D91AD" }}
+          onClick={() => {
+            setIsActiveComponent("dashboard");
+            setLabelName("Dashboard");
+          }}
+        >
+          <i className="fa-solid fa-house"></i>
+          {!isCollapsed && "Dashboard"}
+        </Link>
+
         <ul className="nav nav-pills flex-column mb-auto mt-1">
           {filteredMenuItems
             .filter((item) => {

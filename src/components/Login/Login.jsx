@@ -105,11 +105,17 @@ const LoginPage = () => {
         (name) => Cookies.remove(name)
       );
 
+      // Decode token and get warehouseId
+      const tokenPayload = JSON.parse(atob(token.split(".")[1]));
+      const warehouseId =
+        tokenPayload.warehouseId || response.data.data.warehouseId;
+
       // Set essential session cookies
       Cookies.set("isLoggedIn", "true", { path: "/" });
       Cookies.set("username", responseUsername, { path: "/" });
       Cookies.set("token", token, { path: "/" });
       Cookies.set("authToken", token, { path: "/" });
+      Cookies.set("warehouseId", warehouseId, { path: "/" });
       Cookies.set("permissions", JSON.stringify(permissions), {
         expires: 1,
         path: "/",
@@ -201,7 +207,7 @@ const LoginPage = () => {
                   style={{ animationDelay: "0.1s" }}
                 >
                   <label htmlFor="username" className="form-label">
-                    Username/Email
+                    Username
                   </label>
                   <div className="position-relative w-100">
                     <i className="fas fa-user position-absolute input-i"></i>
@@ -209,7 +215,7 @@ const LoginPage = () => {
                       type="text"
                       className="form-control text-font ps-5"
                       id="username"
-                      placeholder="Enter username or email"
+                      placeholder="Enter username"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       autoComplete="username"

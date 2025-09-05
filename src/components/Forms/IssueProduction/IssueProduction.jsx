@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useContext } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
+import Select from "react-select";
 import api from "../../../services/api";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -118,7 +119,7 @@ const IssueProduction = () => {
         const stockQtyPromises = items.map((item) =>
           api
             .post(`/api/inventory/itemQuantity/${warehouseId}/${item.code}`)
-            .then((res) => res.data.stockQty || 0)
+            .then((res) => res.data.data.quantity || 0)
             .catch((err) => {
               console.error(`Error fetching stockQty for ${item.code}`, err);
               return 0; // fallback to 0
@@ -154,8 +155,8 @@ const IssueProduction = () => {
     }
   };
 
-  const handleRequisitionChange = (e) => {
-    const newRequisition = e.target.value;
+  const handleRequisitionChange = (selectedOption) => {
+    const newRequisition = selectedOption ? selectedOption.value : "";
     if (newRequisition !== selectedRequisition) {
       // Clear scanned batches when changing requisition
       setSelectedRequisition(newRequisition);
@@ -190,6 +191,24 @@ const IssueProduction = () => {
       return;
     }
 
+    // Extract item code from batch number (between index 7 and 15)
+    if (batchNo.length < 15) {
+      toast.error("Invalid batch number format");
+      setBatchNumber("");
+      return;
+    }
+    const itemCodeFromBatch = batchNo.substring(7, 15);
+
+    // Check if item exists in requested items before making API call
+    const itemExists = requestedItems.some(
+      (item) => item.code === itemCodeFromBatch
+    );
+    if (!itemExists) {
+      toast.warning("This item is not in the requisition list");
+      setBatchNumber("");
+      return;
+    }
+
     try {
       // Using the new API endpoint for verifying and issuing the batch
       const response = await api.post(
@@ -205,6 +224,14 @@ const IssueProduction = () => {
         );
         if (alreadyScanned) {
           toast.warning("This batch has already been scanned");
+          setBatchNumber("");
+          return;
+        }
+
+        // No need to check item existence again since we already checked before API call
+        // Just validate that the API returned the same item code we expected
+        if (batchData.itemCode !== itemCodeFromBatch) {
+          toast.error("Batch data mismatch. Please try again.");
           setBatchNumber("");
           return;
         }
@@ -511,28 +538,81 @@ const IssueProduction = () => {
                       <span className="text-danger fs-6">*</span>
                     </label>
                     <div className="position-relative w-100">
-                      <i className="fas fa-file-invoice ms-2 position-absolute z-0 input-icon"></i>
-                      <select
-                        className={`form-select ps-5 ms-1 text-font ${
-                          selectedRequisition ? "" : "text-secondary"
-                        }`}
+                      <i
+                        className="fas fa-file-invoice position-absolute input-icon"
+                        style={{
+                          left: "15px",
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          zIndex: "1",
+                        }}
+                      ></i>
+                      <Select
+                        className="text-font"
+                        styles={{
+                          control: (base) => ({
+                            ...base,
+                            paddingLeft: "32px",
+                            minHeight: "32px",
+                            height: "32px",
+                          }),
+                          valueContainer: (base) => ({
+                            ...base,
+                            height: "32px",
+                            padding: "0 8px",
+                            display: "flex",
+                            alignItems: "center",
+                          }),
+                          input: (base) => ({
+                            ...base,
+                            margin: "0px",
+                            padding: "0px",
+                          }),
+                          singleValue: (base) => ({
+                            ...base,
+                            margin: "0",
+                            padding: "0",
+                            lineHeight: "32px", // aligns text with height
+                            display: "flex",
+                            alignItems: "center",
+                          }),
+                          placeholder: (base) => ({
+                            ...base,
+                            lineHeight: "32px",
+                            display: "flex",
+                            alignItems: "center",
+                          }),
+                        }}
+                        classNamePrefix="select"
                         id="requisitionType"
-                        value={selectedRequisition}
+                        value={
+                          selectedRequisition
+                            ? {
+                                value: selectedRequisition,
+                                label: requisitionNumbers.find(
+                                  (r) =>
+                                    r.transactionNumber === selectedRequisition
+                                )
+                                  ? `(${
+                                      requisitionNumbers.find(
+                                        (r) =>
+                                          r.transactionNumber ===
+                                          selectedRequisition
+                                      ).warehouseName
+                                    }) - ${selectedRequisition}`
+                                  : selectedRequisition,
+                              }
+                            : null
+                        }
                         onChange={handleRequisitionChange}
-                      >
-                        <option value="">Select Requisition</option>
-                        {requisitionNumbers.map((reqNumber, index) => (
-                          <option
-                            key={index}
-                            value={reqNumber.transactionNumber}
-                          >
-                            {"(" +
-                              reqNumber.warehouseName +
-                              ") - " +
-                              reqNumber.transactionNumber}
-                          </option>
-                        ))}
-                      </select>
+                        options={requisitionNumbers.map((reqNumber) => ({
+                          value: reqNumber.transactionNumber,
+                          label: `(${reqNumber.warehouseName}) - ${reqNumber.transactionNumber}`,
+                        }))}
+                        placeholder="Select Requisition"
+                        isClearable
+                        isSearchable
+                      />
                     </div>
                   </div>
                   <div className="col-6 d-flex flex-column form-group">
@@ -578,7 +658,7 @@ const IssueProduction = () => {
                     className="btn btn-primary btn-sm px-2 py-1 text-8"
                     onClick={handlePrint}
                   >
-                    <i className="fa-solid fa-print me-1"></i> Print
+                    <i className="fa-solid fa-file-pdf me-1"></i> Generate PDF
                   </button>
                 </div>
                 <table>

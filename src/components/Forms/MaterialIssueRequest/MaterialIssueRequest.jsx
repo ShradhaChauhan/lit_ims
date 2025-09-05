@@ -4,6 +4,7 @@ import "./MaterialIssueRequest.css";
 import { toast } from "react-toastify";
 import api from "../../../services/api";
 import Select from "react-select";
+import Cookies from "js-cookie";
 
 const MaterialIssueRequest = () => {
   const [tempQuantity, setTempQuantity] = useState(0);
@@ -99,8 +100,12 @@ const MaterialIssueRequest = () => {
   };
 
   useEffect(() => {
-    // Fetch warehouse list on component mount
+    // Fetch warehouse list and set warehouse from cookies on component mount
     fetchWarehouseList();
+    const userWarehouseId = Cookies.get("warehouseId");
+    if (userWarehouseId) {
+      setWarehouse(userWarehouseId);
+    }
   }, []);
 
   // Calculate the display range for the pagination info
@@ -798,12 +803,11 @@ const MaterialIssueRequest = () => {
                 <div className="position-relative w-100">
                   <i className="fas fa-warehouse ms-2 position-absolute z-0 input-icon margin-top-8 text-font"></i>
                   <select
-                    className={`form-select ps-5 ms-2 text-font ${
-                      warehouse === "" ? "text-muted" : ""
-                    }`}
+                    className={`form-select ps-5 ms-2 text-font`}
                     id="warehouse"
                     value={warehouse}
                     onChange={(e) => setWarehouse(e.target.value)}
+                    disabled
                   >
                     <option value="" disabled hidden>
                       Select Warehouse Location
