@@ -442,12 +442,14 @@ const SideBar = () => {
         {!isCollapsed && <p className="heading">MAIN MENU</p>}
         <Link
           to="/dashboard"
-          className="home-link mb-0 py-0 mt-2"
-          style={{ color: "#8D91AD" }}
+          className="home-link mb-0 py-0 mt-2 text-decoration-none menuListItem"
+          style={{ color: "#8D91AD", textDecoration: "none" }}
           onClick={() => {
             setIsActiveComponent("dashboard");
             setLabelName("Dashboard");
           }}
+          onMouseEnter={(e) => (e.target.style.color = "#8D91AD")}
+          onMouseLeave={(e) => (e.target.style.color = "#8D91AD")}
         >
           <i className="fa-solid fa-house"></i>
           {!isCollapsed && "Dashboard"}
