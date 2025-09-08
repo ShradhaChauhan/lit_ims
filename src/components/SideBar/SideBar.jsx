@@ -140,13 +140,13 @@ const SideBar = () => {
           path: "Masters / BOM Master",
           icon: "fas fa-cubes",
         },
-        {
-          label: "Type Master",
-          compName: "TypeMaster",
-          newPath: "type-master",
-          path: "Masters / Type Master",
-          icon: "fas fa-list-alt",
-        },
+        // {
+        //   label: "Type Master",
+        //   compName: "TypeMaster",
+        //   newPath: "type-master",
+        //   path: "Masters / Type Master",
+        //   icon: "fas fa-list-alt",
+        // },
         {
           label: "Group Master",
           compName: "GroupMaster",

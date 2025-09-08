@@ -2,12 +2,15 @@ import React, { useEffect, useState, useCallback, useContext } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import Select from "react-select";
+import Select from "react-select";
 import api from "../../../services/api";
 import * as XLSX from "xlsx";
 
 const IssueProduction = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [parentBomCode, setParentBomCode] = useState(null);
+  const [parentBomName, setParentBomName] = useState(null);
   const [parentBomCode, setParentBomCode] = useState(null);
   const [parentBomName, setParentBomName] = useState(null);
   const [requestedItems, setRequestedItems] = useState([]);
@@ -113,7 +116,11 @@ const IssueProduction = () => {
         setParentBomCode(response.data.data[0].parentBomCode);
         setParentBomName(response.data.data[0].parentBomName);
         // Get warehouseId from the requisition data
+        setParentBomCode(response.data.data[0].parentBomCode);
+        setParentBomName(response.data.data[0].parentBomName);
+        // Get warehouseId from the requisition data
         const warehouseId = response.data.data[0].warehouseId;
+
 
         // Step 1: Fetch stockQty for each item in parallel
         const stockQtyPromises = items.map((item) =>
@@ -124,7 +131,13 @@ const IssueProduction = () => {
               const quantity = stockResponse.data.data[0]?.quantity || 0;
               return quantity;
             })
+            .then((stockResponse) => {
+              // Get quantity from the first item in the data array
+              const quantity = stockResponse.data.data[0]?.quantity || 0;
+              return quantity;
+            })
             .catch((err) => {
+              console.error(`Error fetching stockQty for ${item.code}:`, err);
               console.error(`Error fetching stockQty for ${item.code}:`, err);
               return 0; // fallback to 0
             })
@@ -159,6 +172,8 @@ const IssueProduction = () => {
     }
   };
 
+  const handleRequisitionChange = (selectedOption) => {
+    const newRequisition = selectedOption ? selectedOption.value : "";
   const handleRequisitionChange = (selectedOption) => {
     const newRequisition = selectedOption ? selectedOption.value : "";
     if (newRequisition !== selectedRequisition) {
@@ -213,6 +228,24 @@ const IssueProduction = () => {
       return;
     }
 
+    // Extract item code from batch number (between index 7 and 15)
+    if (batchNo.length < 15) {
+      toast.error("Invalid batch number format");
+      setBatchNumber("");
+      return;
+    }
+    const itemCodeFromBatch = batchNo.substring(7, 15);
+
+    // Check if item exists in requested items before making API call
+    const itemExists = requestedItems.some(
+      (item) => item.code === itemCodeFromBatch
+    );
+    if (!itemExists) {
+      toast.warning("This item is not in the requisition list");
+      setBatchNumber("");
+      return;
+    }
+
     try {
       // Using the new API endpoint for verifying and issuing the batch
       const response = await api.post(
@@ -228,6 +261,14 @@ const IssueProduction = () => {
         );
         if (alreadyScanned) {
           toast.warning("This batch has already been scanned");
+          setBatchNumber("");
+          return;
+        }
+
+        // No need to check item existence again since we already checked before API call
+        // Just validate that the API returned the same item code we expected
+        if (batchData.itemCode !== itemCodeFromBatch) {
+          toast.error("Batch data mismatch. Please try again.");
           setBatchNumber("");
           return;
         }
@@ -605,6 +646,52 @@ const IssueProduction = () => {
                           }),
                         }}
                         classNamePrefix="select"
+                      <i
+                        className="fas fa-file-invoice position-absolute input-icon"
+                        style={{
+                          left: "15px",
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          zIndex: "1",
+                        }}
+                      ></i>
+                      <Select
+                        className="text-font"
+                        styles={{
+                          control: (base) => ({
+                            ...base,
+                            paddingLeft: "32px",
+                            minHeight: "32px",
+                            height: "32px",
+                          }),
+                          valueContainer: (base) => ({
+                            ...base,
+                            height: "32px",
+                            padding: "0 8px",
+                            display: "flex",
+                            alignItems: "center",
+                          }),
+                          input: (base) => ({
+                            ...base,
+                            margin: "0px",
+                            padding: "0px",
+                          }),
+                          singleValue: (base) => ({
+                            ...base,
+                            margin: "0",
+                            padding: "0",
+                            lineHeight: "32px", // aligns text with height
+                            display: "flex",
+                            alignItems: "center",
+                          }),
+                          placeholder: (base) => ({
+                            ...base,
+                            lineHeight: "32px",
+                            display: "flex",
+                            alignItems: "center",
+                          }),
+                        }}
+                        classNamePrefix="select"
                         id="requisitionType"
                         value={
                           selectedRequisition
@@ -631,7 +718,40 @@ const IssueProduction = () => {
                               }
                             : null
                         }
+                        value={
+                          selectedRequisition
+                            ? {
+                                value: selectedRequisition,
+                                label: requisitionNumbers.find(
+                                  (r) =>
+                                    r.transactionNumber === selectedRequisition
+                                )
+                                  ? `(${
+                                      requisitionNumbers.find(
+                                        (r) =>
+                                          r.transactionNumber ===
+                                          selectedRequisition
+                                      ).warehouseName
+                                    }) - ${selectedRequisition} - (${
+                                      requisitionNumbers.find(
+                                        (r) =>
+                                          r.transactionNumber ===
+                                          selectedRequisition
+                                      ).date
+                                    })`
+                                  : selectedRequisition,
+                              }
+                            : null
+                        }
                         onChange={handleRequisitionChange}
+                        options={requisitionNumbers.map((reqNumber) => ({
+                          value: reqNumber.transactionNumber,
+                          label: `(${reqNumber.warehouseName}) - ${reqNumber.transactionNumber} - (${reqNumber.date})`,
+                        }))}
+                        placeholder="Select Requisition"
+                        isClearable
+                        isSearchable
+                      />
                         options={requisitionNumbers.map((reqNumber) => ({
                           value: reqNumber.transactionNumber,
                           label: `(${reqNumber.warehouseName}) - ${reqNumber.transactionNumber} - (${reqNumber.date})`,
@@ -693,6 +813,7 @@ const IssueProduction = () => {
                     <tr className="text-break">
                       <th>Item Code</th>
                       <th>Item Name</th>
+                      <th>WIP Stock Qty</th>
                       <th>WIP Stock Qty</th>
                       <th>Requested Qty</th>
                       {/* <th>Standard Qty</th> */}

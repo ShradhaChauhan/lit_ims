@@ -116,6 +116,7 @@ const LoginPage = () => {
       Cookies.set("token", token, { path: "/" });
       Cookies.set("authToken", token, { path: "/" });
       Cookies.set("warehouseId", warehouseId, { path: "/" });
+      Cookies.set("warehouseId", warehouseId, { path: "/" });
       Cookies.set("permissions", JSON.stringify(permissions), {
         expires: 1,
         path: "/",

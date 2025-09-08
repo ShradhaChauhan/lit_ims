@@ -103,6 +103,17 @@ const Reports = () => {
     });
   };
 
+  // Unmount backdrop
+  useEffect(() => {
+    return () => {
+      // Force-remove bootstrap modal backdrop if stuck
+      const backdrops = document.querySelectorAll(".modal-backdrop");
+      backdrops.forEach((bd) => bd.remove());
+      document.body.classList.remove("modal-open");
+      document.body.style.overflow = "";
+    };
+  }, []);
+
   // Sort items based on itemSortConfig
   const handleItemSort = (key) => {
     setItemSortConfig((prev) => {

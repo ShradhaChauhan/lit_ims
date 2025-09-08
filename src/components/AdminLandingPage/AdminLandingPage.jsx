@@ -43,7 +43,7 @@ const AdminLandingPage = () => {
               <span className="ms-1 mt-1 text-small-gray">/ Dashboard</span>
             </p>
           </div>
-          
+
           {/* Notification Bell */}
           <div className="d-flex align-items-center">
             <NotificationDropdown permissions={permissions} />
@@ -53,10 +53,10 @@ const AdminLandingPage = () => {
 
       {/* Main Content */}
       <Container fluid>
-                    {/* KPI Cards with Navigation Tabs */}
-            <KpiCards activeTab={activeTab} setActiveTab={setActiveTab} />
+        {/* KPI Cards with Navigation Tabs */}
+        <KpiCards activeTab={activeTab} setActiveTab={setActiveTab} />
 
-            {/* Main Content Area */}
+        {/* Main Content Area */}
         <Row className="mb-4">
           {/* Left Column - Charts and Tables */}
           <Col lg={12}>
@@ -78,11 +78,11 @@ const AdminLandingPage = () => {
 
           {/* Right Column - Machines and Notifications */}
           {/* <Col lg={4}> */}
-            {/* Notifications Panel */}
-            {/* <NotificationsPanel activeTab={activeTab} /> */}
+          {/* Notifications Panel */}
+          {/* <NotificationsPanel activeTab={activeTab} /> */}
 
-            {/* Machines Grid */}
-            {/* <MachinesGrid activeTab={activeTab} /> */}
+          {/* Machines Grid */}
+          {/* <MachinesGrid activeTab={activeTab} /> */}
           {/* </Col> */}
         </Row>
       </Container>

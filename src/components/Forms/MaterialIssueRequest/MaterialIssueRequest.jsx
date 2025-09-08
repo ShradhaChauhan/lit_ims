@@ -165,6 +165,8 @@ const MaterialIssueRequest = () => {
   const [filteredItems, setFilteredItems] = useState([]);
   const [selectedRecentRequest, setSelectedRecentRequest] = useState(null);
   const [showRecentItemsModal, setShowRecentItemsModal] = useState(false);
+  const [selectedRecentRequest, setSelectedRecentRequest] = useState(null);
+  const [showRecentItemsModal, setShowRecentItemsModal] = useState(false);
   // Pagination states
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -186,7 +188,12 @@ const MaterialIssueRequest = () => {
 
   useEffect(() => {
     // Fetch warehouse list and set warehouse from cookies on component mount
+    // Fetch warehouse list and set warehouse from cookies on component mount
     fetchWarehouseList();
+    const userWarehouseId = Cookies.get("warehouseId");
+    if (userWarehouseId) {
+      setWarehouse(userWarehouseId);
+    }
     const userWarehouseId = Cookies.get("warehouseId");
     if (userWarehouseId) {
       setWarehouse(userWarehouseId);
@@ -332,6 +339,7 @@ const MaterialIssueRequest = () => {
   // Dynamically calculate widths
   const fieldClass = isCompleteBOM || isIndividualItems ? "flex-1" : "flex-1-3";
   const [selectedOption, setSelectedOption] = useState([]);
+  const [selectedOption, setSelectedOption] = useState([]);
 
   const handleAddRequest = async (e) => {
     e.preventDefault();
@@ -359,6 +367,7 @@ const MaterialIssueRequest = () => {
       // Find the selected BOM from the list
       console.log("Selected BOM ID: " + bom);
       const selectedBOM = bomList.find((b) => b.id === bom);
+      setSelectedOption(selectedBOM);
       setSelectedOption(selectedBOM);
       if (!selectedBOM) {
         toast.error("Selected BOM not found");
@@ -455,6 +464,87 @@ const MaterialIssueRequest = () => {
       setType("");
       setQuantity("");
       setRequisitionType("");
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (request.length === 0) {
+      toast.error("Please add at least one item to the request");
+      return;
+    }
+
+    try {
+      // Determine type based on the first item
+      const requestType = request[0].type === "BOM" ? "bom" : "items";
+      console.log("Warehouse: " + warehouse);
+      // Format data for API
+      // const formattedItems = request.map((item) => ({
+      //   id: item.id,
+      //   name: item.name,
+      //   code: item.code,
+      //   type: item.type.toLowerCase(),
+      //   quantity: Number(item.quantity),
+      // }));
+      const formattedItems = request.flatMap((item) => {
+        if (item.type === "bom" || item.type === "BOM") {
+          // BOM - flatten the sub-items with calculated quantity
+          return item.items.map((subItem) => ({
+            id: subItem.itemId,
+            name: subItem.itemName,
+            code: subItem.itemCode,
+            type: "item", // sub-items are always individual items
+            quantity: Number(subItem.calculatedQuantity),
+          }));
+        } else {
+          // Individual item
+          return [
+            {
+              id: item.id,
+              name: item.name,
+              code: item.code,
+              type: "item",
+              quantity: Number(item.quantity),
+            },
+          ];
+        }
+      });
+
+      const payload = {
+        transactionNumber,
+        type: requestType,
+        bomName: selectedOption.name,
+        bomCode: selectedOption.code,
+        warehouseId: Number(warehouse),
+        items: formattedItems,
+      };
+
+      console.log("Submitting payload:", payload);
+
+      const response = await api.post("/api/requisitions/save", payload);
+
+      if (response.data.status) {
+        toast.success("Material request saved successfully");
+
+        // Fetch updated recent requests
+        try {
+          const recentResponse = await api.get("/api/requisitions/recent");
+          if (recentResponse.data.status) {
+            setRecentRequests(recentResponse.data.data);
+          }
+        } catch (error) {
+          console.error("Error fetching updated recent requests:", error);
+        }
+
+        // Perform complete form reset
+        handleReset();
+      } else {
+        toast.error(response.data.message || "Error saving request");
+      }
+    } catch (error) {
+      toast.error(error.response.data.message || "Error submitting request");
+      console.error("Error submitting material request:", error);
     }
   };
 
@@ -889,9 +979,11 @@ const MaterialIssueRequest = () => {
                   <i className="fas fa-warehouse ms-2 position-absolute z-0 input-icon margin-top-8 text-font"></i>
                   <select
                     className={`form-select ps-5 ms-2 text-font`}
+                    className={`form-select ps-5 ms-2 text-font`}
                     id="warehouse"
                     value={warehouse}
                     onChange={(e) => setWarehouse(e.target.value)}
+                    disabled
                     disabled
                   >
                     <option value="" disabled hidden>
@@ -1172,6 +1264,7 @@ const MaterialIssueRequest = () => {
               <div className="modal-header">
                 <h5 className="modal-title">
                   <i className="fa-solid fa-circle-info me-2"></i>Item Details
+                  <i className="fa-solid fa-circle-info me-2"></i>Item Details
                 </h5>
                 <button
                   type="button"
@@ -1276,6 +1369,102 @@ const MaterialIssueRequest = () => {
                   }}
                 >
                   <i className="fa-solid fa-xmark me-1"></i> Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Recent Items Modal */}
+      {showRecentItemsModal && selectedRecentRequest && (
+        <div
+          className="modal show d-block modal-xl"
+          tabIndex="-1"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+        >
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  <i className="fa-solid fa-clipboard-list me-2"></i>Request
+                  Items
+                </h5>
+                <button
+                  type="button"
+                  className="btn"
+                  aria-label="Close"
+                  onClick={() => {
+                    setSelectedRecentRequest(null);
+                    setShowRecentItemsModal(false);
+                  }}
+                >
+                  <i className="fas fa-times"></i>
+                </button>
+              </div>
+              <div className="modal-body">
+                <div className="user-details-grid">
+                  <div className="detail-item">
+                    <strong>Transaction Number:</strong>
+                    <span>{selectedRecentRequest.transactionNumber}</span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Date:</strong>
+                    <span>{selectedRecentRequest.createdAt}</span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Type:</strong>
+                    <span className="text-capitalize">
+                      {selectedRecentRequest.type}
+                    </span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Status:</strong>
+                    <span
+                      className={`status-badge ${selectedRecentRequest.status.toLowerCase()}`}
+                    >
+                      {selectedRecentRequest.status}
+                    </span>
+                  </div>
+                </div>
+
+                {selectedRecentRequest.items &&
+                  selectedRecentRequest.items.length > 0 && (
+                    <>
+                      <hr />
+                      <h6>Items List:</h6>
+                      <table className="align-middle">
+                        <thead>
+                          <tr>
+                            <th>Item Name</th>
+                            <th>Item Code</th>
+                            <th>Type</th>
+                          </tr>
+                        </thead>
+                        <tbody className="text-break">
+                          {selectedRecentRequest.items.map((item, idx) => (
+                            <tr key={idx}>
+                              <td className="p-4">{item.name}</td>
+                              <td className="p-4">{item.code}</td>
+                              <td className="text-capitalize p-4">
+                                {item.type}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </>
+                  )}
+              </div>
+              <div className="modal-footer">
+                <button
+                  className="btn btn-secondary text-8"
+                  onClick={() => {
+                    setSelectedRecentRequest(null);
+                    setShowRecentItemsModal(false);
+                  }}
+                >
+                  <i className="fa-solid fa-xmark me-1"></i> Close
                 </button>
               </div>
             </div>
