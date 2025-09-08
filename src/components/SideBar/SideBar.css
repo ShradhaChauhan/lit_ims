@@ -18,6 +18,26 @@
   font-size: 0.8rem;
 }
 
+.home-link {
+  display: flex;
+  align-items: center;
+  color: white;
+  text-decoration: none;
+  padding: 8px 16px;
+  margin: 8px 0;
+  font-size: 0.8rem;
+  transition: background-color 0.3s;
+}
+
+.home-link:hover {
+  text-decoration: none;
+  color: white;
+}
+
+.home-link i {
+  margin-right: 8px;
+}
+
 /* .sidebar {
   width: 277px;
   background-color: var(--sidebar-color);

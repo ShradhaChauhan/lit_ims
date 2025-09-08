@@ -3,24 +3,50 @@
     border-radius: 1rem;
     font-size: 0.7rem !important;
     font-weight: 500 !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .badge.create {
-    background-color: var(--green);
-    color: var(--white);
+    background-color: #198754;
+    color: #fff;
 }
  
 .badge.view {
-    background-color: var(--warning-color);
-    color: var(--white);
+    background-color: #0d6efd;
+    color: #fff;
 }
 
 .badge.update {
-    background-color: var(--blue1);
-    color: var(--white);
+    background-color: #ffc107;
+    color: #000;
 }
 
 .badge.delete {
-    background-color: var(--danger-color);
-    color: var(--white);
+    background-color: #dc3545;
+    color: #fff;
+}
+
+.btn-icon.view:hover {
+  background-color: #e7f1ff; /* dull blue */
+}
+
+.btn-icon.view:hover i {
+  color: #0d6efd; /* primary blue */
+}
+
+.btn-icon.edit:hover {
+  background-color: #e8f7ec; /* dull green */
+}
+.btn-icon.edit:hover i {
+  color: #198754; /* Bootstrap green */
+}
+
+/* Delete button */
+.btn-icon.delete:hover {
+  background-color: #fbeaea; /* dull red */
+}
+.btn-icon.delete:hover i {
+  color: #dc3545; /* Bootstrap red */
 }

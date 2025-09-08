@@ -43,6 +43,7 @@ const Users = () => {
     confirmPassword: "",
     role: "",
     department: "",
+    warehouseId: "",
     status: "active",
     branch: "",
   });
@@ -82,6 +83,7 @@ const Users = () => {
   const [transactionEditPermissions, setTransactionEditPermissions] = useState(
     {}
   );
+  const [warehouse, setWarehouse] = useState([]);
   const [reportViewPermissions, setReportViewPermissions] = useState({});
   const [reportEditPermissions, setReportEditPermissions] = useState({});
   const [adminViewPermissions, setAdminViewPermissions] = useState({});
@@ -154,6 +156,51 @@ const Users = () => {
     return errors;
   };
 
+  // Function to export users data to Excel
+  const handleExportToExcel = () => {
+    // Filter users based on current filters
+    const filteredUsers = users.filter((user) => {
+      const search = searchTerm.toLowerCase();
+      const matchSearch =
+        user.name.toLowerCase().includes(search) ||
+        user.email.toLowerCase().includes(search) ||
+        user.role.toLowerCase().includes(search);
+
+      const matchRole =
+        filterRole === "" ||
+        user.role.toLowerCase() === filterRole.toLowerCase();
+
+      const matchStatus =
+        filterStatus === "" ||
+        user.status.toLowerCase() === filterStatus.toLowerCase();
+
+      return matchSearch && matchRole && matchStatus;
+    });
+
+    if (filteredUsers.length === 0) {
+      toast.warning("No data available to export!");
+      return;
+    }
+
+    // Format data for export
+    const exportData = filteredUsers.map((user) => ({
+      Name: user.name,
+      Role: user.role,
+      Email: user.email,
+      "Last Login": user.time || "Never",
+      Status: user.status,
+    }));
+
+    // Create worksheet
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Users");
+
+    // Generate and save file
+    XLSX.writeFile(wb, "Users_Data.xlsx");
+    toast.success("Successfully exported to Excel");
+  };
+
   // Fetch users from API
   useEffect(() => {
     fetchUsers();
@@ -168,8 +215,6 @@ const Users = () => {
       userDetails &&
       Object.keys(userDetails).length > 0
     ) {
-      console.log("User detail modal should show with data:", userDetails.name);
-
       // Ensure any previous modal instance is disposed
       if (userModal) {
         userModal.dispose();
@@ -187,7 +232,6 @@ const Users = () => {
 
         // Add event listeners
         modalElement.addEventListener("hidden.bs.modal", () => {
-          console.log("Modal was hidden, cleaning up state");
           cleanupModalArtifacts();
           setIsShowUserDetails(false);
           setUserDetails({});
@@ -215,7 +259,6 @@ const Users = () => {
     let modal = null;
 
     if (isEditUserDetails) {
-      console.log("Edit modal should show");
       const modalElement = document.getElementById("userEditModal");
 
       if (modalElement) {
@@ -235,7 +278,6 @@ const Users = () => {
 
         // Add event listener for when modal is hidden
         modalElement.addEventListener("hidden.bs.modal", () => {
-          console.log("Edit modal was hidden, cleaning up");
           cleanupModalArtifacts();
           setIsEditUserDetails(false);
         });
@@ -444,6 +486,29 @@ const Users = () => {
     const end = Math.min(start + itemsPerPage - 1, totalItems);
     return `${start}-${end}`;
   };
+
+  const fetchWarehouses = () => {
+    api
+      .get("/api/warehouses")
+      .then((response) => {
+        console.log("Warehouses response:", response.data);
+        if (response.data && response.data.status) {
+          setWarehouse(response.data.data || []);
+        } else {
+          console.error(
+            "Error fetching warehouses:",
+            response.data.message || "Unknown error"
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching warehouses:", error);
+      });
+  };
+
+  useEffect(() => {
+    fetchWarehouses();
+  }, []);
 
   const masters = [
     {
@@ -686,6 +751,7 @@ const Users = () => {
         role: formData.role.toUpperCase(),
         branchIds: selectedOptions.map((option) => option.value), // Get branch IDs from selectedOptions
         department: formData.department,
+        warehouseId: formData.warehouseId,
         status: formData.status,
         permissions: collectPermissions(),
       };
@@ -1034,6 +1100,7 @@ const Users = () => {
       confirmPassword: "", // Added this field which was missing
       role: "",
       department: "",
+      warehouseId: "",
       status: "active",
       branch: "",
     });
@@ -1201,11 +1268,12 @@ const Users = () => {
           email: userData.email,
           status: userData.status.toUpperCase(),
           department: userData.department,
+          warehouseId: userData.warehouseId || "",
           password: "", // Clear password field for security
           confirmPassword: "", // Clear confirm password field
         };
 
-        console.log("Setting user details to:", updatedUserDetails); // Log the updated user details
+        // console.log("Setting user details to:", updatedUserDetails); // Log the updated user details
         setUserDetails(updatedUserDetails);
 
         // Also update formData state to match
@@ -1216,6 +1284,7 @@ const Users = () => {
           confirmPassword: "",
           role: userData.role,
           department: userData.department,
+          warehouseId: userData.warehouseId || "",
           status: userData.status.toUpperCase(),
           branch: "",
         });
@@ -1233,7 +1302,7 @@ const Users = () => {
 
         // Set permissions based on user data
         if (userData.permissions && Array.isArray(userData.permissions)) {
-          console.log("Setting permissions from:", userData.permissions);
+          // console.log("Setting permissions from:", userData.permissions);
 
           // Reset all permissions first
           const newMasterViewPermissions = {};
@@ -1292,14 +1361,14 @@ const Users = () => {
             };
           });
 
-          console.log("Permission mapping:", permissionMapping);
+          // console.log("Permission mapping:", permissionMapping);
 
           // Set permissions based on user data
           userData.permissions.forEach((permission) => {
             const { pageName, canView, canEdit } = permission;
-            console.log(
-              `Processing permission: ${pageName}, canView: ${canView}, canEdit: ${canEdit}`
-            );
+            // console.log(
+            //   `Processing permission: ${pageName}, canView: ${canView}, canEdit: ${canEdit}`
+            // );
 
             // Find exact match first
             let moduleInfo = permissionMapping[pageName];
@@ -1319,7 +1388,7 @@ const Users = () => {
                   (key.includes(pageName) && pageName.length > 3)
                 ) {
                   moduleInfo = permissionMapping[key];
-                  console.log(`Fuzzy match found: ${pageName} -> ${key}`);
+                  // console.log(`Fuzzy match found: ${pageName} -> ${key}`);
                   break;
                 }
               }
@@ -1327,9 +1396,9 @@ const Users = () => {
 
             if (moduleInfo) {
               const { type: moduleType, category: moduleCategory } = moduleInfo;
-              console.log(
-                `Found match for ${pageName}: type=${moduleType}, category=${moduleCategory}`
-              );
+              // console.log(
+              //   `Found match for ${pageName}: type=${moduleType}, category=${moduleCategory}`
+              // );
 
               if (canView) {
                 if (moduleCategory === "master") {
@@ -1363,14 +1432,14 @@ const Users = () => {
             }
           });
 
-          console.log(
-            "Setting master view permissions:",
-            newMasterViewPermissions
-          );
-          console.log(
-            "Setting master edit permissions:",
-            newMasterEditPermissions
-          );
+          // console.log(
+          //   "Setting master view permissions:",
+          //   newMasterViewPermissions
+          // );
+          // console.log(
+          //   "Setting master edit permissions:",
+          //   newMasterEditPermissions
+          // );
 
           // Set all permissions at once
           setMasterViewPermissions(newMasterViewPermissions);
@@ -1428,8 +1497,8 @@ const Users = () => {
             setIsAllWarehousesViewChecked(allWarehousesView);
             setIsAllWarehousesEditChecked(allWarehousesEdit);
 
-            console.log("All masters view checked:", allMastersView);
-            console.log("All masters edit checked:", allMastersEdit);
+            // console.log("All masters view checked:", allMastersView);
+            // console.log("All masters edit checked:", allMastersEdit);
           }, 100);
         }
 
@@ -1528,9 +1597,9 @@ const Users = () => {
           toast.error(`Error deleting user ${userId}:`, error);
         }
       }
-      console.log(
-        `${successCount} users deleted successfully. ${errorCount} deletions failed.`
-      );
+      // console.log(
+      //   `${successCount} users deleted successfully. ${errorCount} deletions failed.`
+      // );
 
       toast.success("Users deleted successfully");
       fetchUsers(); // Refresh the user list
@@ -1569,7 +1638,7 @@ const Users = () => {
 
   // Add handleCloseEditModal function
   const handleCloseEditModal = (e) => {
-    console.log("Closing edit modal");
+    // console.log("Closing edit modal");
     handleReset(e);
     // First hide the modal using Bootstrap's API
     if (editModal) {
@@ -1600,6 +1669,7 @@ const Users = () => {
     setErrors(validationErrors);
 
     if (Object.keys(validationErrors).length > 0) {
+      toast.error("Please fix the validation errors before submitting.");
       console.log("Form has validation errors"); // Debug log
       return;
     }
@@ -1653,8 +1723,6 @@ const Users = () => {
       });
     });
 
-    console.log("Formatted permissions:", formattedPermissions); // Debug log
-
     // Prepare the update payload according to the API format
     const updatedUser = {
       id: userDetails.id, // Explicitly include the user ID in the payload
@@ -1662,6 +1730,7 @@ const Users = () => {
       email: userDetails.email,
       role: userDetails.role.toUpperCase(), // Ensure role is uppercase
       department: userDetails.department,
+      warehouseId: userDetails.warehouseId || null,
       status: userDetails.status.toUpperCase(), // Ensure status is uppercase
       branchIds: selectedOptions.map((option) => option.value),
       permissions: formattedPermissions,
@@ -1671,10 +1740,6 @@ const Users = () => {
     if (userDetails.password && userDetails.password.trim() !== "") {
       updatedUser.password = userDetails.password;
     }
-
-    console.log("Current user details:", userDetails); // Debug log
-    console.log("Updating user with data:", updatedUser); // Debug log
-    console.log("User ID being updated:", userDetails.id); // Debug log
 
     try {
       // Make sure we have a valid user ID
@@ -1686,8 +1751,7 @@ const Users = () => {
       // Try multiple API endpoint formats to ensure one works
       let response;
       let endpoint = `/api/users/update/${userDetails.id}`;
-      console.log("Trying API endpoint:", endpoint); // Debug log
-
+      console.log("updatedUser: ", updatedUser);
       try {
         response = await api({
           method: "put",
@@ -2029,24 +2093,23 @@ const Users = () => {
                           setFormData({
                             ...formData,
                             department: e.target.value,
+                            warehouseId:
+                              warehouse.find((w) => w.name === e.target.value)
+                                ?.id || "",
                           })
                         }
                       >
-                        <option
-                          value=""
-                          disabled
-                          hidden
-                          style={{ color: "#6c757d !important" }}
-                        >
+                        <option value="" disabled hidden>
                           Select Department
                         </option>
-                        <option value="Sales">Sales</option>
-                        <option value="Production">Production</option>
-                        <option value="Store">Store</option>
-                        <option value="IQC">IQC</option>
-                        <option value="IT">IT</option>
+
+                        {/* Map warehouse list */}
+                        {warehouse.map((w) => (
+                          <option key={w.id} value={w.name}>
+                            {w.name}
+                          </option>
+                        ))}
                       </select>
-                      {/* <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i> */}
                     </div>
                     {errors.department && (
                       <span className="error-message">{errors.department}</span>
@@ -2486,7 +2549,7 @@ const Users = () => {
                       </tbody>
                     </table>
                   </div>
-                  <div className="table-list-container">
+                  {/* <div className="table-list-container">
                     <table>
                       <thead>
                         <tr>
@@ -2571,7 +2634,7 @@ const Users = () => {
                         ))}
                       </tbody>
                     </table>
-                  </div>
+                  </div> */}
                 </div>
               </div>
               <div className="form-actions">
@@ -2645,12 +2708,19 @@ const Users = () => {
               </label>
             </div>
             <div className="bulk-actions">
-              <button className="btn-action">
-                <i className="fas fa-envelope"></i>
+              <button className="btn btn-outline-primary text-8">
+                <i className="fas fa-envelope me-2"></i>
                 Email Selected
               </button>
               <button
-                className="btn-action btn-danger"
+                className="btn btn-outline-success text-8"
+                onClick={handleExportToExcel}
+              >
+                <i className="fas fa-file-export me-2"></i>
+                Export Excel
+              </button>
+              <button
+                className="btn btn-outline-danger text-8"
                 onClick={() => {
                   setConfirmType("multi");
                   handleShowConfirm("multi");
@@ -2663,7 +2733,7 @@ const Users = () => {
                   </>
                 ) : (
                   <>
-                    <i className="fas fa-trash"></i> Delete Selected
+                    <i className="fas fa-trash me-1"></i> Delete Selected
                   </>
                 )}
               </button>
@@ -2747,7 +2817,7 @@ const Users = () => {
                       </td>
                       <td className="actions">
                         <button
-                          className="btn-icon btn-primary"
+                          className="btn-icon view"
                           title="View Details"
                           onClick={(e) => handleViewDetails(user, e)}
                         >
@@ -2755,7 +2825,7 @@ const Users = () => {
                         </button>
                         {ability.can("edit", "User Management") && (
                           <button
-                            className="btn-icon btn-success"
+                            className="btn-icon edit"
                             title="Edit"
                             onClick={(e) => handleEditDetails(user, e)}
                           >
@@ -2764,7 +2834,7 @@ const Users = () => {
                         )}
                         {ability.can("edit", "User Management") && (
                           <button
-                            className="btn-icon btn-danger"
+                            className="btn-icon delete"
                             title="Delete"
                             onClick={() => {
                               setUserIdState(user.id);
@@ -3116,6 +3186,7 @@ const Users = () => {
                                   })
                                 }
                                 placeholder="Enter full name"
+                                disabled
                               />
                             </div>
                           </div>
@@ -3250,6 +3321,10 @@ const Users = () => {
                                   setUserDetails({
                                     ...userDetails,
                                     department: e.target.value,
+                                    warehouseId:
+                                      warehouse.find(
+                                        (w) => w.name === e.target.value
+                                      )?.id || "",
                                   })
                                 }
                               >
@@ -3261,11 +3336,11 @@ const Users = () => {
                                 >
                                   Select Department
                                 </option>
-                                <option value="Sales">Sales</option>
-                                <option value="Production">Production</option>
-                                <option value="Store">Store</option>
-                                <option value="IQC">IQC</option>
-                                <option value="IT">IT</option>
+                                {warehouse.map((w) => (
+                                  <option key={w.id} value={w.name}>
+                                    {w.name}
+                                  </option>
+                                ))}
                               </select>
                               <i className="fa-solid fa-angle-down position-absolute down-arrow-icon"></i>
                             </div>
@@ -3334,10 +3409,6 @@ const Users = () => {
                                 id="branch"
                                 value={selectedOptions}
                                 onChange={(options) => {
-                                  console.log(
-                                    "Branch selection changed:",
-                                    options
-                                  );
                                   setSelectedOptions(options || []);
                                 }}
                                 placeholder="Select branches..."

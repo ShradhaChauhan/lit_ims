@@ -6,6 +6,7 @@ import api from "../../../services/api";
 import { Modal } from "bootstrap";
 import "./IncomingQC.css";
 import _ from "lodash";
+import * as XLSX from "xlsx";
 
 const IncomingQC = () => {
   const [isShowQualityCheckForm, setIsShowQualityCheckForm] = useState(false);
@@ -795,6 +796,46 @@ const IncomingQC = () => {
     "transactionNumber"
   );
 
+  // Function to export data to Excel
+  const handleExportToExcel = () => {
+    if (iqc.length === 0) {
+      toast.warning("No data available to export!");
+      return;
+    }
+
+    // Format data for export based on filtered data
+    const filteredData = iqc.filter((i) => {
+      const search = searchQuery.toLowerCase();
+      return (
+        i.itemName?.toLowerCase().includes(search) ||
+        i.itemCode?.toLowerCase().includes(search) ||
+        i.batchNumber?.toLowerCase().includes(search) ||
+        i.vendorName?.toLowerCase().includes(search)
+      );
+    });
+
+    // Format data for export
+    const exportData = filteredData.map((item) => ({
+      "TR No": item.transactionNumber || "-",
+      "Item Code": item.itemCode || "-",
+      "Item Name": item.itemName || "-",
+      "Batch No": item.batchNumber || "-",
+      Quantity: item.quantity || "0",
+      Status: item.status || "-",
+      Vendor: item.vendorName || "-",
+      Date: item.date ? new Date(item.date).toLocaleString() : "-",
+    }));
+
+    // Create worksheet
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Incoming QC");
+
+    // Generate and save file
+    XLSX.writeFile(wb, "Incoming_QC_Data.xlsx");
+    toast.success("Successfully exported to Excel");
+  };
+
   // Batch details button change
   const [batchStatuses, setBatchStatuses] = useState({}); // { batchId: {status, warehouseId} }
 
@@ -1480,19 +1521,22 @@ const IncomingQC = () => {
               </label>
             </div>
             <div className="bulk-actions">
-              <button className="btn-action">
-                <i className="fas fa-file-export"></i>
-                Export Selected
+              <button
+                className="btn btn-outline-success text-8"
+                onClick={handleExportToExcel}
+              >
+                <i className="fas fa-file-export me-1"></i>
+                Export Excel
               </button>
-              <button className="btn-action">
-                <i className="fas fa-clock-rotate-left"></i>
+              <button className="btn btn-outline-secondary text-8">
+                <i className="fas fa-clock-rotate-left me-1"></i>
                 View Recent
               </button>
               <button
-                className="btn-action btn-danger"
+                className="btn btn-outline-danger text-8"
                 onClick={handleShowConfirm}
               >
-                <i className="fas fa-trash"></i> Delete Selected
+                <i className="fas fa-trash me-1"></i> Delete Selected
               </button>
             </div>
           </div>

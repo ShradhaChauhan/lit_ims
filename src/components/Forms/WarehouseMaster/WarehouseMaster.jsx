@@ -8,6 +8,7 @@ import { AbilityContext } from "../../../utils/AbilityContext";
 import exportToExcel from "../../../utils/exportToExcel";
 import Select from "react-select";
 import * as XLSX from "xlsx";
+import "./WarehouseMaster.css";
 
 const WarehouseMaster = () => {
   const [errors, setErrors] = useState({});
@@ -1230,11 +1231,62 @@ const WarehouseMaster = () => {
                 </button>
                 <button
                   className="btn btn-outline-success text-8"
-                  onClick={() => {
-                    const rowData = filteredWarehouses.filter((row) =>
-                      selectedWarehouses.includes(row.id)
-                    );
-                    exportToExcel(rowData, "Warehouses");
+                  onClick={async () => {
+                    if (selectedWarehouses.length === 0) {
+                      toast.warning("Please select at least one warehouse to export!");
+                      return;
+                    }
+
+                    setIsLoading(true);
+                    try {
+                      // Fetch complete data for selected warehouses
+                      const warehousePromises = selectedWarehouses.map(id => 
+                        api.get(`/api/warehouses/${id}`)
+                      );
+                      
+                      const responses = await Promise.all(warehousePromises);
+                      const warehousesWithSubLocations = responses
+                        .filter(response => response.data && response.data.status)
+                        .map(response => response.data.data);
+
+                      // Flatten the data for Excel export
+                      const flattenedData = warehousesWithSubLocations.flatMap(warehouse => {
+                        if (!warehouse.subLocations || warehouse.subLocations.length === 0) {
+                          // Return warehouse without sublocations
+                          return [{
+                            trno: warehouse.trno,
+                            code: warehouse.code,
+                            name: warehouse.name,
+                            type: warehouse.type,
+                            status: warehouse.status,
+                            subLocationCode: '',
+                            rackNumber: '',
+                            itemCode: '',
+                            itemName: ''
+                          }];
+                        }
+                        
+                        // Return warehouse with each sublocation as a separate row
+                        return warehouse.subLocations.map(subLoc => ({
+                          trno: warehouse.trno,
+                          code: warehouse.code,
+                          name: warehouse.name,
+                          type: warehouse.type,
+                          status: warehouse.status,
+                          subLocationCode: subLoc.subLocationCode || '',
+                          rackNumber: subLoc.rackNumber || '',
+                          itemCode: subLoc.itemCode || '',
+                          itemName: subLoc.itemName || ''
+                        }));
+                      });
+
+                      exportToExcel(flattenedData, "Warehouses");
+                    } catch (error) {
+                      console.error("Error exporting warehouses:", error);
+                      toast.error("Error exporting warehouses. Please try again.");
+                    } finally {
+                      setIsLoading(false);
+                    }
                   }}
                 >
                   <i className="fas fa-file-export me-1"></i>
@@ -1338,7 +1390,7 @@ const WarehouseMaster = () => {
                     </td>
                     <td className="actions ps-3">
                       <button
-                        className="btn-icon btn-primary"
+                        className="btn-icon view"
                         title="View Details"
                         onClick={(e) => handleViewDetails(warehouse, e)}
                       >
@@ -1346,7 +1398,7 @@ const WarehouseMaster = () => {
                       </button>
                       {ability.can("edit", "Warehouse Master") && (
                         <button
-                          className="btn-icon btn-success"
+                          className="btn-icon edit"
                           title="Edit"
                           onClick={(e) => handleEditDetails(warehouse, e)}
                         >

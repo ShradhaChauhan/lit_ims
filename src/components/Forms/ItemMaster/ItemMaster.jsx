@@ -1498,7 +1498,7 @@ const ItemMaster = () => {
                   Download Template
                 </button>
                 <button
-                  className="btn-action btn-danger"
+                  className="btn btn-outline-danger text-8"
                   onClick={() => {
                     setConfirmType("multi");
                     handleShowConfirm("multi");
@@ -1512,7 +1512,7 @@ const ItemMaster = () => {
                     </>
                   ) : (
                     <>
-                      <i className="fas fa-trash"></i>
+                      <i className="fas fa-trash me-2"></i>
                       Delete Selected
                     </>
                   )}
@@ -1603,7 +1603,7 @@ const ItemMaster = () => {
                     </td>
                     <td className="actions ps-3">
                       <button
-                        className="btn-icon btn-primary"
+                        className="btn-icon view"
                         title="View Details"
                         onClick={(e) => handleViewDetails(item, e)}
                       >
@@ -1611,7 +1611,7 @@ const ItemMaster = () => {
                       </button>
                       {ability.can("edit", "Item Master") && (
                         <button
-                          className="btn-icon btn-success"
+                          className="btn-icon edit"
                           title="Edit"
                           onClick={(e) => handleEditDetails(item, e)}
                         >
@@ -1620,7 +1620,7 @@ const ItemMaster = () => {
                       )}
                       {ability.can("edit", "Item Master") && (
                         <button
-                          className="btn-icon btn-danger"
+                          className="btn-icon delete"
                           title="Delete"
                           onClick={() => {
                             setItemIdState(item.id);

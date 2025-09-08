@@ -34,6 +34,9 @@ import { useIdleTimer } from "./utils/useIdleTimer";
 import api from "./services/api";
 import { useNavigate } from "react-router-dom";
 import StockAdjustment from "./components/Forms/StockAdjustment/StockAdjustment";
+import OrderPlanning from "./components/OrderPlanning/OrderPlanning";
+import VendorRating from "./components/VendorRating/VendorRating";
+import LineMonitoring from "./components/LineMonitoring/LineMonitoring";
 
 function App() {
   // const [isLoggedIn, setIsLoggedIn] = useState(
@@ -294,6 +297,18 @@ function App() {
                 <StockAdjustment />
               </ProtectedRoute>
             }
+          />
+          <Route
+            path="/order-planning"
+            element={<OrderPlanning />}
+          />
+          <Route
+            path="/vendor-rating"
+            element={<VendorRating />}
+          />
+          <Route
+            path="/line-monitoring"
+            element={<LineMonitoring />}
           />
         </Route>
       </Route>

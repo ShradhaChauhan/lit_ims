@@ -59,3 +59,22 @@
 .icon-color {
   color: #94A3B8;
 }
+
+.btn-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-icon i {
+  color: inherit; /* default inherits from button */
+  transition: color 0.3s ease;
+}
+
+.btn-icon:hover {
+  background-color: #e7f1ff; /* dull blue */
+}
+
+.btn-icon:hover i {
+  color: #0d6efd; /* primary blue */
+}

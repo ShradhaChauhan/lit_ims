@@ -1,0 +1,49 @@
+.line-monitoring-container {
+  padding: 20px;
+}
+
+.header-style {
+  font-weight: 600;
+  color: #333;
+}
+
+.text-small-gray {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.badge {
+  font-size: 0.8rem;
+  padding: 0.35em 0.65em;
+}
+
+.table th {
+  font-weight: 600;
+  background-color: #f8f9fa;
+}
+
+.time-entry-row {
+  background-color: #f8f9fa;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  padding: 10px;
+}
+
+.time-entry-header {
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+.btn-icon.edit:hover {
+  background-color: #e8f7ec; /* dull green */
+}
+.btn-icon.edit:hover i {
+  color: #198754; /* Bootstrap green */
+}
+
+/* Delete button */
+.btn-icon.delete:hover {
+  background-color: #fbeaea; /* dull red */
+}
+.btn-icon.delete:hover i {
+  color: #dc3545; /* Bootstrap red */
+}

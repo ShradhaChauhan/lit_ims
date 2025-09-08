@@ -117,6 +117,33 @@ const ActivityLogs = () => {
     setIsShowLogDetails(true);
   };
 
+  // Function to export data to Excel
+  const handleExportToExcel = () => {
+    if (filteredLogs.length === 0) {
+      toast.warning("No data available to export!");
+      return;
+    }
+
+    // Format data for export
+    const exportData = filteredLogs.map((log) => ({
+      ID: log.id || "-",
+      Details: log.details || "-",
+      "Performed By": log.performedBy || "System",
+      Time: log.timestamp ? new Date(log.timestamp).toLocaleString() : "-",
+      "IP Address": log.ipAddress || "-",
+      Action: log.action || "-",
+    }));
+
+    // Create worksheet
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Activity Logs");
+
+    // Generate and save file
+    XLSX.writeFile(wb, "Activity_Logs.xlsx");
+    toast.success("Successfully exported to Excel");
+  };
+
   return (
     <div>
       {" "}
@@ -136,7 +163,7 @@ const ActivityLogs = () => {
       </nav>
       {/* Search and Filter Section */}
       <div className="search-filter-container mx-2">
-        <div className="search-box">
+        <div className="search-box text-8">
           <i className="fas fa-search position-absolute z-0 input-icon"></i>
           <input
             type="text"
@@ -148,7 +175,7 @@ const ActivityLogs = () => {
         </div>
         <div className="filter-options">
           <select
-            className="filter-select"
+            className="filter-select text-8"
             value={selectedAction}
             onChange={(e) => {
               setSelectedAction(e.target.value);
@@ -164,7 +191,7 @@ const ActivityLogs = () => {
         </div>
         <div className="filter-options">
           <button
-            className="filter-select"
+            className="btn btn-outline-secondary text-8"
             onClick={() => {
               setInputValue("");
               setSelectedAction("");
@@ -173,6 +200,14 @@ const ActivityLogs = () => {
           >
             <i className="fas fa-filter me-2"></i>
             Reset Filters
+          </button>
+        </div>
+        <div className="filter-options">
+          <button
+            className="btn btn-outline-success text-8"
+            onClick={handleExportToExcel}
+          >
+            <i className="fas fa-file-export me-1"></i> Export Excel
           </button>
         </div>
       </div>
@@ -232,7 +267,7 @@ const ActivityLogs = () => {
 
                     <td className="ps-5">
                       <button
-                        className="btn-icon btn-primary"
+                        className="btn-icon view"
                         title="View Details"
                         onClick={(e) => handleViewDetails(log, e)}
                       >

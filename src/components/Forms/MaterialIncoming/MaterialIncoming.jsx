@@ -1523,7 +1523,7 @@ const MaterialIncoming = () => {
                 <div className="form-header d-flex justify-content-between align-items-center">
                   <h2>Receipt Items</h2>
                   <button
-                    className="btn btn-outline-dark text-8"
+                    className="btn btn-primary text-8"
                     onClick={handlePrint}
                   >
                     <i className="fa-solid fa-print me-1"></i> Print
@@ -1674,7 +1674,7 @@ const MaterialIncoming = () => {
                               </td>
                               <td className="actions ps-3">
                                 <button
-                                  className="btn-icon btn-primary"
+                                  className="btn-icon view"
                                   title="View Details"
                                   onClick={(e) => handleViewDetails(receipt, e)}
                                   disabled={isPrinted}
@@ -1682,7 +1682,7 @@ const MaterialIncoming = () => {
                                   <i className="fas fa-eye"></i>
                                 </button>
                                 <button
-                                  className="btn-icon btn-danger"
+                                  className="btn-icon delete"
                                   title="Delete"
                                   onClick={(e) => handleDeleteItem(index, e)}
                                   disabled={isPrinted}
