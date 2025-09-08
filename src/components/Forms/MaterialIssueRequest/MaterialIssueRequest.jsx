@@ -165,8 +165,6 @@ const MaterialIssueRequest = () => {
   const [filteredItems, setFilteredItems] = useState([]);
   const [selectedRecentRequest, setSelectedRecentRequest] = useState(null);
   const [showRecentItemsModal, setShowRecentItemsModal] = useState(false);
-  const [selectedRecentRequest, setSelectedRecentRequest] = useState(null);
-  const [showRecentItemsModal, setShowRecentItemsModal] = useState(false);
   // Pagination states
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -190,10 +188,6 @@ const MaterialIssueRequest = () => {
     // Fetch warehouse list and set warehouse from cookies on component mount
     // Fetch warehouse list and set warehouse from cookies on component mount
     fetchWarehouseList();
-    const userWarehouseId = Cookies.get("warehouseId");
-    if (userWarehouseId) {
-      setWarehouse(userWarehouseId);
-    }
     const userWarehouseId = Cookies.get("warehouseId");
     if (userWarehouseId) {
       setWarehouse(userWarehouseId);
@@ -339,7 +333,6 @@ const MaterialIssueRequest = () => {
   // Dynamically calculate widths
   const fieldClass = isCompleteBOM || isIndividualItems ? "flex-1" : "flex-1-3";
   const [selectedOption, setSelectedOption] = useState([]);
-  const [selectedOption, setSelectedOption] = useState([]);
 
   const handleAddRequest = async (e) => {
     e.preventDefault();
@@ -464,87 +457,6 @@ const MaterialIssueRequest = () => {
       setType("");
       setQuantity("");
       setRequisitionType("");
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (request.length === 0) {
-      toast.error("Please add at least one item to the request");
-      return;
-    }
-
-    try {
-      // Determine type based on the first item
-      const requestType = request[0].type === "BOM" ? "bom" : "items";
-      console.log("Warehouse: " + warehouse);
-      // Format data for API
-      // const formattedItems = request.map((item) => ({
-      //   id: item.id,
-      //   name: item.name,
-      //   code: item.code,
-      //   type: item.type.toLowerCase(),
-      //   quantity: Number(item.quantity),
-      // }));
-      const formattedItems = request.flatMap((item) => {
-        if (item.type === "bom" || item.type === "BOM") {
-          // BOM - flatten the sub-items with calculated quantity
-          return item.items.map((subItem) => ({
-            id: subItem.itemId,
-            name: subItem.itemName,
-            code: subItem.itemCode,
-            type: "item", // sub-items are always individual items
-            quantity: Number(subItem.calculatedQuantity),
-          }));
-        } else {
-          // Individual item
-          return [
-            {
-              id: item.id,
-              name: item.name,
-              code: item.code,
-              type: "item",
-              quantity: Number(item.quantity),
-            },
-          ];
-        }
-      });
-
-      const payload = {
-        transactionNumber,
-        type: requestType,
-        bomName: selectedOption.name,
-        bomCode: selectedOption.code,
-        warehouseId: Number(warehouse),
-        items: formattedItems,
-      };
-
-      console.log("Submitting payload:", payload);
-
-      const response = await api.post("/api/requisitions/save", payload);
-
-      if (response.data.status) {
-        toast.success("Material request saved successfully");
-
-        // Fetch updated recent requests
-        try {
-          const recentResponse = await api.get("/api/requisitions/recent");
-          if (recentResponse.data.status) {
-            setRecentRequests(recentResponse.data.data);
-          }
-        } catch (error) {
-          console.error("Error fetching updated recent requests:", error);
-        }
-
-        // Perform complete form reset
-        handleReset();
-      } else {
-        toast.error(response.data.message || "Error saving request");
-      }
-    } catch (error) {
-      toast.error(error.response.data.message || "Error submitting request");
-      console.error("Error submitting material request:", error);
     }
   };
 
@@ -979,11 +891,9 @@ const MaterialIssueRequest = () => {
                   <i className="fas fa-warehouse ms-2 position-absolute z-0 input-icon margin-top-8 text-font"></i>
                   <select
                     className={`form-select ps-5 ms-2 text-font`}
-                    className={`form-select ps-5 ms-2 text-font`}
                     id="warehouse"
                     value={warehouse}
                     onChange={(e) => setWarehouse(e.target.value)}
-                    disabled
                     disabled
                   >
                     <option value="" disabled hidden>
