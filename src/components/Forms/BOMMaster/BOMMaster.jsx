@@ -234,6 +234,14 @@ const BOMMaster = () => {
       );
     }
 
+    // Update pagination when filters change
+    setPagination(prev => ({
+      ...prev,
+      totalItems: filtered.length,
+      totalPages: Math.ceil(filtered.length / prev.itemsPerPage),
+      currentPage: 1 // Reset to first page when filters change
+    }));
+
     setFilteredBoms(filtered);
   }, [boms, searchTerm, selectedStatus, selectedWarehouse, selectedPart]);
 
@@ -512,14 +520,15 @@ const BOMMaster = () => {
   // Function to fetch BOMs with pagination
   const fetchBOMs = (page = 1, perPage = pagination.itemsPerPage) => {
     api
-      .get(`/api/bom/all?page=${page}&per_page=${perPage}`)
+      .get(`/api/bom/all`)
       .then((response) => {
         if (response.data.status && response.data.data) {
-          setBoms(response.data.data);
+          const allBoms = response.data.data;
+          setBoms(allBoms);
           setPagination({
-            currentPage: response.data.current_page || page,
-            totalPages: response.data.total_pages || 1,
-            totalItems: response.data.total_items || 0,
+            currentPage: page,
+            totalPages: Math.ceil(allBoms.length / perPage),
+            totalItems: allBoms.length,
             itemsPerPage: perPage,
           });
         }
@@ -538,15 +547,22 @@ const BOMMaster = () => {
   // Handle page change
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= pagination.totalPages) {
-      fetchBOMs(newPage);
+      setPagination(prev => ({
+        ...prev,
+        currentPage: newPage
+      }));
     }
   };
 
   // Handle items per page change
   const handleItemsPerPageChange = (e) => {
     const newItemsPerPage = parseInt(e.target.value);
-    setPagination((prev) => ({ ...prev, itemsPerPage: newItemsPerPage }));
-    fetchBOMs(1, newItemsPerPage);
+    setPagination((prev) => ({ 
+      ...prev, 
+      itemsPerPage: newItemsPerPage,
+      currentPage: 1, // Reset to first page when changing items per page
+      totalPages: Math.ceil(filteredBoms.length / newItemsPerPage)
+    }));
   };
 
   const handleItemChange = (index, field, value) => {
@@ -1175,9 +1191,55 @@ const BOMMaster = () => {
                 <button
                   className="btn btn-outline-success text-8"
                   onClick={() => {
-                    const rowData = filteredBoms.filter((row) =>
-                      selectedBoms.includes(row.id)
-                    );
+                    // Prepare data for Excel export with better formatting
+                    const rowData = [];
+                    
+                    // Filter selected BOMs
+                    const selectedBOMData = filteredBoms.filter((row) => selectedBoms.includes(row.id));
+                    
+                    // Process each BOM
+                    selectedBOMData.forEach(bom => {
+                      // Add BOM header row
+                      rowData.push({
+                        'BOM Code': bom.code,
+                        'BOM Name': bom.name,
+                        'Status': bom.status,
+                        'Item Name': '',
+                        'Item Code': '',
+                        'UOM': '',
+                        'Quantity': '',
+                        'Warehouse': ''
+                      });
+                      
+                      // Add item rows
+                      if (bom.items && bom.items.length > 0) {
+                        bom.items.forEach(item => {
+                          rowData.push({
+                            'BOM Code': bom.code,
+                            'BOM Name': '',
+                            'Status': '',
+                            'Item Name': item.itemName,
+                            'Item Code': item.itemCode,
+                            'UOM': item.uom,
+                            'Quantity': item.quantity,
+                            'Warehouse': item.warehouseName
+                          });
+                        });
+                      }
+                      
+                      // Add a blank row between BOMs for better readability
+                      rowData.push({
+                        'BOM Code': '',
+                        'BOM Name': '',
+                        'Status': '',
+                        'Item Name': '',
+                        'Item Code': '',
+                        'UOM': '',
+                        'Quantity': '',
+                        'Warehouse': ''
+                      });
+                    });
+                    
                     exportToExcel(rowData, "BOM");
                   }}
                 >
@@ -1193,14 +1255,14 @@ const BOMMaster = () => {
                 </button>
 
                 <button
-                  className="btn-action btn-danger"
+                  className="btn btn-outline-danger text-8"
                   onClick={() => {
                     setConfirmType("multi");
                     handleShowConfirm("multi");
                   }}
                   disabled={selectedBoms.length === 0}
                 >
-                  <i className="fas fa-trash"></i>
+                  <i className="fas fa-trash me-2"></i>
                   Delete Selected
                 </button>
               </div>
@@ -1234,7 +1296,13 @@ const BOMMaster = () => {
                   </td>
                 </tr>
               ) : (
-                filteredBoms.map((bom) => (
+                // Get the current page's records
+                filteredBoms
+                  .slice(
+                    (pagination.currentPage - 1) * pagination.itemsPerPage,
+                    pagination.currentPage * pagination.itemsPerPage
+                  )
+                  .map((bom) => (
                   <tr key={bom.id}>
                     <td className="checkbox-cell ps-4">
                       <input
@@ -1260,7 +1328,7 @@ const BOMMaster = () => {
                     </td>
                     <td className="actions ps-3">
                       <button
-                        className="btn-icon btn-primary"
+                        className="btn-icon view"
                         title="View Details"
                         onClick={(e) => handleViewDetails(bom, e)}
                       >
@@ -1268,7 +1336,7 @@ const BOMMaster = () => {
                       </button>
                       {ability.can("edit", "BOM Master") && (
                         <button
-                          className="btn-icon btn-success"
+                          className="btn-icon edit"
                           title="Edit"
                           onClick={(e) => handleEditDetails(bom, e)}
                         >
@@ -1277,7 +1345,7 @@ const BOMMaster = () => {
                       )}
                       {ability.can("edit", "BOM Master") && (
                         <button
-                          className="btn-icon btn-danger"
+                          className="btn-icon delete"
                           title="Delete"
                           onClick={() => {
                             setBomIdState(bom.id);
@@ -1290,7 +1358,7 @@ const BOMMaster = () => {
                       )}
                     </td>
                   </tr>
-                ))
+                  ))
               )}
             </tbody>
           </table>

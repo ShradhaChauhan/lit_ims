@@ -159,7 +159,7 @@ const MaterialIncoming = () => {
 
   const validateForm = (data) => {
     const errors = {};
-
+    console.log(data);
     if (!mode) {
       errors.mode = "Please select a mode";
     }
@@ -168,12 +168,16 @@ const MaterialIncoming = () => {
       errors.vendor = "Please select vendor name";
     }
 
+    if (!data.quantity > 0) {
+      errors.quantity = "Please enter a valid quantity";
+    }
+
     // Validate numberOfBatches for manual mode
     if (mode === "manual") {
       const numberOfBatches = parseInt(data.numberOfBatches);
-      if (!numberOfBatches || numberOfBatches < 1 || numberOfBatches > 50) {
+      if (!numberOfBatches || numberOfBatches < 1 || numberOfBatches > 100) {
         errors.numberOfBatches =
-          "Number of batch numbers must be between 1 and 50";
+          "Number of batch numbers must be between 1 and 100";
       }
     }
 
@@ -284,8 +288,8 @@ const MaterialIncoming = () => {
         }
 
         const numberOfBatches = parseInt(formData.numberOfBatches) || 1;
-        if (numberOfBatches < 1 || numberOfBatches > 50) {
-          toast.error("Number of batch numbers must be between 1 and 50");
+        if (numberOfBatches < 1 || numberOfBatches > 100) {
+          toast.error("Number of batch numbers must be between 1 and 100");
           setLoading(false);
           return;
         }
@@ -1061,6 +1065,31 @@ const MaterialIncoming = () => {
 
   return (
     <div>
+      {loading && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            backgroundColor: "rgba(0, 0, 0, 0.6)",
+            zIndex: 9999,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            pointerEvents: "all",
+          }}
+        >
+          <div className="orbit-loader">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      )}
+
       {/* Header section */}
       <nav className="navbar bg-light border-body" data-bs-theme="light">
         <div className="container-fluid">
@@ -1429,6 +1458,9 @@ const MaterialIncoming = () => {
                     onChange={(e) => setIsStdQty(!e.target.checked)}
                   />
                 </div>
+                {errors.quantity && (
+                  <span className="error-message">{errors.quantity}</span>
+                )}
               </div>
             )}
           </div>
@@ -1491,7 +1523,7 @@ const MaterialIncoming = () => {
                 <div className="form-header d-flex justify-content-between align-items-center">
                   <h2>Receipt Items</h2>
                   <button
-                    className="btn btn-outline-dark text-8"
+                    className="btn btn-primary text-8"
                     onClick={handlePrint}
                   >
                     <i className="fa-solid fa-print me-1"></i> Print
@@ -1642,7 +1674,7 @@ const MaterialIncoming = () => {
                               </td>
                               <td className="actions ps-3">
                                 <button
-                                  className="btn-icon btn-primary"
+                                  className="btn-icon view"
                                   title="View Details"
                                   onClick={(e) => handleViewDetails(receipt, e)}
                                   disabled={isPrinted}
@@ -1650,7 +1682,7 @@ const MaterialIncoming = () => {
                                   <i className="fas fa-eye"></i>
                                 </button>
                                 <button
-                                  className="btn-icon btn-danger"
+                                  className="btn-icon delete"
                                   title="Delete"
                                   onClick={(e) => handleDeleteItem(index, e)}
                                   disabled={isPrinted}

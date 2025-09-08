@@ -786,7 +786,7 @@ const TypeMaster = () => {
       {/* Table Section */}
       <div className="margin-2 mx-2">
         <div className="table-container">
-          {ability.can("edit", "Business Partner") && (
+          {ability.can("edit", "Type Master") && (
             <div className="table-header">
               <div className="selected-count">
                 <input
@@ -837,7 +837,7 @@ const TypeMaster = () => {
                   Download Template
                 </button>
                 <button
-                  className="btn-action btn-danger"
+                  className="btn btn-outline-danger text-8"
                   onClick={() => {
                     setConfirmType("multi");
                     handleShowConfirm("multi");
@@ -850,7 +850,7 @@ const TypeMaster = () => {
                     </>
                   ) : (
                     <>
-                      <i className="fas fa-trash"></i> Delete Selected
+                      <i className="fas fa-trash me-2"></i> Delete Selected
                     </>
                   )}
                 </button>
@@ -927,7 +927,7 @@ const TypeMaster = () => {
                     </td>
                     <td className="actions p-3">
                       <button
-                        className="btn-icon btn-primary"
+                        className="btn-icon view"
                         title="View Details"
                         onClick={(e) => handleViewDetails(type, e)}
                       >
@@ -935,7 +935,7 @@ const TypeMaster = () => {
                       </button>
                       {ability.can("edit", "Type Master") && (
                         <button
-                          className="btn-icon btn-success"
+                          className="btn-icon edit"
                           title="Edit"
                           onClick={(e) => handleEditDetails(type, e)}
                         >
@@ -944,7 +944,7 @@ const TypeMaster = () => {
                       )}
                       {ability.can("edit", "Type Master") && (
                         <button
-                          className="btn-icon btn-danger"
+                          className="btn-icon delete"
                           title="Delete"
                           disabled={isDeleting}
                           onClick={() => {

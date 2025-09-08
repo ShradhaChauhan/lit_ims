@@ -142,6 +142,115 @@ const ProductionMaterialUsage = () => {
     generateTransactionNumber()
   );
 
+  // Export Material Usage to Excel
+  const handleExportMaterialUsage = () => {
+    if (materials.length === 0) {
+      toast.warning("No materials to export");
+      return;
+    }
+
+    // Create worksheet data
+    const wsData = [
+      ["Production Material Usage"],
+      ["Work Order: " + selectedWorkOrder],
+      ["Transaction #: " + transactionNumber],
+      ["Generated on: " + new Date().toLocaleString()],
+      [], // Empty row for spacing
+      [
+        "Material",
+        "Batch No",
+        "Available Qty",
+        "Used Qty",
+        "Scrap Qty",
+        "Remaining Qty",
+        "Status",
+      ],
+    ];
+
+    // Add data rows
+    materials.forEach((material) => {
+      wsData.push([
+        material.material,
+        material.batchno,
+        material.availableQty,
+        material.usedQty,
+        material.scrapQty,
+        material.remainingQty,
+        material.status,
+      ]);
+    });
+
+    // Create workbook and worksheet
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    // Set column widths
+    const colWidths = [
+      { wch: 40 }, // Material
+      { wch: 15 }, // Batch No
+      { wch: 15 }, // Available Qty
+      { wch: 15 }, // Used Qty
+      { wch: 15 }, // Scrap Qty
+      { wch: 15 }, // Remaining Qty
+      { wch: 15 }, // Status
+    ];
+    ws["!cols"] = colWidths;
+
+    // Add the worksheet to the workbook
+    XLSX.utils.book_append_sheet(wb, ws, "Material Usage");
+
+    // Save the file
+    XLSX.writeFile(wb, `Material_Usage_${selectedWorkOrder}.xlsx`);
+  };
+
+  // Export Recent Production Records to Excel
+  const handleExportRecentRecords = () => {
+    if (recentRecords.length === 0) {
+      toast.warning("No recent records to export");
+      return;
+    }
+
+    // Create worksheet data
+    const wsData = [
+      ["Production Material Usage - Recent Records"],
+      ["Generated on: " + new Date().toLocaleString()],
+      [], // Empty row for spacing
+      ["Date", "Work Order", "Transaction #", "Status"],
+    ];
+
+    // Add data rows
+    recentRecords.forEach((record) => {
+      wsData.push([
+        record.usageDate,
+        record.workOrder,
+        record.transactionNumber,
+        record.status,
+      ]);
+    });
+
+    // Create workbook and worksheet
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    // Set column widths
+    const colWidths = [
+      { wch: 20 }, // Date
+      { wch: 20 }, // Work Order
+      { wch: 20 }, // Transaction #
+      { wch: 15 }, // Status
+    ];
+    ws["!cols"] = colWidths;
+
+    // Add the worksheet to the workbook
+    XLSX.utils.book_append_sheet(wb, ws, "Recent Records");
+
+    // Save the file
+    XLSX.writeFile(
+      wb,
+      `Recent_Production_Records_${new Date().toISOString().split("T")[0]}.xlsx`
+    );
+  };
+
   const handleClear = () => {
     setSelectedWorkOrder(""); // Reset work order selection
     setMaterials([]); // Clear materials table
@@ -262,6 +371,13 @@ const ProductionMaterialUsage = () => {
               <div className="table-container">
                 <div className="table-header">
                   <h6>Material Usage</h6>
+                  <button
+                    type="button"
+                    className="btn btn-outline-success px-2 py-1 text-8"
+                    onClick={handleExportMaterialUsage}
+                  >
+                    <i className="fa-solid fa-file-excel me-1"></i> Export Excel
+                  </button>
                 </div>
                 <table className="table table-striped table-hover table-sm p-2 align-middle">
                   <thead>
@@ -489,6 +605,13 @@ const ProductionMaterialUsage = () => {
               <div className="table-container">
                 <div className="table-header">
                   <h6>Recent Production Records</h6>
+                  <button
+                    type="button"
+                    className="btn btn-outline-success px-2 py-1 text-8"
+                    onClick={handleExportRecentRecords}
+                  >
+                    <i className="fa-solid fa-file-excel me-1"></i> Export Excel
+                  </button>
                 </div>
                 <table className="table table-striped table-hover table-sm p-2 align-middle">
                   <thead>
@@ -535,7 +658,7 @@ const ProductionMaterialUsage = () => {
                             <td className="ps-4 actions">
                               <button
                                 type="button"
-                                className="btn-icon btn-primary"
+                                className="btn-icon view"
                                 title="View Details"
                                 onClick={() => handleViewDetails(record)}
                               >

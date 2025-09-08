@@ -109,6 +109,38 @@
   font-size: 1rem;
 }
 
+.badge {
+  display: inline-block;
+  padding: 0.35em 0.8em;
+  font-size: 0.75em;
+  font-weight: 500;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 0.375rem;
+}
+
+.badge.admin {
+  background-color: var(--lightBlue3);
+    color: var(--blue3);
+  font-weight: 600;
+}
+
+.badge.manager {
+  background-color: var(--lightYellow);
+    color: var(--yellow);
+  font-weight: 600;
+}
+
+.badge.user {
+  background-color: var(--lightGreen);
+    color: var(--green);
+  font-weight: 500;
+}
+
+
+
 .modal-footer {
   background-color: #f8f9fa;
   border-top: 1px solid #e9ecef;
@@ -164,4 +196,27 @@
 .modal-dialog.modal-lg {
   max-width: 1000px;
   margin: 1.75rem auto;
+}
+
+.btn-icon.view:hover {
+  background-color: #e7f1ff; /* dull blue */
+}
+
+.btn-icon.view:hover i {
+  color: #0d6efd; /* primary blue */
+}
+
+.btn-icon.edit:hover {
+  background-color: #e8f7ec; /* dull green */
+}
+.btn-icon.edit:hover i {
+  color: #198754; /* Bootstrap green */
+}
+
+/* Delete button */
+.btn-icon.delete:hover {
+  background-color: #fbeaea; /* dull red */
+}
+.btn-icon.delete:hover i {
+  color: #dc3545; /* Bootstrap red */
 }

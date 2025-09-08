@@ -1,0 +1,70 @@
+.order-planning-container {
+  padding: 0;
+}
+
+.order-planning-container .header-style {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.order-planning-container .text-small-gray {
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.order-planning-container .breadcrumb {
+  margin-bottom: 0;
+}
+
+.order-planning-container .card {
+  border-radius: 8px;
+}
+
+.order-planning-container .table th {
+  font-weight: 600;
+  background-color: #f8f9fa;
+}
+
+.order-planning-container .table td {
+  vertical-align: middle;
+}
+
+.order-planning-container .nav-tabs .nav-link.active {
+  font-weight: 600;
+  border-bottom: 2px solid #0d6efd;
+}
+
+.order-planning-container .form-control:focus,
+.order-planning-container .form-select:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.order-planning-container .react-datepicker-wrapper {
+  width: 100%;
+}
+
+.order-planning-container .badge {
+  font-weight: 500;
+  padding: 0.5em 0.75em;
+}
+
+.order-planning-container .btn-sm {
+  padding: 0.25rem 0.5rem;
+}
+
+.order-planning-container .text-danger {
+  color: #dc3545 !important;
+}
+
+.order-planning-container .text-success {
+  color: #198754 !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .order-planning-container .d-flex.flex-wrap {
+    gap: 0.5rem !important;
+  }
+}

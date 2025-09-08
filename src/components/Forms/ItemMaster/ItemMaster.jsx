@@ -1447,7 +1447,7 @@ const ItemMaster = () => {
       {/* Table Section */}
       <div className="margin-2 mx-2">
         <div className="table-container">
-          {ability.can("edit", "Business Partner") && (
+          {ability.can("edit", "Item Master") && (
             <div className="table-header d-flex justify-content-between align-items-center flex-wrap gap-2">
               <div className="selected-count">
                 <input
@@ -1498,7 +1498,7 @@ const ItemMaster = () => {
                   Download Template
                 </button>
                 <button
-                  className="btn-action btn-danger"
+                  className="btn btn-outline-danger text-8"
                   onClick={() => {
                     setConfirmType("multi");
                     handleShowConfirm("multi");
@@ -1512,7 +1512,7 @@ const ItemMaster = () => {
                     </>
                   ) : (
                     <>
-                      <i className="fas fa-trash"></i>
+                      <i className="fas fa-trash me-2"></i>
                       Delete Selected
                     </>
                   )}
@@ -1530,7 +1530,7 @@ const ItemMaster = () => {
                 <th>Code</th>
                 <th>UOM</th>
                 <th>ST Qty</th>
-                <th>Min Qty</th>
+                {/* <th>Min Qty</th> */}
                 <th>Life</th>
                 <th>Group</th>
                 <th>Status</th>
@@ -1587,7 +1587,7 @@ const ItemMaster = () => {
                       </div>
                     </td>
                     <td className="ps-4">{item.stQty}</td>
-                    <td className="ps-4">{item.minQty}</td>
+                    {/* <td className="ps-4">{item.minQty}</td> */}
                     <td className="ps-4">
                       <div>
                         <span>{item.life}</span>
@@ -1603,7 +1603,7 @@ const ItemMaster = () => {
                     </td>
                     <td className="actions ps-3">
                       <button
-                        className="btn-icon btn-primary"
+                        className="btn-icon view"
                         title="View Details"
                         onClick={(e) => handleViewDetails(item, e)}
                       >
@@ -1611,7 +1611,7 @@ const ItemMaster = () => {
                       </button>
                       {ability.can("edit", "Item Master") && (
                         <button
-                          className="btn-icon btn-success"
+                          className="btn-icon edit"
                           title="Edit"
                           onClick={(e) => handleEditDetails(item, e)}
                         >
@@ -1620,7 +1620,7 @@ const ItemMaster = () => {
                       )}
                       {ability.can("edit", "Item Master") && (
                         <button
-                          className="btn-icon btn-danger"
+                          className="btn-icon delete"
                           title="Delete"
                           onClick={() => {
                             setItemIdState(item.id);

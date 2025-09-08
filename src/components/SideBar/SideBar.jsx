@@ -27,6 +27,10 @@ import ProductionMaterialUsage from "../Forms/ProductionMaterialUsage/Production
 import Users from "../Users/Users";
 import ApproveItemsQuantity from "../Forms/ApproveItemsQuantity/ApproveItemsQuantity";
 import { AbilityContext } from "../../utils/AbilityContext";
+import StockAdjustment from "../Forms/StockAdjustment/StockAdjustment";
+import OrderPlanning from "../OrderPlanning/OrderPlanning";
+import VendorRating from "../VendorRating/VendorRating";
+import LineMonitoring from "../LineMonitoring/LineMonitoring";
 
 const SideBar = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -54,11 +58,6 @@ const SideBar = () => {
   };
 
   const menuItems = [
-    {
-      icon: "fa-solid fa-house",
-      path: "dashboard",
-      label: "Dashboard",
-    },
     {
       icon: "fas fa-user-tie",
       path: "Administrations",
@@ -141,13 +140,13 @@ const SideBar = () => {
           path: "Masters / BOM Master",
           icon: "fas fa-cubes",
         },
-        {
-          label: "Type Master",
-          compName: "TypeMaster",
-          newPath: "type-master",
-          path: "Masters / Type Master",
-          icon: "fas fa-list-alt",
-        },
+        // {
+        //   label: "Type Master",
+        //   compName: "TypeMaster",
+        //   newPath: "type-master",
+        //   path: "Masters / Type Master",
+        //   icon: "fas fa-list-alt",
+        // },
         {
           label: "Group Master",
           compName: "GroupMaster",
@@ -204,13 +203,13 @@ const SideBar = () => {
           path: "Transactions /Production Floor Receipt",
           icon: "fas fa-circle-check",
         },
-        // {
-        //   label: "Production Material Usage",
-        //   compName: "ProductionMaterialUsage",
-        //   newPath: "production-material-usage",
-        //   path: "Transactions / Production Material Usage",
-        //   icon: "fas fa-industry",
-        // },
+        {
+          label: "Production Material Usage",
+          compName: "ProductionMaterialUsage",
+          newPath: "production-material-usage",
+          path: "Transactions / Production Material Usage",
+          icon: "fas fa-industry",
+        },
         {
           label: "WIP Return",
           compName: "WIPReturn",
@@ -252,6 +251,11 @@ const SideBar = () => {
       icon: "fa-solid fa-star",
       path: "activity-logs",
       label: "Activity Logs",
+    },
+    {
+      icon: "fa-solid fa-cubes",
+      path: "stock-adjustment",
+      label: "Stock Adjustment",
     },
   ];
 
@@ -341,6 +345,10 @@ const SideBar = () => {
       setRightSideComponent(<div>Reports Coming Soon</div>);
     name === "Activity Logs" && setRightSideComponent(<ActivityLogs />);
     name === "My Approvals" && setRightSideComponent(<ApproveItemsQuantity />);
+    name === "Stock Adjustment" && setRightSideComponent(<StockAdjustment />);
+    name === "Order Planning" && setRightSideComponent(<OrderPlanning />);
+    name === "Vendor Rating" && setRightSideComponent(<VendorRating />);
+    name === "Line Monitoring" && setRightSideComponent(<LineMonitoring />);
   };
 
   // RBAC
@@ -436,9 +444,63 @@ const SideBar = () => {
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
         />
-
         {/* Menu Items */}
         {!isCollapsed && <p className="heading">MAIN MENU</p>}
+        <Link
+          to="/dashboard"
+          className="home-link mb-0 py-0 mt-3"
+          style={{ color: "#8D91AD" }}
+          onClick={() => {
+            setIsActiveComponent("dashboard");
+            setLabelName("Dashboard");
+          }}
+        >
+          <i className="fa-solid fa-house"></i>
+          {!isCollapsed && "Dashboard"}
+        </Link>
+
+        <Link
+          to="/order-planning"
+          className="home-link mb-0 py-0 mt-3"
+          style={{ color: "#8D91AD" }}
+          onClick={() => {
+            setIsActiveComponent("order-planning");
+            setLabelName("Order Planning");
+            handleRightSideComponentName("Order Planning");
+          }}
+        >
+          <i className="fa-solid fa-calendar-check"></i>
+          {!isCollapsed && "Order Planning"}
+        </Link>
+
+        <Link
+          to="/vendor-rating"
+          className="home-link mb-0 py-0 mt-3"
+          style={{ color: "#8D91AD" }}
+          onClick={() => {
+            setIsActiveComponent("vendor-rating");
+            setLabelName("Vendor Rating");
+            handleRightSideComponentName("Vendor Rating");
+          }}
+        >
+          <i className="fa-solid fa-star"></i>
+          {!isCollapsed && "Vendor Rating"}
+        </Link>
+
+        <Link
+          to="/line-monitoring"
+          className="home-link mb-0 py-0 my-3"
+          style={{ color: "#8D91AD" }}
+          onClick={() => {
+            setIsActiveComponent("line-monitoring");
+            setLabelName("Line Monitoring");
+            handleRightSideComponentName("Line Monitoring");
+          }}
+        >
+          <i className="fa-solid fa-industry"></i>
+          {!isCollapsed && "Line Monitoring"}
+        </Link>
+
         <ul className="nav nav-pills flex-column mb-auto mt-1">
           {filteredMenuItems
             .filter((item) => {
@@ -528,7 +590,7 @@ const SideBar = () => {
           <div className="user-profile">
             <div className="profile-info" title="John Doe">
               <img
-                src={`https://ui-avatars.com/api/?name=${localStorage.getItem(
+                src={`https://ui-avatars.com/api/?name=${Cookies.get(
                   "username"
                 )}&background=2563eb&color=fff`}
                 alt="Profile"

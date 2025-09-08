@@ -2,7 +2,9 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../../../services/api";
+import Cookies from "js-cookie";
 import "./WIPReturn.css";
+import * as XLSX from "xlsx";
 
 const WIPReturn = () => {
   const [warehouseList, setWarehouseList] = useState([]);
@@ -42,8 +44,12 @@ const WIPReturn = () => {
   };
 
   useEffect(() => {
-    // Fetch warehouse list on component mount
+    // Fetch warehouse list and set warehouse from cookies on component mount
     fetchWarehouseList();
+    const userWarehouseId = Cookies.get("warehouseId");
+    if (userWarehouseId) {
+      setWarehouse(userWarehouseId);
+    }
   }, []);
 
   // Calculate the display range for the pagination info
@@ -269,6 +275,117 @@ const WIPReturn = () => {
   //   }
   // };
 
+  // Export Return Items to Excel
+  const handleExportReturnItems = () => {
+    if (returnItems.length === 0) {
+      toast.warning("No items to export");
+      return;
+    }
+
+    // Create worksheet data
+    const wsData = [
+      ["WIP Return - Return Items"],
+      ["Work Order: " + order],
+      ["Return Type: " + type],
+      ["Return Date: " + date],
+      [], // Empty row for spacing
+      ["Material", "Batch No", "Original Qty", "Return Qty", "Return Reason"],
+    ];
+
+    // Add data rows
+    returnItems.forEach((item) => {
+      wsData.push([
+        item.itemName,
+        item.batchNumber,
+        item.receivedQuantity,
+        item.returnQty || "",
+        item.reason || "",
+      ]);
+    });
+
+    // Create workbook and worksheet
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    // Set column widths
+    const colWidths = [
+      { wch: 40 }, // Material
+      { wch: 15 }, // Batch No
+      { wch: 15 }, // Original Qty
+      { wch: 15 }, // Return Qty
+      { wch: 30 }, // Return Reason
+    ];
+    ws["!cols"] = colWidths;
+
+    // Add the worksheet to the workbook
+    XLSX.utils.book_append_sheet(wb, ws, "Return Items");
+
+    // Save the file
+    XLSX.writeFile(wb, `WIP_Return_${transactionNumber}.xlsx`);
+  };
+
+  // Export Recent Returns to Excel
+  const handleExportRecentReturns = () => {
+    if (recentReturns.length === 0) {
+      toast.warning("No recent returns to export");
+      return;
+    }
+
+    // Create worksheet data
+    const wsData = [
+      ["WIP Return - Recent Returns"],
+      ["Generated on: " + new Date().toLocaleString()],
+      [], // Empty row for spacing
+      [
+        "Date",
+        "Transaction #",
+        "Work Order",
+        "Return Type",
+        "Items",
+        "Total Value",
+        "Status",
+      ],
+    ];
+
+    // Add data rows
+    recentReturns.forEach((r) => {
+      wsData.push([
+        r.date,
+        r.transactionNumber,
+        r.workOrderId,
+        r.returnType,
+        r.items.join(", "),
+        r.totalValue,
+        r.status,
+      ]);
+    });
+
+    // Create workbook and worksheet
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    // Set column widths
+    const colWidths = [
+      { wch: 20 }, // Date
+      { wch: 20 }, // Transaction #
+      { wch: 20 }, // Work Order
+      { wch: 20 }, // Return Type
+      { wch: 50 }, // Items
+      { wch: 15 }, // Total Value
+      { wch: 15 }, // Status
+    ];
+    ws["!cols"] = colWidths;
+
+    // Add the worksheet to the workbook
+    XLSX.utils.book_append_sheet(wb, ws, "Recent Returns");
+
+    // Save the file
+    XLSX.writeFile(
+      wb,
+      `Recent_WIP_Returns_${new Date().toISOString().split("T")[0]}.xlsx`
+    );
+  };
+
   const handleReset = () => {
     setOrder("");
     setType("");
@@ -419,12 +536,11 @@ const WIPReturn = () => {
                 <div className="position-relative w-100">
                   <i className="fas fa-warehouse ms-2 position-absolute z-0 input-icon text-font"></i>
                   <select
-                    className={`form-select ps-5 ms-2 text-font ${
-                      warehouse === "" ? "text-muted" : ""
-                    }`}
+                    className={`form-select ps-5 ms-2 text-font`}
                     id="warehouse"
                     value={warehouse}
                     onChange={(e) => setWarehouse(e.target.value)}
+                    disabled
                   >
                     <option value="" disabled hidden>
                       Select Your Warehouse
@@ -446,6 +562,13 @@ const WIPReturn = () => {
               <div className="table-container">
                 <div className="table-header">
                   <h6>Return Items</h6>
+                  <button
+                    type="button"
+                    className="btn btn-outline-success px-2 py-1 text-8"
+                    onClick={handleExportReturnItems}
+                  >
+                    <i className="fa-solid fa-file-excel me-1"></i> Export Excel
+                  </button>
                 </div>
                 <table>
                   <thead>
@@ -590,6 +713,13 @@ const WIPReturn = () => {
               <div className="table-container">
                 <div className="table-header">
                   <h6>Recent Returns</h6>
+                  <button
+                    type="button"
+                    className="btn btn-outline-success px-2 py-1 text-8"
+                    onClick={handleExportRecentReturns}
+                  >
+                    <i className="fa-solid fa-file-excel me-1"></i> Export Excel
+                  </button>
                 </div>
                 <table>
                   <thead>

@@ -1044,8 +1044,6 @@ const VendorItemsMaster = () => {
               </option>
             ))}
           </select>
-        </div>
-        <div className="filter-options">
           <select
             className="filter-select"
             value={selectedStatusFilter}
@@ -1055,8 +1053,6 @@ const VendorItemsMaster = () => {
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
           </select>
-        </div>
-        <div className="filter-options">
           <button className="filter-select" onClick={resetFilters}>
             <i className="fas fa-filter me-2"></i>
             Reset Filters
@@ -1393,7 +1389,7 @@ const VendorItemsMaster = () => {
       {/* Table Section */}
       <div className="margin-2 mx-2">
         <div className="table-container">
-          {ability.can("edit", "Business Partner") && (
+          {ability.can("edit", "Vendor Item Master") && (
             <div className="table-header">
               <div className="selected-count">
                 <input
@@ -1443,13 +1439,13 @@ const VendorItemsMaster = () => {
                   Download Template
                 </button>
                 <button
-                  className="btn-action btn-danger"
+                  className="btn btn-outline-danger text-8"
                   onClick={() => {
                     setConfirmType("multi");
                     handleShowConfirm("multi");
                   }}
                 >
-                  <i className="fas fa-trash"></i>
+                  <i className="fas fa-trash me-2"></i>
                   Delete Selected
                 </button>
               </div>
@@ -1554,7 +1550,7 @@ const VendorItemsMaster = () => {
                     </td>
                     <td className="actions ps-3">
                       <button
-                        className="btn-icon btn-primary"
+                        className="btn-icon view"
                         title="View Details"
                         onClick={(e) => handleViewDetails(assignment, e)}
                       >
@@ -1562,7 +1558,7 @@ const VendorItemsMaster = () => {
                       </button>
                       {ability.can("edit", "Vendor Item Master") && (
                         <button
-                          className="btn-icon btn-success"
+                          className="btn-icon edit"
                           title="Edit"
                           onClick={(e) => handleEditDetails(assignment, e)}
                         >
@@ -1571,7 +1567,7 @@ const VendorItemsMaster = () => {
                       )}
                       {ability.can("edit", "Vendor Item Master") && (
                         <button
-                          className="btn-icon btn-danger"
+                          className="btn-icon delete"
                           title="Delete"
                           onClick={() => {
                             setVendorItemIdState(assignment.id);

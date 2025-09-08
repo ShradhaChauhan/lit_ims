@@ -4,10 +4,11 @@ import "./MaterialIssueRequest.css";
 import { toast } from "react-toastify";
 import api from "../../../services/api";
 import Select from "react-select";
+import Cookies from "js-cookie";
+import * as XLSX from "xlsx";
 
 const MaterialIssueRequest = () => {
   const [tempQuantity, setTempQuantity] = useState(0);
-  const [qty, setQty] = useState(0);
   // Helper function to check requisition type restriction
   const getRequisitionTypeOptions = () => {
     // If no items have been added yet, allow both types
@@ -27,6 +28,90 @@ const MaterialIssueRequest = () => {
 
     // Fallback - should not reach here
     return ["complete bom", "individual items"];
+  };
+
+  // Export Requested Items to Excel
+  const handleExportRequestedItems = () => {
+    if (request.length === 0) {
+      toast.warning("No items to export");
+      return;
+    }
+
+    // Create worksheet data
+    const wsData = [
+      ["Material Issue Request - Requested Items"],
+      ["Transaction #: " + transactionNumber],
+      ["Generated on: " + new Date().toLocaleString()],
+      [], // Empty row for spacing
+      ["Item Code", "Item/BOM Name", "Type", "Quantity"],
+    ];
+
+    // Add data rows
+    request.forEach((item) => {
+      wsData.push([item.code, item.name, item.type, item.quantity]);
+    });
+
+    // Create workbook and worksheet
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    // Set column widths
+    const colWidths = [
+      { wch: 15 }, // Item Code
+      { wch: 30 }, // Item/BOM Name
+      { wch: 15 }, // Type
+      { wch: 15 }, // Quantity
+    ];
+    ws["!cols"] = colWidths;
+
+    // Add the worksheet to the workbook
+    XLSX.utils.book_append_sheet(wb, ws, "Requested Items");
+
+    // Save the file
+    XLSX.writeFile(wb, `Material_Issue_Request_${transactionNumber}.xlsx`);
+  };
+
+  // Export Recent Requests to Excel
+  const handleExportRecentRequests = () => {
+    if (recentRequests.length === 0) {
+      toast.warning("No recent requests to export");
+      return;
+    }
+
+    // Create worksheet data
+    const wsData = [
+      ["Material Issue Request - Recent Requests"],
+      ["Generated on: " + new Date().toLocaleString()],
+      [], // Empty row for spacing
+      ["Transaction #", "Date", "Type", "Status"],
+    ];
+
+    // Add data rows
+    recentRequests.forEach((req) => {
+      wsData.push([req.transactionNumber, req.createdAt, req.type, req.status]);
+    });
+
+    // Create workbook and worksheet
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    // Set column widths
+    const colWidths = [
+      { wch: 20 }, // Transaction #
+      { wch: 20 }, // Date
+      { wch: 15 }, // Type
+      { wch: 15 }, // Status
+    ];
+    ws["!cols"] = colWidths;
+
+    // Add the worksheet to the workbook
+    XLSX.utils.book_append_sheet(wb, ws, "Recent Requests");
+
+    // Save the file
+    XLSX.writeFile(
+      wb,
+      `Recent_Material_Requests_${new Date().toISOString().split("T")[0]}.xlsx`
+    );
   };
 
   const handleReset = (e) => {
@@ -54,85 +139,6 @@ const MaterialIssueRequest = () => {
     setTransactionNumber(generateTransactionNumber());
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (request.length === 0) {
-      toast.error("Please add at least one item to the request");
-      return;
-    }
-
-    try {
-      // Determine type based on the first item
-      const requestType = request[0].type === "BOM" ? "bom" : "items";
-      console.log("Warehouse: " + warehouse);
-      // Format data for API
-      // const formattedItems = request.map((item) => ({
-      //   id: item.id,
-      //   name: item.name,
-      //   code: item.code,
-      //   type: item.type.toLowerCase(),
-      //   quantity: Number(item.quantity),
-      // }));
-      const formattedItems = request.flatMap((item) => {
-        if (item.type === "bom" || item.type === "BOM") {
-          // BOM - flatten the sub-items with calculated quantity
-          return item.items.map((subItem) => ({
-            id: subItem.itemId,
-            name: subItem.itemName,
-            code: subItem.itemCode,
-            type: "item", // sub-items are always individual items
-            quantity: Number(subItem.calculatedQuantity),
-          }));
-        } else {
-          // Individual item
-          return [
-            {
-              id: item.id,
-              name: item.name,
-              code: item.code,
-              type: "item",
-              quantity: Number(item.quantity),
-            },
-          ];
-        }
-      });
-
-      const payload = {
-        transactionNumber,
-        type: requestType,
-        warehouseId: Number(warehouse),
-        items: formattedItems,
-      };
-
-      console.log("Submitting payload:", payload);
-
-      const response = await api.post("/api/requisitions/save", payload);
-
-      if (response.data.status) {
-        toast.success("Material request saved successfully");
-
-        // Fetch updated recent requests
-        try {
-          const recentResponse = await api.get("/api/requisitions/recent");
-          if (recentResponse.data.status) {
-            setRecentRequests(recentResponse.data.data);
-          }
-        } catch (error) {
-          console.error("Error fetching updated recent requests:", error);
-        }
-
-        // Perform complete form reset
-        handleReset();
-      } else {
-        toast.error(response.data.message || "Error saving request");
-      }
-    } catch (error) {
-      toast.error(error.response.data.message || "Error submitting request");
-      console.error("Error submitting material request:", error);
-    }
-  };
-
   const [requisitionType, setRequisitionType] = useState("");
   const [request, setRequest] = useState([]);
   const [bom, setBom] = useState("");
@@ -157,6 +163,8 @@ const MaterialIssueRequest = () => {
   const [showModal, setShowModal] = useState(false);
   const [recent, setRecent] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
+  const [selectedRecentRequest, setSelectedRecentRequest] = useState(null);
+  const [showRecentItemsModal, setShowRecentItemsModal] = useState(false);
   // Pagination states
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -177,8 +185,13 @@ const MaterialIssueRequest = () => {
   };
 
   useEffect(() => {
-    // Fetch warehouse list on component mount
+    // Fetch warehouse list and set warehouse from cookies on component mount
+    // Fetch warehouse list and set warehouse from cookies on component mount
     fetchWarehouseList();
+    const userWarehouseId = Cookies.get("warehouseId");
+    if (userWarehouseId) {
+      setWarehouse(userWarehouseId);
+    }
   }, []);
 
   // Calculate the display range for the pagination info
@@ -319,6 +332,7 @@ const MaterialIssueRequest = () => {
 
   // Dynamically calculate widths
   const fieldClass = isCompleteBOM || isIndividualItems ? "flex-1" : "flex-1-3";
+  const [selectedOption, setSelectedOption] = useState([]);
 
   const handleAddRequest = async (e) => {
     e.preventDefault();
@@ -346,7 +360,8 @@ const MaterialIssueRequest = () => {
       // Find the selected BOM from the list
       console.log("Selected BOM ID: " + bom);
       const selectedBOM = bomList.find((b) => b.id === bom);
-
+      setSelectedOption(selectedBOM);
+      setSelectedOption(selectedBOM);
       if (!selectedBOM) {
         toast.error("Selected BOM not found");
         return;
@@ -442,6 +457,87 @@ const MaterialIssueRequest = () => {
       setType("");
       setQuantity("");
       setRequisitionType("");
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (request.length === 0) {
+      toast.error("Please add at least one item to the request");
+      return;
+    }
+
+    try {
+      // Determine type based on the first item
+      const requestType = request[0].type === "BOM" ? "bom" : "items";
+      console.log("Warehouse: " + warehouse);
+      // Format data for API
+      // const formattedItems = request.map((item) => ({
+      //   id: item.id,
+      //   name: item.name,
+      //   code: item.code,
+      //   type: item.type.toLowerCase(),
+      //   quantity: Number(item.quantity),
+      // }));
+      const formattedItems = request.flatMap((item) => {
+        if (item.type === "bom" || item.type === "BOM") {
+          // BOM - flatten the sub-items with calculated quantity
+          return item.items.map((subItem) => ({
+            id: subItem.itemId,
+            name: subItem.itemName,
+            code: subItem.itemCode,
+            type: "item", // sub-items are always individual items
+            quantity: Number(subItem.calculatedQuantity),
+          }));
+        } else {
+          // Individual item
+          return [
+            {
+              id: item.id,
+              name: item.name,
+              code: item.code,
+              type: "item",
+              quantity: Number(item.quantity),
+            },
+          ];
+        }
+      });
+
+      const payload = {
+        transactionNumber,
+        type: requestType,
+        bomName: selectedOption.name,
+        bomCode: selectedOption.code,
+        warehouseId: Number(warehouse),
+        items: formattedItems,
+      };
+
+      console.log("Submitting payload:", payload);
+
+      const response = await api.post("/api/requisitions/save", payload);
+
+      if (response.data.status) {
+        toast.success("Material request saved successfully");
+
+        // Fetch updated recent requests
+        try {
+          const recentResponse = await api.get("/api/requisitions/recent");
+          if (recentResponse.data.status) {
+            setRecentRequests(recentResponse.data.data);
+          }
+        } catch (error) {
+          console.error("Error fetching updated recent requests:", error);
+        }
+
+        // Perform complete form reset
+        handleReset();
+      } else {
+        toast.error(response.data.message || "Error saving request");
+      }
+    } catch (error) {
+      toast.error(error.response.data.message || "Error submitting request");
+      console.error("Error submitting material request:", error);
     }
   };
 
@@ -794,12 +890,11 @@ const MaterialIssueRequest = () => {
                 <div className="position-relative w-100">
                   <i className="fas fa-warehouse ms-2 position-absolute z-0 input-icon margin-top-8 text-font"></i>
                   <select
-                    className={`form-select ps-5 ms-2 text-font ${
-                      warehouse === "" ? "text-muted" : ""
-                    }`}
+                    className={`form-select ps-5 ms-2 text-font`}
                     id="warehouse"
                     value={warehouse}
                     onChange={(e) => setWarehouse(e.target.value)}
+                    disabled
                   >
                     <option value="" disabled hidden>
                       Select Warehouse Location
@@ -830,11 +925,18 @@ const MaterialIssueRequest = () => {
               <div className="table-container">
                 <div className="table-header">
                   <h6>Requested Items</h6>
+                  <button
+                    type="button"
+                    className="btn btn-outline-success px-2 py-1 text-8"
+                    onClick={handleExportRequestedItems}
+                  >
+                    <i className="fa-solid fa-file-excel me-1"></i> Export Excel
+                  </button>
                 </div>
                 <table className="align-middle">
                   <thead>
                     <tr>
-                      <th>Item Code</th>
+                      <th>Item/BOM Code</th>
                       <th>Item/BOM Name</th>
                       <th>Type</th>
                       <th>Quantity</th>
@@ -870,7 +972,7 @@ const MaterialIssueRequest = () => {
                           <td className="actions ps-4">
                             <button
                               type="button"
-                              className={`btn-icon btn-primary ${
+                              className={`btn-icon view ${
                                 i.type !== "BOM" ? "d-none" : ""
                               }`}
                               title="View Details"
@@ -882,7 +984,7 @@ const MaterialIssueRequest = () => {
                             </button>
                             <button
                               type="button"
-                              className="btn-icon btn-danger"
+                              className="btn-icon delete"
                               title="Delete"
                               onClick={() => handleDelete(i.id)}
                             >
@@ -931,6 +1033,13 @@ const MaterialIssueRequest = () => {
               <div className="table-container">
                 <div className="table-header">
                   <h6>Recent Requests</h6>
+                  <button
+                    type="button"
+                    className="btn btn-outline-success px-2 py-1 text-8"
+                    onClick={handleExportRecentRequests}
+                  >
+                    <i className="fa-solid fa-file-excel me-1"></i> Export Excel
+                  </button>
                 </div>
                 <table className="align-middle">
                   <thead>
@@ -946,24 +1055,23 @@ const MaterialIssueRequest = () => {
                     {recentRequests.length > 0 ? (
                       recentRequests.map((req, index) => (
                         <tr key={index}>
-                          <td className="ps-4">{req.transactionNumber}</td>
-                          <td className="ps-4">{req.createdAt}</td>
-                          <td className="ps-4 text-capitalize">{req.type}</td>
-                          <td className="ps-4">
-                            {req.items && req.items.length > 0 ? (
-                              <ul className="mb-0 ps-3">
-                                {req.items.map((item, index) => (
-                                  <li key={index}>
-                                    {"(" + item.code + ") " + item.name}
-                                  </li>
-                                ))}
-                              </ul>
-                            ) : (
-                              "-"
-                            )}
+                          <td>{req.transactionNumber}</td>
+                          <td>{req.createdAt}</td>
+                          <td className="text-capitalize">{req.type}</td>
+                          <td>
+                            <button
+                              type="button"
+                              className="btn-icon view"
+                              title="View Items"
+                              onClick={() => {
+                                setSelectedRecentRequest(req);
+                                setShowRecentItemsModal(true);
+                              }}
+                            >
+                              <i className="fas fa-eye"></i>
+                            </button>
                           </td>
-
-                          <td className="ps-4">
+                          <td>
                             <span
                               className={`status-badge ${req.status.toLowerCase()}`}
                             >
@@ -1063,7 +1171,8 @@ const MaterialIssueRequest = () => {
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">
-                  <i class="fa-solid fa-circle-info me-2"></i>Item Details
+                  <i className="fa-solid fa-circle-info me-2"></i>Item Details
+                  <i className="fa-solid fa-circle-info me-2"></i>Item Details
                 </h5>
                 <button
                   type="button"
@@ -1128,8 +1237,6 @@ const MaterialIssueRequest = () => {
                                   )
                                 }
                               />
-
-                              {/* {item.quantity * tempQuantity} */}
                             </td>
                             <td>
                               <input
@@ -1170,6 +1277,198 @@ const MaterialIssueRequest = () => {
                   }}
                 >
                   <i className="fa-solid fa-xmark me-1"></i> Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Recent Items Modal */}
+      {showRecentItemsModal && selectedRecentRequest && (
+        <div
+          className="modal show d-block modal-xl"
+          tabIndex="-1"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+        >
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  <i className="fa-solid fa-clipboard-list me-2"></i>Request
+                  Items
+                </h5>
+                <button
+                  type="button"
+                  className="btn"
+                  aria-label="Close"
+                  onClick={() => {
+                    setSelectedRecentRequest(null);
+                    setShowRecentItemsModal(false);
+                  }}
+                >
+                  <i className="fas fa-times"></i>
+                </button>
+              </div>
+              <div className="modal-body">
+                <div className="user-details-grid">
+                  <div className="detail-item">
+                    <strong>Transaction Number:</strong>
+                    <span>{selectedRecentRequest.transactionNumber}</span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Date:</strong>
+                    <span>{selectedRecentRequest.createdAt}</span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Type:</strong>
+                    <span className="text-capitalize">
+                      {selectedRecentRequest.type}
+                    </span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Status:</strong>
+                    <span
+                      className={`status-badge ${selectedRecentRequest.status.toLowerCase()}`}
+                    >
+                      {selectedRecentRequest.status}
+                    </span>
+                  </div>
+                </div>
+
+                {selectedRecentRequest.items &&
+                  selectedRecentRequest.items.length > 0 && (
+                    <>
+                      <hr />
+                      <h6>Items List:</h6>
+                      <table className="align-middle">
+                        <thead>
+                          <tr>
+                            <th>Item Name</th>
+                            <th>Item Code</th>
+                            <th>Type</th>
+                          </tr>
+                        </thead>
+                        <tbody className="text-break">
+                          {selectedRecentRequest.items.map((item, idx) => (
+                            <tr key={idx}>
+                              <td className="p-4">{item.name}</td>
+                              <td className="p-4">{item.code}</td>
+                              <td className="text-capitalize p-4">
+                                {item.type}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </>
+                  )}
+              </div>
+              <div className="modal-footer">
+                <button
+                  className="btn btn-secondary text-8"
+                  onClick={() => {
+                    setSelectedRecentRequest(null);
+                    setShowRecentItemsModal(false);
+                  }}
+                >
+                  <i className="fa-solid fa-xmark me-1"></i> Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Recent Items Modal */}
+      {showRecentItemsModal && selectedRecentRequest && (
+        <div
+          className="modal show d-block modal-xl"
+          tabIndex="-1"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+        >
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  <i className="fa-solid fa-clipboard-list me-2"></i>Request
+                  Items
+                </h5>
+                <button
+                  type="button"
+                  className="btn"
+                  aria-label="Close"
+                  onClick={() => {
+                    setSelectedRecentRequest(null);
+                    setShowRecentItemsModal(false);
+                  }}
+                >
+                  <i className="fas fa-times"></i>
+                </button>
+              </div>
+              <div className="modal-body">
+                <div className="user-details-grid">
+                  <div className="detail-item">
+                    <strong>Transaction Number:</strong>
+                    <span>{selectedRecentRequest.transactionNumber}</span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Date:</strong>
+                    <span>{selectedRecentRequest.createdAt}</span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Type:</strong>
+                    <span className="text-capitalize">
+                      {selectedRecentRequest.type}
+                    </span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Status:</strong>
+                    <span
+                      className={`status-badge ${selectedRecentRequest.status.toLowerCase()}`}
+                    >
+                      {selectedRecentRequest.status}
+                    </span>
+                  </div>
+                </div>
+
+                {selectedRecentRequest.items &&
+                  selectedRecentRequest.items.length > 0 && (
+                    <>
+                      <hr />
+                      <h6>Items List:</h6>
+                      <table className="align-middle">
+                        <thead>
+                          <tr>
+                            <th>Item Name</th>
+                            <th>Item Code</th>
+                            <th>Type</th>
+                          </tr>
+                        </thead>
+                        <tbody className="text-break">
+                          {selectedRecentRequest.items.map((item, idx) => (
+                            <tr key={idx}>
+                              <td className="p-4">{item.name}</td>
+                              <td className="p-4">{item.code}</td>
+                              <td className="text-capitalize p-4">
+                                {item.type}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </>
+                  )}
+              </div>
+              <div className="modal-footer">
+                <button
+                  className="btn btn-secondary text-8"
+                  onClick={() => {
+                    setSelectedRecentRequest(null);
+                    setShowRecentItemsModal(false);
+                  }}
+                >
+                  <i className="fa-solid fa-xmark me-1"></i> Close
                 </button>
               </div>
             </div>

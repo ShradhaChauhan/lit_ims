@@ -49,10 +49,10 @@ const ItemMasterModal = ({ item, onClose }) => {
             <span>{item?.stQty || "-"}</span>
           </div>
 
-          <div className="detail-item">
+          {/* <div className="detail-item">
             <strong>Min Qty:</strong>
             <span>{item?.minQty || "-"}</span>
-          </div>
+          </div> */}
 
           <div className="detail-item">
             <strong>Life:</strong>
