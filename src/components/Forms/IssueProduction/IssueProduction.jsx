@@ -191,29 +191,16 @@ const IssueProduction = () => {
     }
   };
 
-  const verifyBatch = async (batchNo) => {
-    if (!batchNo.trim()) {
-      toast.error("Please enter a batch number");
-      return;
-    }
-
-    if (!selectedRequisition) {
-      toast.error("Please select a requisition first");
-      return;
-    }
-
-    if (allItemsFulfilled) {
-      toast.warning("All requested quantities have been fulfilled");
-      setBatchNumber("");
-      return;
-    }
+  const processIndividualBatch = async (batchNo) => {
+    const errors = [];
+    const warnings = [];
 
     // Extract item code from batch number (between index 7 and 15)
     if (batchNo.length < 15) {
-      toast.error("Invalid batch number format");
-      setBatchNumber("");
-      return;
+      errors.push({ batch: batchNo, message: "Invalid batch number format" });
+      return { success: false, errors, warnings };
     }
+
     const itemCodeFromBatch = batchNo.substring(7, 15);
 
     // Check if item exists in requested items before making API call
@@ -221,9 +208,8 @@ const IssueProduction = () => {
       (item) => item.code === itemCodeFromBatch
     );
     if (!itemExists) {
-      toast.warning("This item is not in the requisition list");
-      setBatchNumber("");
-      return;
+      warnings.push({ batch: batchNo, message: "This item is not in the requisition list" });
+      return { success: false, errors, warnings };
     }
 
     try {
@@ -240,16 +226,14 @@ const IssueProduction = () => {
           (batch) => batch.batchNo === batchData.batchNo
         );
         if (alreadyScanned) {
-          toast.warning("This batch has already been scanned");
-          setBatchNumber("");
-          return;
+          warnings.push({ batch: batchNo, message: "This batch has already been scanned" });
+          return { success: false, errors, warnings };
         }
 
         // Validate that the API returned the same item code we expected
         if (batchData.itemCode !== itemCodeFromBatch) {
-          toast.error("Batch data mismatch. Please try again.");
-          setBatchNumber("");
-          return;
+          errors.push({ batch: batchNo, message: "Batch data mismatch" });
+          return { success: false, errors, warnings };
         }
 
         // Check if this item's requested quantity is already fulfilled
@@ -260,11 +244,11 @@ const IssueProduction = () => {
           matchingItem &&
           matchingItem.issuedQty >= matchingItem.requestedQty
         ) {
-          toast.warning(
-            `Requested quantity for ${matchingItem.itemName} already fulfilled`
-          );
-          setBatchNumber("");
-          return;
+          warnings.push({ 
+            batch: batchNo, 
+            message: `Requested quantity for ${matchingItem.itemName} already fulfilled` 
+          });
+          return { success: false, errors, warnings };
         }
 
         // Add to scanned batches
@@ -276,38 +260,91 @@ const IssueProduction = () => {
           itemCode: batchData.itemCode,
         };
 
-        setScannedBatches([...scannedBatches, newScannedBatch]);
+        setScannedBatches((prev) => [...prev, newScannedBatch]);
 
         // Update the requested items table with the issued quantity
-        const updatedItems = requestedItems.map((item) => {
-          if (item.code === batchData.itemCode) {
-            const newIssuedQty = item.issuedQty + batchData.quantity;
-            const newVariance = newIssuedQty - item.requestedQty;
-            const newStatus =
-              newIssuedQty >= item.requestedQty ? "Completed" : "Pending";
+        setRequestedItems((prevItems) => 
+          prevItems.map((item) => {
+            if (item.code === batchData.itemCode) {
+              const newIssuedQty = item.issuedQty + batchData.quantity;
+              const newVariance = newIssuedQty - item.requestedQty;
+              const newStatus =
+                newIssuedQty >= item.requestedQty ? "Completed" : "Pending";
 
-            return {
-              ...item,
-              issuedQty: newIssuedQty,
-              variance: newVariance,
-              status: newStatus,
-            };
-          }
-          return item;
-        });
+              return {
+                ...item,
+                issuedQty: newIssuedQty,
+                variance: newVariance,
+                status: newStatus,
+              };
+            }
+            return item;
+          })
+        );
 
-        setRequestedItems(updatedItems);
-        toast.success("Batch verified and issued successfully");
-        setBatchNumber("");
+        return { success: true, errors, warnings, batchData };
       } else {
-        toast.error(response.data.message || "Invalid batch number");
-        setBatchNumber("");
+        errors.push({ batch: batchNo, message: response.data.message || "Invalid batch number" });
+        return { success: false, errors, warnings };
       }
     } catch (error) {
-      toast.error("Error verifying and issuing batch");
+      errors.push({ batch: batchNo, message: "Error verifying and issuing batch" });
       console.error("Error verifying and issuing batch:", error);
-      setBatchNumber("");
+      return { success: false, errors, warnings };
     }
+  };
+
+  const verifyBatch = async (batchInput) => {
+    if (!batchInput.trim()) {
+      toast.error("Please enter a batch number");
+      return;
+    }
+
+    if (!selectedRequisition) {
+      toast.error("Please select a requisition first");
+      return;
+    }
+
+    if (allItemsFulfilled) {
+      toast.warning("All requested quantities have been fulfilled");
+      setBatchNumber("");
+      return;
+    }
+
+    // Split batch numbers by comma and trim whitespace
+    const batchNumbers = batchInput.split(',').map(batch => batch.trim());
+    const allErrors = [];
+    const allWarnings = [];
+    let successCount = 0;
+
+    // Process each batch number sequentially
+    for (const batchNo of batchNumbers) {
+      const result = await processIndividualBatch(batchNo);
+      
+      if (result.errors.length > 0) allErrors.push(...result.errors);
+      if (result.warnings.length > 0) allWarnings.push(...result.warnings);
+      if (result.success) successCount++;
+    }
+
+    // Display results
+    if (successCount > 0) {
+      toast.success(`Successfully processed ${successCount} batch${successCount > 1 ? 'es' : ''}`);
+    }
+
+    // Display errors and warnings
+    if (allErrors.length > 0) {
+      allErrors.forEach(error => {
+        toast.error(`Batch ${error.batch}: ${error.message}`);
+      });
+    }
+
+    if (allWarnings.length > 0) {
+      allWarnings.forEach(warning => {
+        toast.warning(`Batch ${warning.batch}: ${warning.message}`);
+      });
+    }
+
+    setBatchNumber("");
   };
 
   const handleRemoveBatch = async (batchToRemove) => {
