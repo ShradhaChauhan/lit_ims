@@ -26,6 +26,8 @@ const IssueProduction = () => {
     parentBomCode: null,
     parentBomName: null,
   });
+  const [itemCode, setItemCode] = useState("");
+  const [itemWiseData, setItemWiseData] = useState([]);
 
   // Auto generate issue number
   const generateIssueNumber = () => {
@@ -822,7 +824,12 @@ const IssueProduction = () => {
                           </td>
                           <td
                             className="ps-4"
-                            style={{ backgroundColor: "#fff3cd" }}
+                            style={{
+                              backgroundColor:
+                                item.status.toLowerCase() === "completed"
+                                  ? "#e6f4ea"
+                                  : "#fff3cd"
+                            }}
                           >
                             <div>
                               <span>{item.requestedQty}</span>
