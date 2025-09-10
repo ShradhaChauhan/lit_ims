@@ -37,6 +37,7 @@ import StockAdjustment from "./components/Forms/StockAdjustment/StockAdjustment"
 import OrderPlanning from "./components/OrderPlanning/OrderPlanning";
 import VendorRating from "./components/VendorRating/VendorRating";
 import LineMonitoring from "./components/LineMonitoring/LineMonitoring";
+import ProductionReportEntry from "./components/Forms/ProductionReportEntry/ProductionReportEntry";
 
 function App() {
   // const [isLoggedIn, setIsLoggedIn] = useState(
@@ -298,17 +299,12 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/order-planning" element={<OrderPlanning />} />
+          <Route path="/vendor-rating" element={<VendorRating />} />
+          <Route path="/line-monitoring" element={<LineMonitoring />} />
           <Route
-            path="/order-planning"
-            element={<OrderPlanning />}
-          />
-          <Route
-            path="/vendor-rating"
-            element={<VendorRating />}
-          />
-          <Route
-            path="/line-monitoring"
-            element={<LineMonitoring />}
+            path="/production-report-entry"
+            element={<ProductionReportEntry />}
           />
         </Route>
       </Route>

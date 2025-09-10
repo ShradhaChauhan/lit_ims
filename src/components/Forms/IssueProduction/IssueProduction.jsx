@@ -132,11 +132,6 @@ const IssueProduction = () => {
               const quantity = stockResponse.data.data[0]?.quantity || 0;
               return quantity;
             })
-            .then((stockResponse) => {
-              // Get quantity from the first item in the data array
-              const quantity = stockResponse.data.data[0]?.quantity || 0;
-              return quantity;
-            })
             .catch((err) => {
               console.error(`Error fetching stockQty for ${item.code}:`, err);
               return 0; // fallback to 0
@@ -145,6 +140,29 @@ const IssueProduction = () => {
 
         // Step 2: Wait for all stockQty responses
         const stockQuantities = await Promise.all(stockQtyPromises);
+        console.log("WIP stockQuantities: " + JSON.stringify(stockQuantities));
+
+        const storeStockQtyPromises = items.map((item) =>
+          api
+            .post(`/api/inventory/itemQuantity/1/${item.code}`)
+            .then((stockResponse) => {
+              // Get quantity from the first item in the data array
+              const quantity = stockResponse.data.data[0]?.quantity || 0;
+              return quantity;
+            })
+            .catch((err) => {
+              console.error(
+                `Error fetching store stockQty for ${item.code}:`,
+                err
+              );
+              return 0; // fallback to 0
+            })
+        );
+
+        const storeStockQuantities = await Promise.all(storeStockQtyPromises);
+        console.log(
+          "store stockQuantities: " + JSON.stringify(storeStockQuantities)
+        );
         // Step 3: Combine stockQty into formattedItems
         const formattedItems = items.map((item, index) => ({
           id: index + 1,
@@ -155,7 +173,8 @@ const IssueProduction = () => {
           issuedQty: 0,
           variance: 0,
           status: "Pending",
-          stockQty: stockQuantities[index],
+          wipStockQty: stockQuantities,
+          storeStockQty: storeStockQuantities,
         }));
 
         // Step 4: Update state
@@ -208,7 +227,10 @@ const IssueProduction = () => {
       (item) => item.code === itemCodeFromBatch
     );
     if (!itemExists) {
-      warnings.push({ batch: batchNo, message: "This item is not in the requisition list" });
+      warnings.push({
+        batch: batchNo,
+        message: "This item is not in the requisition list",
+      });
       return { success: false, errors, warnings };
     }
 
@@ -226,7 +248,10 @@ const IssueProduction = () => {
           (batch) => batch.batchNo === batchData.batchNo
         );
         if (alreadyScanned) {
-          warnings.push({ batch: batchNo, message: "This batch has already been scanned" });
+          warnings.push({
+            batch: batchNo,
+            message: "This batch has already been scanned",
+          });
           return { success: false, errors, warnings };
         }
 
@@ -244,9 +269,9 @@ const IssueProduction = () => {
           matchingItem &&
           matchingItem.issuedQty >= matchingItem.requestedQty
         ) {
-          warnings.push({ 
-            batch: batchNo, 
-            message: `Requested quantity for ${matchingItem.itemName} already fulfilled` 
+          warnings.push({
+            batch: batchNo,
+            message: `Requested quantity for ${matchingItem.itemName} already fulfilled`,
           });
           return { success: false, errors, warnings };
         }
@@ -263,7 +288,7 @@ const IssueProduction = () => {
         setScannedBatches((prev) => [...prev, newScannedBatch]);
 
         // Update the requested items table with the issued quantity
-        setRequestedItems((prevItems) => 
+        setRequestedItems((prevItems) =>
           prevItems.map((item) => {
             if (item.code === batchData.itemCode) {
               const newIssuedQty = item.issuedQty + batchData.quantity;
@@ -284,11 +309,17 @@ const IssueProduction = () => {
 
         return { success: true, errors, warnings, batchData };
       } else {
-        errors.push({ batch: batchNo, message: response.data.message || "Invalid batch number" });
+        errors.push({
+          batch: batchNo,
+          message: response.data.message || "Invalid batch number",
+        });
         return { success: false, errors, warnings };
       }
     } catch (error) {
-      errors.push({ batch: batchNo, message: "Error verifying and issuing batch" });
+      errors.push({
+        batch: batchNo,
+        message: "Error verifying and issuing batch",
+      });
       console.error("Error verifying and issuing batch:", error);
       return { success: false, errors, warnings };
     }
@@ -312,7 +343,7 @@ const IssueProduction = () => {
     }
 
     // Split batch numbers by comma and trim whitespace
-    const batchNumbers = batchInput.split(',').map(batch => batch.trim());
+    const batchNumbers = batchInput.split(",").map((batch) => batch.trim());
     const allErrors = [];
     const allWarnings = [];
     let successCount = 0;
@@ -320,7 +351,7 @@ const IssueProduction = () => {
     // Process each batch number sequentially
     for (const batchNo of batchNumbers) {
       const result = await processIndividualBatch(batchNo);
-      
+
       if (result.errors.length > 0) allErrors.push(...result.errors);
       if (result.warnings.length > 0) allWarnings.push(...result.warnings);
       if (result.success) successCount++;
@@ -328,18 +359,22 @@ const IssueProduction = () => {
 
     // Display results
     if (successCount > 0) {
-      toast.success(`Successfully processed ${successCount} batch${successCount > 1 ? 'es' : ''}`);
+      toast.success(
+        `Successfully processed ${successCount} batch${
+          successCount > 1 ? "es" : ""
+        }`
+      );
     }
 
     // Display errors and warnings
     if (allErrors.length > 0) {
-      allErrors.forEach(error => {
+      allErrors.forEach((error) => {
         toast.error(`Batch ${error.batch}: ${error.message}`);
       });
     }
 
     if (allWarnings.length > 0) {
-      allWarnings.forEach(warning => {
+      allWarnings.forEach((warning) => {
         toast.warning(`Batch ${warning.batch}: ${warning.message}`);
       });
     }
@@ -743,6 +778,7 @@ const IssueProduction = () => {
                       <th>Item Code</th>
                       <th>Item Name</th>
                       <th>WIP Stock Qty</th>
+                      <th>Store Stock Qty</th>
                       <th>Requested Qty</th>
                       {/* <th>Standard Qty</th> */}
                       <th>Issued Qty</th>
@@ -764,7 +800,7 @@ const IssueProduction = () => {
                         </td>
                       </tr>
                     ) : (
-                      requestedItems.map((item) => (
+                      requestedItems.map((item, index) => (
                         <tr key={item.id}>
                           <td className="ps-4">
                             <div>
@@ -778,7 +814,13 @@ const IssueProduction = () => {
                           </td>
                           <td className="ps-4">
                             <div>
-                              <span>{item.stockQty}</span>
+                              <span>{item.wipStockQty[index]}</span>
+                            </div>
+                          </td>
+
+                          <td className="ps-4">
+                            <div>
+                              <span>{item.storeStockQty[index]}</span>
                             </div>
                           </td>
                           <td className="ps-4">
