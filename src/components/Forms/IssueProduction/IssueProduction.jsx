@@ -5,6 +5,11 @@ import Select from "react-select";
 import api from "../../../services/api";
 import * as XLSX from "xlsx";
 
+// Toast configuration helper
+const showToast = (type, message) => {
+  toast[type](message, { autoClose: 30000 });
+};
+
 const IssueProduction = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -102,7 +107,7 @@ const IssueProduction = () => {
       console.log(response.data.data);
       setRequisitionNumbers(response.data.data);
     } catch (error) {
-      toast.error("Error in fetching requisition number list");
+      showToast("error", "Error in fetching requisition number list");
       console.error("Error fetching requisition number list:", error);
     }
   };
@@ -186,7 +191,7 @@ const IssueProduction = () => {
         });
       }
     } catch (error) {
-      toast.error("Error fetching requisition items");
+      showToast("error", "Error fetching requisition items");
       console.error("Error fetching requisition items:", error);
     }
   };
@@ -327,17 +332,17 @@ const IssueProduction = () => {
 
   const verifyBatch = async (batchInput) => {
     if (!batchInput.trim()) {
-      toast.error("Please enter a batch number");
+      showToast("error", "Please enter a batch number");
       return;
     }
 
     if (!selectedRequisition) {
-      toast.error("Please select a requisition first");
+      showToast("error", "Please select a requisition first");
       return;
     }
 
     if (allItemsFulfilled) {
-      toast.warning("All requested quantities have been fulfilled");
+      showToast("warning", "All requested quantities have been fulfilled");
       setBatchNumber("");
       return;
     }
@@ -369,13 +374,13 @@ const IssueProduction = () => {
     // Display errors and warnings
     if (allErrors.length > 0) {
       allErrors.forEach((error) => {
-        toast.error(`Batch ${error.batch}: ${error.message}`);
+        showToast("error", `Batch ${error.batch}: ${error.message}`);
       });
     }
 
     if (allWarnings.length > 0) {
       allWarnings.forEach((warning) => {
-        toast.warning(`Batch ${warning.batch}: ${warning.message}`);
+        showToast("warning", `Batch ${warning.batch}: ${warning.message}`);
       });
     }
 
@@ -427,11 +432,11 @@ const IssueProduction = () => {
         setScannedBatches(updatedBatches);
         toast.success("Batch removed and released successfully");
       } else {
-        toast.error("Failed to release batch");
+        showToast("error", "Failed to release batch");
       }
     } catch (error) {
       console.error("Error releasing batch:", error);
-      toast.error("Error releasing batch. Please try again.");
+      showToast("error", "Error releasing batch. Please try again.");
     }
   };
 
@@ -439,12 +444,12 @@ const IssueProduction = () => {
     e.preventDefault();
 
     if (!selectedRequisition) {
-      toast.error("Please select a requisition first");
+      showToast("error", "Please select a requisition first");
       return;
     }
 
     if (scannedBatches.length === 0) {
-      toast.error("No batches have been scanned for issue");
+      showToast("error", "No batches have been scanned for issue");
       return;
     }
 
@@ -456,7 +461,7 @@ const IssueProduction = () => {
         );
 
         if (!confirmResponse.data.status) {
-          toast.error(`Failed to confirm batch ${batch.batchNo}`);
+          showToast("error", `Failed to confirm batch ${batch.batchNo}`);
           return;
         }
       }
@@ -487,7 +492,7 @@ const IssueProduction = () => {
       const response = await api.post("/api/issue-production/save", finalData);
 
       if (response.data.status) {
-        toast.success("Issue completed successfully");
+        showToast("success", "Issue completed successfully");
 
         // Reset form state completely without releasing batches
         // (batches are already saved to the system)
@@ -503,7 +508,10 @@ const IssueProduction = () => {
         // Refresh the requisition number list
         handleFetchRequisitionNumberList();
       } else {
-        toast.error(response.data.message || "Failed to complete the issue");
+        showToast(
+          "error",
+          response.data.message || "Failed to complete the issue"
+        );
       }
     } catch (error) {
       let errorMessage = "Failed to complete the issue. Please try again.";
@@ -521,7 +529,7 @@ const IssueProduction = () => {
       }
 
       console.error("Error in completing the issue:", errorMessage);
-      toast.error(errorMessage);
+      showToast("error", errorMessage);
     }
   };
 
@@ -537,7 +545,7 @@ const IssueProduction = () => {
     // Generate a new issue number
     setIssueNumber(generateIssueNumber());
 
-    toast.info("Form cleared successfully");
+    showToast("info", "Form cleared successfully");
   };
 
   // Export to Excel
@@ -777,12 +785,12 @@ const IssueProduction = () => {
                     <tr className="text-break">
                       <th>Item Code</th>
                       <th>Item Name</th>
-                      <th>WIP Stock Qty</th>
-                      <th>Store Stock Qty</th>
                       <th>Requested Qty</th>
                       {/* <th>Standard Qty</th> */}
                       <th>Issued Qty</th>
                       <th>Variance</th>
+                      <th>WIP Stock Qty</th>
+                      <th>Store Stock Qty</th>
                       <th>Status</th>
                     </tr>
                   </thead>
@@ -812,18 +820,10 @@ const IssueProduction = () => {
                               <span>{item.itemName}</span>
                             </div>
                           </td>
-                          <td className="ps-4">
-                            <div>
-                              <span>{item.wipStockQty[index]}</span>
-                            </div>
-                          </td>
-
-                          <td className="ps-4">
-                            <div>
-                              <span>{item.storeStockQty[index]}</span>
-                            </div>
-                          </td>
-                          <td className="ps-4">
+                          <td
+                            className="ps-4"
+                            style={{ backgroundColor: "#fff3cd" }}
+                          >
                             <div>
                               <span>{item.requestedQty}</span>
                             </div>
@@ -833,24 +833,69 @@ const IssueProduction = () => {
                               <span>{item.standardQty}</span>
                             </div>
                           </td> */}
-                          <td className="ps-4">
+                          <td
+                            className="ps-4"
+                            style={{
+                              backgroundColor:
+                                item.status.toLowerCase() === "completed"
+                                  ? "#e6f4ea"
+                                  : "#e8f0fe",
+                            }}
+                          >
                             <div>
                               <span>{item.issuedQty}</span>
                             </div>
                           </td>
-                          <td className="ps-4">
+                          <td
+                            className="ps-4"
+                            style={{
+                              backgroundColor:
+                                item.variance > 0
+                                  ? "#e6f4ea"
+                                  : item.variance < 0
+                                  ? "#fce8e6"
+                                  : "transparent",
+                            }}
+                          >
                             <div>
                               <span>{item.variance}</span>
+                            </div>
+                          </td>
+                          <td
+                            className="ps-4"
+                            style={{ backgroundColor: "#e2e6e8ff" }}
+                          >
+                            <div>
+                              <span>{item.wipStockQty[index]}</span>
+                            </div>
+                          </td>
+
+                          <td
+                            className="ps-4"
+                            style={{ backgroundColor: "#e2e6e8ff" }}
+                          >
+                            <div>
+                              <span>{item.storeStockQty[index]}</span>
                             </div>
                           </td>
                           <td className="ps-4">
                             <div>
                               <span
                                 className={`badge status ${
-                                  item.status.toLowerCase() === "pending"
-                                    ? "inactive"
-                                    : "active"
+                                  item.status.toLowerCase() === "completed"
+                                    ? "completed"
+                                    : "pending"
                                 }`}
+                                style={{
+                                  backgroundColor:
+                                    item.status.toLowerCase() === "completed"
+                                      ? "#e6f4ea"
+                                      : "#fff3cd",
+                                  color:
+                                    item.status.toLowerCase() === "completed"
+                                      ? "#1e4620"
+                                      : "#856404",
+                                }}
                               >
                                 {item.status}
                               </span>
