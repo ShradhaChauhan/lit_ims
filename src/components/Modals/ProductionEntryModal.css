@@ -88,3 +88,7 @@
     --bs-gutter-y: 1rem;
   }
 }
+
+.react-select__menu-portal {
+  z-index: 9999 !important;  /* higher than modal */
+}

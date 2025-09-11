@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Button, Table, Badge, Pagination } from "react-bootstrap";
 import Select from "react-select";
 import ProductionEntryModal from "../../Modals/ProductionEntryModal";
-import "./ProductionReportEntry.css";
+import "./ProductionPunch.css";
 import { Link } from "react-router-dom";
 import * as XLSX from "xlsx";
 
@@ -353,6 +353,16 @@ const ProductionReportEntry = () => {
     setCurrentPage(pageNumber);
   };
 
+  // Auto generate transaction number
+  const generateTransactionNumber = () => {
+    const year = new Date().getFullYear();
+    const randomNum = Math.floor(1000 + Math.random() * 9000);
+    return `PU-${year}-${randomNum}`;
+  };
+
+  const [transactionNumber, setTransactionNumber] = useState(
+    generateTransactionNumber()
+  );
   return (
     <div className="production-report-entry">
       {/* Header section */}

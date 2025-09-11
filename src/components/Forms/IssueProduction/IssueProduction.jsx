@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import Select from "react-select";
 import api from "../../../services/api";
 import * as XLSX from "xlsx";
+import BatchListModal from "../../Modals/BatchListModal";
 
 // Toast configuration helper
 const showToast = (type, message) => {
@@ -20,7 +21,9 @@ const IssueProduction = () => {
   const [selectedRequisition, setSelectedRequisition] = useState("");
   const [batchNumber, setBatchNumber] = useState("");
   const [scannedBatches, setScannedBatches] = useState([]);
+  const [isRequisitionLoaded, setIsRequisitionLoaded] = useState(false);
   const [allItemsFulfilled, setAllItemsFulfilled] = useState(false);
+  const [batchList, setBatchList] = useState([]);
   const [type, setType] = useState({
     type: "item",
     parentBomCode: null,
@@ -28,6 +31,18 @@ const IssueProduction = () => {
   });
   const [itemCode, setItemCode] = useState("");
   const [itemWiseData, setItemWiseData] = useState([]);
+  const [showBatchModal, setShowBatchModal] = useState(false);
+  const [selectedItemBatches, setSelectedItemBatches] = useState([]);
+  const [selectedItemName, setSelectedItemName] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedItemCode, setSelectedItemCode] = useState("");
+
+  // Filter requested items based on search term
+  const filteredRequestedItems = requestedItems.filter(
+    (item) =>
+      item.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.itemName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   // Auto generate issue number
   const generateIssueNumber = () => {
@@ -106,11 +121,28 @@ const IssueProduction = () => {
   const handleFetchRequisitionNumberList = async () => {
     try {
       const response = await api.get("/api/requisitions/trNo");
-      console.log(response.data.data);
+      console.log("trno list: " + JSON.stringify(response.data.data));
       setRequisitionNumbers(response.data.data);
     } catch (error) {
       showToast("error", "Error in fetching requisition number list");
       console.error("Error fetching requisition number list:", error);
+    }
+  };
+
+  const fetchBatchList = async (itemCode, itemName) => {
+    try {
+      const response = await api.get(`/api/receipt/by-item/${itemCode}`);
+      if (response.data.status) {
+        setSelectedItemBatches(response.data.data);
+        setSelectedItemName(itemName);
+        setSelectedItemCode(itemCode);
+        setShowBatchModal(true);
+      } else {
+        showToast("error", "No batch details found for this item");
+      }
+    } catch (error) {
+      showToast("error", "Error fetching item batch details");
+      console.error("Error fetching item batch details:", error);
     }
   };
 
@@ -191,6 +223,7 @@ const IssueProduction = () => {
           parentBomCode: response.data.data[0].parentBomCode,
           parentBomName: response.data.data[0].parentBomName,
         });
+        setIsRequisitionLoaded(true);
       }
     } catch (error) {
       showToast("error", "Error fetching requisition items");
@@ -203,6 +236,7 @@ const IssueProduction = () => {
     if (newRequisition !== selectedRequisition) {
       // Clear scanned batches when changing requisition
       setSelectedRequisition(newRequisition);
+      setIsRequisitionLoaded(false);
     }
   };
 
@@ -489,7 +523,7 @@ const IssueProduction = () => {
           };
         }),
       };
-
+      console.log("finalData: " + JSON.stringify(finalData));
       // Send data to the API
       const response = await api.post("/api/issue-production/save", finalData);
 
@@ -543,6 +577,7 @@ const IssueProduction = () => {
     setRequestedItems([]);
     setBatchNumber("");
     setAllItemsFulfilled(false);
+    setIsRequisitionLoaded(false);
 
     // Generate a new issue number
     setIssueNumber(generateIssueNumber());
@@ -644,7 +679,7 @@ const IssueProduction = () => {
               {/* Requisition Type */}
               <div className="form-group">
                 <div className="row form-style">
-                  <div className="col-6 d-flex flex-column form-group">
+                  <div className="col-3 d-flex flex-column form-group">
                     <label
                       htmlFor="requisitionType"
                       className="form-label ms-2"
@@ -736,7 +771,55 @@ const IssueProduction = () => {
                       />
                     </div>
                   </div>
-                  <div className="col-6 d-flex flex-column form-group">
+                  {isRequisitionLoaded && (
+                    <>
+                      <div className="col-3 d-flex flex-column form-group">
+                        <label
+                          htmlFor="parentItemName"
+                          className="form-label ms-2"
+                        >
+                          Parent Item Name{" "}
+                          <span className="text-danger fs-6">*</span>
+                        </label>
+                        <div className="position-relative w-100">
+                          <i className="fas fa-box ms-2 position-absolute z-0 input-icon"></i>
+                          <input
+                            id="parentItemName"
+                            className="form-control ps-5 ms-1 text-font"
+                            value={
+                              parentBomCode && parentBomName
+                                ? `(${parentBomCode}) - ${parentBomName}`
+                                : ""
+                            }
+                            disabled
+                          />
+                        </div>
+                      </div>
+                      <div className="col-3 d-flex flex-column form-group">
+                        <label
+                          htmlFor="requestedQty"
+                          className="form-label ms-2"
+                        >
+                          Requested Qty{" "}
+                          <span className="text-danger fs-6">*</span>
+                        </label>
+                        <div className="position-relative w-100">
+                          <i className="fas fa-cubes ms-2 position-absolute z-0 input-icon"></i>
+                          <input
+                            id="requestedQty"
+                            className="form-control ps-5 ms-1 text-font"
+                            value={requestedItems.reduce(
+                              (total, item) => total + item.requestedQty,
+                              0
+                            )}
+                            disabled
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  <div className="col-3 d-flex flex-column form-group">
                     <label htmlFor="scanBatch" className="form-label ms-2">
                       Scan Batch <span className="text-danger fs-6">*</span>
                     </label>
@@ -765,22 +848,49 @@ const IssueProduction = () => {
             <div className="margin-2 mx-2">
               <div className="table-container">
                 <div className="table-header">
-                  <h6>
-                    {type.type === "item"
-                      ? "Individual Items"
-                      : "(" +
-                        type.parentBomName +
-                        " - " +
-                        type.parentBomCode +
-                        ") - BOM Items"}
-                  </h6>
-                  <button
-                    type="button"
-                    className="btn btn-outline-success px-2 py-1 text-8"
-                    onClick={handleExport}
-                  >
-                    <i className="fa-solid fa-file-excel me-1"></i> Export Excel
-                  </button>
+                  <div className="d-flex justify-content-between align-items-center w-100">
+                    <h6>
+                      {type.type === "item"
+                        ? "Individual Items"
+                        : "(" +
+                          type.parentBomName +
+                          " - " +
+                          type.parentBomCode +
+                          ") - BOM Items"}
+                    </h6>
+                    <div className="d-flex align-items-center gap-3">
+                      <div className="position-relative">
+                        <i
+                          className="fas fa-search position-absolute input-icon"
+                          style={{
+                            left: "10px",
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                          }}
+                        ></i>
+                        <input
+                          type="text"
+                          className="form-control ps-5"
+                          placeholder="Search items..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          style={{
+                            width: "250px",
+                            paddingLeft: "30px",
+                            fontSize: "0.8rem",
+                          }}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        className="btn btn-outline-success px-2 py-1 text-8"
+                        onClick={handleExport}
+                      >
+                        <i className="fa-solid fa-file-excel me-1"></i> Export
+                        Excel
+                      </button>
+                    </div>
+                  </div>
                 </div>
                 <table>
                   <thead>
@@ -793,6 +903,7 @@ const IssueProduction = () => {
                       <th>Variance</th>
                       <th>WIP Stock Qty</th>
                       <th>Store Stock Qty</th>
+                      <th>Actions</th>
                       <th>Status</th>
                     </tr>
                   </thead>
@@ -809,8 +920,22 @@ const IssueProduction = () => {
                           </div>
                         </td>
                       </tr>
+                    ) : filteredRequestedItems.length === 0 ? (
+                      <tr className="no-data-row">
+                        <td colSpan="7" className="no-data-cell">
+                          <div className="no-data-content">
+                            <i className="fas fa-search no-data-icon"></i>
+                            <p className="no-data-text">
+                              No matching items found
+                            </p>
+                            <p className="no-data-subtext">
+                              Try a different search term
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
                     ) : (
-                      requestedItems.map((item, index) => (
+                      filteredRequestedItems.map((item, index) => (
                         <tr key={item.id}>
                           <td className="ps-4">
                             <div>
@@ -828,7 +953,7 @@ const IssueProduction = () => {
                               backgroundColor:
                                 item.status.toLowerCase() === "completed"
                                   ? "#e6f4ea"
-                                  : "#fff3cd"
+                                  : "#fff3cd",
                             }}
                           >
                             <div>
@@ -884,6 +1009,17 @@ const IssueProduction = () => {
                             <div>
                               <span>{item.storeStockQty[index]}</span>
                             </div>
+                          </td>
+                          <td className="ps-4">
+                            <button
+                              type="button"
+                              className="btn-icon view p-0"
+                              onClick={() =>
+                                fetchBatchList(item.code, item.itemName)
+                              }
+                            >
+                              <i className="fas fa-eye"></i>
+                            </button>
                           </td>
                           <td className="ps-4">
                             <div>
@@ -1000,6 +1136,14 @@ const IssueProduction = () => {
           </button>
         </div>
       </div>
+      {/* Batch List Modal */}
+      <BatchListModal
+        show={showBatchModal}
+        onHide={() => setShowBatchModal(false)}
+        batchList={selectedItemBatches}
+        itemName={selectedItemName}
+        itemCode={selectedItemCode}
+      />
     </div>
   );
 };

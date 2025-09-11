@@ -1,0 +1,84 @@
+.card {
+   background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  background-color: #f8f9fa;
+  transition: all 0.2s ease-in-out;
+}
+
+.summary .card:hover {
+  transform: scale(1.03);
+  background-color: #e9f4ff; /* light gray background on hover */
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+}
+
+.graph-carousel {
+  
+  position: relative;
+}
+
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.3);
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 10;
+  border-radius: 20%;
+  transition: background 0.3s;
+}
+
+.carousel-arrow:hover {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.carousel-arrow.left {
+  left: 10px;
+}
+
+.carousel-arrow.right {
+  right: 10px;
+}
+
+/* General dropdown style for notifications */
+.notification-dropdown {
+  border-radius: 8px;
+  overflow: hidden; /* makes rounded corners work for all items */
+  min-width: 280px; /* so it looks like a real notification panel */
+}
+
+/* Notification item styling */
+.notification-dropdown .dropdown-item {
+  padding: 10px 15px;
+  border-left: 4px solid transparent;
+  transition: all 0.2s ease-in-out;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* Hover effect: subtle highlight + accent border */
+.notification-dropdown .dropdown-item:hover {
+  background-color: #f4f7ff; /* light blue shade */
+  border-left: 4px solid #3b82f6; /* professional blue accent */
+  color: #1e3a8a; /* darker blue text for emphasis */
+}
+
+/* Optional: make 'No new notifications' look muted */
+.notification-dropdown .dropdown-item.text-muted {
+  background: none !important;
+  border: none !important;
+  text-align: center;
+  padding: 12px;
+}

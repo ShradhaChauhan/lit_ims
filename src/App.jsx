@@ -37,7 +37,11 @@ import StockAdjustment from "./components/Forms/StockAdjustment/StockAdjustment"
 import OrderPlanning from "./components/OrderPlanning/OrderPlanning";
 import VendorRating from "./components/VendorRating/VendorRating";
 import LineMonitoring from "./components/LineMonitoring/LineMonitoring";
-import ProductionReportEntry from "./components/Forms/ProductionReportEntry/ProductionReportEntry";
+import ProductionPunch from "./components/Forms/ProductionPunch/ProductionPunch";
+import StoreReport from "./components/Reports/StoreReport/StoreReport";
+import LineReport from "./components/Reports/LineReport/LineReport";
+import AdminLandingPage from "./components/AdminLandingPage/AdminLandingPage";
+import LandingPage from "./components/LandingPage/LandingPage";
 
 function App() {
   // const [isLoggedIn, setIsLoggedIn] = useState(
@@ -137,7 +141,8 @@ function App() {
       <Route path="/unauthorized" element={<Unauthorized />} />
       <Route element={<PrivateRoute />}>
         <Route element={<MainLayout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard" element={<LandingPage />} />
+          <Route path="/control-panel" element={<AdminLandingPage />} />
           <Route path="/store-dashboard" element={<StoreLandingPage />} />
           <Route
             path="/users"
@@ -302,10 +307,9 @@ function App() {
           <Route path="/order-planning" element={<OrderPlanning />} />
           <Route path="/vendor-rating" element={<VendorRating />} />
           <Route path="/line-monitoring" element={<LineMonitoring />} />
-          <Route
-            path="/production-report-entry"
-            element={<ProductionReportEntry />}
-          />
+          <Route path="/production-punch" element={<ProductionPunch />} />
+          <Route path="/store-report" element={<StoreReport />} />
+          <Route path="/line-report" element={<LineReport />} />
         </Route>
       </Route>
     </Routes>
