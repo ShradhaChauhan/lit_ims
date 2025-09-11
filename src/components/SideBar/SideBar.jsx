@@ -31,7 +31,7 @@ import StockAdjustment from "../Forms/StockAdjustment/StockAdjustment";
 import OrderPlanning from "../OrderPlanning/OrderPlanning";
 import VendorRating from "../VendorRating/VendorRating";
 import LineMonitoring from "../LineMonitoring/LineMonitoring";
-import ProductionReportEntry from "../Forms/ProductionReportEntry/ProductionReportEntry";
+import ProductionPunch from "../Forms/ProductionPunch/ProductionPunch";
 
 const SideBar = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -204,13 +204,13 @@ const SideBar = () => {
           path: "Transactions /Production Floor Receipt",
           icon: "fas fa-circle-check",
         },
-        {
-          label: "Production Material Usage",
-          compName: "ProductionMaterialUsage",
-          newPath: "production-material-usage",
-          path: "Transactions / Production Material Usage",
-          icon: "fas fa-industry",
-        },
+        // {
+        //   label: "Production Material Usage",
+        //   compName: "ProductionMaterialUsage",
+        //   newPath: "production-material-usage",
+        //   path: "Transactions / Production Material Usage",
+        //   icon: "fas fa-industry",
+        // },
         {
           label: "WIP Return",
           compName: "WIPReturn",
@@ -231,6 +231,20 @@ const SideBar = () => {
           newPath: "inventory-audit-report",
           path: "Reports / Inventory Audit Report",
           icon: "fas fa-chart-area",
+        },
+        {
+          label: "Store Report",
+          compName: "StoreReport",
+          newPath: "store-report",
+          path: "Reports / Store Report",
+          icon: "fas fa-store",
+        },
+        {
+          label: "Line Report",
+          compName: "LineReport",
+          newPath: "line-report",
+          path: "Reports / Line Report",
+          icon: "fas fa-industry",
         },
         // {
         //   label: "Transaction Report",
@@ -338,8 +352,8 @@ const SideBar = () => {
       setRightSideComponent(<ProductionFloorReceipt />);
     name === "ProductionReceipt" &&
       setRightSideComponent(<ProductionReceipt />);
-    name === "ProductionMaterialUsage" &&
-      setRightSideComponent(<ProductionMaterialUsage />);
+    // name === "ProductionMaterialUsage" &&
+    //   setRightSideComponent(<ProductionMaterialUsage />);
     name === "WIPReturn" && setRightSideComponent(<WIPReturn />);
     name === "Reports" &&
       permissions.some((p) => p.pageName.includes("Report") && p.canView) &&
@@ -350,7 +364,9 @@ const SideBar = () => {
     name === "Order Planning" && setRightSideComponent(<OrderPlanning />);
     name === "Vendor Rating" && setRightSideComponent(<VendorRating />);
     name === "Line Monitoring" && setRightSideComponent(<LineMonitoring />);
-    name === "Production Report Entry" && setRightSideComponent(<ProductionReportEntry />);
+    name === "Production Punch" && setRightSideComponent(<ProductionPunch />);
+    name === "StoreReport" && setRightSideComponent(<StoreReport />);
+    name === "LineReport" && setRightSideComponent(<LineReport />);
   };
 
   // RBAC
@@ -372,7 +388,7 @@ const SideBar = () => {
     const newFilteredItems = [];
 
     menuItems.forEach((item) => {
-      if (item.label === "Dashboard") {
+      if (item.label === "Control Panel") {
         if (item.label.toLowerCase().includes(lowerSearch)) {
           newFilteredItems.push(item);
         }
@@ -460,6 +476,18 @@ const SideBar = () => {
           <i className="fa-solid fa-house"></i>
           {!isCollapsed && "Dashboard"}
         </Link>
+        <Link
+          to="/control-panel"
+          className="home-link mb-0 py-0 mt-3"
+          style={{ color: "#8D91AD" }}
+          onClick={() => {
+            setIsActiveComponent("control-panel");
+            setLabelName("Control Panel");
+          }}
+        >
+          <i className="fas fa-tachometer-alt"></i>
+          {!isCollapsed && "Control Panel"}
+        </Link>
 
         <Link
           to="/order-planning"
@@ -504,17 +532,17 @@ const SideBar = () => {
         </Link>
 
         <Link
-          to="/production-report-entry"
+          to="/production-punch"
           className="home-link mb-0 py-0 my-3"
           style={{ color: "#8D91AD" }}
           onClick={() => {
-            setIsActiveComponent("production-report-entry");
-            setLabelName("Production Report Entry");
-            handleRightSideComponentName("Production Report Entry");
+            setIsActiveComponent("production-punch");
+            setLabelName("Production Punch");
+            handleRightSideComponentName("Production Punch");
           }}
         >
           <i className="fa-solid fa-clipboard-list"></i>
-          {!isCollapsed && "Production Report Entry"}
+          {!isCollapsed && "Production Punch"}
         </Link>
 
         <ul className="nav nav-pills flex-column mb-auto mt-1">

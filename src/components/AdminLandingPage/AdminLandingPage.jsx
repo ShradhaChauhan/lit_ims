@@ -35,12 +35,12 @@ const AdminLandingPage = () => {
       <nav className="navbar bg-light border-body" data-bs-theme="light">
         <div className="container-fluid">
           <div className="mt-4">
-            <h3 className="nav-header header-style">Dashboard</h3>
+            <h3 className="nav-header header-style">Control Panel</h3>
             <p className="breadcrumb">
               <Link to="/dashboard">
                 <i className="fas fa-home text-8"></i>
               </Link>{" "}
-              <span className="ms-1 mt-1 text-small-gray">/ Dashboard</span>
+              <span className="ms-1 mt-1 text-small-gray">/ Control Panel</span>
             </p>
           </div>
 

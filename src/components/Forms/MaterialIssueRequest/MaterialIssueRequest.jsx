@@ -513,7 +513,7 @@ const MaterialIssueRequest = () => {
         items: formattedItems,
       };
 
-      console.log("Submitting payload:", payload);
+      console.log("Submitting payload:", JSON.stringify(payload));
 
       const response = await api.post("/api/requisitions/save", payload);
 
@@ -1048,7 +1048,8 @@ const MaterialIssueRequest = () => {
                       <th>Date</th>
                       <th>Type</th>
                       <th>Items</th>
-                      <th>Status</th>
+                      <th>Store Status</th>
+                      <th>Approval Status</th>
                     </tr>
                   </thead>
                   <tbody className="text-break">
@@ -1076,6 +1077,13 @@ const MaterialIssueRequest = () => {
                               className={`status-badge ${req.status.toLowerCase()}`}
                             >
                               {req.status}
+                            </span>
+                          </td>
+                          <td>
+                            <span
+                              className={`status-badge ${req.approvalStatus.toLowerCase()}`}
+                            >
+                              {req.approvalStatus}
                             </span>
                           </td>
                         </tr>
