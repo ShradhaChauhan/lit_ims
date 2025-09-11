@@ -5,6 +5,11 @@ import Select from "react-select";
 import api from "../../../services/api";
 import * as XLSX from "xlsx";
 
+// Toast configuration helper
+const showToast = (type, message) => {
+  toast[type](message, { autoClose: 30000 });
+};
+
 const IssueProduction = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -21,6 +26,8 @@ const IssueProduction = () => {
     parentBomCode: null,
     parentBomName: null,
   });
+  const [itemCode, setItemCode] = useState("");
+  const [itemWiseData, setItemWiseData] = useState([]);
 
   // Auto generate issue number
   const generateIssueNumber = () => {
@@ -102,7 +109,7 @@ const IssueProduction = () => {
       console.log(response.data.data);
       setRequisitionNumbers(response.data.data);
     } catch (error) {
-      toast.error("Error in fetching requisition number list");
+      showToast("error", "Error in fetching requisition number list");
       console.error("Error fetching requisition number list:", error);
     }
   };
@@ -132,11 +139,6 @@ const IssueProduction = () => {
               const quantity = stockResponse.data.data[0]?.quantity || 0;
               return quantity;
             })
-            .then((stockResponse) => {
-              // Get quantity from the first item in the data array
-              const quantity = stockResponse.data.data[0]?.quantity || 0;
-              return quantity;
-            })
             .catch((err) => {
               console.error(`Error fetching stockQty for ${item.code}:`, err);
               return 0; // fallback to 0
@@ -145,6 +147,29 @@ const IssueProduction = () => {
 
         // Step 2: Wait for all stockQty responses
         const stockQuantities = await Promise.all(stockQtyPromises);
+        console.log("WIP stockQuantities: " + JSON.stringify(stockQuantities));
+
+        const storeStockQtyPromises = items.map((item) =>
+          api
+            .post(`/api/inventory/itemQuantity/1/${item.code}`)
+            .then((stockResponse) => {
+              // Get quantity from the first item in the data array
+              const quantity = stockResponse.data.data[0]?.quantity || 0;
+              return quantity;
+            })
+            .catch((err) => {
+              console.error(
+                `Error fetching store stockQty for ${item.code}:`,
+                err
+              );
+              return 0; // fallback to 0
+            })
+        );
+
+        const storeStockQuantities = await Promise.all(storeStockQtyPromises);
+        console.log(
+          "store stockQuantities: " + JSON.stringify(storeStockQuantities)
+        );
         // Step 3: Combine stockQty into formattedItems
         const formattedItems = items.map((item, index) => ({
           id: index + 1,
@@ -155,7 +180,8 @@ const IssueProduction = () => {
           issuedQty: 0,
           variance: 0,
           status: "Pending",
-          stockQty: stockQuantities[index],
+          wipStockQty: stockQuantities,
+          storeStockQty: storeStockQuantities,
         }));
 
         // Step 4: Update state
@@ -167,7 +193,7 @@ const IssueProduction = () => {
         });
       }
     } catch (error) {
-      toast.error("Error fetching requisition items");
+      showToast("error", "Error fetching requisition items");
       console.error("Error fetching requisition items:", error);
     }
   };
@@ -208,7 +234,10 @@ const IssueProduction = () => {
       (item) => item.code === itemCodeFromBatch
     );
     if (!itemExists) {
-      warnings.push({ batch: batchNo, message: "This item is not in the requisition list" });
+      warnings.push({
+        batch: batchNo,
+        message: "This item is not in the requisition list",
+      });
       return { success: false, errors, warnings };
     }
 
@@ -226,7 +255,10 @@ const IssueProduction = () => {
           (batch) => batch.batchNo === batchData.batchNo
         );
         if (alreadyScanned) {
-          warnings.push({ batch: batchNo, message: "This batch has already been scanned" });
+          warnings.push({
+            batch: batchNo,
+            message: "This batch has already been scanned",
+          });
           return { success: false, errors, warnings };
         }
 
@@ -244,9 +276,9 @@ const IssueProduction = () => {
           matchingItem &&
           matchingItem.issuedQty >= matchingItem.requestedQty
         ) {
-          warnings.push({ 
-            batch: batchNo, 
-            message: `Requested quantity for ${matchingItem.itemName} already fulfilled` 
+          warnings.push({
+            batch: batchNo,
+            message: `Requested quantity for ${matchingItem.itemName} already fulfilled`,
           });
           return { success: false, errors, warnings };
         }
@@ -263,7 +295,7 @@ const IssueProduction = () => {
         setScannedBatches((prev) => [...prev, newScannedBatch]);
 
         // Update the requested items table with the issued quantity
-        setRequestedItems((prevItems) => 
+        setRequestedItems((prevItems) =>
           prevItems.map((item) => {
             if (item.code === batchData.itemCode) {
               const newIssuedQty = item.issuedQty + batchData.quantity;
@@ -284,11 +316,17 @@ const IssueProduction = () => {
 
         return { success: true, errors, warnings, batchData };
       } else {
-        errors.push({ batch: batchNo, message: response.data.message || "Invalid batch number" });
+        errors.push({
+          batch: batchNo,
+          message: response.data.message || "Invalid batch number",
+        });
         return { success: false, errors, warnings };
       }
     } catch (error) {
-      errors.push({ batch: batchNo, message: "Error verifying and issuing batch" });
+      errors.push({
+        batch: batchNo,
+        message: "Error verifying and issuing batch",
+      });
       console.error("Error verifying and issuing batch:", error);
       return { success: false, errors, warnings };
     }
@@ -296,23 +334,23 @@ const IssueProduction = () => {
 
   const verifyBatch = async (batchInput) => {
     if (!batchInput.trim()) {
-      toast.error("Please enter a batch number");
+      showToast("error", "Please enter a batch number");
       return;
     }
 
     if (!selectedRequisition) {
-      toast.error("Please select a requisition first");
+      showToast("error", "Please select a requisition first");
       return;
     }
 
     if (allItemsFulfilled) {
-      toast.warning("All requested quantities have been fulfilled");
+      showToast("warning", "All requested quantities have been fulfilled");
       setBatchNumber("");
       return;
     }
 
     // Split batch numbers by comma and trim whitespace
-    const batchNumbers = batchInput.split(',').map(batch => batch.trim());
+    const batchNumbers = batchInput.split(",").map((batch) => batch.trim());
     const allErrors = [];
     const allWarnings = [];
     let successCount = 0;
@@ -320,7 +358,7 @@ const IssueProduction = () => {
     // Process each batch number sequentially
     for (const batchNo of batchNumbers) {
       const result = await processIndividualBatch(batchNo);
-      
+
       if (result.errors.length > 0) allErrors.push(...result.errors);
       if (result.warnings.length > 0) allWarnings.push(...result.warnings);
       if (result.success) successCount++;
@@ -328,19 +366,23 @@ const IssueProduction = () => {
 
     // Display results
     if (successCount > 0) {
-      toast.success(`Successfully processed ${successCount} batch${successCount > 1 ? 'es' : ''}`);
+      toast.success(
+        `Successfully processed ${successCount} batch${
+          successCount > 1 ? "es" : ""
+        }`
+      );
     }
 
     // Display errors and warnings
     if (allErrors.length > 0) {
-      allErrors.forEach(error => {
-        toast.error(`Batch ${error.batch}: ${error.message}`);
+      allErrors.forEach((error) => {
+        showToast("error", `Batch ${error.batch}: ${error.message}`);
       });
     }
 
     if (allWarnings.length > 0) {
-      allWarnings.forEach(warning => {
-        toast.warning(`Batch ${warning.batch}: ${warning.message}`);
+      allWarnings.forEach((warning) => {
+        showToast("warning", `Batch ${warning.batch}: ${warning.message}`);
       });
     }
 
@@ -392,11 +434,11 @@ const IssueProduction = () => {
         setScannedBatches(updatedBatches);
         toast.success("Batch removed and released successfully");
       } else {
-        toast.error("Failed to release batch");
+        showToast("error", "Failed to release batch");
       }
     } catch (error) {
       console.error("Error releasing batch:", error);
-      toast.error("Error releasing batch. Please try again.");
+      showToast("error", "Error releasing batch. Please try again.");
     }
   };
 
@@ -404,12 +446,12 @@ const IssueProduction = () => {
     e.preventDefault();
 
     if (!selectedRequisition) {
-      toast.error("Please select a requisition first");
+      showToast("error", "Please select a requisition first");
       return;
     }
 
     if (scannedBatches.length === 0) {
-      toast.error("No batches have been scanned for issue");
+      showToast("error", "No batches have been scanned for issue");
       return;
     }
 
@@ -421,7 +463,7 @@ const IssueProduction = () => {
         );
 
         if (!confirmResponse.data.status) {
-          toast.error(`Failed to confirm batch ${batch.batchNo}`);
+          showToast("error", `Failed to confirm batch ${batch.batchNo}`);
           return;
         }
       }
@@ -452,7 +494,7 @@ const IssueProduction = () => {
       const response = await api.post("/api/issue-production/save", finalData);
 
       if (response.data.status) {
-        toast.success("Issue completed successfully");
+        showToast("success", "Issue completed successfully");
 
         // Reset form state completely without releasing batches
         // (batches are already saved to the system)
@@ -468,7 +510,10 @@ const IssueProduction = () => {
         // Refresh the requisition number list
         handleFetchRequisitionNumberList();
       } else {
-        toast.error(response.data.message || "Failed to complete the issue");
+        showToast(
+          "error",
+          response.data.message || "Failed to complete the issue"
+        );
       }
     } catch (error) {
       let errorMessage = "Failed to complete the issue. Please try again.";
@@ -486,7 +531,7 @@ const IssueProduction = () => {
       }
 
       console.error("Error in completing the issue:", errorMessage);
-      toast.error(errorMessage);
+      showToast("error", errorMessage);
     }
   };
 
@@ -502,7 +547,7 @@ const IssueProduction = () => {
     // Generate a new issue number
     setIssueNumber(generateIssueNumber());
 
-    toast.info("Form cleared successfully");
+    showToast("info", "Form cleared successfully");
   };
 
   // Export to Excel
@@ -742,11 +787,12 @@ const IssueProduction = () => {
                     <tr className="text-break">
                       <th>Item Code</th>
                       <th>Item Name</th>
-                      <th>WIP Stock Qty</th>
                       <th>Requested Qty</th>
                       {/* <th>Standard Qty</th> */}
                       <th>Issued Qty</th>
                       <th>Variance</th>
+                      <th>WIP Stock Qty</th>
+                      <th>Store Stock Qty</th>
                       <th>Status</th>
                     </tr>
                   </thead>
@@ -764,7 +810,7 @@ const IssueProduction = () => {
                         </td>
                       </tr>
                     ) : (
-                      requestedItems.map((item) => (
+                      requestedItems.map((item, index) => (
                         <tr key={item.id}>
                           <td className="ps-4">
                             <div>
@@ -776,12 +822,15 @@ const IssueProduction = () => {
                               <span>{item.itemName}</span>
                             </div>
                           </td>
-                          <td className="ps-4">
-                            <div>
-                              <span>{item.stockQty}</span>
-                            </div>
-                          </td>
-                          <td className="ps-4">
+                          <td
+                            className="ps-4"
+                            style={{
+                              backgroundColor:
+                                item.status.toLowerCase() === "completed"
+                                  ? "#e6f4ea"
+                                  : "#fff3cd"
+                            }}
+                          >
                             <div>
                               <span>{item.requestedQty}</span>
                             </div>
@@ -791,24 +840,69 @@ const IssueProduction = () => {
                               <span>{item.standardQty}</span>
                             </div>
                           </td> */}
-                          <td className="ps-4">
+                          <td
+                            className="ps-4"
+                            style={{
+                              backgroundColor:
+                                item.status.toLowerCase() === "completed"
+                                  ? "#e6f4ea"
+                                  : "#e8f0fe",
+                            }}
+                          >
                             <div>
                               <span>{item.issuedQty}</span>
                             </div>
                           </td>
-                          <td className="ps-4">
+                          <td
+                            className="ps-4"
+                            style={{
+                              backgroundColor:
+                                item.variance > 0
+                                  ? "#e6f4ea"
+                                  : item.variance < 0
+                                  ? "#fce8e6"
+                                  : "transparent",
+                            }}
+                          >
                             <div>
                               <span>{item.variance}</span>
+                            </div>
+                          </td>
+                          <td
+                            className="ps-4"
+                            style={{ backgroundColor: "#e2e6e8ff" }}
+                          >
+                            <div>
+                              <span>{item.wipStockQty[index]}</span>
+                            </div>
+                          </td>
+
+                          <td
+                            className="ps-4"
+                            style={{ backgroundColor: "#e2e6e8ff" }}
+                          >
+                            <div>
+                              <span>{item.storeStockQty[index]}</span>
                             </div>
                           </td>
                           <td className="ps-4">
                             <div>
                               <span
                                 className={`badge status ${
-                                  item.status.toLowerCase() === "pending"
-                                    ? "inactive"
-                                    : "active"
+                                  item.status.toLowerCase() === "completed"
+                                    ? "completed"
+                                    : "pending"
                                 }`}
+                                style={{
+                                  backgroundColor:
+                                    item.status.toLowerCase() === "completed"
+                                      ? "#e6f4ea"
+                                      : "#fff3cd",
+                                  color:
+                                    item.status.toLowerCase() === "completed"
+                                      ? "#1e4620"
+                                      : "#856404",
+                                }}
                               >
                                 {item.status}
                               </span>

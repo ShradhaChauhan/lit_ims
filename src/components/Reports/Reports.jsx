@@ -406,11 +406,18 @@ const Reports = () => {
   };
 
   // Fetch all items for item-wise report
-  const fetchAllItems = () => {
+  const fetchItemByCode = (code) => {
+    let itemCode = "";
+    if (code.length > 30) {
+      itemCode = code.substring(7, 15);
+    } else {
+      itemCode = code;
+    }
     api
-      .get("/api/inventory/items")
+      .get(`/api/inventory/stock-by-item/${itemCode}`)
       .then((response) => {
         if (response.data && response.data.status) {
+          console.log("Items: " + JSON.stringify(response.data.data));
           setItems(response.data.data || []);
         } else {
           console.error(
@@ -430,26 +437,17 @@ const Reports = () => {
 
   useEffect(() => {
     fetchWarehouses();
-    fetchAllItems();
   }, []);
 
-  // Filtered items for item-wise report
-  const filteredItems_Report = useMemo(() => {
-    let result = items.filter((item) => {
-      const query = itemSearchQuery.toLowerCase();
-      const matchesSearch =
-        item.name?.toLowerCase().includes(query) ||
-        item.code?.toLowerCase().includes(query) ||
-        item.uom?.toLowerCase().includes(query);
-
-      return matchesSearch;
-    });
+  // Sort items based on itemSortConfig
+  const sortedItems = useMemo(() => {
+    let result = [...items];
 
     // Apply sort
     if (itemSortConfig.key) {
       result.sort((a, b) => {
-        const aVal = a[itemSortConfig.key]?.toLowerCase?.() || "";
-        const bVal = b[itemSortConfig.key]?.toLowerCase?.() || "";
+        const aVal = (a[itemSortConfig.key] || "").toString().toLowerCase();
+        const bVal = (b[itemSortConfig.key] || "").toString().toLowerCase();
 
         if (aVal < bVal) return itemSortConfig.direction === "asc" ? -1 : 1;
         if (aVal > bVal) return itemSortConfig.direction === "asc" ? 1 : -1;
@@ -458,11 +456,7 @@ const Reports = () => {
     }
 
     return result;
-  }, [items, itemSearchQuery, itemSortConfig]);
-
-  useEffect(() => {
-    setFilteredItemsReport(filteredItems_Report);
-  }, [filteredItems_Report]);
+  }, [items, itemSortConfig]);
 
   // Modal effects
   useEffect(() => {
@@ -654,17 +648,18 @@ const Reports = () => {
 
   // Export item data to Excel
   const handleExportItemReport = () => {
-    if (filteredItemsReport.length === 0) {
+    if (items.length === 0) {
       toast.warning("No data available to export!");
       return;
     }
 
     // Format item data for export
-    const exportData = filteredItemsReport.map((item) => ({
-      "Item Name": item.name,
-      "Item Code": item.code,
+    const exportData = items.map((item) => ({
+      "Item Name": item.itemName,
+      "Item Code": item.itemCode,
+      Warehouse: item.warehouseName,
+      Quantity: item.quantity,
       UOM: item.uom || "N/A",
-      "Total Stock": item.totalStock || 0,
     }));
 
     exportToExcel(exportData, "Item_Audit_Report");
@@ -792,13 +787,27 @@ const Reports = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           ) : (
-            <input
-              type="text"
-              className="form-control vendor-search-bar"
-              placeholder="Search by item name, code, UOM..."
-              value={itemSearchQuery}
-              onChange={(e) => setItemSearchQuery(e.target.value)}
-            />
+            <div className="d-flex">
+              <input
+                type="text"
+                className="form-control vendor-search-bar me-2"
+                placeholder="Search by item code, or scan batch number..."
+                value={itemSearchQuery}
+                onChange={(e) => setItemSearchQuery(e.target.value)}
+              />
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  if (itemSearchQuery.trim()) {
+                    fetchItemByCode(itemSearchQuery);
+                  } else {
+                    setItems([]);
+                  }
+                }}
+              >
+                <i className="fas fa-search"></i> Search
+              </button>
+            </div>
           )}
         </div>
         <div className="filter-options d-flex">
@@ -812,6 +821,7 @@ const Reports = () => {
                 setSortConfig({ key: null, direction: null });
               } else {
                 setItemSearchQuery("");
+                setItems([]);
                 setItemSortConfig({ key: null, direction: null });
               }
             }}
@@ -916,11 +926,11 @@ const Reports = () => {
               <thead>
                 <tr>
                   <th
-                    onClick={() => handleItemSort("name")}
+                    onClick={() => handleItemSort("itemName")}
                     style={{ cursor: "pointer" }}
                   >
-                    Item Name{" "}
-                    {itemSortConfig.key === "name" &&
+                    Item{" "}
+                    {itemSortConfig.key === "itemName" &&
                       (itemSortConfig.direction === "asc" ? (
                         <i className="fa-solid fa-sort-up"></i>
                       ) : (
@@ -928,11 +938,11 @@ const Reports = () => {
                       ))}
                   </th>
                   <th
-                    onClick={() => handleItemSort("code")}
+                    onClick={() => handleItemSort("warehouseName")}
                     style={{ cursor: "pointer" }}
                   >
-                    Item Code{" "}
-                    {itemSortConfig.key === "code" &&
+                    Warehouse Name{" "}
+                    {itemSortConfig.key === "warehouseName" &&
                       (itemSortConfig.direction === "asc" ? (
                         <i className="fa-solid fa-sort-up"></i>
                       ) : (
@@ -940,37 +950,24 @@ const Reports = () => {
                       ))}
                   </th>
                   <th
-                    onClick={() => handleItemSort("uom")}
+                    onClick={() => handleItemSort("quantity")}
                     style={{ cursor: "pointer" }}
                   >
-                    UOM{" "}
-                    {itemSortConfig.key === "uom" &&
+                    Quantity{" "}
+                    {itemSortConfig.key === "quantity" &&
                       (itemSortConfig.direction === "asc" ? (
                         <i className="fa-solid fa-sort-up"></i>
                       ) : (
                         <i className="fa-solid fa-sort-down"></i>
                       ))}
                   </th>
-                  <th
-                    onClick={() => handleItemSort("totalStock")}
-                    style={{ cursor: "pointer" }}
-                  >
-                    Total Stock{" "}
-                    {itemSortConfig.key === "totalStock" &&
-                      (itemSortConfig.direction === "asc" ? (
-                        <i className="fa-solid fa-sort-up"></i>
-                      ) : (
-                        <i className="fa-solid fa-sort-down"></i>
-                      ))}
-                  </th>
-                  <th>Actions</th>
                 </tr>
               </thead>
 
               <tbody className="text-break">
-                {filteredItemsReport.length === 0 ? (
+                {sortedItems.length === 0 ? (
                   <tr className="no-data-row">
-                    <td colSpan="5" className="no-data-cell">
+                    <td colSpan="3" className="no-data-cell">
                       <div className="no-data-content">
                         <i className="fa-solid fa-box no-data-icon"></i>
                         <p className="no-data-text">No items found</p>
@@ -978,21 +975,11 @@ const Reports = () => {
                     </td>
                   </tr>
                 ) : (
-                  filteredItemsReport.map((item) => (
+                  sortedItems.map((item) => (
                     <tr key={item.id}>
-                      <td className="ps-4">{item.name}</td>
-                      <td className="ps-4">{item.code}</td>
-                      <td className="ps-4">{item.uom}</td>
-                      <td className="ps-4">{item.totalStock || 0}</td>
-                      <td className="actions ps-4">
-                        <button
-                          className="btn-icon view"
-                          title="View Details"
-                          onClick={() => handleOpenItemHistory(item)}
-                        >
-                          <i className="fas fa-eye"></i>
-                        </button>
-                      </td>
+                      <td>{"(" + item.itemCode + ") - " + item.itemName}</td>
+                      <td>{item.warehouseName}</td>
+                      <td>{item.quantity + " " + item.uom.toLowerCase()}</td>
                     </tr>
                   ))
                 )}
@@ -1009,7 +996,7 @@ const Reports = () => {
                 </>
               ) : (
                 <>
-                  Showing {getDisplayRange()} of {filteredItemsReport.length}{" "}
+                  Showing {getDisplayRange()} of {sortedItems.length}{" "}
                   entries
                 </>
               )}

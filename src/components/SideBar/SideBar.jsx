@@ -31,6 +31,7 @@ import StockAdjustment from "../Forms/StockAdjustment/StockAdjustment";
 import OrderPlanning from "../OrderPlanning/OrderPlanning";
 import VendorRating from "../VendorRating/VendorRating";
 import LineMonitoring from "../LineMonitoring/LineMonitoring";
+import ProductionReportEntry from "../Forms/ProductionReportEntry/ProductionReportEntry";
 
 const SideBar = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -349,6 +350,7 @@ const SideBar = () => {
     name === "Order Planning" && setRightSideComponent(<OrderPlanning />);
     name === "Vendor Rating" && setRightSideComponent(<VendorRating />);
     name === "Line Monitoring" && setRightSideComponent(<LineMonitoring />);
+    name === "Production Report Entry" && setRightSideComponent(<ProductionReportEntry />);
   };
 
   // RBAC
@@ -489,7 +491,7 @@ const SideBar = () => {
 
         <Link
           to="/line-monitoring"
-          className="home-link mb-0 py-0 my-3"
+          className="home-link mb-0 py-0 mt-3"
           style={{ color: "#8D91AD" }}
           onClick={() => {
             setIsActiveComponent("line-monitoring");
@@ -499,6 +501,20 @@ const SideBar = () => {
         >
           <i className="fa-solid fa-industry"></i>
           {!isCollapsed && "Line Monitoring"}
+        </Link>
+
+        <Link
+          to="/production-report-entry"
+          className="home-link mb-0 py-0 my-3"
+          style={{ color: "#8D91AD" }}
+          onClick={() => {
+            setIsActiveComponent("production-report-entry");
+            setLabelName("Production Report Entry");
+            handleRightSideComponentName("Production Report Entry");
+          }}
+        >
+          <i className="fa-solid fa-clipboard-list"></i>
+          {!isCollapsed && "Production Report Entry"}
         </Link>
 
         <ul className="nav nav-pills flex-column mb-auto mt-1">
