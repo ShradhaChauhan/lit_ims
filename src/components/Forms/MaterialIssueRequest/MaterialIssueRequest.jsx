@@ -124,7 +124,7 @@ const MaterialIssueRequest = () => {
     setType("");
     setQuantity("");
     setIsBOMAdded(false);
-    setWarehouse("");
+    // setWarehouse("");
 
     // Reset available items from the original items list
     const itemNames = itemsList.map((item) => ({
