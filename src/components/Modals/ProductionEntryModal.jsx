@@ -50,6 +50,7 @@ const ProductionEntryModal = ({ show, onHide }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [transactionNumber, setTransactionNumber] = useState("PU" + Date.now());
+  const [wipQuantities, setWipQuantities] = useState({});
   const initialFormState = {
     date: "",
     category: null,
@@ -86,7 +87,7 @@ const ProductionEntryModal = ({ show, onHide }) => {
       if (selectedBom) {
         const fullBomData = selectedBom.original; // Get the full BOM data we stored earlier
         setSelectedProduct(fullBomData);
-        
+
         // Check if BOM code starts with 2010 or 2020
         const bomCode = fullBomData.code;
         if (bomCode.startsWith("2010") || bomCode.startsWith("2020")) {
@@ -121,16 +122,18 @@ const ProductionEntryModal = ({ show, onHide }) => {
         bomName: selectedProduct.name,
         producedQuantity: Number(formData.producedQty),
         productionDate: new Date(formData.date).toISOString(),
-        items: batchData ? batchData.items : selectedProduct.items.map((item) => ({
-          itemCode: item.itemCode,
-          itemName: item.itemName,
-          usedQuantity: Number(
-            (item.quantity * formData.producedQty).toFixed(3)
-          ),
-        })),
+        items: batchData
+          ? batchData.items
+          : selectedProduct.items.map((item) => ({
+              itemCode: item.itemCode,
+              itemName: item.itemName,
+              usedQuantity: Number(
+                (item.quantity * formData.producedQty).toFixed(3)
+              ),
+            })),
         hasBatchSplits: !!batchData,
       };
-      
+
       console.log("request: " + JSON.stringify(requestBody));
       const response = await api.post(
         "/api/production-punch/create",
@@ -189,10 +192,28 @@ const ProductionEntryModal = ({ show, onHide }) => {
     }));
   };
 
+  const fetchWipQuantities = async () => {
+    if (!selectedProduct?.items || !formData.location) return;
+    
+    try {
+      const quantities = {};
+      for (const item of selectedProduct.items) {
+        const response = await api.post(`/api/inventory/itemQuantity/${formData.location.value}/${item.itemCode}`);
+        console.log("WIP quantity response:", response.data.data);
+        quantities[item.itemCode] = parseFloat(response.data.data) || 0;
+      }
+      setWipQuantities(quantities);
+    } catch (error) {
+      console.error("Error fetching WIP quantities:", error);
+      toast.error("Error fetching WIP quantities");
+    }
+  };
+
   const resetForm = () => {
     setFormData(initialFormState);
     setSelectedProduct(null);
     setShowPreview(false);
+    setWipQuantities({});
   };
 
   const handleClose = () => {
@@ -271,6 +292,13 @@ const ProductionEntryModal = ({ show, onHide }) => {
       setWarehouseFromCookies();
     }
   }, [show, warehouseList]);
+
+  // Fetch WIP quantities when preview modal is shown
+  useEffect(() => {
+    if (showPreview) {
+      fetchWipQuantities();
+    }
+  }, [showPreview]);
 
   return (
     <>
@@ -446,6 +474,7 @@ const ProductionEntryModal = ({ show, onHide }) => {
                   <th>Item Name</th>
                   <th>Unit Qty</th>
                   <th>Used Qty</th>
+                  <th>WIP Qty</th>
                   <th>Location</th>
                 </tr>
               </thead>
@@ -456,6 +485,7 @@ const ProductionEntryModal = ({ show, onHide }) => {
                     <td>{item.itemName}</td>
                     <td>{item.quantity + " " + item.uom.toLowerCase()}</td>
                     <td>{(item.quantity * formData.producedQty).toFixed(3)}</td>
+                    <td>{typeof wipQuantities[item.itemCode] === 'number' ? wipQuantities[item.itemCode].toFixed(3) : "-"}</td>
                     <td>{formData.location?.label || "-"}</td>
                   </tr>
                 ))}
@@ -472,7 +502,11 @@ const ProductionEntryModal = ({ show, onHide }) => {
             <i className="fas fa-times me-2" />
             Close
           </Button>
-          <Button variant="primary" className="text-8" onClick={() => handleSave()}>
+          <Button
+            variant="primary"
+            className="text-8"
+            onClick={() => handleSave()}
+          >
             <i className="fas fa-floppy-disk me-2" />
             Save
           </Button>
