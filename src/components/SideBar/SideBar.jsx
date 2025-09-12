@@ -551,8 +551,8 @@ const SideBar = () => {
           <i className="fa-solid fa-clipboard-list"></i>
           {!isCollapsed && "Production Punch"}
         </Link>
-        
-        <Link
+
+        {/* <Link
           to="/store-report"
           className="home-link mb-0 py-0 my-3"
           style={{ color: "#8D91AD" }}
@@ -564,7 +564,7 @@ const SideBar = () => {
         >
           <i className="fa-solid fa-store"></i>
           {!isCollapsed && "Store Report"}
-        </Link>
+        </Link> */}
 
         <ul className="nav nav-pills flex-column mb-auto mt-1">
           {filteredMenuItems
