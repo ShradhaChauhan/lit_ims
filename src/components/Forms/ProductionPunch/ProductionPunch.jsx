@@ -18,19 +18,28 @@ const ProductionReportEntry = () => {
   const [error, setError] = useState(null);
   const itemsPerPage = 10;
 
+  // Toast configuration helper
+  const showToast = (type, message) => {
+    toast[type](message, { autoClose: 30000 });
+  };
+
   const fetchProductionData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("/api/production-punch");
-      console.log("API Response:", response.data);
+      const response = await api.get("api/production-punch");
+      console.log("API Response:", JSON.stringify(response.data.data));
       if (response.data.status) {
-        console.log("Setting production data:", response.data.data);
+        console.log(
+          "Setting production data:",
+          JSON.stringify(response.data.data)
+        );
         setProductionData(response.data.data);
       } else {
-        setError("No records found");
+        showToast("error", "No records found");
       }
     } catch (err) {
-      setError("No records found");
+      showToast("error", err.response.data.message);
+      console.log(err);
     } finally {
       setLoading(false);
     }
@@ -39,6 +48,7 @@ const ProductionReportEntry = () => {
   useEffect(() => {
     fetchProductionData();
   }, []);
+
   const handleExportExcel = () => {
     const dataToExport =
       selectedRows.length > 0
