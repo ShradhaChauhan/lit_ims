@@ -520,6 +520,7 @@ const IssueProduction = () => {
             quantity: batch.quantity,
             issuedQty: batch.quantity,
             variance: item ? item.variance : 0,
+            warehouseId: batch.warehouseId,
             // stockQty: batch.stockQty
           };
         }),
