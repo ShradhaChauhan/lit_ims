@@ -495,47 +495,38 @@ const MaterialIssueRequest = () => {
 
     try {
       // Determine type based on the first item
-      const requestType = request[0].type === "BOM" ? "bom" : "items";
-      console.log("Warehouse: " + warehouse);
-      // Format data for API
-      // const formattedItems = request.map((item) => ({
-      //   id: item.id,
-      //   name: item.name,
-      //   code: item.code,
-      //   type: item.type.toLowerCase(),
-      //   quantity: Number(item.quantity),
-      // }));
+      const requestType = request[0].type === "BOM" ? "PRODUCTION" : "PRODUCTION";
+      
+      // Format items based on the new structure
       const formattedItems = request.flatMap((item) => {
-        if (item.type === "bom" || item.type === "BOM") {
-          // BOM - flatten the sub-items with calculated quantity
+        if (item.type === "BOM") {
+          // BOM items - use the warehouse ID from each sub-item
           return item.items.map((subItem) => ({
-            id: subItem.itemId,
-            name: subItem.itemName,
             code: subItem.itemCode,
-            type: "item", // sub-items are always individual items
+            name: subItem.itemName,
+            type: "RAW_MATERIAL",
             quantity: Number(subItem.calculatedQuantity),
+            warehouseId: Number(subItem.warehouseId) // Inner warehouse ID from where item will be issued
           }));
         } else {
           // Individual item
-          return [
-            {
-              id: item.id,
-              name: item.name,
-              code: item.code,
-              type: "item",
-              quantity: Number(item.quantity),
-            },
-          ];
+          return [{
+            code: item.code,
+            name: item.name,
+            type: "RAW_MATERIAL",
+            quantity: Number(item.quantity),
+            warehouseId: Number(item.warehouse) // Inner warehouse ID from where item will be issued
+          }];
         }
       });
 
       const payload = {
         transactionNumber,
         type: requestType,
-        bomName: selectedOption.name,
-        bomCode: selectedOption.code,
-        warehouseId: Number(warehouse),
-        items: formattedItems,
+        warehouseId: Number(warehouse), // Outer warehouse ID (who is raising this requisition)
+        bomCode: request[0].type === "BOM" ? request[0].code : undefined,
+        bomName: request[0].type === "BOM" ? request[0].name : undefined,
+        items: formattedItems
       };
 
       console.log("Submitting payload:", JSON.stringify(payload));
