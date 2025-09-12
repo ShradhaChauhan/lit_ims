@@ -50,12 +50,15 @@ const ProductionReportEntry = () => {
       "BOM Name": entry.bomName,
       "Produced Quantity": entry.producedQuantity,
       "Production Date": entry.productionDate,
-      "Warehouse": entry.warehouseName,
+      Warehouse: entry.warehouseName,
       "Created By": entry.createdBy,
       "Created At": entry.createdAt,
-      "Items": entry.items.map(item => 
-        `${item.itemName} (${item.itemCode}) - Qty: ${item.usedQuantity}`
-      ).join(", ")
+      Items: entry.items
+        .map(
+          (item) =>
+            `${item.itemName} (${item.itemCode}) - Qty: ${item.usedQuantity}`
+        )
+        .join(", "),
     }));
 
     const ws = XLSX.utils.json_to_sheet(exportData);
@@ -107,18 +110,18 @@ const ProductionReportEntry = () => {
       <nav className="navbar bg-light border-body" data-bs-theme="light">
         <div className="container-fluid">
           <div className="mt-4">
-            <h3 className="nav-header header-style">Production Report Entry</h3>
+            <h3 className="nav-header header-style">Production Punch</h3>
             <p className="breadcrumb">
               <Link to="/dashboard">
                 <i className="fas fa-home text-8"></i>
               </Link>{" "}
               <span className="ms-1 mt-1 text-small-gray">
-                / Production Report Entry
+                / Production Punch
               </span>
             </p>
           </div>
           <button className="btn btn-primary add-btn" onClick={handleModalShow}>
-            <i className="fa-solid fa-plus pe-1"></i> Add Production Entry
+            <i className="fa-solid fa-plus pe-1"></i> Add Production Punch
           </button>
         </div>
       </nav>
@@ -180,7 +183,7 @@ const ProductionReportEntry = () => {
                 </tr>
               </thead>
               <tbody className="text-break">
-                {currentItems.map((entry) => (
+                {productionData.map((entry) => (
                   <tr key={entry.id}>
                     <td>
                       <input
@@ -201,7 +204,8 @@ const ProductionReportEntry = () => {
                     <td>
                       {entry.items.map((item, idx) => (
                         <div key={idx}>
-                          {item.itemName} ({item.itemCode}) - Qty: {item.usedQuantity}
+                          {item.itemName} ({item.itemCode}) - Qty:{" "}
+                          {item.usedQuantity}
                           <br />
                           <small className="text-muted">
                             Batch: {item.batchNumbers.join(", ")}
