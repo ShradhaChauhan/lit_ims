@@ -145,8 +145,8 @@ const Users = () => {
       errors.role = "Role is required";
     }
 
-    if (!data.department || data.department.trim() === "") {
-      errors.department = "Department is required";
+    if (!data.department || !Array.isArray(data.department) || data.department.length === 0) {
+      errors.department = "At least one department must be selected";
     }
 
     // Check if branch is selected - using selectedOptions from state
@@ -438,7 +438,7 @@ const Users = () => {
         console.warn("No users data found in the response:", response.data);
       }
     } catch (error) {
-      toast.error("Error in fetching users. Please try again");
+      toast.error(error.response.data.message);
       console.error("Error fetching users:", error);
     } finally {
       setLoading(false);
@@ -1198,7 +1198,10 @@ const Users = () => {
       }
     } catch (error) {
       console.error("Error fetching user details:", error);
-      toast.error("Failed to fetch user details. Please try again.");
+      toast.error(
+        error.response.data.message ||
+          "Failed to fetch user details. Please try again."
+      );
     }
   };
 
@@ -1517,7 +1520,10 @@ const Users = () => {
       }
     } catch (error) {
       console.error("Error fetching user details:", error);
-      toast.error("Failed to fetch user details. Please try again.");
+      toast.error(
+        error.response.data.message ||
+          "Failed to fetch user details. Please try again."
+      );
     }
   };
 
@@ -2083,39 +2089,26 @@ const Users = () => {
                     </label>
                     <div className="position-relative w-100">
                       <i className="fa-solid fa-building position-absolute z-0 input-icon"></i>
-                      <select
-                        multiple
-                        className={`form-select ps-5 text-font ${
-                          formData.department?.length > 0
-                            ? ""
-                            : "text-secondary"
+                      <Select
+                        className={`form-control p-0 text-font border-0 ${
+                          errors.department ? "is-invalid" : ""
                         }`}
+                        options={warehouse.map(w => ({ value: w.name, label: w.name }))}
+                        isMulti
                         id="department"
-                        value={formData.department || []} // make sure it's an array
-                        onChange={(e) => {
-                          const selectedValues = Array.from(
-                            e.target.selectedOptions,
-                            (option) => option.value
-                          );
+                        value={(formData.department || []).map(d => ({ value: d, label: d }))}
+                        onChange={(options) => {
+                          const selectedValues = (options || []).map(opt => opt.value);
                           setFormData({
                             ...formData,
                             department: selectedValues,
                             warehouseId: warehouse
                               .filter((w) => selectedValues.includes(w.name))
-                              .map((w) => w.id), // now returns array of ids
+                              .map((w) => w.id),
                           });
                         }}
-                      >
-                        <option value="" disabled hidden>
-                          Select Department
-                        </option>
-
-                        {warehouse.map((w) => (
-                          <option key={w.id} value={w.name}>
-                            {w.name}
-                          </option>
-                        ))}
-                      </select>
+                        placeholder="Select Department..."
+                      />
                     </div>
 
                     {errors.department && (
