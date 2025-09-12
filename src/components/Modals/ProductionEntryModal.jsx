@@ -87,14 +87,7 @@ const ProductionEntryModal = ({ show, onHide }) => {
       if (selectedBom) {
         const fullBomData = selectedBom.original; // Get the full BOM data we stored earlier
         setSelectedProduct(fullBomData);
-
-        // Check if BOM code starts with 2010 or 2020
-        const bomCode = fullBomData.code;
-        if (bomCode.startsWith("2010") || bomCode.startsWith("2020")) {
-          setShowBatchSplit(true);
-        } else {
-          setShowPreview(true);
-        }
+        setShowPreview(true);
       } else {
         toast.error("Selected product BOM not found");
       }
@@ -148,7 +141,9 @@ const ProductionEntryModal = ({ show, onHide }) => {
       }
     } catch (error) {
       console.error("Error saving production entry:", error);
-      toast.error("Error saving production entry");
+      toast.error(
+        error.response.data.message || "Error saving production entry"
+      );
     }
   };
 
@@ -194,11 +189,13 @@ const ProductionEntryModal = ({ show, onHide }) => {
 
   const fetchWipQuantities = async () => {
     if (!selectedProduct?.items || !formData.location) return;
-    
+
     try {
       const quantities = {};
       for (const item of selectedProduct.items) {
-        const response = await api.post(`/api/inventory/itemQuantity/${formData.location.value}/${item.itemCode}`);
+        const response = await api.post(
+          `/api/inventory/itemQuantity/${formData.location.value}/${item.itemCode}`
+        );
         console.log("WIP quantity response:", response.data.data);
         quantities[item.itemCode] = parseFloat(response.data.data) || 0;
       }
@@ -485,7 +482,11 @@ const ProductionEntryModal = ({ show, onHide }) => {
                     <td>{item.itemName}</td>
                     <td>{item.quantity + " " + item.uom.toLowerCase()}</td>
                     <td>{(item.quantity * formData.producedQty).toFixed(3)}</td>
-                    <td>{typeof wipQuantities[item.itemCode] === 'number' ? wipQuantities[item.itemCode].toFixed(3) : "-"}</td>
+                    <td>
+                      {typeof wipQuantities[item.itemCode] === "number"
+                        ? wipQuantities[item.itemCode].toFixed(3)
+                        : "-"}
+                    </td>
                     <td>{formData.location?.label || "-"}</td>
                   </tr>
                 ))}
@@ -505,7 +506,15 @@ const ProductionEntryModal = ({ show, onHide }) => {
           <Button
             variant="primary"
             className="text-8"
-            onClick={() => handleSave()}
+            onClick={() => {
+              const bomCode = selectedProduct.code;
+              if (bomCode.startsWith("2010") || bomCode.startsWith("2020")) {
+                setShowBatchSplit(true);
+                setShowPreview(false);
+              } else {
+                handleSave();
+              }
+            }}
           >
             <i className="fas fa-floppy-disk me-2" />
             Save

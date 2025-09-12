@@ -16,95 +16,95 @@ const ProductionReportEntry = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState([]);
   const [productionData, setProductionData] = useState([
-    {
-      id: 4,
-      trNo: "PP-888B33CF",
-      bomCode: "456789",
-      bomName: "TESTING",
-      producedQuantity: 300,
-      productionDate: "2025-09-11",
-      warehouseId: 7,
-      warehouseName: "WIP2",
-      createdBy: "MANJEET",
-      createdAt: "2025-09-11T17:06:57.186727",
-      items: [
-        {
-          itemCode: "10301034",
-          itemName: "J2K LENCE",
-          usedQuantity: 1500,
-          batchNumbers: ["MV0014410301034250911005000000003"],
-        },
-        {
-          itemCode: "10301035",
-          itemName: "J2K BOTTOM COVER",
-          usedQuantity: 1500,
-          batchNumbers: ["MV0014410301035250911005000000002"],
-        },
-      ],
-    },
-    {
-      id: 3,
-      trNo: "PP-F642A952",
-      bomCode: "456789",
-      bomName: "TESTING",
-      producedQuantity: 500,
-      productionDate: "2025-09-10",
-      warehouseId: 7,
-      warehouseName: "WIP2",
-      createdBy: "MANJEET",
-      createdAt: "2025-09-11T16:11:41.02988",
-      items: [
-        {
-          itemCode: "10301034",
-          itemName: "J2K LENCE",
-          usedQuantity: 2500,
-          batchNumbers: ["MV0014410301034250911005000000002"],
-        },
-      ],
-    },
-    {
-      id: 2,
-      trNo: "PP-17E7AEF0",
-      bomCode: "456789",
-      bomName: "TESTING",
-      producedQuantity: 1000,
-      productionDate: "2025-09-11",
-      warehouseId: 7,
-      warehouseName: "WIP2",
-      createdBy: "MANJEET",
-      createdAt: "2025-09-11T16:09:43.611068",
-      items: [
-        {
-          itemCode: "10301034",
-          itemName: "J2K LENCE",
-          usedQuantity: 5000,
-          batchNumbers: [
-            "MV0014410301034250911005000000001",
-            "MV0014410301034250911005000000002",
-          ],
-        },
-      ],
-    },
-    {
-      id: 1,
-      trNo: "PP-0F08D5A8",
-      bomCode: "456789",
-      bomName: "TESTING",
-      producedQuantity: 500,
-      productionDate: "2025-09-11",
-      warehouseId: 7,
-      warehouseName: "WIP2",
-      createdBy: "MANJEET",
-      createdAt: "2025-09-11T16:01:15.53059",
-      items: [
-        {
-          itemCode: "10301034",
-          itemName: "J2K LENCE",
-          usedQuantity: 2500,
-          batchNumbers: ["MV0014410301034250911005000000001"],
-        },
-      ],
-    },
+    // {
+    //   id: 4,
+    //   trNo: "PP-888B33CF",
+    //   bomCode: "456789",
+    //   bomName: "TESTING",
+    //   producedQuantity: 300,
+    //   productionDate: "2025-09-11",
+    //   warehouseId: 7,
+    //   warehouseName: "WIP2",
+    //   createdBy: "MANJEET",
+    //   createdAt: "2025-09-11T17:06:57.186727",
+    //   items: [
+    //     {
+    //       itemCode: "10301034",
+    //       itemName: "J2K LENCE",
+    //       usedQuantity: 1500,
+    //       batchNumbers: ["MV0014410301034250911005000000003"],
+    //     },
+    //     {
+    //       itemCode: "10301035",
+    //       itemName: "J2K BOTTOM COVER",
+    //       usedQuantity: 1500,
+    //       batchNumbers: ["MV0014410301035250911005000000002"],
+    //     },
+    //   ],
+    // },
+    // {
+    //   id: 3,
+    //   trNo: "PP-F642A952",
+    //   bomCode: "456789",
+    //   bomName: "TESTING",
+    //   producedQuantity: 500,
+    //   productionDate: "2025-09-10",
+    //   warehouseId: 7,
+    //   warehouseName: "WIP2",
+    //   createdBy: "MANJEET",
+    //   createdAt: "2025-09-11T16:11:41.02988",
+    //   items: [
+    //     {
+    //       itemCode: "10301034",
+    //       itemName: "J2K LENCE",
+    //       usedQuantity: 2500,
+    //       batchNumbers: ["MV0014410301034250911005000000002"],
+    //     },
+    //   ],
+    // },
+    // {
+    //   id: 2,
+    //   trNo: "PP-17E7AEF0",
+    //   bomCode: "456789",
+    //   bomName: "TESTING",
+    //   producedQuantity: 1000,
+    //   productionDate: "2025-09-11",
+    //   warehouseId: 7,
+    //   warehouseName: "WIP2",
+    //   createdBy: "MANJEET",
+    //   createdAt: "2025-09-11T16:09:43.611068",
+    //   items: [
+    //     {
+    //       itemCode: "10301034",
+    //       itemName: "J2K LENCE",
+    //       usedQuantity: 5000,
+    //       batchNumbers: [
+    //         "MV0014410301034250911005000000001",
+    //         "MV0014410301034250911005000000002",
+    //       ],
+    //     },
+    //   ],
+    // },
+    // {
+    //   id: 1,
+    //   trNo: "PP-0F08D5A8",
+    //   bomCode: "456789",
+    //   bomName: "TESTING",
+    //   producedQuantity: 500,
+    //   productionDate: "2025-09-11",
+    //   warehouseId: 7,
+    //   warehouseName: "WIP2",
+    //   createdBy: "MANJEET",
+    //   createdAt: "2025-09-11T16:01:15.53059",
+    //   items: [
+    //     {
+    //       itemCode: "10301034",
+    //       itemName: "J2K LENCE",
+    //       usedQuantity: 2500,
+    //       batchNumbers: ["MV0014410301034250911005000000001"],
+    //     },
+    //   ],
+    // },
   ]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -348,9 +348,9 @@ const ProductionReportEntry = () => {
       </div>
 
       <ProductionEntryModal show={showModal} onHide={handleModalClose} />
-      <ItemsViewModal 
-        show={showItemsModal} 
-        onHide={() => setShowItemsModal(false)} 
+      <ItemsViewModal
+        show={showItemsModal}
+        onHide={() => setShowItemsModal(false)}
         items={selectedItems}
       />
     </div>

@@ -495,8 +495,8 @@ const MaterialIssueRequest = () => {
 
     try {
       // Determine type based on the first item
-      const requestType = request[0].type === "BOM" ? "PRODUCTION" : "PRODUCTION";
-      
+      const requestType = request[0].type === "BOM" ? "bom" : "item";
+
       // Format items based on the new structure
       const formattedItems = request.flatMap((item) => {
         if (item.type === "BOM") {
@@ -504,19 +504,21 @@ const MaterialIssueRequest = () => {
           return item.items.map((subItem) => ({
             code: subItem.itemCode,
             name: subItem.itemName,
-            type: "RAW_MATERIAL",
+            type: "bom items",
             quantity: Number(subItem.calculatedQuantity),
-            warehouseId: Number(subItem.warehouseId) // Inner warehouse ID from where item will be issued
+            warehouseId: Number(subItem.warehouseId), // Inner warehouse ID from where item will be issued
           }));
         } else {
           // Individual item
-          return [{
-            code: item.code,
-            name: item.name,
-            type: "RAW_MATERIAL",
-            quantity: Number(item.quantity),
-            warehouseId: Number(item.warehouse) // Inner warehouse ID from where item will be issued
-          }];
+          return [
+            {
+              code: item.code,
+              name: item.name,
+              type: "item",
+              quantity: Number(item.quantity),
+              warehouseId: Number(item.warehouse), // Inner warehouse ID from where item will be issued
+            },
+          ];
         }
       });
 
@@ -526,7 +528,7 @@ const MaterialIssueRequest = () => {
         warehouseId: Number(warehouse), // Outer warehouse ID (who is raising this requisition)
         bomCode: request[0].type === "BOM" ? request[0].code : undefined,
         bomName: request[0].type === "BOM" ? request[0].name : undefined,
-        items: formattedItems
+        items: formattedItems,
       };
 
       console.log("Submitting payload:", JSON.stringify(payload));

@@ -302,7 +302,10 @@ const ProductionMaterialUsage = () => {
       })
       .catch((error) => {
         console.error("Error saving production usage:", error);
-        toast.error("Error saving production usage. Please try again.");
+        toast.error(
+          error.response.data.message ||
+            "Error saving production usage. Please try again."
+        );
       });
   };
   return (
