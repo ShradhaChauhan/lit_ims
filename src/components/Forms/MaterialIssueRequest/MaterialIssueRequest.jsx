@@ -968,6 +968,7 @@ const MaterialIssueRequest = () => {
                       <th>Item/BOM Name</th>
                       <th>Type</th>
                       <th>Quantity</th>
+                      <th>Warehouse</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -985,17 +986,38 @@ const MaterialIssueRequest = () => {
                             <span>{i.type}</span>
                           </td>
                           <td className="ps-4">
-                            <span>
-                              {/* <input
-                                type="text"
-                                className="form-control text-8"
-                                value={i.quantity}
-                                onChange={(e) =>
-                                  handleQuantityChange(i.id, e.target.value)
-                                }
-                              /> */}
-                              {i.quantity}
-                            </span>
+                            <span>{i.quantity}</span>
+                          </td>
+                          <td className="ps-4">
+                            {i.type === "Item" && (
+                              <select
+                                className="form-select text-font"
+                                value={i.warehouse || ""}
+                                onChange={(e) => {
+                                  const updatedRequest = request.map((item) =>
+                                    item.id === i.id
+                                      ? { ...item, warehouse: e.target.value }
+                                      : item
+                                  );
+                                  setRequest(updatedRequest);
+                                }}
+                              >
+                                <option value="" disabled>
+                                  Select Warehouse
+                                </option>
+                                {reqWarehouse
+                                  .filter((w) =>
+                                    ["store", "wip0", "wip1"].includes(
+                                      w.name.toLowerCase()
+                                    )
+                                  )
+                                  .map((w) => (
+                                    <option key={w.id} value={w.id}>
+                                      {w.name}
+                                    </option>
+                                  ))}
+                              </select>
+                            )}
                           </td>
                           <td className="actions ps-4">
                             <button
@@ -1023,7 +1045,7 @@ const MaterialIssueRequest = () => {
                       ))
                     ) : (
                       <tr className="no-data-row">
-                        <td colSpan="5" className="no-data-cell">
+                        <td colSpan="6" className="no-data-cell">
                           <div className="no-data-content">
                             <i className="fas fa-clipboard-list no-data-icon"></i>
                             <p className="no-data-text">No Items Requested</p>
