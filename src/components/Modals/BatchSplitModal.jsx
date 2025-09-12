@@ -5,132 +5,149 @@ import {
   Form,
   Table,
   InputGroup,
-  Row,
-  Col,
-  Collapse
 } from 'react-bootstrap';
-import * as XLSX from 'xlsx';
 import { toast } from 'react-toastify';
+
+// Keep track of active toast messages
+const activeToasts = new Set();
+
+// Helper function to show toast messages
+const showUniqueToast = (message, type = 'error') => {
+  // If the same message is already showing, don't show it again
+  if (activeToasts.has(message)) {
+    return;
+  }
+
+  // Add message to active toasts
+  activeToasts.add(message);
+
+  // Show the toast
+  toast[type](message, {
+    toastId: message, // Use message as the toast ID to prevent duplicates
+    autoClose: 3000,
+    onClose: () => {
+      // Remove the message from active toasts when it closes
+      activeToasts.delete(message);
+    }
+  });
+};
 
 const BatchSplitModal = ({ show, onHide, selectedProduct, formData, transactionNumber, onSave }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [expandedItems, setExpandedItems] = useState({});
   const [batchSplits, setBatchSplits] = useState({});
-  const [batchNumbers, setBatchNumbers] = useState({});
 
-  // Filter items based on search term
-  const filteredItems = selectedProduct?.items?.filter(
-    (item) =>
-      item.itemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.itemCode.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
-
-  // Handle adding a new batch split for an item
-  const handleAddBatchSplit = (itemCode) => {
-    setBatchSplits((prev) => ({
-      ...prev,
-      [itemCode]: [
-        ...(prev[itemCode] || []),
-        {
-          batchNo: generateBatchNumber(itemCode),
-          quantity: 0
-        }
-      ]
-    }));
-  };
-
-  // Generate a unique batch number in format P12345678452145250912000100000002
-  const generateBatchNumber = (itemCode) => {
-    const timestamp = Date.now().toString();
-    const randomDigits = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-    const sequence = ((batchSplits[itemCode]?.length || 0) + 1).toString().padStart(8, '0');    
-    return `P123456${randomDigits}${sequence}`;
-  };
-
-  // Handle quantity change in batch split
-  const handleQuantityChange = (itemCode, index, value) => {
-    const numValue = parseFloat(value) || 0;
-    const item = selectedProduct.items.find(i => i.itemCode === itemCode);
-    const totalQuantity = item.quantity * formData.producedQty;
+  // Handle adding a new batch split
+  const handleAddBatchSplit = (isFirstAdd = false) => {
+    const mainBatchNo = "P123456" + selectedProduct.code + "250912000100000002";
     
-    // Calculate sum of other splits
-    const otherSplitsSum = batchSplits[itemCode]?.reduce((sum, split, i) => 
+    setBatchSplits((prev) => {
+      const currentSplits = prev[selectedProduct.code] || [];
+      
+      // Check if all existing rows have quantities filled
+      const hasEmptyQuantities = currentSplits.some(split => 
+        !split.quantity || parseFloat(split.quantity) === 0
+      );
+      
+      if (!isFirstAdd && hasEmptyQuantities) {
+        showUniqueToast("Please fill quantity in existing rows before adding new ones");
+        return prev;
+      }
+
+      if (isFirstAdd) {
+        return {
+          ...prev,
+          [selectedProduct.code]: [
+            {
+              batchNo: mainBatchNo,
+              quantity: 0
+            }
+          ]
+        };
+      } else {
+        // Get the last row's batch number and increment its last digit
+        const lastSplit = currentSplits[currentSplits.length - 1];
+        const lastDigit = parseInt(lastSplit.batchNo.slice(-1));
+        const newBatchNo = lastSplit.batchNo.slice(0, -1) + (lastDigit + 1).toString();
+
+        return {
+          ...prev,
+          [selectedProduct.code]: [
+            ...currentSplits,
+            {
+              batchNo: newBatchNo,
+              quantity: 0
+            }
+          ]
+        };
+      }
+    });
+  };
+
+  // Handle quantity change
+  const handleQuantityChange = (index, value) => {
+    const numValue = parseFloat(value) || 0;
+    const currentSplits = batchSplits[selectedProduct.code] || [];
+    const totalQuantity = parseFloat(formData.producedQty) || 0;
+    
+    // Calculate sum of all splits except current
+    const otherSplitsSum = currentSplits.reduce((sum, split, i) => 
       i !== index ? sum + (parseFloat(split.quantity) || 0) : sum, 0
-    ) || 0;
+    );
 
     // Check if new value would exceed total quantity
     if (numValue + otherSplitsSum > totalQuantity) {
-      toast.error(`Total split quantity cannot exceed ${totalQuantity}`);
+      showUniqueToast(`Total split quantity cannot exceed ${totalQuantity}`);
       return;
     }
 
-    setBatchSplits((prev) => ({
+    setBatchSplits(prev => ({
       ...prev,
-      [itemCode]: prev[itemCode].map((split, i) =>
+      [selectedProduct.code]: prev[selectedProduct.code].map((split, i) =>
         i === index ? { ...split, quantity: numValue } : split
       )
     }));
   };
 
-  // Handle export to Excel
-  const handleExportExcel = () => {
-    if (!selectedProduct || !selectedProduct.items) return;
-
-    const exportData = selectedProduct.items.map((item) => {
-      const splits = batchSplits[item.itemCode] || [];
-      return {
-        'Item Code': item.itemCode,
-        'Item Name': item.itemName,
-        'Total Quantity': item.quantity * formData.producedQty,
-        'Batch Splits': splits.map(s => `${s.batchNo}: ${s.quantity}`).join(', ') || 'No splits'
-      };
-    });
-
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Batch Splits');
-    XLSX.writeFile(wb, `${selectedProduct.code}_${selectedProduct.name}_Batch_Splits.xlsx`);
-  };
-
-  // Handle print stickers
-  const handlePrintStickers = () => {
-    // Implement sticker printing logic here
-    // This would typically involve generating a print-friendly format
-    // and using the browser's print functionality or a printing library
-    window.print();
-  };
-
   // Handle save
-  const handleSave = () => {
-    // Validate all quantities are properly split
-    const invalidItems = selectedProduct.items.filter(item => {
-      const totalQuantity = item.quantity * formData.producedQty;
-      const splits = batchSplits[item.itemCode] || [];
-      const splitSum = splits.reduce((sum, split) => sum + (parseFloat(split.quantity) || 0), 0);
-      return Math.abs(splitSum - totalQuantity) > 0.001; // Using small epsilon for float comparison
-    });
+  const resetForm = () => {
+    setBatchSplits({});
+    setSearchTerm('');
+  };
 
-    if (invalidItems.length > 0) {
-      toast.error('Please ensure all items are fully split into batches');
+  const handleSave = () => {
+    const splits = batchSplits[selectedProduct.code] || [];
+    const totalQuantity = parseFloat(formData.producedQty) || 0;
+    const splitSum = splits.reduce((sum, split) => 
+      sum + (parseFloat(split.quantity) || 0), 0
+    );
+
+    if (Math.abs(splitSum - totalQuantity) > 0.001) {
+      showUniqueToast('Split quantities must equal produced quantity');
       return;
     }
 
     // Prepare data for saving
     const batchData = {
       ...formData,
-      items: selectedProduct.items.map(item => ({
-        itemCode: item.itemCode,
-        itemName: item.itemName,
-        totalQuantity: item.quantity * formData.producedQty,
-        batches: batchSplits[item.itemCode] || []
-      }))
+      items: [{
+        itemCode: selectedProduct.code,
+        itemName: selectedProduct.name,
+        totalQuantity: totalQuantity,
+        batches: splits
+      }]
     };
 
     onSave(batchData);
+    resetForm();
   };
 
+  // Filter splits based on search term
+  const filteredSplits = (batchSplits[selectedProduct.code] || []).filter(split =>
+    split.batchNo.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
-    <Modal show={show} onHide={onHide} size="xl" dialogClassName="modal-dialog-centered">
+    <Modal show={show} onHide={() => { resetForm(); onHide(); }} size="xl" dialogClassName="modal-dialog-centered">
       <Modal.Header closeButton>
         <Modal.Title>
           <i className="fas fa-layer-group me-2" />
@@ -149,7 +166,7 @@ const BatchSplitModal = ({ show, onHide, selectedProduct, formData, transactionN
               </InputGroup.Text>
               <Form.Control
                 className="text-8"
-                placeholder="Search items..."
+                placeholder="Search batch numbers..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -161,119 +178,94 @@ const BatchSplitModal = ({ show, onHide, selectedProduct, formData, transactionN
                 <i className="fas fa-undo" /> Reset
               </Button>
             </InputGroup>
-            <Button
-              variant="outline-success"
-              className="text-8"
-              onClick={handleExportExcel}
-            >
-              <i className="fas fa-file-excel me-2" />
-              Export
-            </Button>
-            <Button
-              variant="outline-primary"
-              className="text-8"
-              onClick={handlePrintStickers}
-            >
-              <i className="fas fa-print me-2" />
-              Print Stickers
-            </Button>
           </div>
         </div>
         <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+          {/* Calculate sum of split quantities */}
+          {(() => {
+            const splits = batchSplits[selectedProduct.code] || [];
+            const totalSplitQuantity = splits.reduce((sum, split) => 
+              sum + (parseFloat(split.quantity) || 0), 0
+            );
+            const totalQuantity = parseFloat(formData.producedQty) || 0;
+            const difference = Math.abs(totalQuantity - totalSplitQuantity);
+            
+            return difference > 0.001 && (
+              <div className="alert alert-warning py-1 mb-2">
+                <small>
+                  <i className="fas fa-exclamation-triangle me-2"></i>
+                  Split quantities sum ({totalSplitQuantity.toFixed(3)}) does not match produced quantity ({totalQuantity.toFixed(3)})
+                </small>
+              </div>
+            );
+          })()}
           <Table striped bordered hover>
             <thead>
               <tr className="text-8">
                 <th>Batch No</th>
-                <th>Item Name</th>
-                <th>Total Quantity</th>
-                <th>Actions</th>
+                <th>BOM Name</th>
+                <th>
+                  Quantity
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="ms-2"
+                    onClick={() => handleAddBatchSplit(!batchSplits[selectedProduct.code])}
+                  >
+                    <i className="fas fa-plus" />
+                  </Button>
+                </th>
               </tr>
             </thead>
             <tbody className="text-8 text-break">
-              {filteredItems.map((item) => (
-                <React.Fragment key={item.itemCode}>
-                  <tr>
-                    <td>{"P123456" + item.itemCode+ "250912000100000002"}</td>
-                    <td>({item.itemCode}) - {item.itemName}</td>
-                    <td>{(item.quantity * formData.producedQty).toFixed(3)}</td>
-                    <td>
-                      <Button
-                        variant="outline-primary"
-                        size="sm"
-                        onClick={() => {
-                          setExpandedItems(prev => ({
-                            ...prev,
-                            [item.itemCode]: !prev[item.itemCode]
-                          }));
-                          if (!batchSplits[item.itemCode]) {
-                            handleAddBatchSplit(item.itemCode);
+              {filteredSplits.map((split, index) => (
+                <tr key={split.batchNo}>
+                  <td>{split.batchNo}</td>
+                  <td>{formData.product.label}</td>
+                  <td className="d-flex align-items-center gap-2">
+                    <Form.Control
+                      type="number"
+                      size="sm"
+                      value={split.quantity || ''}
+                      onChange={(e) => handleQuantityChange(index, e.target.value)}
+                      min="0"
+                      step="0.001"
+                    />
+                    <Button
+                      variant="outline-danger"
+                      size="sm"
+                      onClick={() => {
+                        setBatchSplits(prev => {
+                          const splits = prev[selectedProduct.code];
+                          // If this is the last row, don't allow deletion
+                          if (splits.length === 1) {
+                            showUniqueToast("Cannot delete the last row");
+                            return prev;
                           }
-                        }}
-                      >
-                        <i className={`fas fa-chevron-${expandedItems[item.itemCode] ? 'up' : 'down'} me-1`} />
-                        {expandedItems[item.itemCode] ? 'Hide' : 'Show'} Splits
-                      </Button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td colSpan="4" className="p-0">
-                      <Collapse in={expandedItems[item.itemCode]}>
-                        <div className="p-3">
-                          <Table size="sm" className="mb-2">
-                            <thead>
-                              <tr>
-                                <th>Batch No</th>
-                                <th>Item Name</th>
-                                <th>Quantity</th>
-                                <th>Actions</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {(batchSplits[item.itemCode] || []).map((split, index) => (
-                                <tr key={split.batchNo}>
-                                  <td>{split.batchNo}</td>
-                                  <td>({item.itemCode}) - {item.itemName}</td>
-                                  <td>
-                                    <Form.Control
-                                      type="number"
-                                      size="sm"
-                                      value={split.quantity}
-                                      onChange={(e) => handleQuantityChange(item.itemCode, index, e.target.value)}
-                                      min="0"
-                                      step="0.001"
-                                    />
-                                  </td>
-                                  <td>
-                                    <Button
-                                      variant="outline-danger"
-                                      size="sm"
-                                      onClick={() => {
-                                        setBatchSplits(prev => ({
-                                          ...prev,
-                                          [item.itemCode]: prev[item.itemCode].filter((_, i) => i !== index)
-                                        }));
-                                      }}
-                                    >
-                                      <i className="fas fa-trash" />
-                                    </Button>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </Table>
-                          <Button
-                            variant="outline-success"
-                            size="sm"
-                            onClick={() => handleAddBatchSplit(item.itemCode)}
-                          >
-                            <i className="fas fa-plus me-1" />
-                            Add Split
-                          </Button>
-                        </div>
-                      </Collapse>
-                    </td>
-                  </tr>
-                </React.Fragment>
+                          
+                          // Get the quantity to redistribute
+                          const quantityToRedistribute = split.quantity || 0;
+                          
+                          // Remove the current row
+                          const updatedSplits = splits.filter((_, i) => i !== index);
+                          
+                          // If there's a quantity to redistribute, add it to the previous row
+                          if (quantityToRedistribute > 0 && index > 0) {
+                            updatedSplits[index - 1].quantity = 
+                              (parseFloat(updatedSplits[index - 1].quantity) || 0) + quantityToRedistribute;
+                          }
+                          
+                          return {
+                            ...prev,
+                            [selectedProduct.code]: updatedSplits
+                          };
+                        });
+                      }}
+                    >
+                      <i className="fas fa-trash" />
+                    </Button>
+                  </td>
+                </tr>
               ))}
             </tbody>
           </Table>
