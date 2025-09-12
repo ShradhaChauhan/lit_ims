@@ -305,7 +305,7 @@ const BOMMaster = () => {
           };
         }),
       };
-
+      console.log("finalData: " + JSON.stringify(finalData));
       api
         .post("/api/bom/add", finalData)
         .then((response) => {

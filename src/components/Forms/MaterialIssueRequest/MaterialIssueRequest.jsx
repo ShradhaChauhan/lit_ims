@@ -193,6 +193,32 @@ const MaterialIssueRequest = () => {
       setWarehouse(userWarehouseId);
     }
   }, []);
+  const [reqWarehouse, setReqWarehouse] = useState([]);
+  const fetchWarehouses = () => {
+    api
+      .get("/api/warehouses")
+      .then((response) => {
+        if (response.data && response.data.status) {
+          // Filter warehouses to only include store, wip0, and wip1
+          const filteredWarehouses = (response.data.data || []).filter(w => 
+            ['store', 'wip0', 'wip1'].includes(w.name.toLowerCase())
+          );
+          setReqWarehouse(filteredWarehouses);
+        } else {
+          console.error(
+            "Error fetching warehouses:",
+            response.data.message || "Unknown error"
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching warehouses:", error);
+      });
+  };
+
+  useEffect(() => {
+    fetchWarehouses();
+  }, []);
 
   // Calculate the display range for the pagination info
   const getDisplayRange = () => {
@@ -482,13 +508,14 @@ const MaterialIssueRequest = () => {
       // }));
       const formattedItems = request.flatMap((item) => {
         if (item.type === "bom" || item.type === "BOM") {
-          // BOM - flatten the sub-items with calculated quantity
+          // BOM - flatten the sub-items with calculated quantity and their respective warehouses
           return item.items.map((subItem) => ({
             id: subItem.itemId,
             name: subItem.itemName,
             code: subItem.itemCode,
             type: "item", // sub-items are always individual items
             quantity: Number(subItem.calculatedQuantity),
+            warehouseId: Number(subItem.warehouseId || warehouse), // Use item-specific warehouse or default
           }));
         } else {
           // Individual item
@@ -499,6 +526,7 @@ const MaterialIssueRequest = () => {
               code: item.code,
               type: "item",
               quantity: Number(item.quantity),
+              warehouseId: Number(item.warehouse), // Use the warehouse selected for individual item
             },
           ];
         }
@@ -507,9 +535,8 @@ const MaterialIssueRequest = () => {
       const payload = {
         transactionNumber,
         type: requestType,
-        bomName: selectedOption.name,
-        bomCode: selectedOption.code,
-        warehouseId: Number(warehouse),
+        bomName: selectedOption?.name || "",
+        bomCode: selectedOption?.code || "",
         items: formattedItems,
       };
 
@@ -607,6 +634,13 @@ const MaterialIssueRequest = () => {
   // Save button in Item Details modal
   const handleSaveItemDetails = () => {
     if (!selectedItem) return;
+
+    // Validate that all items have a warehouse selected
+    const missingWarehouse = selectedItem.items.some(item => !item.warehouseId);
+    if (missingWarehouse) {
+      toast.error("Please select warehouse for all items");
+      return;
+    }
 
     const updatedRequest = request.map((reqItem) =>
       reqItem.id === selectedItem.id
@@ -1180,7 +1214,6 @@ const MaterialIssueRequest = () => {
               <div className="modal-header">
                 <h5 className="modal-title">
                   <i className="fa-solid fa-circle-info me-2"></i>Item Details
-                  <i className="fa-solid fa-circle-info me-2"></i>Item Details
                 </h5>
                 <button
                   type="button"
@@ -1262,7 +1295,35 @@ const MaterialIssueRequest = () => {
                                 disabled
                               />
                             </td>
-                            <td>{item.warehouseName}</td>
+                            <td>
+                              <select
+                                className="form-select text-font"
+                                value={item.warehouseId || ""}
+                                onChange={(e) => {
+                                  const updatedItems = selectedItem.items.map((i) =>
+                                    i.itemCode === item.itemCode
+                                      ? { ...i, warehouseId: e.target.value }
+                                      : i
+                                  );
+                                  setSelectedItem({
+                                    ...selectedItem,
+                                    items: updatedItems,
+                                  });
+                                }}
+                              >
+                                <option value="" disabled>
+                                  Select Warehouse
+                                </option>
+                                {reqWarehouse
+                                  .filter(w => ['store', 'wip0', 'wip1'].includes(w.name.toLowerCase()))
+                                  .map((w) => (
+                                    <option key={w.id} value={w.id}>
+                                      {w.name}
+                                    </option>
+                                  ))}
+                              </select>
+                              {/* {item.warehouseName} */}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -1285,102 +1346,6 @@ const MaterialIssueRequest = () => {
                   }}
                 >
                   <i className="fa-solid fa-xmark me-1"></i> Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Recent Items Modal */}
-      {showRecentItemsModal && selectedRecentRequest && (
-        <div
-          className="modal show d-block modal-xl"
-          tabIndex="-1"
-          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-        >
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
-                  <i className="fa-solid fa-clipboard-list me-2"></i>Request
-                  Items
-                </h5>
-                <button
-                  type="button"
-                  className="btn"
-                  aria-label="Close"
-                  onClick={() => {
-                    setSelectedRecentRequest(null);
-                    setShowRecentItemsModal(false);
-                  }}
-                >
-                  <i className="fas fa-times"></i>
-                </button>
-              </div>
-              <div className="modal-body">
-                <div className="user-details-grid">
-                  <div className="detail-item">
-                    <strong>Transaction Number:</strong>
-                    <span>{selectedRecentRequest.transactionNumber}</span>
-                  </div>
-                  <div className="detail-item">
-                    <strong>Date:</strong>
-                    <span>{selectedRecentRequest.createdAt}</span>
-                  </div>
-                  <div className="detail-item">
-                    <strong>Type:</strong>
-                    <span className="text-capitalize">
-                      {selectedRecentRequest.type}
-                    </span>
-                  </div>
-                  <div className="detail-item">
-                    <strong>Status:</strong>
-                    <span
-                      className={`status-badge ${selectedRecentRequest.status.toLowerCase()}`}
-                    >
-                      {selectedRecentRequest.status}
-                    </span>
-                  </div>
-                </div>
-
-                {selectedRecentRequest.items &&
-                  selectedRecentRequest.items.length > 0 && (
-                    <>
-                      <hr />
-                      <h6>Items List:</h6>
-                      <table className="align-middle">
-                        <thead>
-                          <tr>
-                            <th>Item Name</th>
-                            <th>Item Code</th>
-                            <th>Type</th>
-                          </tr>
-                        </thead>
-                        <tbody className="text-break">
-                          {selectedRecentRequest.items.map((item, idx) => (
-                            <tr key={idx}>
-                              <td className="p-4">{item.name}</td>
-                              <td className="p-4">{item.code}</td>
-                              <td className="text-capitalize p-4">
-                                {item.type}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </>
-                  )}
-              </div>
-              <div className="modal-footer">
-                <button
-                  className="btn btn-secondary text-8"
-                  onClick={() => {
-                    setSelectedRecentRequest(null);
-                    setShowRecentItemsModal(false);
-                  }}
-                >
-                  <i className="fa-solid fa-xmark me-1"></i> Close
                 </button>
               </div>
             </div>

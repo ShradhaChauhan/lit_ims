@@ -5,9 +5,8 @@ import ProductionEntryModal from "../../Modals/ProductionEntryModal";
 import "./ProductionPunch.css";
 import { Link } from "react-router-dom";
 import * as XLSX from "xlsx";
-import axios from "axios";
-
-const API_URL = "/api/production-punch/";
+import api from "../../../services/api";
+import { toast } from "react-toastify";
 
 const ProductionReportEntry = () => {
   const [showModal, setShowModal] = useState(false);
