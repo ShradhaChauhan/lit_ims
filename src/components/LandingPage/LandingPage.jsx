@@ -475,16 +475,22 @@ const LandingPage = () => {
 
   // Auto-slide
   useEffect(() => {
-    startAutoSlide();
+    // Only start auto-slide if there's more than one chart
+    if (total > 1) {
+      startAutoSlide();
+    }
     return () => {
       stopAutoSlide();
     };
   }, [total]);
 
   const startAutoSlide = () => {
-    intervalRef.current = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % total);
-    }, 9000);
+    // Only set interval if there's more than one chart
+    if (total > 1) {
+      intervalRef.current = setInterval(() => {
+        setCurrent((prev) => (prev + 1) % total);
+      }, 9000);
+    }
   };
 
   const stopAutoSlide = () => {
@@ -949,22 +955,30 @@ const LandingPage = () => {
       bars: [{ key: "value", label: "Returns", color: "#ef4444" }],
     },
   ];
+  
+  // Filter monthly reports by permission
+  const filteredMonthlyReports = monthlyReports.filter((r) =>
+    hasViewPermission(r.pageName, permissions)
+  );
 
   const [currentMonth, setCurrentMonth] = useState(0);
   const handleMonthNext = () =>
-    setCurrentMonth((prev) => (prev + 1) % monthlyReports.length);
+    setCurrentMonth((prev) => (prev + 1) % (filteredMonthlyReports.length || 1));
   const handleMonthPrev = () =>
     setCurrentMonth((prev) =>
-      prev === 0 ? monthlyReports.length - 1 : prev - 1
+      prev === 0 ? (filteredMonthlyReports.length || 1) - 1 : prev - 1
     );
   
   // Auto-slide for monthly reports
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentMonth((prev) => (prev + 1) % monthlyReports.length);
-    }, 10000);
-    return () => clearInterval(timer);
-  }, [monthlyReports.length]);
+    // Only start auto-slide if there's more than one report
+    if (filteredMonthlyReports.length > 1) {
+      const timer = setInterval(() => {
+        setCurrentMonth((prev) => (prev + 1) % filteredMonthlyReports.length);
+      }, 10000);
+      return () => clearInterval(timer);
+    }
+  }, [filteredMonthlyReports.length]);
 
   // Weekly Bar Chart Data
   const weeklyReports = [
@@ -1035,24 +1049,32 @@ const LandingPage = () => {
       bars: [{ key: "value", label: "Returns", color: "#ef4444" }],
     },
   ];
+  
+  // Filter weekly reports by permission
+  const filteredWeeklyReports = weeklyReports.filter((r) =>
+    hasViewPermission(r.pageName, permissions)
+  );
 
   const [currentWeekly, setCurrentWeekly] = useState(0);
 
   const handleWeeklyNext = () =>
-    setCurrentWeekly((prev) => (prev + 1) % weeklyReports.length);
+    setCurrentWeekly((prev) => (prev + 1) % (filteredWeeklyReports.length || 1));
 
   const handleWeeklyPrev = () =>
     setCurrentWeekly((prev) =>
-      prev === 0 ? weeklyReports.length - 1 : prev - 1
+      prev === 0 ? (filteredWeeklyReports.length || 1) - 1 : prev - 1
     );
 
   // Auto-slide for weekly reports
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentWeekly((prev) => (prev + 1) % weeklyReports.length);
-    }, 10000);
-    return () => clearInterval(timer);
-  }, [weeklyReports.length]);
+    // Only start auto-slide if there's more than one report
+    if (filteredWeeklyReports.length > 1) {
+      const timer = setInterval(() => {
+        setCurrentWeekly((prev) => (prev + 1) % filteredWeeklyReports.length);
+      }, 10000);
+      return () => clearInterval(timer);
+    }
+  }, [filteredWeeklyReports.length]);
 
   // Dummy stock data
   const dummyItems = [
@@ -1095,14 +1117,6 @@ const LandingPage = () => {
       setItemsX(dummyItems);
     }, 1000);
   }, []);
-
-  const filteredWeeklyReports = weeklyReports.filter((r) =>
-    hasViewPermission(r.pageName, permissions)
-  );
-
-  const filteredMonthlyReports = monthlyReports.filter((r) =>
-    hasViewPermission(r.pageName, permissions)
-  );
 
   return (
     <div>
@@ -1309,19 +1323,19 @@ const LandingPage = () => {
 
             <div>
               <h5 className="text-center text-dark">
-                {chartData[current].title}
+                {filteredChartData[current]?.title || chartData[current].title}
               </h5>
             </div>
 
             <ResponsiveContainer width="95%" height={300}>
-              <LineChart data={chartData[current].data}>
+              <LineChart data={filteredChartData[current]?.data || chartData[current].data}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis
                   dataKey={
-                    chartData[current].title === "IQC" ||
-                    chartData[current].title === "Material Issue Request"
+                    (filteredChartData[current]?.title || chartData[current].title) === "IQC" ||
+                    (filteredChartData[current]?.title || chartData[current].title) === "Material Issue Request"
                       ? "time"
-                      : chartData[current].title === "Store Material Inward"
+                      : (filteredChartData[current]?.title || chartData[current].title) === "Store Material Inward"
                       ? "hour"
                       : "day"
                   }
@@ -1329,41 +1343,41 @@ const LandingPage = () => {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                {chartData[current].title !== "WIP Return" && (
+                {(filteredChartData[current]?.title || chartData[current].title) !== "WIP Return" && (
                   <Line
                     type="monotone"
                     dataKey={`${
-                      chartData[current].title === "IQC"
+                      (filteredChartData[current]?.title || chartData[current].title) === "IQC"
                         ? "pass"
-                        : chartData[current].title ===
+                        : (filteredChartData[current]?.title || chartData[current].title) ===
                             "Material Issue Request" ||
-                          chartData[current].title === "Material Receipt" ||
-                          chartData[current].title === "WIP Return"
+                          (filteredChartData[current]?.title || chartData[current].title) === "Material Receipt" ||
+                          (filteredChartData[current]?.title || chartData[current].title) === "WIP Return"
                         ? "bom"
                         : "inward"
                     }`}
-                    stroke={chartData[current].lineColor1}
+                    stroke={filteredChartData[current]?.lineColor1 || chartData[current].lineColor1}
                     strokeWidth={3}
                   />
                 )}
-                {chartData[current].title !== "WIP Return" && (
+                {(filteredChartData[current]?.title || chartData[current].title) !== "WIP Return" && (
                   <Line
                     type="monotone"
                     dataKey={`${
-                      chartData[current].title === "IQC"
+                      (filteredChartData[current]?.title || chartData[current].title) === "IQC"
                         ? "fail"
-                        : chartData[current].title ===
+                        : (filteredChartData[current]?.title || chartData[current].title) ===
                             "Material Issue Request" ||
-                          chartData[current].title === "Material Receipt" ||
-                          chartData[current].title === "WIP Return"
+                          (filteredChartData[current]?.title || chartData[current].title) === "Material Receipt" ||
+                          (filteredChartData[current]?.title || chartData[current].title) === "WIP Return"
                         ? "item"
                         : "outward"
                     }`}
-                    stroke={chartData[current].lineColor2}
+                    stroke={filteredChartData[current]?.lineColor2 || chartData[current].lineColor2}
                     strokeWidth={3}
                   />
                 )}
-                {chartData[current].title === "WIP Return" && (
+                {(filteredChartData[current]?.title || chartData[current].title) === "WIP Return" && (
                   <Line
                     type="monotone"
                     dataKey="defective"
@@ -1371,7 +1385,7 @@ const LandingPage = () => {
                     strokeWidth={3}
                   />
                 )}
-                {chartData[current].title === "WIP Return" && (
+                {(filteredChartData[current]?.title || chartData[current].title) === "WIP Return" && (
                   <Line
                     type="monotone"
                     dataKey="excess"
@@ -1379,7 +1393,7 @@ const LandingPage = () => {
                     strokeWidth={3}
                   />
                 )}
-                {chartData[current].title === "WIP Return" && (
+                {(filteredChartData[current]?.title || chartData[current].title) === "WIP Return" && (
                   <Line
                     type="monotone"
                     dataKey="reusable"

@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "./components/Login/Login";
 import MainLayout from "./components/MainLayout/MainLayout";
 import Dashboard from "./components/Dashboard/Dashboard";
@@ -26,8 +26,9 @@ import Reports from "./components/Reports/Reports";
 import Unauthorized from "./components/Unauthorized/Unauthorized";
 import useAutoLogout from "./utils/useAutoLogout";
 import { toast } from "react-toastify";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import StoreLandingPage from "./components/StoreLandingPage/StoreLandingPage";
+import { AppContext } from "./context/AppContext";
 import Cookies from "js-cookie";
 import { useLocation } from "react-router-dom";
 import { useIdleTimer } from "./utils/useIdleTimer";
@@ -44,6 +45,7 @@ import AdminLandingPage from "./components/AdminLandingPage/AdminLandingPage";
 import LandingPage from "./components/LandingPage/LandingPage";
 
 function App() {
+  const { role } = useContext(AppContext);
   // const [isLoggedIn, setIsLoggedIn] = useState(
   //   localStorage.getItem("isLoggedIn") === "true"
   // );
@@ -304,9 +306,30 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="/order-planning" element={<OrderPlanning />} />
-          <Route path="/vendor-rating" element={<VendorRating />} />
-          <Route path="/line-monitoring" element={<LineMonitoring />} />
+          <Route
+            path="/order-planning"
+            element={
+              <ProtectedRoute page="Order Planning">
+                {role === "owner" ? <OrderPlanning /> : <Navigate to="/unauthorized" replace />}
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/vendor-rating"
+            element={
+              <ProtectedRoute page="Vendor Rating">
+                {role === "owner" ? <VendorRating /> : <Navigate to="/unauthorized" replace />}
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/line-monitoring"
+            element={
+              <ProtectedRoute page="Line Monitoring">
+                {role === "owner" ? <LineMonitoring /> : <Navigate to="/unauthorized" replace />}
+              </ProtectedRoute>
+            }
+          />
           <Route path="/production-punch" element={<ProductionPunch />} />
           <Route path="/store-report" element={<StoreReport />} />
           <Route path="/line-report" element={<LineReport />} />

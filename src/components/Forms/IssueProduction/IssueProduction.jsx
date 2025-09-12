@@ -679,7 +679,7 @@ const IssueProduction = () => {
               {/* Requisition Type */}
               <div className="form-group">
                 <div className="row form-style">
-                  <div className="col-3 d-flex flex-column form-group">
+                  <div className="col-6 d-flex flex-column form-group">
                     <label
                       htmlFor="requisitionType"
                       className="form-label ms-2"
@@ -771,7 +771,7 @@ const IssueProduction = () => {
                       />
                     </div>
                   </div>
-                  {isRequisitionLoaded && (
+                  {/* {isRequisitionLoaded && (
                     <>
                       <div className="col-3 d-flex flex-column form-group">
                         <label
@@ -817,9 +817,9 @@ const IssueProduction = () => {
                         </div>
                       </div>
                     </>
-                  )}
+                  )} */}
 
-                  <div className="col-3 d-flex flex-column form-group">
+                  <div className="col-6 d-flex flex-column form-group">
                     <label htmlFor="scanBatch" className="form-label ms-2">
                       Scan Batch <span className="text-danger fs-6">*</span>
                     </label>

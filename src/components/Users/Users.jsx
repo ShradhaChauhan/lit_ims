@@ -3352,7 +3352,7 @@ const Users = () => {
                               Status
                             </label>
                             <div className="position-relative w-100">
-                              <div className="form-check form-switch position-absolute z-0 input-icon mt-1 padding-left-2">
+                              <div className="position-absolute z-0 input-icon mt-1 padding-left-2">
                                 <input
                                   className="form-check-input text-font switch-style"
                                   type="checkbox"

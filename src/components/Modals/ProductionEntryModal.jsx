@@ -393,7 +393,7 @@ const ProductionEntryModal = ({ show, onHide }) => {
         </Modal.Header>
         <Modal.Body>
           <div className="mb-3 d-flex justify-content-between align-items-center">
-            <p>
+            <p className="text-8">
               Transaction #: <strong>{transactionNumber}</strong>
             </p>
             <div className="d-flex gap-2 w-50">
