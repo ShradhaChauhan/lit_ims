@@ -359,7 +359,8 @@ const IssueProduction = () => {
     } catch (error) {
       errors.push({
         batch: batchNo,
-        message: "Error verifying and issuing batch",
+        message:
+          error.response.data.message || "Error verifying and issuing batch",
       });
       console.error("Error verifying and issuing batch:", error);
       return { success: false, errors, warnings };
@@ -519,6 +520,7 @@ const IssueProduction = () => {
             quantity: batch.quantity,
             issuedQty: batch.quantity,
             variance: item ? item.variance : 0,
+            warehouseId: batch.warehouseId,
             // stockQty: batch.stockQty
           };
         }),

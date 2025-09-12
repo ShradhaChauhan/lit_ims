@@ -36,8 +36,22 @@ const BatchSplitModal = ({ show, onHide, selectedProduct, formData, transactionN
   const [searchTerm, setSearchTerm] = useState('');
   const [batchSplits, setBatchSplits] = useState({});
 
+  // Initialize first row with full quantity when modal opens
+  React.useEffect(() => {
+    if (show && selectedProduct?.code && formData?.producedQty && !batchSplits[selectedProduct.code]) {
+      setBatchSplits({
+        [selectedProduct.code]: [{
+          batchNo: "P123456" + selectedProduct.code + "250912000100000002",
+          quantity: parseFloat(formData.producedQty)
+        }]
+      });
+    }
+  }, [show, selectedProduct?.code, formData?.producedQty]);
+
   // Handle adding a new batch split
   const handleAddBatchSplit = (isFirstAdd = false) => {
+    if (!selectedProduct?.code) return;
+    
     const mainBatchNo = "P123456" + selectedProduct.code + "250912000100000002";
     
     setBatchSplits((prev) => {
@@ -115,6 +129,8 @@ const BatchSplitModal = ({ show, onHide, selectedProduct, formData, transactionN
   };
 
   const handleSave = () => {
+    if (!selectedProduct?.code) return;
+    
     const splits = batchSplits[selectedProduct.code] || [];
     const totalQuantity = parseFloat(formData.producedQty) || 0;
     const splitSum = splits.reduce((sum, split) => 
@@ -142,7 +158,7 @@ const BatchSplitModal = ({ show, onHide, selectedProduct, formData, transactionN
   };
 
   // Filter splits based on search term
-  const filteredSplits = (batchSplits[selectedProduct.code] || []).filter(split =>
+  const filteredSplits = (selectedProduct?.code ? (batchSplits[selectedProduct.code] || []) : []).filter(split =>
     split.batchNo.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -183,6 +199,8 @@ const BatchSplitModal = ({ show, onHide, selectedProduct, formData, transactionN
         <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
           {/* Calculate sum of split quantities */}
           {(() => {
+            if (!selectedProduct?.code) return null;
+            
             const splits = batchSplits[selectedProduct.code] || [];
             const totalSplitQuantity = splits.reduce((sum, split) => 
               sum + (parseFloat(split.quantity) || 0), 0
@@ -199,76 +217,96 @@ const BatchSplitModal = ({ show, onHide, selectedProduct, formData, transactionN
               </div>
             );
           })()}
-          <Table striped bordered hover>
-            <thead>
-              <tr className="text-8">
-                <th>Batch No</th>
-                <th>BOM Name</th>
-                <th>
-                  Quantity
-                  <Button
-                    variant="link"
-                    size="sm"
-                    className="ms-2"
-                    onClick={() => handleAddBatchSplit(!batchSplits[selectedProduct.code])}
-                  >
-                    <i className="fas fa-plus" />
-                  </Button>
-                </th>
-              </tr>
-            </thead>
-            <tbody className="text-8 text-break">
-              {filteredSplits.map((split, index) => (
-                <tr key={split.batchNo}>
-                  <td>{split.batchNo}</td>
-                  <td>{formData.product.label}</td>
-                  <td className="d-flex align-items-center gap-2">
-                    <Form.Control
-                      type="number"
-                      size="sm"
-                      value={split.quantity || ''}
-                      onChange={(e) => handleQuantityChange(index, e.target.value)}
-                      min="0"
-                      step="0.001"
-                    />
-                    <Button
-                      variant="outline-danger"
-                      size="sm"
-                      onClick={() => {
-                        setBatchSplits(prev => {
-                          const splits = prev[selectedProduct.code];
-                          // If this is the last row, don't allow deletion
-                          if (splits.length === 1) {
-                            showUniqueToast("Cannot delete the last row");
-                            return prev;
-                          }
-                          
-                          // Get the quantity to redistribute
-                          const quantityToRedistribute = split.quantity || 0;
-                          
-                          // Remove the current row
-                          const updatedSplits = splits.filter((_, i) => i !== index);
-                          
-                          // If there's a quantity to redistribute, add it to the previous row
-                          if (quantityToRedistribute > 0 && index > 0) {
-                            updatedSplits[index - 1].quantity = 
-                              (parseFloat(updatedSplits[index - 1].quantity) || 0) + quantityToRedistribute;
-                          }
-                          
-                          return {
-                            ...prev,
-                            [selectedProduct.code]: updatedSplits
-                          };
-                        });
-                      }}
-                    >
-                      <i className="fas fa-trash" />
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
+          {selectedProduct?.code ? (
+            <div>
+              <div className="mb-3">
+                <div className="d-flex gap-4 text-8">
+                  <div>
+                    <strong>Item Name:</strong> {formData.product?.label || "-"}
+                  </div>
+                  <div>
+                    <strong>Total Produced Quantity:</strong> {formData.producedQty || "0"}
+                  </div>
+                </div>
+              </div>
+              <Table striped bordered hover>
+                <thead>
+                  <tr className="text-8">
+                    <th>Batch No</th>
+                    <th>Item Name</th>
+                    <th>Quantity</th>
+                  </tr>
+                </thead>
+                <tbody className="text-8 text-break">
+                  {filteredSplits.map((split, index) => (
+                    <tr key={split.batchNo}>
+                      <td>{split.batchNo}</td>
+                      <td>{formData.product?.label || "-"}</td>
+                      <td className="d-flex align-items-center gap-2">
+                        <Form.Control
+                          type="number"
+                          size="sm"
+                          value={split.quantity || ''}
+                          onChange={(e) => handleQuantityChange(index, e.target.value)}
+                          min="0"
+                          step="0.001"
+                        />
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                          onClick={() => {
+                            setBatchSplits(prev => {
+                              const splits = prev[selectedProduct.code];
+                              // If this is the last row, don't allow deletion
+                              if (splits.length === 1) {
+                                showUniqueToast("Cannot delete the last row");
+                                return prev;
+                              }
+                              
+                              // Get the quantity to redistribute
+                              const quantityToRedistribute = split.quantity || 0;
+                              
+                              // Remove the current row
+                              const updatedSplits = splits.filter((_, i) => i !== index);
+                              
+                              // If there's a quantity to redistribute, add it to the previous row
+                              if (quantityToRedistribute > 0 && index > 0) {
+                                updatedSplits[index - 1].quantity = 
+                                  (parseFloat(updatedSplits[index - 1].quantity) || 0) + quantityToRedistribute;
+                              }
+                              
+                              return {
+                                ...prev,
+                                [selectedProduct.code]: updatedSplits
+                              };
+                            });
+                          }}
+                        >
+                          <i className="fas fa-trash" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+              <div className="d-flex justify-content-start mt-3">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="text-8"
+                  onClick={() => handleAddBatchSplit(!batchSplits[selectedProduct.code])}
+                >
+                  <i className="fas fa-plus me-2" />
+                  Add
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="alert alert-info">
+              <i className="fas fa-info-circle me-2"></i>
+              No product selected
+            </div>
+          )}
         </div>
       </Modal.Body>
       <Modal.Footer>
