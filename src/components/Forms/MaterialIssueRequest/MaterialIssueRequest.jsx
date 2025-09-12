@@ -200,8 +200,8 @@ const MaterialIssueRequest = () => {
       .then((response) => {
         if (response.data && response.data.status) {
           // Filter warehouses to only include store, wip0, and wip1
-          const filteredWarehouses = (response.data.data || []).filter(w => 
-            ['store', 'wip0', 'wip1'].includes(w.name.toLowerCase())
+          const filteredWarehouses = (response.data.data || []).filter((w) =>
+            ["store", "wip0", "wip1"].includes(w.name.toLowerCase())
           );
           setReqWarehouse(filteredWarehouses);
         } else {
@@ -485,7 +485,6 @@ const MaterialIssueRequest = () => {
       setRequisitionType("");
     }
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -508,14 +507,13 @@ const MaterialIssueRequest = () => {
       // }));
       const formattedItems = request.flatMap((item) => {
         if (item.type === "bom" || item.type === "BOM") {
-          // BOM - flatten the sub-items with calculated quantity and their respective warehouses
+          // BOM - flatten the sub-items with calculated quantity
           return item.items.map((subItem) => ({
             id: subItem.itemId,
             name: subItem.itemName,
             code: subItem.itemCode,
             type: "item", // sub-items are always individual items
             quantity: Number(subItem.calculatedQuantity),
-            warehouseId: Number(subItem.warehouseId || warehouse), // Use item-specific warehouse or default
           }));
         } else {
           // Individual item
@@ -526,7 +524,6 @@ const MaterialIssueRequest = () => {
               code: item.code,
               type: "item",
               quantity: Number(item.quantity),
-              warehouseId: Number(item.warehouse), // Use the warehouse selected for individual item
             },
           ];
         }
@@ -535,8 +532,9 @@ const MaterialIssueRequest = () => {
       const payload = {
         transactionNumber,
         type: requestType,
-        bomName: selectedOption?.name || "",
-        bomCode: selectedOption?.code || "",
+        bomName: selectedOption.name,
+        bomCode: selectedOption.code,
+        warehouseId: Number(warehouse),
         items: formattedItems,
       };
 
@@ -568,7 +566,6 @@ const MaterialIssueRequest = () => {
     }
   };
 
-  // Auto generate transaction number
   const generateTransactionNumber = () => {
     const year = new Date().getFullYear();
     const randomNum = Math.floor(1000 + Math.random() * 9000);
@@ -636,7 +633,9 @@ const MaterialIssueRequest = () => {
     if (!selectedItem) return;
 
     // Validate that all items have a warehouse selected
-    const missingWarehouse = selectedItem.items.some(item => !item.warehouseId);
+    const missingWarehouse = selectedItem.items.some(
+      (item) => !item.warehouseId
+    );
     if (missingWarehouse) {
       toast.error("Please select warehouse for all items");
       return;
@@ -1300,10 +1299,11 @@ const MaterialIssueRequest = () => {
                                 className="form-select text-font"
                                 value={item.warehouseId || ""}
                                 onChange={(e) => {
-                                  const updatedItems = selectedItem.items.map((i) =>
-                                    i.itemCode === item.itemCode
-                                      ? { ...i, warehouseId: e.target.value }
-                                      : i
+                                  const updatedItems = selectedItem.items.map(
+                                    (i) =>
+                                      i.itemCode === item.itemCode
+                                        ? { ...i, warehouseId: e.target.value }
+                                        : i
                                   );
                                   setSelectedItem({
                                     ...selectedItem,
@@ -1315,7 +1315,11 @@ const MaterialIssueRequest = () => {
                                   Select Warehouse
                                 </option>
                                 {reqWarehouse
-                                  .filter(w => ['store', 'wip0', 'wip1'].includes(w.name.toLowerCase()))
+                                  .filter((w) =>
+                                    ["store", "wip0", "wip1"].includes(
+                                      w.name.toLowerCase()
+                                    )
+                                  )
                                   .map((w) => (
                                     <option key={w.id} value={w.id}>
                                       {w.name}
