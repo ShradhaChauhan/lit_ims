@@ -994,8 +994,6 @@ const MaterialIssueRequest = () => {
                                 i.type !== "BOM" ? "d-none" : ""
                               }`}
                               title="View Details"
-                              data-bs-toggle="modal"
-                              data-bs-target="#viewModal"
                               onClick={() => handleView(i)}
                             >
                               <i className="fas fa-eye"></i>
@@ -1299,13 +1297,7 @@ const MaterialIssueRequest = () => {
                                 <option value="" disabled>
                                   Select Warehouse
                                 </option>
-                                {reqWarehouse
-                                  .filter((w) =>
-                                    ["store", "wip0", "wip1"].includes(
-                                      w.name.toLowerCase()
-                                    )
-                                  )
-                                  .map((w) => (
+                                {warehouseList.map((w) => (
                                     <option key={w.id} value={w.id}>
                                       {w.name}
                                     </option>
