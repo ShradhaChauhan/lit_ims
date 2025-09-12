@@ -2084,26 +2084,32 @@ const Users = () => {
                     <div className="position-relative w-100">
                       <i className="fa-solid fa-building position-absolute z-0 input-icon"></i>
                       <select
+                        multiple
                         className={`form-select ps-5 text-font ${
-                          formData.department ? "" : "text-secondary"
+                          formData.department?.length > 0
+                            ? ""
+                            : "text-secondary"
                         }`}
                         id="department"
-                        value={formData.department}
-                        onChange={(e) =>
+                        value={formData.department || []} // make sure it's an array
+                        onChange={(e) => {
+                          const selectedValues = Array.from(
+                            e.target.selectedOptions,
+                            (option) => option.value
+                          );
                           setFormData({
                             ...formData,
-                            department: e.target.value,
-                            warehouseId:
-                              warehouse.find((w) => w.name === e.target.value)
-                                ?.id || "",
-                          })
-                        }
+                            department: selectedValues,
+                            warehouseId: warehouse
+                              .filter((w) => selectedValues.includes(w.name))
+                              .map((w) => w.id), // now returns array of ids
+                          });
+                        }}
                       >
                         <option value="" disabled hidden>
                           Select Department
                         </option>
 
-                        {/* Map warehouse list */}
                         {warehouse.map((w) => (
                           <option key={w.id} value={w.name}>
                             {w.name}
@@ -2111,6 +2117,7 @@ const Users = () => {
                         ))}
                       </select>
                     </div>
+
                     {errors.department && (
                       <span className="error-message">{errors.department}</span>
                     )}
