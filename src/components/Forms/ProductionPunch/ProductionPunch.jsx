@@ -1,318 +1,62 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button, Table, Badge, Pagination } from "react-bootstrap";
 import Select from "react-select";
 import ProductionEntryModal from "../../Modals/ProductionEntryModal";
 import "./ProductionPunch.css";
 import { Link } from "react-router-dom";
 import * as XLSX from "xlsx";
+import axios from "axios";
 
-// Dummy data for the table
-const dummyData = [
-  {
-    id: 1,
-    date: "2025-09-10",
-    plant: "Plant A",
-    category: "Electronics",
-    productCode: "PROD001",
-    productName: "LED Display",
-    targetQty: 100,
-    producedQty: 95,
-    location: "Assembly Line 1",
-    totalPlanQty: 500,
-    totalBalanceQty: 405,
-  },
-  {
-    id: 2,
-    date: "2025-09-10",
-    plant: "Plant B",
-    category: "Electronics",
-    productCode: "PROD002",
-    productName: "Circuit Board",
-    targetQty: 150,
-    producedQty: 160,
-    location: "Assembly Line 2",
-    totalPlanQty: 600,
-    totalBalanceQty: 440,
-  },
-  {
-    id: 3,
-    date: "2025-09-10",
-    plant: "Plant A",
-    category: "Mechanical",
-    productCode: "PROD003",
-    productName: "Gear Assembly",
-    targetQty: 80,
-    producedQty: 60,
-    location: "Assembly Line 3",
-    totalPlanQty: 400,
-    totalBalanceQty: 340,
-  },
-  {
-    id: 4,
-    date: "2025-09-10",
-    plant: "Plant C",
-    category: "Electronics",
-    productCode: "PROD004",
-    productName: "Power Supply Unit",
-    targetQty: 120,
-    producedQty: 125,
-    location: "Assembly Line 1",
-    totalPlanQty: 600,
-    totalBalanceQty: 475,
-  },
-  {
-    id: 5,
-    date: "2025-09-10",
-    plant: "Plant B",
-    category: "Mechanical",
-    productCode: "PROD005",
-    productName: "Bearing Assembly",
-    targetQty: 200,
-    producedQty: 180,
-    location: "Assembly Line 4",
-    totalPlanQty: 800,
-    totalBalanceQty: 620,
-  },
-  {
-    id: 6,
-    date: "2025-09-10",
-    plant: "Plant A",
-    category: "Plastics",
-    productCode: "PROD006",
-    productName: "Injection Molded Case",
-    targetQty: 300,
-    producedQty: 310,
-    location: "Molding Line 1",
-    totalPlanQty: 1200,
-    totalBalanceQty: 890,
-  },
-  {
-    id: 7,
-    date: "2025-09-10",
-    plant: "Plant C",
-    category: "Electronics",
-    productCode: "PROD007",
-    productName: "Control Panel",
-    targetQty: 90,
-    producedQty: 90,
-    location: "Assembly Line 2",
-    totalPlanQty: 450,
-    totalBalanceQty: 360,
-  },
-  {
-    id: 8,
-    date: "2025-09-10",
-    plant: "Plant B",
-    category: "Mechanical",
-    productCode: "PROD008",
-    productName: "Shaft Assembly",
-    targetQty: 150,
-    producedQty: 150,
-    location: "Assembly Line 3",
-    totalPlanQty: 600,
-    totalBalanceQty: 450,
-  },
-  {
-    id: 9,
-    date: "2025-09-10",
-    plant: "Plant A",
-    category: "Plastics",
-    productCode: "PROD009",
-    productName: "Front Panel",
-    targetQty: 250,
-    producedQty: 250,
-    location: "Molding Line 2",
-    totalPlanQty: 1000,
-    totalBalanceQty: 750,
-  },
-  {
-    id: 10,
-    date: "2025-09-10",
-    plant: "Plant C",
-    category: "Electronics",
-    productCode: "PROD010",
-    productName: "Sensor Module",
-    targetQty: 180,
-    producedQty: 175,
-    location: "Assembly Line 1",
-    totalPlanQty: 720,
-    totalBalanceQty: 545,
-  },
-  {
-    id: 11,
-    date: "2025-09-10",
-    plant: "Plant B",
-    category: "Mechanical",
-    productCode: "PROD011",
-    productName: "Coupling Unit",
-    targetQty: 120,
-    producedQty: 130,
-    location: "Assembly Line 4",
-    totalPlanQty: 480,
-    totalBalanceQty: 350,
-  },
-  {
-    id: 12,
-    date: "2025-09-10",
-    plant: "Plant A",
-    category: "Plastics",
-    productCode: "PROD012",
-    productName: "Housing Cover",
-    targetQty: 400,
-    producedQty: 395,
-    location: "Molding Line 1",
-    totalPlanQty: 1600,
-    totalBalanceQty: 1205,
-  },
-  {
-    id: 13,
-    date: "2025-09-10",
-    plant: "Plant C",
-    category: "Electronics",
-    productCode: "PROD013",
-    productName: "Display Module",
-    targetQty: 160,
-    producedQty: 165,
-    location: "Assembly Line 2",
-    totalPlanQty: 640,
-    totalBalanceQty: 475,
-  },
-  {
-    id: 14,
-    date: "2025-09-10",
-    plant: "Plant B",
-    category: "Mechanical",
-    productCode: "PROD014",
-    productName: "Pulley System",
-    targetQty: 100,
-    producedQty: 95,
-    location: "Assembly Line 3",
-    totalPlanQty: 400,
-    totalBalanceQty: 305,
-  },
-  {
-    id: 15,
-    date: "2025-09-10",
-    plant: "Plant A",
-    category: "Plastics",
-    productCode: "PROD015",
-    productName: "Button Panel",
-    targetQty: 300,
-    producedQty: 320,
-    location: "Molding Line 2",
-    totalPlanQty: 1200,
-    totalBalanceQty: 880,
-  },
-  {
-    id: 16,
-    date: "2025-09-10",
-    plant: "Plant C",
-    category: "Electronics",
-    productCode: "PROD016",
-    productName: "Power Module",
-    targetQty: 140,
-    producedQty: 140,
-    location: "Assembly Line 1",
-    totalPlanQty: 560,
-    totalBalanceQty: 420,
-  },
-  {
-    id: 17,
-    date: "2025-09-10",
-    plant: "Plant B",
-    category: "Mechanical",
-    productCode: "PROD017",
-    productName: "Spring Assembly",
-    targetQty: 200,
-    producedQty: 200,
-    location: "Assembly Line 4",
-    totalPlanQty: 800,
-    totalBalanceQty: 600,
-  },
-  {
-    id: 18,
-    date: "2025-09-10",
-    plant: "Plant A",
-    category: "Plastics",
-    productCode: "PROD018",
-    productName: "Side Panel",
-    targetQty: 350,
-    producedQty: 360,
-    location: "Molding Line 1",
-    totalPlanQty: 1400,
-    totalBalanceQty: 1040,
-  },
-  {
-    id: 19,
-    date: "2025-09-10",
-    plant: "Plant C",
-    category: "Electronics",
-    productCode: "PROD019",
-    productName: "Control Board",
-    targetQty: 120,
-    producedQty: 115,
-    location: "Assembly Line 2",
-    totalPlanQty: 480,
-    totalBalanceQty: 365,
-  },
-  {
-    id: 20,
-    date: "2025-09-10",
-    plant: "Plant B",
-    category: "Mechanical",
-    productCode: "PROD020",
-    productName: "Gear Box",
-    targetQty: 80,
-    producedQty: 85,
-    location: "Assembly Line 3",
-    totalPlanQty: 320,
-    totalBalanceQty: 235,
-  },
-];
+const API_URL = "/api/production-punch/";
 
 const ProductionReportEntry = () => {
   const [showModal, setShowModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState([]);
+  const [productionData, setProductionData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const itemsPerPage = 10;
+
+  useEffect(() => {
+    fetchProductionData();
+  }, []);
+
+  const fetchProductionData = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(API_URL);
+      if (response.data.status) {
+        setProductionData(response.data.data);
+      } else {
+        setError("No records found");
+      }
+    } catch (err) {
+      setError("No records found");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleExportExcel = () => {
     const dataToExport =
       selectedRows.length > 0
-        ? dummyData.filter((row) => selectedRows.includes(row.id))
-        : dummyData;
+        ? productionData.filter((row) => selectedRows.includes(row.id))
+        : productionData;
 
-    const exportData = dataToExport.map(
-      ({
-        date,
-        plant,
-        category,
-        productCode,
-        productName,
-        targetQty,
-        producedQty,
-        location,
-        totalPlanQty,
-        totalBalanceQty,
-      }) => ({
-        Date: date,
-        Plant: plant,
-        Category: category,
-        "Product Code": productCode,
-        "Product Name": productName,
-        "Target Qty": targetQty,
-        "Produced Qty": producedQty,
-        Location: location,
-        "Total Plan Qty": totalPlanQty,
-        "Total Balance Qty": totalBalanceQty,
-        Status:
-          producedQty === targetQty
-            ? "Achieved"
-            : producedQty > targetQty
-            ? "Excess"
-            : "Not Achieved",
-      })
-    );
+    const exportData = dataToExport.map((entry) => ({
+      "Transaction No": entry.trNo,
+      "BOM Code": entry.bomCode,
+      "BOM Name": entry.bomName,
+      "Produced Quantity": entry.producedQuantity,
+      "Production Date": entry.productionDate,
+      "Warehouse": entry.warehouseName,
+      "Created By": entry.createdBy,
+      "Created At": entry.createdAt,
+      "Items": entry.items.map(item => 
+        `${item.itemName} (${item.itemCode}) - Qty: ${item.usedQuantity}`
+      ).join(", ")
+    }));
 
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
@@ -321,10 +65,10 @@ const ProductionReportEntry = () => {
   };
 
   const handleSelectAll = () => {
-    if (selectedRows.length === dummyData.length) {
+    if (selectedRows.length === productionData.length) {
       setSelectedRows([]);
     } else {
-      setSelectedRows(dummyData.map((row) => row.id));
+      setSelectedRows(productionData.map((row) => row.id));
     }
   };
 
@@ -334,20 +78,14 @@ const ProductionReportEntry = () => {
     );
   };
 
-  const getStatusInfo = (target, produced) => {
-    if (produced === target) return { variant: "achieved", text: "Achieved" };
-    if (produced > target) return { variant: "excess", text: "Excess" };
-    return { variant: "not-achieved", text: "Not Achieved" };
-  };
-
   const handleModalClose = () => setShowModal(false);
   const handleModalShow = () => setShowModal(true);
 
   // Calculate pagination
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = dummyData.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(dummyData.length / itemsPerPage);
+  const currentItems = productionData.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(productionData.length / itemsPerPage);
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -393,7 +131,7 @@ const ProductionReportEntry = () => {
               <input
                 type="checkbox"
                 id="select-all"
-                checked={selectedRows.length === dummyData.length}
+                checked={selectedRows.length === productionData.length}
                 onChange={handleSelectAll}
                 className="ms-3 text-8"
               />
@@ -412,32 +150,37 @@ const ProductionReportEntry = () => {
               </button>
             </div>
           </div>
-          <table className="table table-hover">
-            <thead>
-              <tr>
-                <th>
-                  <input type="checkbox" className="text-8" disabled />
-                </th>
-                <th>Date</th>
-                <th>Plant</th>
-                <th>Category</th>
-                <th>Product Code</th>
-                <th>Product Name</th>
-                <th>Target Qty</th>
-                <th>Produced Qty</th>
-                <th>Location</th>
-                <th>Total Plan Qty</th>
-                <th>Total Balance Qty</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody className="text-break">
-              {currentItems.map((entry) => {
-                const status = getStatusInfo(
-                  entry.targetQty,
-                  entry.producedQty
-                );
-                return (
+          {loading ? (
+            <div className="text-center p-4">Loading...</div>
+          ) : error ? (
+            <div className="text-center p-4 text-secondary">{error}</div>
+          ) : productionData.length === 0 ? (
+            <div className="text-center p-4">No data available</div>
+          ) : (
+            <table className="table table-hover">
+              <thead>
+                <tr>
+                  <th>
+                    <input
+                      type="checkbox"
+                      className="text-8"
+                      checked={selectedRows.length === productionData.length}
+                      onChange={handleSelectAll}
+                    />
+                  </th>
+                  <th>Transaction No</th>
+                  <th>BOM Code</th>
+                  <th>BOM Name</th>
+                  <th>Produced Qty</th>
+                  <th>Production Date</th>
+                  <th>Warehouse</th>
+                  <th>Created By</th>
+                  <th>Created At</th>
+                  <th>Items</th>
+                </tr>
+              </thead>
+              <tbody className="text-break">
+                {currentItems.map((entry) => (
                   <tr key={entry.id}>
                     <td>
                       <input
@@ -447,29 +190,30 @@ const ProductionReportEntry = () => {
                         onChange={() => handleSelectRow(entry.id)}
                       />
                     </td>
-                    <td>{entry.date}</td>
-                    <td>{entry.plant}</td>
-                    <td>{entry.category}</td>
-                    <td>{entry.productCode}</td>
-                    <td>{entry.productName}</td>
-                    <td>{entry.targetQty}</td>
-                    <td>{entry.producedQty}</td>
-                    <td>{entry.location}</td>
-                    <td>{entry.totalPlanQty}</td>
-                    <td>{entry.totalBalanceQty}</td>
+                    <td>{entry.trNo}</td>
+                    <td>{entry.bomCode}</td>
+                    <td>{entry.bomName}</td>
+                    <td>{entry.producedQuantity}</td>
+                    <td>{entry.productionDate}</td>
+                    <td>{entry.warehouseName}</td>
+                    <td>{entry.createdBy}</td>
+                    <td>{new Date(entry.createdAt).toLocaleString()}</td>
                     <td>
-                      <span className={`badge ${status.variant}`}>
-                        {status.text}
-                      </span>
-                      {/* <Badge className={`status ${status.variant}`}>
-                      {status.text}
-                    </Badge> */}
+                      {entry.items.map((item, idx) => (
+                        <div key={idx}>
+                          {item.itemName} ({item.itemCode}) - Qty: {item.usedQuantity}
+                          <br />
+                          <small className="text-muted">
+                            Batch: {item.batchNumbers.join(", ")}
+                          </small>
+                        </div>
+                      ))}
                     </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          )}
 
           <div className="d-flex justify-content-center mt-4">
             <Pagination>

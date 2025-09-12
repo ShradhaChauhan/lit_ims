@@ -32,6 +32,8 @@ import OrderPlanning from "../OrderPlanning/OrderPlanning";
 import VendorRating from "../VendorRating/VendorRating";
 import LineMonitoring from "../LineMonitoring/LineMonitoring";
 import ProductionPunch from "../Forms/ProductionPunch/ProductionPunch";
+import StoreReport from "../Reports/StoreReport/StoreReport";
+import LineReport from "../Reports/LineReport/LineReport";
 
 const SideBar = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -44,6 +46,7 @@ const SideBar = () => {
     setPermissions,
     setIsAuthenticated,
     setIsToken,
+    role,
   } = useContext(AppContext);
 
   // Floating submenu state
@@ -489,51 +492,55 @@ const SideBar = () => {
           {!isCollapsed && "Control Panel"}
         </Link>
 
-        <Link
-          to="/order-planning"
-          className="home-link mb-0 py-0 mt-3"
-          style={{ color: "#8D91AD" }}
-          onClick={() => {
-            setIsActiveComponent("order-planning");
-            setLabelName("Order Planning");
-            handleRightSideComponentName("Order Planning");
-          }}
-        >
-          <i className="fa-solid fa-calendar-check"></i>
-          {!isCollapsed && "Order Planning"}
-        </Link>
+        {role === "owner" && (
+          <>
+            <Link
+              to="/order-planning"
+              className="home-link mb-0 py-0 mt-3"
+              style={{ color: "#8D91AD" }}
+              onClick={() => {
+                setIsActiveComponent("order-planning");
+                setLabelName("Order Planning");
+                handleRightSideComponentName("Order Planning");
+              }}
+            >
+              <i className="fa-solid fa-calendar-check"></i>
+              {!isCollapsed && "Order Planning"}
+            </Link>
 
-        <Link
-          to="/vendor-rating"
-          className="home-link mb-0 py-0 mt-3"
-          style={{ color: "#8D91AD" }}
-          onClick={() => {
-            setIsActiveComponent("vendor-rating");
-            setLabelName("Vendor Rating");
-            handleRightSideComponentName("Vendor Rating");
-          }}
-        >
-          <i className="fa-solid fa-star"></i>
-          {!isCollapsed && "Vendor Rating"}
-        </Link>
+            <Link
+              to="/vendor-rating"
+              className="home-link mb-0 py-0 mt-3"
+              style={{ color: "#8D91AD" }}
+              onClick={() => {
+                setIsActiveComponent("vendor-rating");
+                setLabelName("Vendor Rating");
+                handleRightSideComponentName("Vendor Rating");
+              }}
+            >
+              <i className="fa-solid fa-star"></i>
+              {!isCollapsed && "Vendor Rating"}
+            </Link>
 
-        <Link
-          to="/line-monitoring"
-          className="home-link mb-0 py-0 mt-3"
-          style={{ color: "#8D91AD" }}
-          onClick={() => {
-            setIsActiveComponent("line-monitoring");
-            setLabelName("Line Monitoring");
-            handleRightSideComponentName("Line Monitoring");
-          }}
-        >
-          <i className="fa-solid fa-industry"></i>
-          {!isCollapsed && "Line Monitoring"}
-        </Link>
+            <Link
+              to="/line-monitoring"
+              className="home-link mb-0 py-0 mt-3"
+              style={{ color: "#8D91AD" }}
+              onClick={() => {
+                setIsActiveComponent("line-monitoring");
+                setLabelName("Line Monitoring");
+                handleRightSideComponentName("Line Monitoring");
+              }}
+            >
+              <i className="fa-solid fa-industry"></i>
+              {!isCollapsed && "Line Monitoring"}
+            </Link>
+          </>
+        )}
 
         <Link
           to="/production-punch"
-          className="home-link mb-0 py-0 my-3"
+          className="home-link mb-0 py-0 mt-3"
           style={{ color: "#8D91AD" }}
           onClick={() => {
             setIsActiveComponent("production-punch");
@@ -543,6 +550,20 @@ const SideBar = () => {
         >
           <i className="fa-solid fa-clipboard-list"></i>
           {!isCollapsed && "Production Punch"}
+        </Link>
+        
+        <Link
+          to="/store-report"
+          className="home-link mb-0 py-0 my-3"
+          style={{ color: "#8D91AD" }}
+          onClick={() => {
+            setIsActiveComponent("store-report");
+            setLabelName("Store Report");
+            handleRightSideComponentName("StoreReport");
+          }}
+        >
+          <i className="fa-solid fa-store"></i>
+          {!isCollapsed && "Store Report"}
         </Link>
 
         <ul className="nav nav-pills flex-column mb-auto mt-1">

@@ -1,0 +1,6 @@
+.btn-icon.delete:hover {
+  background-color: #fbeaea; /* dull red */
+}
+.btn-icon.delete:hover i {
+  color: #dc3545; /* Bootstrap red */
+}
