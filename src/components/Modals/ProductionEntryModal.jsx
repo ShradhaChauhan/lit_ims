@@ -14,6 +14,7 @@ import { toast } from "react-toastify";
 import api from "../../services/api";
 import * as XLSX from "xlsx";
 import "./ProductionEntryModal.css";
+import BatchSplitModal from "./BatchSplitModal";
 
 const modalStyle = {
   minHeight: "600px",
@@ -45,6 +46,7 @@ const ProductionEntryModal = ({ show, onHide }) => {
   const [warehouseList, setWarehouseList] = useState([]);
   const [productList, setProductList] = useState([]);
   const [showPreview, setShowPreview] = useState(false);
+  const [showBatchSplit, setShowBatchSplit] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [transactionNumber, setTransactionNumber] = useState("PU" + Date.now());
@@ -84,7 +86,14 @@ const ProductionEntryModal = ({ show, onHide }) => {
       if (selectedBom) {
         const fullBomData = selectedBom.original; // Get the full BOM data we stored earlier
         setSelectedProduct(fullBomData);
-        setShowPreview(true);
+        
+        // Check if BOM code starts with 2010 or 2020
+        const bomCode = fullBomData.code;
+        if (bomCode.startsWith("2010") || bomCode.startsWith("2020")) {
+          setShowBatchSplit(true);
+        } else {
+          setShowPreview(true);
+        }
       } else {
         toast.error("Selected product BOM not found");
       }
@@ -94,7 +103,7 @@ const ProductionEntryModal = ({ show, onHide }) => {
     }
   };
 
-  const handleSave = async () => {
+  const handleSave = async (batchData) => {
     if (
       !selectedProduct ||
       !selectedProduct.items ||
@@ -112,15 +121,17 @@ const ProductionEntryModal = ({ show, onHide }) => {
         bomName: selectedProduct.name,
         producedQuantity: Number(formData.producedQty),
         productionDate: new Date(formData.date).toISOString(),
-        items: selectedProduct.items.map((item) => ({
+        items: batchData ? batchData.items : selectedProduct.items.map((item) => ({
           itemCode: item.itemCode,
           itemName: item.itemName,
           usedQuantity: Number(
             (item.quantity * formData.producedQty).toFixed(3)
           ),
         })),
+        hasBatchSplits: !!batchData,
       };
-      console.log("request: " + requestBody);
+      
+      console.log("request: " + JSON.stringify(requestBody));
       const response = await api.post(
         "/api/production-punch/create",
         requestBody
@@ -186,6 +197,8 @@ const ProductionEntryModal = ({ show, onHide }) => {
 
   const handleClose = () => {
     resetForm();
+    setShowBatchSplit(false);
+    setShowPreview(false);
     onHide();
   };
 
@@ -270,7 +283,7 @@ const ProductionEntryModal = ({ show, onHide }) => {
       >
         <Modal.Header closeButton>
           <Modal.Title>
-            <i className="fas fa-circle-check me-2"></i>Add Production Entry
+            <i className="fas fa-circle-check me-2"></i>Add Production Punch
           </Modal.Title>
         </Modal.Header>
         <Form
@@ -459,12 +472,21 @@ const ProductionEntryModal = ({ show, onHide }) => {
             <i className="fas fa-times me-2" />
             Close
           </Button>
-          <Button variant="primary" className="text-8" onClick={handleSave}>
+          <Button variant="primary" className="text-8" onClick={() => handleSave()}>
             <i className="fas fa-floppy-disk me-2" />
             Save
           </Button>
         </Modal.Footer>
       </Modal>
+
+      <BatchSplitModal
+        show={showBatchSplit}
+        onHide={() => setShowBatchSplit(false)}
+        selectedProduct={selectedProduct}
+        formData={formData}
+        transactionNumber={transactionNumber}
+        onSave={handleSave}
+      />
     </>
   );
 };
