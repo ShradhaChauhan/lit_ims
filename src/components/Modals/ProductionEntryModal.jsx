@@ -198,7 +198,8 @@ const ProductionEntryModal = ({ show, onHide }) => {
           `/api/inventory/itemQuantity/${formData.location.value}/${item.itemCode}`
         );
         console.log("WIP quantity response:", response.data.data);
-        quantities[item.itemCode] = parseFloat(response.data.data) || 0;
+        // Fix: Access the quantity from the first item in the data array
+        quantities[item.itemCode] = parseFloat(response.data.data[0]?.quantity) || 0;
       }
       setWipQuantities(quantities);
     } catch (error) {
