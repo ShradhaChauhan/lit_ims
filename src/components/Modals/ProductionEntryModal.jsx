@@ -51,6 +51,7 @@ const ProductionEntryModal = ({ show, onHide }) => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [transactionNumber, setTransactionNumber] = useState("PU" + Date.now());
   const [wipQuantities, setWipQuantities] = useState({});
+  const [rowsWithErrors, setRowsWithErrors] = useState([]);
   const initialFormState = {
     date: "",
     category: null,
@@ -349,7 +350,7 @@ const ProductionEntryModal = ({ show, onHide }) => {
 
               <Col lg={4} md={6} sm={12}>
                 <Form.Group>
-                  <Form.Label className="text-8">BOM Name</Form.Label>
+                  <Form.Label className="text-8">Item Name</Form.Label>
                   <Select
                     options={productList}
                     value={formData.product}
@@ -476,20 +477,40 @@ const ProductionEntryModal = ({ show, onHide }) => {
                 </tr>
               </thead>
               <tbody className="text-8 text-break">
-                {filteredItems.map((item, index) => (
-                  <tr key={index}>
-                    <td>{item.itemCode}</td>
-                    <td>{item.itemName}</td>
-                    <td>{item.quantity + " " + item.uom.toLowerCase()}</td>
-                    <td>{(item.quantity * formData.producedQty).toFixed(3)}</td>
-                    <td>
-                      {typeof wipQuantities[item.itemCode] === "number"
-                        ? wipQuantities[item.itemCode].toFixed(3)
-                        : "-"}
-                    </td>
-                    <td>{formData.location?.label || "-"}</td>
-                  </tr>
-                ))}
+                {filteredItems.map((item, index) => {
+                  const usedQty = Number((item.quantity * formData.producedQty).toFixed(3));
+                  const wipQty = wipQuantities[item.itemCode] || 0;
+                  const hasError = rowsWithErrors.includes(item.itemCode);
+                  
+                  return (
+                    <tr 
+                      key={index}
+                      className={hasError ? "table-danger" : ""}
+                      title={hasError ? "Insufficient WIP quantity" : ""}
+                    >
+                      <td>{item.itemCode}</td>
+                      <td>{item.itemName}</td>
+                      <td>{item.quantity + " " + item.uom.toLowerCase()}</td>
+                      <td>{usedQty.toFixed(3)}</td>
+                      <td>
+                        <div className="d-flex align-items-center">
+                          <span>
+                            {typeof wipQuantities[item.itemCode] === "number"
+                              ? wipQuantities[item.itemCode].toFixed(3)
+                              : "-"}
+                          </span>
+                          {hasError && (
+                            <i 
+                              className="fas fa-exclamation-circle text-danger ms-2" 
+                              title={`Required: ${usedQty.toFixed(3)}, Available: ${wipQty.toFixed(3)}`}
+                            />
+                          )}
+                        </div>
+                      </td>
+                      <td>{formData.location?.label || "-"}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </Table>
           </div>
@@ -506,15 +527,32 @@ const ProductionEntryModal = ({ show, onHide }) => {
           <Button
             variant="primary"
             className="text-8"
-            onClick={() => {
-              const bomCode = selectedProduct.code;
-              if (bomCode.startsWith("2010") || bomCode.startsWith("2020")) {
-                setShowBatchSplit(true);
-                setShowPreview(false);
-              } else {
-                handleSave();
-              }
-            }}
+              onClick={() => {
+                // Check if any item has insufficient WIP quantity
+                const itemsWithErrors = selectedProduct.items.filter(item => {
+                  const usedQty = Number((item.quantity * formData.producedQty).toFixed(3));
+                  const wipQty = wipQuantities[item.itemCode] || 0;
+                  return wipQty < usedQty;
+                });
+
+                if (itemsWithErrors.length > 0) {
+                  // Update the error state to highlight rows
+                  setRowsWithErrors(itemsWithErrors.map(item => item.itemCode));
+                  toast.error("Some items have insufficient WIP quantity");
+                  return;
+                }
+
+                // Clear any previous errors
+                setRowsWithErrors([]);
+
+                const bomCode = selectedProduct.code;
+                if (bomCode.startsWith("2010") || bomCode.startsWith("2020")) {
+                  setShowBatchSplit(true);
+                  setShowPreview(false);
+                } else {
+                  handleSave();
+                }
+              }}
           >
             <i className="fas fa-floppy-disk me-2" />
             Save

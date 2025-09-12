@@ -359,7 +359,8 @@ const IssueProduction = () => {
     } catch (error) {
       errors.push({
         batch: batchNo,
-        message: "Error verifying and issuing batch",
+        message:
+          error.response.data.message || "Error verifying and issuing batch",
       });
       console.error("Error verifying and issuing batch:", error);
       return { success: false, errors, warnings };
