@@ -324,6 +324,7 @@ const IssueProduction = () => {
           batchNo: batchData.batchNo,
           quantity: batchData.quantity,
           itemCode: batchData.itemCode,
+          warehouseId: batchData.warehouseId,
         };
 
         setScannedBatches((prev) => [...prev, newScannedBatch]);

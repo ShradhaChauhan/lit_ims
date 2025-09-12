@@ -193,32 +193,6 @@ const MaterialIssueRequest = () => {
       setWarehouse(userWarehouseId);
     }
   }, []);
-  const [reqWarehouse, setReqWarehouse] = useState([]);
-  const fetchWarehouses = () => {
-    api
-      .get("/api/warehouses")
-      .then((response) => {
-        if (response.data && response.data.status) {
-          // Filter warehouses to only include store, wip0, and wip1
-          const filteredWarehouses = (response.data.data || []).filter((w) =>
-            ["store", "wip0", "wip1"].includes(w.name.toLowerCase())
-          );
-          setReqWarehouse(filteredWarehouses);
-        } else {
-          console.error(
-            "Error fetching warehouses:",
-            response.data.message || "Unknown error"
-          );
-        }
-      })
-      .catch((error) => {
-        console.error("Error fetching warehouses:", error);
-      });
-  };
-
-  useEffect(() => {
-    fetchWarehouses();
-  }, []);
 
   // Calculate the display range for the pagination info
   const getDisplayRange = () => {
@@ -966,7 +940,7 @@ const MaterialIssueRequest = () => {
                       <th>Item/BOM Name</th>
                       <th>Type</th>
                       <th>Quantity</th>
-                      <th>Warehouse</th>
+                      {request.length > 0 && request[0].type === "Item" && <th>Warehouse</th>}
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -986,8 +960,8 @@ const MaterialIssueRequest = () => {
                           <td className="ps-4">
                             <span>{i.quantity}</span>
                           </td>
-                          <td className="ps-4">
-                            {i.type === "Item" && (
+                          {i.type === "Item" && (
+                            <td className="ps-4">
                               <select
                                 className="form-select text-font"
                                 value={i.warehouse || ""}
@@ -1003,20 +977,14 @@ const MaterialIssueRequest = () => {
                                 <option value="" disabled>
                                   Select Warehouse
                                 </option>
-                                {reqWarehouse
-                                  .filter((w) =>
-                                    ["store", "wip0", "wip1"].includes(
-                                      w.name.toLowerCase()
-                                    )
-                                  )
-                                  .map((w) => (
+                                {warehouseList.map((w) => (
                                     <option key={w.id} value={w.id}>
                                       {w.name}
                                     </option>
                                   ))}
                               </select>
-                            )}
-                          </td>
+                            </td>
+                          )}
                           <td className="actions ps-4">
                             <button
                               type="button"
