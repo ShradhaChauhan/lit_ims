@@ -145,9 +145,13 @@ const Users = () => {
       errors.role = "Role is required";
     }
 
-    if (!data.department || !Array.isArray(data.department) || data.department.length === 0) {
-      errors.department = "At least one department must be selected";
-    }
+    // if (
+    //   !data.department ||
+    //   !Array.isArray(data.department) ||
+    //   data.department.length === 0
+    // ) {
+    //   errors.department = "At least one department must be selected";
+    // }
 
     // Check if branch is selected - using selectedOptions from state
     if (!selectedOptions || selectedOptions.length === 0) {
@@ -2089,7 +2093,34 @@ const Users = () => {
                     </label>
                     <div className="position-relative w-100">
                       <i className="fa-solid fa-building position-absolute z-0 input-icon"></i>
-                      <Select
+                      <select
+                        className={`form-select ps-5 text-font ${
+                          formData.department ? "" : "text-secondary"
+                        }`}
+                        id="department"
+                        value={formData.department}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            department: e.target.value,
+                            warehouseId:
+                              warehouse.find((w) => w.name === e.target.value)
+                                ?.id || "",
+                          })
+                        }
+                      >
+                        <option value="" disabled hidden>
+                          Select Department
+                        </option>
+
+                        {/* Map warehouse list */}
+                        {warehouse.map((w) => (
+                          <option key={w.id} value={w.name}>
+                            {w.name}
+                          </option>
+                        ))}
+                      </select>
+                      {/* <Select
                         className={`form-control p-0 text-font border-0 ${
                           errors.department ? "is-invalid" : ""
                         }`}
@@ -2108,7 +2139,7 @@ const Users = () => {
                           });
                         }}
                         placeholder="Select Department..."
-                      />
+                      /> */}
                     </div>
 
                     {errors.department && (
