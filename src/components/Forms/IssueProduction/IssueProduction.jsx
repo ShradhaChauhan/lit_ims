@@ -283,6 +283,14 @@ const IssueProduction = () => {
 
       if (response.data.status) {
         const batchData = response.data.data;
+        
+        // Log batch data for debugging
+        console.log("Batch data from API:", {
+          batchNo: batchData.batchNo,
+          itemCode: batchData.itemCode,
+          itemName: batchData.itemName,
+          warehouseId: batchData.warehouseId
+        });
 
         // Check if this batch has already been scanned
         const alreadyScanned = scannedBatches.some(
@@ -477,100 +485,189 @@ const IssueProduction = () => {
       showToast("error", "Error releasing batch. Please try again.");
     }
   };
-
-  const handleCompleteIssue = async (e) => {
-    e.preventDefault();
-
-    if (!selectedRequisition) {
-      showToast("error", "Please select a requisition first");
-      return;
-    }
-
-    if (scannedBatches.length === 0) {
-      showToast("error", "No batches have been scanned for issue");
-      return;
-    }
-
-    try {
-      // First confirm all batch allocations
-      for (const batch of scannedBatches) {
-        const confirmResponse = await api.post(
-          `/api/receipt/batches/confirm?batchNo=${batch.batchNo}`
-        );
-
-        if (!confirmResponse.data.status) {
-          showToast("error", `Failed to confirm batch ${batch.batchNo}`);
-          return;
-        }
+   const handleCompleteIssue = async (e) => {
+      e.preventDefault();
+  
+      if (!selectedRequisition) {
+        toast.error("Please select a requisition first");
+        return;
       }
-
-      // Format the data according to the expected structure
-      const finalData = {
-        issueNumber: issueNumber,
-        requisitionNumber: selectedRequisition,
-        batchItems: scannedBatches.map((batch) => {
-          // Find the corresponding item to get variance
-          const item = requestedItems.find(
-            (item) => item.code === batch.itemCode
+  
+      if (scannedBatches.length === 0) {
+        toast.error("No batches have been scanned for issue");
+        return;
+      }
+  
+      try {
+        // First confirm all batch allocations
+        for (const batch of scannedBatches) {
+          const confirmResponse = await api.post(
+            `/api/receipt/batches/confirm?batchNo=${batch.batchNo}`
           );
-
-          return {
-            itemCode: batch.itemCode,
-            itemName: batch.itemName,
-            batchNo: batch.batchNo,
-            quantity: batch.quantity,
-            issuedQty: batch.quantity,
-            variance: item ? item.variance : 0,
-            warehouseId: batch.warehouseId,
-            // stockQty: batch.stockQty
-          };
-        }),
-      };
-      console.log("finalData: " + JSON.stringify(finalData));
-      // Send data to the API
-      const response = await api.post("/api/issue-production/save", finalData);
-
-      if (response.data.status) {
-        showToast("success", "Issue completed successfully");
-
-        // Reset form state completely without releasing batches
-        // (batches are already saved to the system)
-        setSelectedRequisition("");
-        setScannedBatches([]);
-        setRequestedItems([]);
-        setBatchNumber("");
-        setAllItemsFulfilled(false);
-
-        // Generate a new issue number for the next entry
-        setIssueNumber(generateIssueNumber());
-
-        // Refresh the requisition number list
-        handleFetchRequisitionNumberList();
-      } else {
-        showToast(
-          "error",
-          response.data.message || "Failed to complete the issue"
-        );
-      }
-    } catch (error) {
-      let errorMessage = "Failed to complete the issue. Please try again.";
-
-      if (error.response) {
-        if (error.response.data.message) {
-          // For structured error from backend (with message field)
-          errorMessage = error.response.data.message;
-        } else if (typeof error.response.data === "string") {
-          // For plain string error from backend
-          errorMessage = error.response.data;
+  
+          if (!confirmResponse.data.status) {
+            toast.error(`Failed to confirm batch ${batch.batchNo}`);
+            return;
+          }
         }
-      } else {
-        errorMessage = error.message;
+  
+        // Format the data according to the expected structure
+        const finalData = {
+          issueNumber: issueNumber,
+          requisitionNumber: selectedRequisition,
+          batchItems: scannedBatches.map((batch) => {
+            // Find the corresponding item to get variance
+            const item = requestedItems.find(
+              (item) => item.code === batch.itemCode
+            );
+  
+            return {
+              itemCode: batch.itemCode,
+              itemName: batch.itemName,
+              batchNo: batch.batchNo,
+              quantity: batch.quantity,
+              issuedQty: batch.quantity,
+              variance: item ? item.variance : 0,
+              // stockQty: batch.stockQty
+            };
+          }),
+        };
+  
+        // Send data to the API
+        const response = await api.post("/api/issue-production/save", finalData);
+  
+        if (response.data.status) {
+          toast.success("Issue completed successfully");
+  
+          // Reset form state completely without releasing batches
+          // (batches are already saved to the system)
+          setSelectedRequisition("");
+          setScannedBatches([]);
+          setRequestedItems([]);
+          setBatchNumber("");
+          setAllItemsFulfilled(false);
+  
+          // Generate a new issue number for the next entry
+          setIssueNumber(generateIssueNumber());
+  
+          // Refresh the requisition number list
+          handleFetchRequisitionNumberList();
+        } else {
+          toast.error(response.data.message || "Failed to complete the issue");
+        }
+      } catch (error) {
+        let errorMessage = "Failed to complete the issue. Please try again.";
+  
+        if (error.response) {
+          if (error.response.data.message) {
+            // For structured error from backend (with message field)
+            errorMessage = error.response.data.message;
+          } else if (typeof error.response.data === "string") {
+            // For plain string error from backend
+            errorMessage = error.response.data;
+          }
+        } else {
+          errorMessage = error.message;
+        }
+  
+        console.error("Error in completing the issue:", errorMessage);
+        toast.error(errorMessage);
       }
+    };
+  // const handleCompleteIssue = async (e) => {
+  //   e.preventDefault();
 
-      console.error("Error in completing the issue:", errorMessage);
-      showToast("error", errorMessage);
-    }
-  };
+  //   if (!selectedRequisition) {
+  //     showToast("error", "Please select a requisition first");
+  //     return;
+  //   }
+
+  //   if (scannedBatches.length === 0) {
+  //     showToast("error", "No batches have been scanned for issue");
+  //     return;
+  //   }
+
+  //   try {
+  //     s
+  //     for (const batch of scannedBatches) {
+  //       const confirmResponse = await api.post(
+  //         `/api/receipt/batches/confirm?batchNo=${batch.batchNo}`
+  //       );
+
+  //       if (!confirmResponse.data.status) {
+  //         showToast("error", `Failed to confirm batch ${batch.batchNo}`);
+  //         return;
+  //       }
+  //     }
+
+     
+  //     const finalData = {
+  //       issueNumber: issueNumber,
+  //       requisitionNumber: selectedRequisition,
+  //       batchItems: scannedBatches.map((batch) => {
+         
+  //         const item = requestedItems.find(
+  //           (item) => item.code === batch.itemCode
+  //         );
+
+  //         return {
+  //           itemCode: batch.itemCode,
+  //           itemName: batch.itemName,
+  //           batchNo: batch.batchNo,
+  //           quantity: batch.quantity,
+  //           issuedQty: batch.quantity,
+  //           variance: item ? item.variance : 0,
+  //           warehouseId: batch.warehouseId,
+  //         };
+  //       }),
+  //     };
+  //     // Log warehouse IDs for debugging
+  //     console.log("Warehouse IDs:", scannedBatches.map(batch => `${batch.batchNo}: ${batch.warehouseId}`));
+  //     console.log("finalData: " + JSON.stringify(finalData));
+  //     // Send data to the API
+  //     const response = await api.post("/api/issue-production/save", finalData);
+
+  //     if (response.data.status) {
+  //       showToast("success", "Issue completed successfully");
+
+  //       // Reset form state completely without releasing batches
+  //       // (batches are already saved to the system)
+  //       setSelectedRequisition("");
+  //       setScannedBatches([]);
+  //       setRequestedItems([]);
+  //       setBatchNumber("");
+  //       setAllItemsFulfilled(false);
+
+  //       // Generate a new issue number for the next entry
+  //       setIssueNumber(generateIssueNumber());
+
+  //       // Refresh the requisition number list
+  //       handleFetchRequisitionNumberList();
+  //     } else {
+  //       showToast(
+  //         "error",
+  //         response.data.message || "Failed to complete the issue"
+  //       );
+  //     }
+  //   } catch (error) {
+  //     let errorMessage = "Failed to complete the issue. Please try again.";
+
+  //     if (error.response) {
+  //       if (error.response.data.message) {
+  //         // For structured error from backend (with message field)
+  //         errorMessage = error.response.data.message;
+  //       } else if (typeof error.response.data === "string") {
+  //         // For plain string error from backend
+  //         errorMessage = error.response.data;
+  //       }
+  //     } else {
+  //       errorMessage = error.message;
+  //     }
+
+  //     console.error("Error in completing the issue:", errorMessage);
+  //     showToast("error", errorMessage);
+  //   }
+  // };
 
   // Clear form function
   const handleClearForm = () => {
