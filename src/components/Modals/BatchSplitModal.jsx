@@ -7,6 +7,7 @@ import {
   InputGroup,
 } from 'react-bootstrap';
 import { toast } from 'react-toastify';
+import api from '../../services/api';
 
 // Keep track of active toast messages
 const activeToasts = new Set();
@@ -36,6 +37,7 @@ const BatchSplitModal = ({ show, onHide, selectedProduct, formData, transactionN
   const [searchTerm, setSearchTerm] = useState('');
   const [batchSplits, setBatchSplits] = useState({});
   const [generateBatchNo, setGenerateBatchNo] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Reset splits when modal opens
   React.useEffect(() => {
@@ -47,7 +49,7 @@ const BatchSplitModal = ({ show, onHide, selectedProduct, formData, transactionN
 
 
   // Handle quantity change
-  const handleQuantityChange = (index, value) => {
+  const handleQuantityChange = async (index, value) => {
     const numValue = parseFloat(value) || 0;
     const currentSplits = batchSplits[selectedProduct.code] || [];
     const totalQuantity = parseFloat(formData.producedQty) || 0;
@@ -63,12 +65,43 @@ const BatchSplitModal = ({ show, onHide, selectedProduct, formData, transactionN
       return;
     }
 
+    // Update the quantity first
     setBatchSplits(prev => ({
       ...prev,
       [selectedProduct.code]: prev[selectedProduct.code].map((split, i) =>
         i === index ? { ...split, quantity: numValue } : split
       )
     }));
+
+    // If quantity is valid, generate batch number via API
+    if (numValue > 0) {
+      try {
+        setIsLoading(true);
+        const response = await api.post('/api/production-punch/generate-batch', {
+          bomCode: formData.product?.value || selectedProduct.code,
+          bomName: formData.product?.label || selectedProduct.name,
+          quantity: numValue
+        });
+
+        if (response.data.status) {
+          // Update the batch number with the generated one
+          setBatchSplits(prev => ({
+            ...prev,
+            [selectedProduct.code]: prev[selectedProduct.code].map((split, i) =>
+              i === index ? { ...split, batchNo: response.data.data.batchNo } : split
+            )
+          }));
+          showUniqueToast('Batch number generated successfully', 'success');
+        } else {
+          showUniqueToast(response.data.message || 'Failed to generate batch number');
+        }
+      } catch (error) {
+        console.error('Error generating batch number:', error);
+        showUniqueToast('Failed to generate batch number. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    }
   };
 
   // Handle save
@@ -77,7 +110,7 @@ const BatchSplitModal = ({ show, onHide, selectedProduct, formData, transactionN
     setSearchTerm('');
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!selectedProduct?.code) return;
     
     const splits = batchSplits[selectedProduct.code] || [];
@@ -91,19 +124,66 @@ const BatchSplitModal = ({ show, onHide, selectedProduct, formData, transactionN
       return;
     }
 
-    // Prepare data for saving
-    const batchData = {
-      ...formData,
-      items: [{
-        itemCode: selectedProduct.code,
-        itemName: selectedProduct.name,
-        totalQuantity: totalQuantity,
-        batches: splits
-      }]
-    };
+    // Check if all batch numbers are filled
+    const missingBatchNumbers = splits.some(split => !split.batchNo || split.batchNo.trim() === '');
+    if (missingBatchNumbers) {
+      showUniqueToast('All batches must have batch numbers');
+      return;
+    }
 
-    onSave(batchData);
-    resetForm();
+    try {
+      setIsLoading(true);
+      
+      // Format the date as YYYY-MM-DD
+      const productionDate = formData.date ? 
+        new Date(formData.date).toISOString().split('T')[0] : 
+        new Date().toISOString().split('T')[0];
+      
+      // Get items from selectedProduct or formData
+      let items = [];
+      if (selectedProduct.items) {
+        items = selectedProduct.items.map(item => ({
+          itemCode: item.itemCode,
+          itemName: item.itemName,
+          usedQuantity: Number((item.quantity * totalQuantity).toFixed(3))
+        }));
+      }
+      
+      // Prepare data for API call with the correct structure
+      const requestBody = {
+        trNo: transactionNumber,
+        bomCode: selectedProduct.code, // Use the actual BOM code, not the item code
+        bomName: formData.product?.label || selectedProduct.name,
+        producedQuantity: totalQuantity,
+        productionDate: productionDate,
+        // Include items array
+        items: items,
+        // Include bomBatches array with batch numbers from the splits
+        bomBatches: splits.map(split => ({
+          batchNo: split.batchNo,
+          quantity: parseFloat(split.quantity) || 0
+        }))
+      };
+      
+      console.log('Sending production data:', requestBody);
+      
+      // Make API call to save the production data
+      const response = await api.post('/api/production-punch/create', requestBody);
+      
+      if (response.data.status) {
+        showUniqueToast('Production data saved successfully', 'success');
+        resetForm();
+        onSave(response.data.data); // Pass the response data to the parent component
+        onHide(); // Close the modal
+      } else {
+        showUniqueToast(response.data.message || 'Failed to save production data');
+      }
+    } catch (error) {
+      console.error('Error saving production data:', error);
+      showUniqueToast(error.response?.data?.message || 'Failed to save production data. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Filter splits based on search term
@@ -226,7 +306,7 @@ const BatchSplitModal = ({ show, onHide, selectedProduct, formData, transactionN
                 </thead>
                 <tbody className="text-8 text-break">
                   {filteredSplits.map((split, index) => (
-                    <tr key={split.batchNo}>
+                    <tr key={index}>
                         <td className="d-flex align-items-center gap-2">
                         <Form.Control
                           type="number"
@@ -235,12 +315,13 @@ const BatchSplitModal = ({ show, onHide, selectedProduct, formData, transactionN
                           onChange={(e) => handleQuantityChange(index, e.target.value)}
                           min="0"
                           step="0.001"
+                          disabled={isLoading}
                         />
                        
                       </td>
                       <td>{formData.product?.label || "-"}</td>                  
                       
-                      <td  className="d-flex align-items-center gap-2">
+                      <td className="d-flex align-items-center gap-2">
                         <Form.Control
                           type="text"
                           size="sm"
@@ -253,6 +334,7 @@ const BatchSplitModal = ({ show, onHide, selectedProduct, formData, transactionN
                               )
                             }));
                           }}
+                          readOnly={isLoading}
                         />
                          <Button
                           variant="outline-danger"
@@ -284,6 +366,7 @@ const BatchSplitModal = ({ show, onHide, selectedProduct, formData, transactionN
                               };
                             });
                           }}
+                          disabled={isLoading}
                         >
                           <i className="fas fa-trash" />
                         </Button>
@@ -306,7 +389,7 @@ const BatchSplitModal = ({ show, onHide, selectedProduct, formData, transactionN
           <i className="fas fa-times me-2" />
           Close
         </Button>
-        <Button variant="primary" className="text-8" onClick={handleSave}>
+        <Button variant="primary" className="text-8" onClick={handleSave} disabled={isLoading}>
           <i className="fas fa-floppy-disk me-2" />
           Save
         </Button>

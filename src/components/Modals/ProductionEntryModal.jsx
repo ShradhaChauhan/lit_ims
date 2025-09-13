@@ -535,23 +535,23 @@ const ProductionEntryModal = ({ show, onHide }) => {
             className="text-8"
             onClick={() => {
               // Check if any item has insufficient WIP quantity
-              // const itemsWithErrors = selectedProduct.items.filter((item) => {
-              //   const usedQty = Number(
-              //     (item.quantity * formData.producedQty).toFixed(3)
-              //   );
-              //   const wipQty = wipQuantities[item.itemCode] || 0;
-              //   return wipQty < usedQty;
-              // });
+              const itemsWithErrors = selectedProduct.items.filter((item) => {
+                const usedQty = Number(
+                  (item.quantity * formData.producedQty).toFixed(3)
+                );
+                const wipQty = wipQuantities[item.itemCode] || 0;
+                return wipQty < usedQty;
+              });
 
-              // if (itemsWithErrors.length > 0) {
+              if (itemsWithErrors.length > 0) {
               // Update the error state to highlight rows
-              //   setRowsWithErrors(itemsWithErrors.map((item) => item.itemCode));
-              //   toast.error("Some items have insufficient WIP quantity");
-              //   return;
-              // }
+                setRowsWithErrors(itemsWithErrors.map((item) => item.itemCode));
+                toast.error("Some items have insufficient WIP quantity");
+                return;
+              }
 
               // Clear any previous errors
-              // setRowsWithErrors([]);
+              setRowsWithErrors([]);
 
               const bomCode = selectedProduct.code;
               if (bomCode.startsWith("2010") || bomCode.startsWith("2020")) {
