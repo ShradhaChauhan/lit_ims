@@ -743,9 +743,11 @@ const Users = () => {
     console.log("Validation errors:", newErrors);
 
     if (Object.keys(newErrors).length !== 0) {
-      toast.error(
-        "All fields are required. Please complete the form before submission"
-      );
+      // Show specific error messages
+      const errorMessages = Object.values(newErrors).join('\n');
+      toast.error(errorMessages, {
+        style: { whiteSpace: 'pre-line' } // This allows line breaks in toast
+      });
     }
     if (Object.keys(newErrors).length === 0) {
       const finalData = {
@@ -1679,7 +1681,11 @@ const Users = () => {
     setErrors(validationErrors);
 
     if (Object.keys(validationErrors).length > 0) {
-      toast.error("Please fix the validation errors before submitting.");
+      // Show specific error messages
+      const errorMessages = Object.values(validationErrors).join('\n');
+      toast.error(errorMessages, {
+        style: { whiteSpace: 'pre-line' } // This allows line breaks in toast
+      });
       console.log("Form has validation errors"); // Debug log
       return;
     }

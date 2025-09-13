@@ -175,7 +175,7 @@ const MaterialIssueRequest = () => {
 
   const fetchWarehouseList = async () => {
     try {
-      const response = await api.get("/api/warehouses/wip");
+      const response = await api.get("/api/warehouses/store-and-wip");
       console.log("Warehouse list response:", response.data.data);
       setWarehouseList(response.data.data);
     } catch (error) {
@@ -942,7 +942,9 @@ const MaterialIssueRequest = () => {
                       <th>Item/BOM Name</th>
                       <th>Type</th>
                       <th>Quantity</th>
-                      {request.length > 0 && request[0].type === "Item" && <th>Warehouse</th>}
+                      {request.length > 0 && request[0].type === "Item" && (
+                        <th>Warehouse</th>
+                      )}
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -980,10 +982,10 @@ const MaterialIssueRequest = () => {
                                   Select Warehouse
                                 </option>
                                 {warehouseList.map((w) => (
-                                    <option key={w.id} value={w.id}>
-                                      {w.name}
-                                    </option>
-                                  ))}
+                                  <option key={w.id} value={w.id}>
+                                    {w.name}
+                                  </option>
+                                ))}
                               </select>
                             </td>
                           )}
@@ -1298,10 +1300,10 @@ const MaterialIssueRequest = () => {
                                   Select Warehouse
                                 </option>
                                 {warehouseList.map((w) => (
-                                    <option key={w.id} value={w.id}>
-                                      {w.name}
-                                    </option>
-                                  ))}
+                                  <option key={w.id} value={w.id}>
+                                    {w.name}
+                                  </option>
+                                ))}
                               </select>
                               {/* {item.warehouseName} */}
                             </td>
