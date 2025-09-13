@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../../../services/api";
 import { AppContext } from "../../../context/AppContext";
+import * as XLSX from "xlsx";
 
 const ProductionFloorReceipt = () => {
   const [issueNumber, setIssueNumber] = useState("");
@@ -265,6 +266,122 @@ const ProductionFloorReceipt = () => {
   };
 
   // Reset the form fields
+  // Export Issued Items to Excel
+  const handleExportIssuedItems = () => {
+    if (issuedItems.length === 0) {
+      toast.warning("No items to export");
+      return;
+    }
+
+    // Create worksheet data
+    const wsData = [
+      ["Production Floor Receipt - Issued Items"],
+      ["Issue Number: " + issueNumber],
+      ["Requisition Number: " + issueSummary.requisitionNumber],
+      ["Issue Date: " + issueSummary.issueDate],
+      ["Receipt Date: " + issueSummary.receiptDate],
+      [], // Empty row for spacing
+      [
+        "Item Name",
+        "Batch Number",
+        "Requested Qty",
+        "Issued Qty",
+        "Received Qty",
+        "Variance",
+        "Notes",
+      ],
+    ];
+
+    // Add data rows
+    issuedItems.forEach((item) => {
+      wsData.push([
+        `(${item.itemCode}) - ${item.itemName}`,
+        item.batchNumber,
+        item.requestedQuantity,
+        item.issuedQty,
+        item.receivedQty,
+        item.variance,
+        item.notes,
+      ]);
+    });
+
+    // Create workbook and worksheet
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    // Set column widths
+    const colWidths = [
+      { wch: 40 }, // Item Name
+      { wch: 15 }, // Batch Number
+      { wch: 15 }, // Requested Qty
+      { wch: 15 }, // Issued Qty
+      { wch: 15 }, // Received Qty
+      { wch: 15 }, // Variance
+      { wch: 30 }, // Notes
+    ];
+    ws["!cols"] = colWidths;
+
+    // Add the worksheet to the workbook
+    XLSX.utils.book_append_sheet(wb, ws, "Issued Items");
+
+    // Save the file
+    XLSX.writeFile(wb, `Production_Floor_Receipt_${issueNumber}.xlsx`);
+  };
+
+  // Export Recent Receipts to Excel
+  const handleExportRecentReceipts = () => {
+    if (recentReceipts.length === 0) {
+      toast.warning("No recent receipts to export");
+      return;
+    }
+
+    // Create worksheet data
+    const wsData = [
+      ["Production Floor Receipt - Recent Receipts"],
+      ["Generated on: " + new Date().toLocaleString()],
+      [], // Empty row for spacing
+      ["Transaction #", "Date", "Type", "Items", "Status"],
+    ];
+
+    // Add data rows
+    recentReceipts.forEach((receipt) => {
+      wsData.push([
+        receipt.transactionNumber,
+        receipt.receiptDate,
+        receipt.type,
+        receipt.items
+          .map((item) => `(${item.itemCode}) ${item.itemName}`)
+          .join(", "),
+        receipt.status,
+      ]);
+    });
+
+    // Create workbook and worksheet
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    // Set column widths
+    const colWidths = [
+      { wch: 20 }, // Transaction #
+      { wch: 20 }, // Date
+      { wch: 15 }, // Type
+      { wch: 50 }, // Items
+      { wch: 15 }, // Status
+    ];
+    ws["!cols"] = colWidths;
+
+    // Add the worksheet to the workbook
+    XLSX.utils.book_append_sheet(wb, ws, "Recent Receipts");
+
+    // Save the file
+    XLSX.writeFile(
+      wb,
+      `Recent_Production_Receipts_${
+        new Date().toISOString().split("T")[0]
+      }.xlsx`
+    );
+  };
+
   const handleReset = (e) => {
     e.preventDefault();
     setIssuedItems([]);
@@ -491,16 +608,26 @@ const ProductionFloorReceipt = () => {
               <div className="table-container">
                 <div className="table-header">
                   <h6>Issued Items</h6>
-                  <div className="selected-count">
-                    <input
-                      type="checkbox"
-                      id="select-all"
-                      checked={selectAll}
-                      onChange={handleSelectAllChange}
-                    />
-                    <label htmlFor="select-all">
-                      {selectedIssueNo.length} Selected
-                    </label>
+                  <div className="d-flex align-items-center">
+                    <button
+                      type="button"
+                      className="btn btn-outline-success px-2 py-1 text-8 me-3"
+                      onClick={handleExportIssuedItems}
+                    >
+                      <i className="fa-solid fa-file-excel me-1"></i> Export
+                      Excel
+                    </button>
+                    <div className="selected-count">
+                      <input
+                        type="checkbox"
+                        id="select-all"
+                        checked={selectAll}
+                        onChange={handleSelectAllChange}
+                      />
+                      <label htmlFor="select-all">
+                        {selectedIssueNo.length} Selected
+                      </label>
+                    </div>
                   </div>
                 </div>
                 <table>
@@ -678,6 +805,13 @@ const ProductionFloorReceipt = () => {
         <div className="table-container">
           <div className="table-header">
             <h6>Recent Receipts</h6>
+            <button
+              type="button"
+              className="btn btn-outline-success px-2 py-1 text-8"
+              onClick={handleExportRecentReceipts}
+            >
+              <i className="fa-solid fa-file-excel me-1"></i> Export Excel
+            </button>
           </div>
           <table>
             <thead>

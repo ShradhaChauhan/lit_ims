@@ -947,7 +947,7 @@ const GroupMaster = () => {
                   Download Template
                 </button>
                 <button
-                  className="btn-action btn-danger text-8"
+                  className="btn btn-outline-danger text-8"
                   onClick={() => {
                     setConfirmType("multi");
                     handleShowConfirm("multi");
@@ -1042,7 +1042,7 @@ const GroupMaster = () => {
                     </td>
                     <td className="actions ps-3">
                       <button
-                        className="btn-icon btn-primary"
+                        className="btn-icon view"
                         title="View Details"
                         onClick={(e) => handleViewDetails(group, e)}
                       >
@@ -1050,7 +1050,7 @@ const GroupMaster = () => {
                       </button>
                       {ability.can("edit", "Group Master") && (
                         <button
-                          className="btn-icon btn-success"
+                          className="btn-icon edit"
                           title="Edit"
                           onClick={(e) => handleEditDetails(group, e)}
                         >
@@ -1059,7 +1059,7 @@ const GroupMaster = () => {
                       )}
                       {ability.can("edit", "Group Master") && (
                         <button
-                          className="btn-icon btn-danger"
+                          className="btn-icon delete"
                           title="Delete"
                           onClick={() => {
                             setGroupIdState(group.id);

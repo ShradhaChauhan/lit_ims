@@ -12,9 +12,9 @@ import GroupMaster from "../Forms/GroupMaster/GroupMaster";
 import WarehouseMaster from "../Forms/WarehouseMaster/WarehouseMaster";
 import BOMMaster from "../Forms/BOMMaster/BOMMaster";
 import TypeMaster from "../Forms/TypeMaster/TypeMaster";
-import AdminLandingPage from "../AdminLandingPage/AdminLandingPage";
 import Cookies from "js-cookie";
 import { Navigate } from "react-router-dom";
+import LandingPage from "../LandingPage/LandingPage";
 
 const Dashboard = () => {
   const { rightSideComponent, setRightSideComponent } = useContext(AppContext);
@@ -47,7 +47,7 @@ const Dashboard = () => {
       ) : rightSideComponent === "/users" ? (
         <Users />
       ) : (
-        <AdminLandingPage />
+        <LandingPage />
       )}
     </div>
   );

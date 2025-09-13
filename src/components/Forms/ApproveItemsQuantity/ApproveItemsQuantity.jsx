@@ -293,7 +293,7 @@ const ApproveItemsQuantity = () => {
                     </td>
                     <td className="text-wrap ps-4">
                       <button
-                        className="btn-icon btn-primary"
+                        className="btn-icon"
                         title="View Details"
                         onClick={() => handleViewMeta(val.metaData)}
                       >
@@ -360,7 +360,7 @@ const ApproveItemsQuantity = () => {
           style={{ display: "block" }}
           tabIndex="-1"
         >
-          <div className="modal-dialog">
+          <div className="modal-dialog modal-lg">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">

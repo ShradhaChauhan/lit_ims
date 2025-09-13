@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import api from "../../../services/api";
 import Select from "react-select";
 import Cookies from "js-cookie";
+import * as XLSX from "xlsx";
 
 const MaterialIssueRequest = () => {
   const [tempQuantity, setTempQuantity] = useState(0);
@@ -29,6 +30,90 @@ const MaterialIssueRequest = () => {
     return ["complete bom", "individual items"];
   };
 
+  // Export Requested Items to Excel
+  const handleExportRequestedItems = () => {
+    if (request.length === 0) {
+      toast.warning("No items to export");
+      return;
+    }
+
+    // Create worksheet data
+    const wsData = [
+      ["Material Issue Request - Requested Items"],
+      ["Transaction #: " + transactionNumber],
+      ["Generated on: " + new Date().toLocaleString()],
+      [], // Empty row for spacing
+      ["Item Code", "Item/BOM Name", "Type", "Quantity"],
+    ];
+
+    // Add data rows
+    request.forEach((item) => {
+      wsData.push([item.code, item.name, item.type, item.quantity]);
+    });
+
+    // Create workbook and worksheet
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    // Set column widths
+    const colWidths = [
+      { wch: 15 }, // Item Code
+      { wch: 30 }, // Item/BOM Name
+      { wch: 15 }, // Type
+      { wch: 15 }, // Quantity
+    ];
+    ws["!cols"] = colWidths;
+
+    // Add the worksheet to the workbook
+    XLSX.utils.book_append_sheet(wb, ws, "Requested Items");
+
+    // Save the file
+    XLSX.writeFile(wb, `Material_Issue_Request_${transactionNumber}.xlsx`);
+  };
+
+  // Export Recent Requests to Excel
+  const handleExportRecentRequests = () => {
+    if (recentRequests.length === 0) {
+      toast.warning("No recent requests to export");
+      return;
+    }
+
+    // Create worksheet data
+    const wsData = [
+      ["Material Issue Request - Recent Requests"],
+      ["Generated on: " + new Date().toLocaleString()],
+      [], // Empty row for spacing
+      ["Transaction #", "Date", "Type", "Status"],
+    ];
+
+    // Add data rows
+    recentRequests.forEach((req) => {
+      wsData.push([req.transactionNumber, req.createdAt, req.type, req.status]);
+    });
+
+    // Create workbook and worksheet
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    // Set column widths
+    const colWidths = [
+      { wch: 20 }, // Transaction #
+      { wch: 20 }, // Date
+      { wch: 15 }, // Type
+      { wch: 15 }, // Status
+    ];
+    ws["!cols"] = colWidths;
+
+    // Add the worksheet to the workbook
+    XLSX.utils.book_append_sheet(wb, ws, "Recent Requests");
+
+    // Save the file
+    XLSX.writeFile(
+      wb,
+      `Recent_Material_Requests_${new Date().toISOString().split("T")[0]}.xlsx`
+    );
+  };
+
   const handleReset = (e) => {
     if (e) e.preventDefault();
 
@@ -39,7 +124,7 @@ const MaterialIssueRequest = () => {
     setType("");
     setQuantity("");
     setIsBOMAdded(false);
-    setWarehouse("");
+    // setWarehouse("");
 
     // Reset available items from the original items list
     const itemNames = itemsList.map((item) => ({
@@ -90,7 +175,7 @@ const MaterialIssueRequest = () => {
 
   const fetchWarehouseList = async () => {
     try {
-      const response = await api.get("/api/warehouses/wip");
+      const response = await api.get("/api/warehouses/store-and-wip");
       console.log("Warehouse list response:", response.data.data);
       setWarehouseList(response.data.data);
     } catch (error) {
@@ -100,6 +185,7 @@ const MaterialIssueRequest = () => {
   };
 
   useEffect(() => {
+    // Fetch warehouse list and set warehouse from cookies on component mount
     // Fetch warehouse list and set warehouse from cookies on component mount
     fetchWarehouseList();
     const userWarehouseId = Cookies.get("warehouseId");
@@ -275,6 +361,7 @@ const MaterialIssueRequest = () => {
       console.log("Selected BOM ID: " + bom);
       const selectedBOM = bomList.find((b) => b.id === bom);
       setSelectedOption(selectedBOM);
+      setSelectedOption(selectedBOM);
       if (!selectedBOM) {
         toast.error("Selected BOM not found");
         return;
@@ -372,7 +459,6 @@ const MaterialIssueRequest = () => {
       setRequisitionType("");
     }
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -383,35 +469,28 @@ const MaterialIssueRequest = () => {
 
     try {
       // Determine type based on the first item
-      const requestType = request[0].type === "BOM" ? "bom" : "items";
-      console.log("Warehouse: " + warehouse);
-      // Format data for API
-      // const formattedItems = request.map((item) => ({
-      //   id: item.id,
-      //   name: item.name,
-      //   code: item.code,
-      //   type: item.type.toLowerCase(),
-      //   quantity: Number(item.quantity),
-      // }));
+      const requestType = request[0].type === "BOM" ? "bom" : "item";
+
+      // Format items based on the new structure
       const formattedItems = request.flatMap((item) => {
-        if (item.type === "bom" || item.type === "BOM") {
-          // BOM - flatten the sub-items with calculated quantity
+        if (item.type === "BOM") {
+          // BOM items - use the warehouse ID from each sub-item
           return item.items.map((subItem) => ({
-            id: subItem.itemId,
-            name: subItem.itemName,
             code: subItem.itemCode,
-            type: "item", // sub-items are always individual items
+            name: subItem.itemName,
+            type: "bom items",
             quantity: Number(subItem.calculatedQuantity),
+            warehouseId: Number(subItem.warehouseId), // Inner warehouse ID from where item will be issued
           }));
         } else {
           // Individual item
           return [
             {
-              id: item.id,
-              name: item.name,
               code: item.code,
+              name: item.name,
               type: "item",
               quantity: Number(item.quantity),
+              warehouseId: Number(item.warehouse), // Inner warehouse ID from where item will be issued
             },
           ];
         }
@@ -420,9 +499,9 @@ const MaterialIssueRequest = () => {
       const payload = {
         transactionNumber,
         type: requestType,
-        bomName: selectedOption.name,
-        bomCode: selectedOption.code,
-        warehouseId: Number(warehouse),
+        warehouseId: Number(warehouse), // Outer warehouse ID (who is raising this requisition)
+        bomCode: request[0].type === "BOM" ? request[0].code : undefined,
+        bomName: request[0].type === "BOM" ? request[0].name : undefined,
         items: formattedItems,
       };
 
@@ -454,7 +533,6 @@ const MaterialIssueRequest = () => {
     }
   };
 
-  // Auto generate transaction number
   const generateTransactionNumber = () => {
     const year = new Date().getFullYear();
     const randomNum = Math.floor(1000 + Math.random() * 9000);
@@ -520,6 +598,15 @@ const MaterialIssueRequest = () => {
   // Save button in Item Details modal
   const handleSaveItemDetails = () => {
     if (!selectedItem) return;
+
+    // Validate that all items have a warehouse selected
+    const missingWarehouse = selectedItem.items.some(
+      (item) => !item.warehouseId
+    );
+    if (missingWarehouse) {
+      toast.error("Please select warehouse for all items");
+      return;
+    }
 
     const updatedRequest = request.map((reqItem) =>
       reqItem.id === selectedItem.id
@@ -840,14 +927,24 @@ const MaterialIssueRequest = () => {
               <div className="table-container">
                 <div className="table-header">
                   <h6>Requested Items</h6>
+                  <button
+                    type="button"
+                    className="btn btn-outline-success px-2 py-1 text-8"
+                    onClick={handleExportRequestedItems}
+                  >
+                    <i className="fa-solid fa-file-excel me-1"></i> Export Excel
+                  </button>
                 </div>
                 <table className="align-middle">
                   <thead>
                     <tr>
-                      <th>Item Code</th>
+                      <th>Item/BOM Code</th>
                       <th>Item/BOM Name</th>
                       <th>Type</th>
                       <th>Quantity</th>
+                      {request.length > 0 && request[0].type === "Item" && (
+                        <th>Warehouse</th>
+                      )}
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -865,34 +962,47 @@ const MaterialIssueRequest = () => {
                             <span>{i.type}</span>
                           </td>
                           <td className="ps-4">
-                            <span>
-                              {/* <input
-                                type="text"
-                                className="form-control text-8"
-                                value={i.quantity}
-                                onChange={(e) =>
-                                  handleQuantityChange(i.id, e.target.value)
-                                }
-                              /> */}
-                              {i.quantity}
-                            </span>
+                            <span>{i.quantity}</span>
                           </td>
+                          {i.type === "Item" && (
+                            <td className="ps-4">
+                              <select
+                                className="form-select text-font"
+                                value={i.warehouse || ""}
+                                onChange={(e) => {
+                                  const updatedRequest = request.map((item) =>
+                                    item.id === i.id
+                                      ? { ...item, warehouse: e.target.value }
+                                      : item
+                                  );
+                                  setRequest(updatedRequest);
+                                }}
+                              >
+                                <option value="" disabled>
+                                  Select Warehouse
+                                </option>
+                                {warehouseList.map((w) => (
+                                  <option key={w.id} value={w.id}>
+                                    {w.name}
+                                  </option>
+                                ))}
+                              </select>
+                            </td>
+                          )}
                           <td className="actions ps-4">
                             <button
                               type="button"
-                              className={`btn-icon btn-primary ${
+                              className={`btn-icon view ${
                                 i.type !== "BOM" ? "d-none" : ""
                               }`}
                               title="View Details"
-                              data-bs-toggle="modal"
-                              data-bs-target="#viewModal"
                               onClick={() => handleView(i)}
                             >
                               <i className="fas fa-eye"></i>
                             </button>
                             <button
                               type="button"
-                              className="btn-icon btn-danger"
+                              className="btn-icon delete"
                               title="Delete"
                               onClick={() => handleDelete(i.id)}
                             >
@@ -903,7 +1013,7 @@ const MaterialIssueRequest = () => {
                       ))
                     ) : (
                       <tr className="no-data-row">
-                        <td colSpan="5" className="no-data-cell">
+                        <td colSpan="6" className="no-data-cell">
                           <div className="no-data-content">
                             <i className="fas fa-clipboard-list no-data-icon"></i>
                             <p className="no-data-text">No Items Requested</p>
@@ -941,6 +1051,13 @@ const MaterialIssueRequest = () => {
               <div className="table-container">
                 <div className="table-header">
                   <h6>Recent Requests</h6>
+                  <button
+                    type="button"
+                    className="btn btn-outline-success px-2 py-1 text-8"
+                    onClick={handleExportRecentRequests}
+                  >
+                    <i className="fa-solid fa-file-excel me-1"></i> Export Excel
+                  </button>
                 </div>
                 <table className="align-middle">
                   <thead>
@@ -949,20 +1066,21 @@ const MaterialIssueRequest = () => {
                       <th>Date</th>
                       <th>Type</th>
                       <th>Items</th>
-                      <th>Status</th>
+                      <th>Store Status</th>
+                      <th>Approval Status</th>
                     </tr>
                   </thead>
                   <tbody className="text-break">
                     {recentRequests.length > 0 ? (
                       recentRequests.map((req, index) => (
                         <tr key={index}>
-                          <td className="ps-4">{req.transactionNumber}</td>
-                          <td className="ps-4">{req.createdAt}</td>
-                          <td className="ps-4 text-capitalize">{req.type}</td>
-                          <td className="ps-4">
+                          <td>{req.transactionNumber}</td>
+                          <td>{req.createdAt}</td>
+                          <td className="text-capitalize">{req.type}</td>
+                          <td>
                             <button
                               type="button"
-                              className="btn-icon btn-primary"
+                              className="btn-icon view"
                               title="View Items"
                               onClick={() => {
                                 setSelectedRecentRequest(req);
@@ -972,11 +1090,18 @@ const MaterialIssueRequest = () => {
                               <i className="fas fa-eye"></i>
                             </button>
                           </td>
-                          <td className="ps-4">
+                          <td>
                             <span
                               className={`status-badge ${req.status.toLowerCase()}`}
                             >
                               {req.status}
+                            </span>
+                          </td>
+                          <td>
+                            <span
+                              className={`status-badge ${req.approvalStatus.toLowerCase()}`}
+                            >
+                              {req.approvalStatus}
                             </span>
                           </td>
                         </tr>
@@ -1154,7 +1279,34 @@ const MaterialIssueRequest = () => {
                                 disabled
                               />
                             </td>
-                            <td>{item.warehouseName}</td>
+                            <td>
+                              <select
+                                className="form-select text-font"
+                                value={item.warehouseId || ""}
+                                onChange={(e) => {
+                                  const updatedItems = selectedItem.items.map(
+                                    (i) =>
+                                      i.itemCode === item.itemCode
+                                        ? { ...i, warehouseId: e.target.value }
+                                        : i
+                                  );
+                                  setSelectedItem({
+                                    ...selectedItem,
+                                    items: updatedItems,
+                                  });
+                                }}
+                              >
+                                <option value="" disabled>
+                                  Select Warehouse
+                                </option>
+                                {warehouseList.map((w) => (
+                                  <option key={w.id} value={w.id}>
+                                    {w.name}
+                                  </option>
+                                ))}
+                              </select>
+                              {/* {item.warehouseName} */}
+                            </td>
                           </tr>
                         ))}
                       </tbody>

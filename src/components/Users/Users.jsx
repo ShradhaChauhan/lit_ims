@@ -145,15 +145,64 @@ const Users = () => {
       errors.role = "Role is required";
     }
 
-    if (!data.department || data.department.trim() === "") {
-      errors.department = "Department is required";
-    }
+    // if (
+    //   !data.department ||
+    //   !Array.isArray(data.department) ||
+    //   data.department.length === 0
+    // ) {
+    //   errors.department = "At least one department must be selected";
+    // }
 
     // Check if branch is selected - using selectedOptions from state
     if (!selectedOptions || selectedOptions.length === 0) {
       errors.branch = "At least one branch must be selected";
     }
     return errors;
+  };
+
+  // Function to export users data to Excel
+  const handleExportToExcel = () => {
+    // Filter users based on current filters
+    const filteredUsers = users.filter((user) => {
+      const search = searchTerm.toLowerCase();
+      const matchSearch =
+        user.name.toLowerCase().includes(search) ||
+        user.email.toLowerCase().includes(search) ||
+        user.role.toLowerCase().includes(search);
+
+      const matchRole =
+        filterRole === "" ||
+        user.role.toLowerCase() === filterRole.toLowerCase();
+
+      const matchStatus =
+        filterStatus === "" ||
+        user.status.toLowerCase() === filterStatus.toLowerCase();
+
+      return matchSearch && matchRole && matchStatus;
+    });
+
+    if (filteredUsers.length === 0) {
+      toast.warning("No data available to export!");
+      return;
+    }
+
+    // Format data for export
+    const exportData = filteredUsers.map((user) => ({
+      Name: user.name,
+      Role: user.role,
+      Email: user.email,
+      "Last Login": user.time || "Never",
+      Status: user.status,
+    }));
+
+    // Create worksheet
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Users");
+
+    // Generate and save file
+    XLSX.writeFile(wb, "Users_Data.xlsx");
+    toast.success("Successfully exported to Excel");
   };
 
   // Fetch users from API
@@ -393,7 +442,7 @@ const Users = () => {
         console.warn("No users data found in the response:", response.data);
       }
     } catch (error) {
-      toast.error("Error in fetching users. Please try again");
+      toast.error(error.response.data.message);
       console.error("Error fetching users:", error);
     } finally {
       setLoading(false);
@@ -694,9 +743,11 @@ const Users = () => {
     console.log("Validation errors:", newErrors);
 
     if (Object.keys(newErrors).length !== 0) {
-      toast.error(
-        "All fields are required. Please complete the form before submission"
-      );
+      // Show specific error messages
+      const errorMessages = Object.values(newErrors).join('\n');
+      toast.error(errorMessages, {
+        style: { whiteSpace: 'pre-line' } // This allows line breaks in toast
+      });
     }
     if (Object.keys(newErrors).length === 0) {
       const finalData = {
@@ -1153,7 +1204,10 @@ const Users = () => {
       }
     } catch (error) {
       console.error("Error fetching user details:", error);
-      toast.error("Failed to fetch user details. Please try again.");
+      toast.error(
+        error.response.data.message ||
+          "Failed to fetch user details. Please try again."
+      );
     }
   };
 
@@ -1472,7 +1526,10 @@ const Users = () => {
       }
     } catch (error) {
       console.error("Error fetching user details:", error);
-      toast.error("Failed to fetch user details. Please try again.");
+      toast.error(
+        error.response.data.message ||
+          "Failed to fetch user details. Please try again."
+      );
     }
   };
 
@@ -1624,7 +1681,11 @@ const Users = () => {
     setErrors(validationErrors);
 
     if (Object.keys(validationErrors).length > 0) {
-      toast.error("Please fix the validation errors before submitting.");
+      // Show specific error messages
+      const errorMessages = Object.values(validationErrors).join('\n');
+      toast.error(errorMessages, {
+        style: { whiteSpace: 'pre-line' } // This allows line breaks in toast
+      });
       console.log("Form has validation errors"); // Debug log
       return;
     }
@@ -2065,7 +2126,28 @@ const Users = () => {
                           </option>
                         ))}
                       </select>
+                      {/* <Select
+                        className={`form-control p-0 text-font border-0 ${
+                          errors.department ? "is-invalid" : ""
+                        }`}
+                        options={warehouse.map(w => ({ value: w.name, label: w.name }))}
+                        isMulti
+                        id="department"
+                        value={(formData.department || []).map(d => ({ value: d, label: d }))}
+                        onChange={(options) => {
+                          const selectedValues = (options || []).map(opt => opt.value);
+                          setFormData({
+                            ...formData,
+                            department: selectedValues,
+                            warehouseId: warehouse
+                              .filter((w) => selectedValues.includes(w.name))
+                              .map((w) => w.id),
+                          });
+                        }}
+                        placeholder="Select Department..."
+                      /> */}
                     </div>
+
                     {errors.department && (
                       <span className="error-message">{errors.department}</span>
                     )}
@@ -2663,12 +2745,19 @@ const Users = () => {
               </label>
             </div>
             <div className="bulk-actions">
-              <button className="btn-action">
-                <i className="fas fa-envelope"></i>
+              <button className="btn btn-outline-primary text-8">
+                <i className="fas fa-envelope me-2"></i>
                 Email Selected
               </button>
               <button
-                className="btn-action btn-danger"
+                className="btn btn-outline-success text-8"
+                onClick={handleExportToExcel}
+              >
+                <i className="fas fa-file-export me-2"></i>
+                Export Excel
+              </button>
+              <button
+                className="btn btn-outline-danger text-8"
                 onClick={() => {
                   setConfirmType("multi");
                   handleShowConfirm("multi");
@@ -2681,7 +2770,7 @@ const Users = () => {
                   </>
                 ) : (
                   <>
-                    <i className="fas fa-trash"></i> Delete Selected
+                    <i className="fas fa-trash me-1"></i> Delete Selected
                   </>
                 )}
               </button>
@@ -2765,7 +2854,7 @@ const Users = () => {
                       </td>
                       <td className="actions">
                         <button
-                          className="btn-icon btn-primary"
+                          className="btn-icon view"
                           title="View Details"
                           onClick={(e) => handleViewDetails(user, e)}
                         >
@@ -2773,7 +2862,7 @@ const Users = () => {
                         </button>
                         {ability.can("edit", "User Management") && (
                           <button
-                            className="btn-icon btn-success"
+                            className="btn-icon edit"
                             title="Edit"
                             onClick={(e) => handleEditDetails(user, e)}
                           >
@@ -2782,7 +2871,7 @@ const Users = () => {
                         )}
                         {ability.can("edit", "User Management") && (
                           <button
-                            className="btn-icon btn-danger"
+                            className="btn-icon delete"
                             title="Delete"
                             onClick={() => {
                               setUserIdState(user.id);
@@ -3300,7 +3389,7 @@ const Users = () => {
                               Status
                             </label>
                             <div className="position-relative w-100">
-                              <div className="form-check form-switch position-absolute z-0 input-icon mt-1 padding-left-2">
+                              <div className="position-absolute z-0 input-icon mt-1 padding-left-2">
                                 <input
                                   className="form-check-input text-font switch-style"
                                   type="checkbox"

@@ -4,6 +4,8 @@ import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../../services/api";
 import { useMemo } from "react";
+import exportToExcel from "../../utils/exportToExcel";
+import "./Reports";
 
 const Reports = () => {
   const [isShowDetails, setIsShowDetails] = useState(false);
@@ -16,6 +18,19 @@ const Reports = () => {
   const reportModalRef = useRef(null);
   const itemModalRef = useRef(null);
   const transactionModalRef = useRef(null);
+
+  // View toggle state (warehouse-wise or item-wise)
+  const [viewMode, setViewMode] = useState("warehouse"); // 'warehouse' or 'item'
+
+  // Item-wise report states
+  const [items, setItems] = useState([]);
+  const [filteredItemsReport, setFilteredItemsReport] = useState([]);
+  const [itemSearchQuery, setItemSearchQuery] = useState("");
+  const [itemSortConfig, setItemSortConfig] = useState({
+    key: null,
+    direction: null,
+  });
+
   // Serach and filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
@@ -95,10 +110,39 @@ const Reports = () => {
       const backdrops = document.querySelectorAll(".modal-backdrop");
       backdrops.forEach((bd) => bd.remove());
       document.body.classList.remove("modal-open");
-      document.body.style.overflow = ""; 
+      document.body.style.overflow = "";
     };
   }, []);
-  
+
+  // Sort items based on itemSortConfig
+  const handleItemSort = (key) => {
+    setItemSortConfig((prev) => {
+      if (prev.key === key) {
+        // Toggle direction
+        return {
+          key,
+          direction: prev.direction === "asc" ? "desc" : "asc",
+        };
+      } else {
+        // Set default to ascending
+        return {
+          key,
+          direction: "asc",
+        };
+      }
+    });
+  };
+
+  // Unmount backdrop
+  useEffect(() => {
+    return () => {
+      // Force-remove bootstrap modal backdrop if stuck
+      const backdrops = document.querySelectorAll(".modal-backdrop");
+      backdrops.forEach((bd) => bd.remove());
+      document.body.classList.remove("modal-open");
+      document.body.style.overflow = "";
+    };
+  }, []);
 
   // Filtered warehouses based on search query
   const filteredWarehouses = useMemo(() => {
@@ -173,7 +217,7 @@ const Reports = () => {
 
       const response = await api.get(`/api/inventory/warehouse/${warehouseId}`);
       const data = response.data.data;
-
+      console.log("WarehouseDetail: " + JSON.stringify(data));
       setWarehouseDetail(data);
 
       // Open modal after data is set
@@ -361,9 +405,58 @@ const Reports = () => {
       });
   };
 
+  // Fetch all items for item-wise report
+  const fetchItemByCode = (code) => {
+    let itemCode = "";
+    if (code.length > 30) {
+      itemCode = code.substring(7, 15);
+    } else {
+      itemCode = code;
+    }
+    api
+      .get(`/api/inventory/stock-by-item/${itemCode}`)
+      .then((response) => {
+        if (response.data && response.data.status) {
+          console.log("Items: " + JSON.stringify(response.data.data));
+          setItems(response.data.data || []);
+        } else {
+          console.error(
+            "Error fetching items:",
+            response.data.message || "Unknown error"
+          );
+          toast.error(
+            "Error in fetching items. Please refresh the page and try again"
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching items:", error);
+        toast.error("Error in fetching items. Please try again");
+      });
+  };
+
   useEffect(() => {
     fetchWarehouses();
   }, []);
+
+  // Sort items based on itemSortConfig
+  const sortedItems = useMemo(() => {
+    let result = [...items];
+
+    // Apply sort
+    if (itemSortConfig.key) {
+      result.sort((a, b) => {
+        const aVal = (a[itemSortConfig.key] || "").toString().toLowerCase();
+        const bVal = (b[itemSortConfig.key] || "").toString().toLowerCase();
+
+        if (aVal < bVal) return itemSortConfig.direction === "asc" ? -1 : 1;
+        if (aVal > bVal) return itemSortConfig.direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return result;
+  }, [items, itemSortConfig]);
 
   // Modal effects
   useEffect(() => {
@@ -386,6 +479,17 @@ const Reports = () => {
       setModalSortConfig({ key: null, direction: null });
     }
   }, [isShowDetails]);
+
+  // Reset search and sort when view mode changes
+  useEffect(() => {
+    if (viewMode === "warehouse") {
+      setItemSearchQuery("");
+      setItemSortConfig({ key: null, direction: null });
+    } else {
+      setSearchQuery("");
+      setSortConfig({ key: null, direction: null });
+    }
+  }, [viewMode]);
 
   useEffect(() => {
     if (isShowItemDetails && itemModalRef.current) {
@@ -417,10 +521,12 @@ const Reports = () => {
 
   // Calculate the display range for the pagination info
   const getDisplayRange = () => {
+    const currentData =
+      viewMode === "warehouse" ? filteredWarehouses : filteredItemsReport;
     const start = (pagination.currentPage - 1) * pagination.itemsPerPage + 1;
-    const end = Math.min(start + reports.length - 1, pagination.totalItems);
+    const end = Math.min(start + currentData.length - 1, pagination.totalItems);
 
-    if (reports.length === 0) {
+    if (currentData.length === 0) {
       return "0";
     }
 
@@ -493,18 +599,22 @@ const Reports = () => {
   };
 
   // Fetch item history when opening Item History modal
-  const handleOpenItemHistory = (warehouseDetail) => {
+  const handleOpenItemHistory = (itemData) => {
     setIsShowItemDetails(true);
-    setViewItemsData(warehouseDetail);
-    setIsShowDetails(true);
+    setViewItemsData(itemData);
+
+    // If coming from warehouse view, keep isShowDetails true
+    // If coming from item view, we need to explicitly set it
+    if (viewMode === "item") {
+      setIsShowDetails(true);
+    }
+
     // Fetch item history from API
     api
       .post("/api/warehouse-transfer-logs/filter", {
-        itemCode: warehouseDetail.itemCode,
+        itemCode: itemData.itemCode || itemData.code,
         sourceWarehouseId:
-          warehouseDetail.warehouseId ||
-          warehouseDetail.sourceWarehouseId ||
-          warehouseDetail.id,
+          itemData.warehouseId || itemData.sourceWarehouseId || itemData.id,
       })
       .then((response) => {
         if (response.data && response.data.status) {
@@ -516,6 +626,73 @@ const Reports = () => {
       .catch(() => {
         setItemHistory([]);
       });
+  };
+
+  // Export warehouse data to Excel
+  const handleExportWarehouseReport = () => {
+    if (filteredWarehouses.length === 0) {
+      toast.warning("No data available to export!");
+      return;
+    }
+
+    // Format warehouse data for export
+    const exportData = filteredWarehouses.map((warehouse) => ({
+      "Warehouse Name": warehouse.name,
+      "Warehouse Code": warehouse.code,
+      "Warehouse Type": warehouse.type,
+      Location: warehouse.location || "N/A",
+    }));
+
+    exportToExcel(exportData, "Warehouse_Audit_Report");
+  };
+
+  // Export item data to Excel
+  const handleExportItemReport = () => {
+    if (items.length === 0) {
+      toast.warning("No data available to export!");
+      return;
+    }
+
+    // Format item data for export
+    const exportData = items.map((item) => ({
+      "Item Name": item.itemName,
+      "Item Code": item.itemCode,
+      Warehouse: item.warehouseName,
+      Quantity: item.quantity,
+      UOM: item.uom || "N/A",
+    }));
+
+    exportToExcel(exportData, "Item_Audit_Report");
+  };
+
+  // Export item history data to Excel
+  const handleExportItemHistoryReport = () => {
+    if (itemHistory.length === 0) {
+      toast.warning("No item history data available to export!");
+      return;
+    }
+
+    // Format item history data for export
+    const exportData = itemHistory.map((item) => ({
+      "TR No": item.trNo,
+      Date: item.transferredAt
+        ? new Date(item.transferredAt).toLocaleString()
+        : "N/A",
+      "Item Code": item.itemCode,
+      "Item Name": item.itemName,
+      "Transferred From": item.sourceWarehouseName,
+      "Transferred To": item.targetWarehouseName,
+      Quantity: item.quantity,
+      "Transferred By": item.transferredBy,
+      Status: "Complete",
+    }));
+
+    exportToExcel(
+      exportData,
+      `Item_History_${
+        viewItemsData?.itemCode || viewItemsData?.code || "Report"
+      }`
+    );
   };
 
   return (
@@ -536,114 +713,293 @@ const Reports = () => {
           </div>
         </div>
       </nav>
+
+      {/* View Mode Toggle - Enhanced Premium Design */}
+      <div className="mx-2 mt-4 mb-4">
+        <div
+          className="premium-tabs-container"
+          style={{
+            display: "flex",
+            borderBottom: "1px solid #dee2e6",
+            marginBottom: "15px",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+          }}
+        >
+          <div
+            className={`premium-tab ${
+              viewMode === "warehouse" ? "active" : ""
+            }`}
+            onClick={() => setViewMode("warehouse")}
+            style={{
+              padding: "14px 25px",
+              cursor: "pointer",
+              fontWeight: viewMode === "warehouse" ? "600" : "500",
+              borderBottom:
+                viewMode === "warehouse" ? "3px solid #007bff" : "none",
+              color: viewMode === "warehouse" ? "#007bff" : "#495057",
+              transition: "all 0.3s ease",
+              marginRight: "10px",
+              fontSize: "15px",
+              display: "flex",
+              alignItems: "center",
+              backgroundColor:
+                viewMode === "warehouse" ? "#f8f9fa" : "transparent",
+            }}
+          >
+            <i
+              className="fas fa-warehouse me-2"
+              style={{ fontSize: "16px" }}
+            ></i>
+            Warehouse-wise Report
+          </div>
+          <div
+            className={`premium-tab ${viewMode === "item" ? "active" : ""}`}
+            onClick={() => setViewMode("item")}
+            style={{
+              padding: "14px 25px",
+              cursor: "pointer",
+              fontWeight: viewMode === "item" ? "600" : "500",
+              borderBottom: viewMode === "item" ? "3px solid #007bff" : "none",
+              color: viewMode === "item" ? "#007bff" : "#495057",
+              transition: "all 0.3s ease",
+              fontSize: "15px",
+              display: "flex",
+              alignItems: "center",
+              backgroundColor: viewMode === "item" ? "#f8f9fa" : "transparent",
+            }}
+          >
+            <i className="fas fa-box me-2" style={{ fontSize: "16px" }}></i>
+            Item-wise Report
+          </div>
+        </div>
+      </div>
+
       {/* Search and Filter Section */}
       <div className="search-filter-container mx-2">
-        <div className="search-box">
+        <div className="search-box text-8">
           <i className="fas fa-search position-absolute z-0 input-icon"></i>
-          <input
-            type="text"
-            className="form-control vendor-search-bar"
-            placeholder="Search by warehouse by name, code, type..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+          {viewMode === "warehouse" ? (
+            <input
+              type="text"
+              className="form-control vendor-search-bar"
+              placeholder="Search by warehouse by name, code, type..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          ) : (
+            <div className="d-flex">
+              <input
+                type="text"
+                className="form-control vendor-search-bar me-2"
+                placeholder="Search by item code, or scan batch number..."
+                value={itemSearchQuery}
+                onChange={(e) => setItemSearchQuery(e.target.value)}
+              />
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  if (itemSearchQuery.trim()) {
+                    fetchItemByCode(itemSearchQuery);
+                  } else {
+                    setItems([]);
+                  }
+                }}
+              >
+                <i className="fas fa-search"></i> Search
+              </button>
+            </div>
+          )}
         </div>
-        <div className="filter-options">
+        <div className="filter-options d-flex">
           <button
-            className="filter-select"
+            className="btn btn-outline-secondary text-8 me-2"
             onClick={() => {
-              setSearchQuery("");
-              setSelectedLocation("");
-              setSelectedIQCStatus("");
-              setSortConfig({ key: null, direction: null });
+              if (viewMode === "warehouse") {
+                setSearchQuery("");
+                setSelectedLocation("");
+                setSelectedIQCStatus("");
+                setSortConfig({ key: null, direction: null });
+              } else {
+                setItemSearchQuery("");
+                setItems([]);
+                setItemSortConfig({ key: null, direction: null });
+              }
             }}
           >
             <i className="fas fa-filter me-2"></i>
             Reset Filters
+          </button>
+
+          {/* Export to Excel Button */}
+          <button
+            className="btn btn-outline-success text-8"
+            onClick={
+              viewMode === "warehouse"
+                ? handleExportWarehouseReport
+                : handleExportItemReport
+            }
+          >
+            <i className="fas fa-file-excel me-2"></i>
+            Export to Excel
           </button>
         </div>
       </div>
       {/* Table Section */}
       <div className="margin-2 mx-2">
         <div className="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th
-                  onClick={() => handleSort("name")}
-                  style={{ cursor: "pointer" }}
-                >
-                  Warehouse Name{" "}
-                  {sortConfig.key === "name" &&
-                    (sortConfig.direction === "asc" ? (
-                      <i className="fa-solid fa-sort-up"></i>
-                    ) : (
-                      <i className="fa-solid fa-sort-down"></i>
-                    ))}
-                </th>
-                <th
-                  onClick={() => handleSort("code")}
-                  style={{ cursor: "pointer" }}
-                >
-                  Warehouse Code{" "}
-                  {sortConfig.key === "code" &&
-                    (sortConfig.direction === "asc" ? (
-                      <i className="fa-solid fa-sort-up"></i>
-                    ) : (
-                      <i className="fa-solid fa-sort-down"></i>
-                    ))}
-                </th>
-                <th
-                  onClick={() => handleSort("type")}
-                  style={{ cursor: "pointer" }}
-                >
-                  Warehouse Type{" "}
-                  {sortConfig.key === "type" &&
-                    (sortConfig.direction === "asc" ? (
-                      <i className="fa-solid fa-sort-up"></i>
-                    ) : (
-                      <i className="fa-solid fa-sort-down"></i>
-                    ))}
-                </th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-
-            <tbody className="text-break">
-              {filteredWarehouses.length === 0 ? (
-                <tr className="no-data-row">
-                  <td colSpan="4" className="no-data-cell">
-                    <div className="no-data-content">
-                      <i className="fa-solid fa-chart-line no-data-icon"></i>
-                      <p className="no-data-text">No audit reports found</p>
-                    </div>
-                  </td>
+          {viewMode === "warehouse" ? (
+            <table>
+              <thead>
+                <tr>
+                  <th
+                    onClick={() => handleSort("code")}
+                    style={{ cursor: "pointer" }}
+                  >
+                    Warehouse Code{" "}
+                    {sortConfig.key === "code" &&
+                      (sortConfig.direction === "asc" ? (
+                        <i className="fa-solid fa-sort-up"></i>
+                      ) : (
+                        <i className="fa-solid fa-sort-down"></i>
+                      ))}
+                  </th>
+                  <th
+                    onClick={() => handleSort("name")}
+                    style={{ cursor: "pointer" }}
+                  >
+                    Warehouse Name{" "}
+                    {sortConfig.key === "name" &&
+                      (sortConfig.direction === "asc" ? (
+                        <i className="fa-solid fa-sort-up"></i>
+                      ) : (
+                        <i className="fa-solid fa-sort-down"></i>
+                      ))}
+                  </th>
+                  <th
+                    onClick={() => handleSort("type")}
+                    style={{ cursor: "pointer" }}
+                  >
+                    Warehouse Type{" "}
+                    {sortConfig.key === "type" &&
+                      (sortConfig.direction === "asc" ? (
+                        <i className="fa-solid fa-sort-up"></i>
+                      ) : (
+                        <i className="fa-solid fa-sort-down"></i>
+                      ))}
+                  </th>
+                  <th>Actions</th>
                 </tr>
-              ) : (
-                filteredWarehouses.map((w) => (
-                  <tr key={w.id}>
-                    <td className="ps-4">{w.name}</td>
-                    <td className="ps-4">{w.code}</td>
-                    <td className="ps-4">{w.type}</td>
-                    <td className="actions ps-4">
-                      <button
-                        className="btn-icon btn-primary"
-                        title="View Details"
-                        onClick={() => fetchWarehouseItems(w.id)}
-                      >
-                        <i className="fas fa-eye"></i>
-                      </button>
+              </thead>
+
+              <tbody className="text-break">
+                {filteredWarehouses.length === 0 ? (
+                  <tr className="no-data-row">
+                    <td colSpan="4" className="no-data-cell">
+                      <div className="no-data-content">
+                        <i className="fa-solid fa-chart-line no-data-icon"></i>
+                        <p className="no-data-text">No audit reports found</p>
+                      </div>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  filteredWarehouses.map((w) => (
+                    <tr key={w.id}>
+                      <td className="ps-4">{w.code}</td>
+                      <td className="ps-4">{w.name}</td>
+                      <td className="ps-4">{w.type}</td>
+                      <td className="actions ps-4">
+                        <button
+                          className="btn-icon view"
+                          title="View Details"
+                          onClick={() => fetchWarehouseItems(w.id)}
+                        >
+                          <i className="fas fa-eye"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          ) : (
+            <table>
+              <thead>
+                <tr>
+                  <th
+                    onClick={() => handleItemSort("itemName")}
+                    style={{ cursor: "pointer" }}
+                  >
+                    Item{" "}
+                    {itemSortConfig.key === "itemName" &&
+                      (itemSortConfig.direction === "asc" ? (
+                        <i className="fa-solid fa-sort-up"></i>
+                      ) : (
+                        <i className="fa-solid fa-sort-down"></i>
+                      ))}
+                  </th>
+                  <th
+                    onClick={() => handleItemSort("warehouseName")}
+                    style={{ cursor: "pointer" }}
+                  >
+                    Warehouse Name{" "}
+                    {itemSortConfig.key === "warehouseName" &&
+                      (itemSortConfig.direction === "asc" ? (
+                        <i className="fa-solid fa-sort-up"></i>
+                      ) : (
+                        <i className="fa-solid fa-sort-down"></i>
+                      ))}
+                  </th>
+                  <th
+                    onClick={() => handleItemSort("quantity")}
+                    style={{ cursor: "pointer" }}
+                  >
+                    Quantity{" "}
+                    {itemSortConfig.key === "quantity" &&
+                      (itemSortConfig.direction === "asc" ? (
+                        <i className="fa-solid fa-sort-up"></i>
+                      ) : (
+                        <i className="fa-solid fa-sort-down"></i>
+                      ))}
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody className="text-break">
+                {sortedItems.length === 0 ? (
+                  <tr className="no-data-row">
+                    <td colSpan="3" className="no-data-cell">
+                      <div className="no-data-content">
+                        <i className="fa-solid fa-box no-data-icon"></i>
+                        <p className="no-data-text">No items found</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  sortedItems.map((item) => (
+                    <tr key={item.id}>
+                      <td>{"(" + item.itemCode + ") - " + item.itemName}</td>
+                      <td>{item.warehouseName}</td>
+                      <td>{item.quantity + " " + item.uom.toLowerCase()}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          )}
 
           {/* Pagination */}
           <div className="pagination-container">
             <div className="pagination-info">
-              Showing {getDisplayRange()} of {filteredItems.length} entries
+              {viewMode === "warehouse" ? (
+                <>
+                  Showing {getDisplayRange()} of {filteredItems.length} entries
+                </>
+              ) : (
+                <>
+                  Showing {getDisplayRange()} of {sortedItems.length}{" "}
+                  entries
+                </>
+              )}
             </div>
             <div className="pagination">
               <button
@@ -725,11 +1081,11 @@ const Reports = () => {
                 <div className="margin-2 mx-2">
                   {/* Search and Filter Section */}
                   <div className="search-filter-container mx-2">
-                    <div className="search-box">
+                    <div className="search-box text-8">
                       <i className="fas fa-search position-absolute z-0 input-icon"></i>
                       <input
                         type="text"
-                        className="form-control mb-2"
+                        className="form-control"
                         placeholder="Search by item name, code, or UOM"
                         value={modalSearchQuery}
                         onChange={(e) => setModalSearchQuery(e.target.value)}
@@ -737,7 +1093,7 @@ const Reports = () => {
                     </div>
                     <div className="filter-options">
                       <button
-                        className="filter-select"
+                        className="btn btn-outline-secondary text-8"
                         onClick={() => {
                           setModalSearchQuery("");
                           setModalSortConfig({ key: null, direction: null });
@@ -745,6 +1101,14 @@ const Reports = () => {
                       >
                         <i className="fas fa-filter me-2"></i>
                         Reset Filters
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-outline-success me-2 text-8"
+                        onClick={handleExportItemHistoryReport}
+                      >
+                        <i className="fas fa-file-excel me-2"></i>Export to
+                        Excel
                       </button>
                     </div>
                   </div>
@@ -831,7 +1195,10 @@ const Reports = () => {
                                 </td>
                                 <td className="ps-4">
                                   <div>
-                                    <span>{warehouseDetail.quantity}</span>
+                                    <span>
+                                      {warehouseDetail.quantity + " "}
+                                      {warehouseDetail.uom}
+                                    </span>
                                   </div>
                                 </td>
                                 {/* <td className="ps-5">
@@ -841,7 +1208,7 @@ const Reports = () => {
                                 </td> */}
                                 <td className="actions ps-4">
                                   <button
-                                    className="btn-icon btn-primary"
+                                    className="btn-icon view"
                                     title="View Details"
                                     onClick={() =>
                                       handleOpenItemHistory(warehouseDetail)
@@ -902,11 +1269,11 @@ const Reports = () => {
               <div className="modal-body">
                 {/* Search and Filter Section */}
                 <div className="search-filter-container mx-2">
-                  <div className="search-box">
+                  <div className="search-box text-8">
                     <i className="fas fa-search position-absolute z-0 input-icon"></i>
                     <input
                       type="text"
-                      className="form-control mb-2"
+                      className="form-control"
                       placeholder="Search by item name, code, or UOM"
                       value={modalItemSearchQuery}
                       onChange={(e) => setModalItemSearchQuery(e.target.value)}
@@ -914,7 +1281,7 @@ const Reports = () => {
                   </div>
                   <div className="filter-options">
                     <button
-                      className="filter-select"
+                      className="btn btn-outline-secondary text-8"
                       onClick={() => {
                         setModalItemSearchQuery("");
                         setModalItemSortConfig({ key: null, direction: null });
@@ -922,6 +1289,13 @@ const Reports = () => {
                     >
                       <i className="fas fa-filter me-2"></i>
                       Reset Filters
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-outline-success text-8 me-2"
+                      onClick={handleExportItemHistoryReport}
+                    >
+                      <i className="fas fa-file-excel me-2"></i>Export to Excel
                     </button>
                   </div>
                 </div>
@@ -1382,6 +1756,13 @@ const Reports = () => {
                 </div>
               </div>
               <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-success me-2"
+                  onClick={handleExportItemHistoryReport}
+                >
+                  <i className="fas fa-file-excel me-2"></i>Export to Excel
+                </button>
                 <button
                   type="button"
                   className="btn btn-secondary add-btn"

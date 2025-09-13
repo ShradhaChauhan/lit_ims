@@ -13,7 +13,7 @@ const exportToExcel = (selectedRows, compName) => {
 
   // Create a new workbook and append the worksheet
   const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Vendors");
+  XLSX.utils.book_append_sheet(workbook, worksheet, compName || "Sheet1");
 
   // Generate buffer and save
   const excelBuffer = XLSX.write(workbook, {

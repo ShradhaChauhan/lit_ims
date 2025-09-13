@@ -12,6 +12,10 @@ export function defineAbilitiesForPermissions(permissions) {
     permissions = [];
   }
 
+  // Always allow access to Store Report (bypassing permissions)
+  can("view", "Store Report");
+  can("edit", "Store Report");
+
   permissions.forEach((perm) => {
     if (perm.canView) can("view", perm.pageName);
     if (perm.canEdit) can("edit", perm.pageName);

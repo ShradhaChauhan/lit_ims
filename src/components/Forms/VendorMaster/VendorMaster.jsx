@@ -1480,13 +1480,13 @@ const VendorMaster = () => {
                   Download Template
                 </button>
                 <button
-                  className="btn-action btn-danger"
+                  className="btn btn-outline-danger text-8"
                   onClick={() => {
                     setConfirmType("multi");
                     handleShowConfirm("multi");
                   }}
                 >
-                  <i className="fas fa-trash"></i>
+                  <i className="fas fa-trash me-2"></i>
                   Delete Selected
                 </button>
               </div>
@@ -1572,36 +1572,40 @@ const VendorMaster = () => {
                           vendor.status.slice(1)}
                       </span>
                     </td>
-                    <td className="ps-4">
-                      <button
-                        className="btn-icon btn-primary"
-                        title="View Details"
-                        onClick={() => handleViewPartner(vendor.id)}
-                      >
-                        <i className="fas fa-eye"></i>
-                      </button>
-                      {ability.can("edit", "Business Partner") && (
+                    <td className="actions">
+                      <div className="actions-wrapper">
                         <button
-                          className="btn-icon btn-success"
-                          title="Edit"
-                          onClick={() => handleShowEditModal(vendor.id)}
+                          className="btn-icon view"
+                          title="View Details"
+                          onClick={() => handleViewPartner(vendor.id)}
                         >
-                          <i className="fas fa-edit"></i>
+                          <i className="fas fa-eye"></i>
                         </button>
-                      )}
-                      {ability.can("edit", "Business Partner") && (
-                        <button
-                          className="btn-icon btn-danger"
-                          title="Delete"
-                          onClick={() => {
-                            setPartnerIdState(vendor.id);
-                            setConfirmType("single");
-                            handleShowConfirm("single");
-                          }}
-                        >
-                          <i className="fas fa-trash"></i>
-                        </button>
-                      )}
+
+                        {ability.can("edit", "Business Partner") && (
+                          <button
+                            className="btn-icon edit"
+                            title="Edit"
+                            onClick={() => handleShowEditModal(vendor.id)}
+                          >
+                            <i className="fas fa-edit"></i>
+                          </button>
+                        )}
+
+                        {ability.can("edit", "Business Partner") && (
+                          <button
+                            className="btn-icon delete"
+                            title="Delete"
+                            onClick={() => {
+                              setPartnerIdState(vendor.id);
+                              setConfirmType("single");
+                              handleShowConfirm("single");
+                            }}
+                          >
+                            <i className="fas fa-trash"></i>
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))

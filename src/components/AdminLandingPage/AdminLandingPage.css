@@ -1,84 +1,397 @@
-.card {
-   background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+/* AdminLandingPage.css */
+
+.dashboard-container {
+  background-color: #f8f9fa;
+  min-height: 100vh;
 }
 
-.card:hover {
-  transform: scale(1.02);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  background-color: #f8f9fa;
+.dashboard-header {
+  border-bottom: 1px solid #e9ecef;
+}
+
+/* KPI Cards */
+.kpi-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.kpi-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.kpi-card h3 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #212529;
+}
+
+.kpi-card .text-muted {
+  font-size: 0.85rem;
+  letter-spacing: 0.02rem;
+}
+
+.kpi-card .fw-medium {
+  font-weight: 500;
+}
+
+.icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.badge-trend {
+  font-weight: 500;
+  font-size: 0.75rem;
+  padding: 0.35em 0.65em;
+}
+
+/* Navigation Tabs */
+.nav-tabs .nav-link {
+  color: #495057;
+  border: none;
+  padding: 0.75rem 1rem;
+  font-weight: 500;
+}
+
+.nav-tabs .nav-link.active {
+  color: #0d6efd;
+  background-color: transparent;
+  border-bottom: 2px solid #0d6efd;
+}
+
+.nav-tabs .nav-link:hover:not(.active) {
+  border-bottom: 2px solid #dee2e6;
+}
+
+/* Charts */
+.chart-container {
+  background-color: #fff;
+  border-radius: 0.375rem;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* Tables */
+.table-hover tbody tr:hover {
+  background-color: rgba(13, 110, 253, 0.05);
+}
+
+/* Machine Status Cards */
+.machine-card {
+  transition: all 0.2s;
+}
+
+.machine-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.machine-status-running {
+  border-left: 4px solid #198754;
+}
+
+.machine-status-idle {
+  border-left: 4px solid #ffc107;
+}
+
+.machine-status-maintenance {
+  border-left: 4px solid #0dcaf0;
+}
+
+.machine-status-error {
+  border-left: 4px solid #dc3545;
+}
+
+.machine-status-offline {
+  border-left: 4px solid #6c757d;
+}
+
+/* Notifications */
+.notification-item {
+  border-left: 3px solid transparent;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+}
+
+.notification-item:hover {
+  background-color: rgba(13, 110, 253, 0.05);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   transition: all 0.2s ease-in-out;
 }
 
-.summary .card:hover {
-  transform: scale(1.03);
-  background-color: #e9f4ff; /* light gray background on hover */
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
-  cursor: pointer;
-}
-
-.graph-carousel {
-  
+.notification-item.unread {
+  background-color: rgba(13, 110, 253, 0.08);
+  font-weight: 500;
   position: relative;
 }
 
-.carousel-arrow {
+.notification-item.unread::after {
+  content: '';
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(0, 0, 0, 0.3);
-  color: #fff;
+  top: 12px;
+  right: 12px;
+  width: 8px;
+  height: 8px;
+  background-color: #0d6efd;
+  border-radius: 50%;
+}
+
+.notification-info {
+  border-left-color: #0dcaf0;
+}
+
+.notification-warning {
+  border-left-color: #ffc107;
+}
+
+.notification-error {
+  border-left-color: #dc3545;
+}
+
+.notification-success {
+  border-left-color: #198754;
+}
+
+/* Notification Bell */
+.notification-bell-container {
+  position: relative;
+  padding: 0.5rem;
+}
+
+.notification-bell {
+  color: #495057;
+  transition: color 0.2s;
+}
+
+.notification-bell-container:hover .notification-bell {
+  color: #0d6efd;
+}
+
+.notification-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 0.65rem;
+  transform: translate(25%, -25%);
+  padding: 0.25em 0.5em;
+}
+
+/* Notification Dropdown */
+.notification-dropdown-menu {
+  width: 350px;
+  padding: 0;
   border: none;
-  padding: 0.5rem 1rem;
-  font-size: 1.5rem;
-  cursor: pointer;
-  z-index: 10;
-  border-radius: 20%;
-  transition: background 0.3s;
+  border-radius: 0.5rem;
 }
 
-.carousel-arrow:hover {
-  background: rgba(0, 0, 0, 0.6);
+.notification-header {
+  background-color: #fff;
+  width: 100%;
+  margin-left: 0;
 }
 
-.carousel-arrow.left {
-  left: 10px;
+.notification-tabs {
+  border-bottom: 1px solid #dee2e6;
+  padding: 0 0.5rem;
 }
 
-.carousel-arrow.right {
-  right: 10px;
+.notification-tabs .nav-link {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  border: none;
+  border-bottom: 2px solid transparent;
 }
 
-/* General dropdown style for notifications */
-.notification-dropdown {
-  border-radius: 8px;
-  overflow: hidden; /* makes rounded corners work for all items */
-  min-width: 280px; /* so it looks like a real notification panel */
+.notification-tabs .nav-link.active {
+  border-bottom: 2px solid #0d6efd;
 }
 
-/* Notification item styling */
-.notification-dropdown .dropdown-item {
-  padding: 10px 15px;
-  border-left: 4px solid transparent;
-  transition: all 0.2s ease-in-out;
-  font-size: 14px;
+.notification-message {
+  font-size: 0.875rem;
   line-height: 1.4;
 }
 
-/* Hover effect: subtle highlight + accent border */
-.notification-dropdown .dropdown-item:hover {
-  background-color: #f4f7ff; /* light blue shade */
-  border-left: 4px solid #3b82f6; /* professional blue accent */
-  color: #1e3a8a; /* darker blue text for emphasis */
+.notification-footer {
+  background-color: #f8f9fa;
 }
 
-/* Optional: make 'No new notifications' look muted */
-.notification-dropdown .dropdown-item.text-muted {
-  background: none !important;
-  border: none !important;
-  text-align: center;
-  padding: 12px;
+/* Responsive adjustments */
+@media (max-width: 992px) {
+  .dashboard-container {
+    padding-bottom: 2rem;
+  }
+  
+  .kpi-card h3 {
+    font-size: 1.5rem;
+  }
+  
+  .notification-dropdown-menu {
+    width: 300px;
+  }
+}
+
+@media (max-width: 768px) {
+  .kpi-card h3 {
+    font-size: 1.25rem;
+  }
+  
+  .notification-dropdown-menu {
+    width: 280px;
+  }
+}
+
+/* Card shadows and borders */
+.card {
+  transition: box-shadow 0.2s;
+}
+
+.card:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Badge styling */
+.badge {
+  font-weight: 500;
+  padding: 0.35em 0.65em;
+}
+
+/* Progress bars */
+.progress {
+  height: 0.5rem;
+  border-radius: 0.25rem;
+}
+
+/* Custom scrollbar for notification panel */
+.notification-scroll, .notification-list {
+  scrollbar-width: thin;
+  scrollbar-color: #6c757d #f8f9fa;
+}
+
+.notification-scroll::-webkit-scrollbar, .notification-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.notification-scroll::-webkit-scrollbar-track, .notification-list::-webkit-scrollbar-track {
+  background: #f8f9fa;
+}
+
+.notification-scroll::-webkit-scrollbar-thumb, .notification-list::-webkit-scrollbar-thumb {
+  background-color: #6c757d;
+  border-radius: 6px;
+}
+
+/* Animation for notifications */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.notification-item {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Notification Modal Styles */
+.notification-modal .modal-content {
+  border-radius: 0.5rem;
+  border: none;
+}
+
+.notification-modal .modal-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 1rem 1.5rem;
+}
+
+.notification-modal .modal-body {
+  padding: 1.5rem;
+}
+
+.notification-modal .modal-footer {
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 1rem 1.5rem;
+}
+
+.notification-modal .notification-item {
+  border-radius: 0.375rem;
+  margin-bottom: 0.5rem;
+  border-left-width: 4px;
+  transition: all 0.2s ease-in-out;
+}
+
+.notification-modal .notification-item:hover {
+  background-color: rgba(13, 110, 253, 0.05);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.notification-modal .notification-item.info {
+  border-left-color: #0dcaf0;
+}
+
+.notification-modal .notification-item.warning {
+  border-left-color: #ffc107;
+}
+
+.notification-modal .notification-item.error {
+  border-left-color: #dc3545;
+}
+
+.notification-modal .notification-item.success {
+  border-left-color: #198754;
+}
+
+.notification-modal .notification-item.unread {
+  background-color: rgba(13, 110, 253, 0.08);
+  font-weight: 500;
+  position: relative;
+}
+
+.notification-modal .notification-item.unread::after {
+  content: '';
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 8px;
+  height: 8px;
+  background-color: #0d6efd;
+  border-radius: 50%;
+}
+
+.notification-modal .badge {
+  font-weight: 500;
+  padding: 0.35em 0.65em;
+}
+
+/* Production Report Styles */
+.production-report {
+  margin-top: 2rem;
+}
+
+.production-report .kpi-card {
+  height: 100%;
+}
+
+.production-report .icon-circle {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.production-report .table th {
+  font-weight: 600;
+  background-color: #f8f9fa;
+}
+
+.production-report .table td {
+  vertical-align: middle;
+}
+
+.production-report .badge {
+  font-size: 0.85rem;
+  padding: 0.5em 0.85em;
 }

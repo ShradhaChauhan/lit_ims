@@ -156,11 +156,13 @@ const BOMMaster = () => {
           code: "",
           uom: "",
           quantity: "",
-          warehouse: "",
+          warehouse:
+            warehouses.find((w) => w.name.toLowerCase().includes("store"))
+              ?.id || "",
         })),
       }));
     }
-  }, []);
+  }, [warehouses]);
 
   useEffect(() => {
     api
@@ -234,6 +236,14 @@ const BOMMaster = () => {
       );
     }
 
+    // Update pagination when filters change
+    setPagination((prev) => ({
+      ...prev,
+      totalItems: filtered.length,
+      totalPages: Math.ceil(filtered.length / prev.itemsPerPage),
+      currentPage: 1, // Reset to first page when filters change
+    }));
+
     setFilteredBoms(filtered);
   }, [boms, searchTerm, selectedStatus, selectedWarehouse, selectedPart]);
 
@@ -280,8 +290,9 @@ const BOMMaster = () => {
         items: formData.items.map((item) => {
           const selectedItem =
             items.find((i) => i.id === parseInt(item.item)) || {};
-          const selectedWarehouse =
-            warehouses.find((w) => w.id === parseInt(item.warehouse)) || {};
+          const storeWarehouse =
+            warehouses.find((w) => w.name.toLowerCase().includes("store")) ||
+            {};
 
           return {
             itemId: parseInt(item.item) || 0,
@@ -289,12 +300,12 @@ const BOMMaster = () => {
             itemCode: item.code || "",
             uom: item.uom || "",
             quantity: parseFloat(item.quantity) || 0,
-            warehouseId: parseInt(item.warehouse) || 0,
-            warehouseName: selectedWarehouse.name || "",
+            warehouseId: storeWarehouse.id || 0,
+            warehouseName: storeWarehouse.name || "",
           };
         }),
       };
-
+      console.log("finalData: " + JSON.stringify(finalData));
       api
         .post("/api/bom/add", finalData)
         .then((response) => {
@@ -352,6 +363,9 @@ const BOMMaster = () => {
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
+      const storeWarehouse =
+        warehouses.find((w) => w.name.toLowerCase().includes("store")) || {};
+
       const finalData = {
         name: bomDetails.name,
         code: bomDetails.code,
@@ -362,8 +376,8 @@ const BOMMaster = () => {
           itemCode: item.itemCode,
           uom: item.uom,
           quantity: parseFloat(item.quantity),
-          warehouseId: item.warehouseId,
-          warehouseName: item.warehouseName,
+          warehouseId: storeWarehouse.id || 0,
+          warehouseName: storeWarehouse.name || "",
         })),
       };
 
@@ -389,6 +403,8 @@ const BOMMaster = () => {
   };
 
   const handleAddItemToEdit = () => {
+    const storeWarehouse =
+      warehouses.find((w) => w.name.toLowerCase().includes("store")) || {};
     setBomDetails((prev) => ({
       ...prev,
       items: [
@@ -399,8 +415,8 @@ const BOMMaster = () => {
           itemCode: "",
           uom: "",
           quantity: "",
-          warehouseId: "",
-          warehouseName: "",
+          warehouseId: storeWarehouse.id || "",
+          warehouseName: storeWarehouse.name || "",
         },
       ],
     }));
@@ -428,14 +444,14 @@ const BOMMaster = () => {
           };
         }
       } else if (field === "warehouse") {
-        const selectedWarehouse = warehouses.find(
-          (w) => w.id === parseInt(value)
+        const storeWarehouse = warehouses.find((w) =>
+          w.name.toLowerCase().includes("store")
         );
-        if (selectedWarehouse) {
+        if (storeWarehouse) {
           updatedItems[index] = {
             ...updatedItems[index],
-            warehouseId: selectedWarehouse.id,
-            warehouseName: selectedWarehouse.name,
+            warehouseId: storeWarehouse.id,
+            warehouseName: storeWarehouse.name,
           };
         }
       } else {
@@ -512,14 +528,15 @@ const BOMMaster = () => {
   // Function to fetch BOMs with pagination
   const fetchBOMs = (page = 1, perPage = pagination.itemsPerPage) => {
     api
-      .get(`/api/bom/all?page=${page}&per_page=${perPage}`)
+      .get(`/api/bom/all`)
       .then((response) => {
         if (response.data.status && response.data.data) {
-          setBoms(response.data.data);
+          const allBoms = response.data.data;
+          setBoms(allBoms);
           setPagination({
-            currentPage: response.data.current_page || page,
-            totalPages: response.data.total_pages || 1,
-            totalItems: response.data.total_items || 0,
+            currentPage: page,
+            totalPages: Math.ceil(allBoms.length / perPage),
+            totalItems: allBoms.length,
             itemsPerPage: perPage,
           });
         }
@@ -538,15 +555,22 @@ const BOMMaster = () => {
   // Handle page change
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= pagination.totalPages) {
-      fetchBOMs(newPage);
+      setPagination((prev) => ({
+        ...prev,
+        currentPage: newPage,
+      }));
     }
   };
 
   // Handle items per page change
   const handleItemsPerPageChange = (e) => {
     const newItemsPerPage = parseInt(e.target.value);
-    setPagination((prev) => ({ ...prev, itemsPerPage: newItemsPerPage }));
-    fetchBOMs(1, newItemsPerPage);
+    setPagination((prev) => ({
+      ...prev,
+      itemsPerPage: newItemsPerPage,
+      currentPage: 1, // Reset to first page when changing items per page
+      totalPages: Math.ceil(filteredBoms.length / newItemsPerPage),
+    }));
   };
 
   const handleItemChange = (index, field, value) => {
@@ -1049,14 +1073,12 @@ const BOMMaster = () => {
                                 <select
                                   className="form-control text-font w-100 ps-5"
                                   required
-                                  value={currentItem.warehouse || ""}
-                                  onChange={(e) =>
-                                    handleItemChange(
-                                      index,
-                                      "warehouse",
-                                      e.target.value
-                                    )
+                                  value={
+                                    warehouses.find((w) =>
+                                      w.name.toLowerCase().includes("store")
+                                    )?.id || ""
                                   }
+                                  disabled
                                 >
                                   <option value="">Select Warehouse</option>
                                   {warehouses.map((warehouse) => (
@@ -1064,7 +1086,7 @@ const BOMMaster = () => {
                                       key={warehouse.id}
                                       value={warehouse.id}
                                     >
-                                      {warehouse.name} ({warehouse.code})
+                                      {warehouse.name}
                                     </option>
                                   ))}
                                 </select>
@@ -1075,7 +1097,7 @@ const BOMMaster = () => {
                             <div className="field-wrapper">
                               <button
                                 type="button"
-                                className="btn-icon btn-danger ms-2"
+                                className="btn-icon delete ms-2"
                                 title="Remove Item"
                                 onClick={() => handleDeleteItem(bomPart.id)}
                                 disabled={isAddBomPart.length <= 1}
@@ -1111,7 +1133,10 @@ const BOMMaster = () => {
                           code: "",
                           uom: "",
                           quantity: "",
-                          warehouse: "",
+                          warehouse:
+                            warehouses.find((w) =>
+                              w.name.toLowerCase().includes("store")
+                            )?.id || "",
                         },
                       ],
                     }));
@@ -1175,9 +1200,57 @@ const BOMMaster = () => {
                 <button
                   className="btn btn-outline-success text-8"
                   onClick={() => {
-                    const rowData = filteredBoms.filter((row) =>
+                    // Prepare data for Excel export with better formatting
+                    const rowData = [];
+
+                    // Filter selected BOMs
+                    const selectedBOMData = filteredBoms.filter((row) =>
                       selectedBoms.includes(row.id)
                     );
+
+                    // Process each BOM
+                    selectedBOMData.forEach((bom) => {
+                      // Add BOM header row
+                      rowData.push({
+                        "BOM Code": bom.code,
+                        "BOM Name": bom.name,
+                        Status: bom.status,
+                        "Item Name": "",
+                        "Item Code": "",
+                        UOM: "",
+                        Quantity: "",
+                        Warehouse: "",
+                      });
+
+                      // Add item rows
+                      if (bom.items && bom.items.length > 0) {
+                        bom.items.forEach((item) => {
+                          rowData.push({
+                            "BOM Code": bom.code,
+                            "BOM Name": "",
+                            Status: "",
+                            "Item Name": item.itemName,
+                            "Item Code": item.itemCode,
+                            UOM: item.uom,
+                            Quantity: item.quantity,
+                            Warehouse: item.warehouseName,
+                          });
+                        });
+                      }
+
+                      // Add a blank row between BOMs for better readability
+                      rowData.push({
+                        "BOM Code": "",
+                        "BOM Name": "",
+                        Status: "",
+                        "Item Name": "",
+                        "Item Code": "",
+                        UOM: "",
+                        Quantity: "",
+                        Warehouse: "",
+                      });
+                    });
+
                     exportToExcel(rowData, "BOM");
                   }}
                 >
@@ -1193,14 +1266,14 @@ const BOMMaster = () => {
                 </button>
 
                 <button
-                  className="btn-action btn-danger"
+                  className="btn btn-outline-danger text-8"
                   onClick={() => {
                     setConfirmType("multi");
                     handleShowConfirm("multi");
                   }}
                   disabled={selectedBoms.length === 0}
                 >
-                  <i className="fas fa-trash"></i>
+                  <i className="fas fa-trash me-2"></i>
                   Delete Selected
                 </button>
               </div>
@@ -1234,63 +1307,69 @@ const BOMMaster = () => {
                   </td>
                 </tr>
               ) : (
-                filteredBoms.map((bom) => (
-                  <tr key={bom.id}>
-                    <td className="checkbox-cell ps-4">
-                      <input
-                        type="checkbox"
-                        checked={selectedBoms.includes(bom.id)}
-                        onChange={() => handleBomCheckboxChange(bom.id)}
-                      />
-                    </td>
-                    <td className="ps-4">
-                      <div>
-                        <span>{bom.code}</span>
-                      </div>
-                    </td>
-                    <td className="ps-4">
-                      <div>
-                        <span>{bom.name}</span>
-                      </div>
-                    </td>
-                    <td className="ps-4">
-                      <span className={`badge status ${bom.status}`}>
-                        {bom.status}
-                      </span>
-                    </td>
-                    <td className="actions ps-3">
-                      <button
-                        className="btn-icon btn-primary"
-                        title="View Details"
-                        onClick={(e) => handleViewDetails(bom, e)}
-                      >
-                        <i className="fas fa-eye"></i>
-                      </button>
-                      {ability.can("edit", "BOM Master") && (
+                // Get the current page's records
+                filteredBoms
+                  .slice(
+                    (pagination.currentPage - 1) * pagination.itemsPerPage,
+                    pagination.currentPage * pagination.itemsPerPage
+                  )
+                  .map((bom) => (
+                    <tr key={bom.id}>
+                      <td className="checkbox-cell ps-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedBoms.includes(bom.id)}
+                          onChange={() => handleBomCheckboxChange(bom.id)}
+                        />
+                      </td>
+                      <td className="ps-4">
+                        <div>
+                          <span>{bom.code}</span>
+                        </div>
+                      </td>
+                      <td className="ps-4">
+                        <div>
+                          <span>{bom.name}</span>
+                        </div>
+                      </td>
+                      <td className="ps-4">
+                        <span className={`badge status ${bom.status}`}>
+                          {bom.status}
+                        </span>
+                      </td>
+                      <td className="actions ps-3">
                         <button
-                          className="btn-icon btn-success"
-                          title="Edit"
-                          onClick={(e) => handleEditDetails(bom, e)}
+                          className="btn-icon view"
+                          title="View Details"
+                          onClick={(e) => handleViewDetails(bom, e)}
                         >
-                          <i className="fas fa-edit"></i>
+                          <i className="fas fa-eye"></i>
                         </button>
-                      )}
-                      {ability.can("edit", "BOM Master") && (
-                        <button
-                          className="btn-icon btn-danger"
-                          title="Delete"
-                          onClick={() => {
-                            setBomIdState(bom.id);
-                            setConfirmType("single");
-                            handleShowConfirm("single");
-                          }}
-                        >
-                          <i className="fas fa-trash"></i>
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))
+                        {ability.can("edit", "BOM Master") && (
+                          <button
+                            className="btn-icon edit"
+                            title="Edit"
+                            onClick={(e) => handleEditDetails(bom, e)}
+                          >
+                            <i className="fas fa-edit"></i>
+                          </button>
+                        )}
+                        {ability.can("edit", "BOM Master") && (
+                          <button
+                            className="btn-icon delete"
+                            title="Delete"
+                            onClick={() => {
+                              setBomIdState(bom.id);
+                              setConfirmType("single");
+                              handleShowConfirm("single");
+                            }}
+                          >
+                            <i className="fas fa-trash"></i>
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))
               )}
             </tbody>
           </table>
@@ -1642,25 +1721,38 @@ const BOMMaster = () => {
                                     <div className="field-wrapper">
                                       <div className="position-relative w-100">
                                         <i className="fas fa-cogs position-absolute z-0 input-icon"></i>
-                                        <select
-                                          className="form-control text-font w-100 ps-5"
-                                          required
-                                          value={item.itemId}
-                                          onChange={(e) =>
+                                        <Select
+                                          className="w-100 text-font ps-5"
+                                          classNamePrefix="react-select"
+                                          placeholder="Select Item"
+                                          isSearchable
+                                          options={items.map((i) => ({
+                                            value: i.id,
+                                            label: `${i.name} (${i.code})`,
+                                            code: i.code,
+                                            uom: i.uom,
+                                          }))}
+                                          value={
+                                            items
+                                              .map((i) => ({
+                                                value: i.id,
+                                                label: `${i.name} (${i.code})`,
+                                                code: i.code,
+                                                uom: i.uom,
+                                              }))
+                                              .find(
+                                                (opt) =>
+                                                  opt.value === item.itemId
+                                              ) || null
+                                          }
+                                          onChange={(selected) =>
                                             handleEditItemChange(
                                               index,
                                               "item",
-                                              e.target.value
+                                              selected ? selected.value : ""
                                             )
                                           }
-                                        >
-                                          <option value="">Select Item</option>
-                                          {items.map((i) => (
-                                            <option key={i.id} value={i.id}>
-                                              {i.name} ({i.code})
-                                            </option>
-                                          ))}
-                                        </select>
+                                        />
                                       </div>
                                     </div>
                                   </td>
@@ -1710,21 +1802,21 @@ const BOMMaster = () => {
                                         <select
                                           className="form-control text-font w-100 ps-5"
                                           required
-                                          value={item.warehouseId || ""}
-                                          onChange={(e) =>
-                                            handleEditItemChange(
-                                              index,
-                                              "warehouse",
-                                              e.target.value
-                                            )
+                                          value={
+                                            warehouses.find((w) =>
+                                              w.name
+                                                .toLowerCase()
+                                                .includes("store")
+                                            )?.id || ""
                                           }
+                                          disabled
                                         >
                                           <option value="">
                                             Select Warehouse
                                           </option>
                                           {warehouses.map((w) => (
                                             <option key={w.id} value={w.id}>
-                                              {w.name} ({w.code})
+                                              {w.name}
                                             </option>
                                           ))}
                                         </select>
@@ -1735,7 +1827,7 @@ const BOMMaster = () => {
                                     <div className="field-wrapper">
                                       <button
                                         type="button"
-                                        className="btn-icon btn-danger ms-2"
+                                        className="btn-icon delete ms-2"
                                         title="Remove Item"
                                         onClick={() =>
                                           handleRemoveItemFromEdit(index)

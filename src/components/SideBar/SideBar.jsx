@@ -28,6 +28,12 @@ import Users from "../Users/Users";
 import ApproveItemsQuantity from "../Forms/ApproveItemsQuantity/ApproveItemsQuantity";
 import { AbilityContext } from "../../utils/AbilityContext";
 import StockAdjustment from "../Forms/StockAdjustment/StockAdjustment";
+import OrderPlanning from "../OrderPlanning/OrderPlanning";
+import VendorRating from "../VendorRating/VendorRating";
+import LineMonitoring from "../LineMonitoring/LineMonitoring";
+import ProductionPunch from "../Forms/ProductionPunch/ProductionPunch";
+import StoreReport from "../Reports/StoreReport/StoreReport";
+import LineReport from "../Reports/LineReport/LineReport";
 
 const SideBar = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -40,6 +46,7 @@ const SideBar = () => {
     setPermissions,
     setIsAuthenticated,
     setIsToken,
+    role,
   } = useContext(AppContext);
 
   // Floating submenu state
@@ -228,6 +235,20 @@ const SideBar = () => {
           path: "Reports / Inventory Audit Report",
           icon: "fas fa-chart-area",
         },
+        {
+          label: "Store Report",
+          compName: "StoreReport",
+          newPath: "store-report",
+          path: "Reports / Store Report",
+          icon: "fas fa-store",
+        },
+        {
+          label: "Line Report",
+          compName: "LineReport",
+          newPath: "line-report",
+          path: "Reports / Line Report",
+          icon: "fas fa-industry",
+        },
         // {
         //   label: "Transaction Report",
         //   compName: "TransactionReport",
@@ -334,8 +355,8 @@ const SideBar = () => {
       setRightSideComponent(<ProductionFloorReceipt />);
     name === "ProductionReceipt" &&
       setRightSideComponent(<ProductionReceipt />);
-    name === "ProductionMaterialUsage" &&
-      setRightSideComponent(<ProductionMaterialUsage />);
+    // name === "ProductionMaterialUsage" &&
+    //   setRightSideComponent(<ProductionMaterialUsage />);
     name === "WIPReturn" && setRightSideComponent(<WIPReturn />);
     name === "Reports" &&
       permissions.some((p) => p.pageName.includes("Report") && p.canView) &&
@@ -343,6 +364,12 @@ const SideBar = () => {
     name === "Activity Logs" && setRightSideComponent(<ActivityLogs />);
     name === "My Approvals" && setRightSideComponent(<ApproveItemsQuantity />);
     name === "Stock Adjustment" && setRightSideComponent(<StockAdjustment />);
+    name === "Order Planning" && setRightSideComponent(<OrderPlanning />);
+    name === "Vendor Rating" && setRightSideComponent(<VendorRating />);
+    name === "Line Monitoring" && setRightSideComponent(<LineMonitoring />);
+    name === "Production Punch" && setRightSideComponent(<ProductionPunch />);
+    name === "StoreReport" && setRightSideComponent(<StoreReport />);
+    name === "LineReport" && setRightSideComponent(<LineReport />);
   };
 
   // RBAC
@@ -364,7 +391,7 @@ const SideBar = () => {
     const newFilteredItems = [];
 
     menuItems.forEach((item) => {
-      if (item.label === "Dashboard") {
+      if (item.label === "Control Panel") {
         if (item.label.toLowerCase().includes(lowerSearch)) {
           newFilteredItems.push(item);
         }
@@ -442,18 +469,102 @@ const SideBar = () => {
         {!isCollapsed && <p className="heading">MAIN MENU</p>}
         <Link
           to="/dashboard"
-          className="home-link mb-0 py-0 mt-2 text-decoration-none menuListItem align-items-center"
-          style={{ color: "#8D91AD", textDecoration: "none" }}
+          className="home-link mb-0 py-0 mt-3"
+          style={{ color: "#8D91AD" }}
           onClick={() => {
             setIsActiveComponent("dashboard");
             setLabelName("Dashboard");
           }}
-          onMouseEnter={(e) => (e.target.style.color = "#8D91AD")}
-          onMouseLeave={(e) => (e.target.style.color = "#8D91AD")}
         >
           <i className="fa-solid fa-house"></i>
           {!isCollapsed && "Dashboard"}
         </Link>
+        <Link
+          to="/control-panel"
+          className="home-link mb-0 py-0 mt-3"
+          style={{ color: "#8D91AD" }}
+          onClick={() => {
+            setIsActiveComponent("control-panel");
+            setLabelName("Control Panel");
+          }}
+        >
+          <i className="fas fa-tachometer-alt"></i>
+          {!isCollapsed && "Control Panel"}
+        </Link>
+
+        {role === "owner" && (
+          <>
+            <Link
+              to="/order-planning"
+              className="home-link mb-0 py-0 mt-3"
+              style={{ color: "#8D91AD" }}
+              onClick={() => {
+                setIsActiveComponent("order-planning");
+                setLabelName("Order Planning");
+                handleRightSideComponentName("Order Planning");
+              }}
+            >
+              <i className="fa-solid fa-calendar-check"></i>
+              {!isCollapsed && "Order Planning"}
+            </Link>
+
+            <Link
+              to="/vendor-rating"
+              className="home-link mb-0 py-0 mt-3"
+              style={{ color: "#8D91AD" }}
+              onClick={() => {
+                setIsActiveComponent("vendor-rating");
+                setLabelName("Vendor Rating");
+                handleRightSideComponentName("Vendor Rating");
+              }}
+            >
+              <i className="fa-solid fa-star"></i>
+              {!isCollapsed && "Vendor Rating"}
+            </Link>
+
+            <Link
+              to="/line-monitoring"
+              className="home-link mb-0 py-0 mt-3"
+              style={{ color: "#8D91AD" }}
+              onClick={() => {
+                setIsActiveComponent("line-monitoring");
+                setLabelName("Line Monitoring");
+                handleRightSideComponentName("Line Monitoring");
+              }}
+            >
+              <i className="fa-solid fa-industry"></i>
+              {!isCollapsed && "Line Monitoring"}
+            </Link>
+          </>
+        )}
+
+        <Link
+          to="/production-punch"
+          className="home-link mb-0 py-0 mt-3"
+          style={{ color: "#8D91AD" }}
+          onClick={() => {
+            setIsActiveComponent("production-punch");
+            setLabelName("Production Punch");
+            handleRightSideComponentName("Production Punch");
+          }}
+        >
+          <i className="fa-solid fa-clipboard-list"></i>
+          {!isCollapsed && "Production Punch"}
+        </Link>
+
+        {/* <Link
+          to="/store-report"
+          className="home-link mb-0 py-0 my-3"
+          style={{ color: "#8D91AD" }}
+          onClick={() => {
+            setIsActiveComponent("store-report");
+            setLabelName("Store Report");
+            handleRightSideComponentName("StoreReport");
+          }}
+        >
+          <i className="fa-solid fa-store"></i>
+          {!isCollapsed && "Store Report"}
+        </Link> */}
 
         <ul className="nav nav-pills flex-column mb-auto mt-1">
           {filteredMenuItems

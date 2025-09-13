@@ -109,12 +109,13 @@ const LoginPage = () => {
       const tokenPayload = JSON.parse(atob(token.split(".")[1]));
       const warehouseId =
         tokenPayload.warehouseId || response.data.data.warehouseId;
-
+      console.log(warehouseId);
       // Set essential session cookies
       Cookies.set("isLoggedIn", "true", { path: "/" });
       Cookies.set("username", responseUsername, { path: "/" });
       Cookies.set("token", token, { path: "/" });
       Cookies.set("authToken", token, { path: "/" });
+      Cookies.set("warehouseId", warehouseId, { path: "/" });
       Cookies.set("warehouseId", warehouseId, { path: "/" });
       Cookies.set("permissions", JSON.stringify(permissions), {
         expires: 1,
