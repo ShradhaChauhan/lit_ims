@@ -426,7 +426,7 @@ const MaterialIssueRequest = () => {
         items: formattedItems,
       };
 
-      console.log("Submitting payload:", payload);
+      console.log("Submitting payload:", JSON.stringify(payload));
 
       const response = await api.post("/api/requisitions/save", payload);
 

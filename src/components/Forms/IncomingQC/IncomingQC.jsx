@@ -6,6 +6,7 @@ import api from "../../../services/api";
 import { Modal } from "bootstrap";
 import "./IncomingQC.css";
 import _ from "lodash";
+import * as XLSX from "xlsx";
 
 const IncomingQC = () => {
   const [isShowQualityCheckForm, setIsShowQualityCheckForm] = useState(false);
@@ -146,16 +147,8 @@ const IncomingQC = () => {
   const fetchPendingQC = async () => {
     try {
       const response = await api.get("/api/receipt/pending-qc");
-      // Flatten the pending items from all transactions
-      const flattenedItems = response.data.data.reduce((acc, transaction) => {
-        return acc.concat(
-          transaction.pendingItems.map((item) => ({
-            ...item,
-            transactionNumber: transaction.transactionNumber,
-          }))
-        );
-      }, []);
-      setIqc(flattenedItems);
+      // Store the raw response data
+      setIqc(response.data.data);
     } catch (error) {
       toast.error("Error in fetching pending IQC");
       console.error("Error fetching pending IQC:", error);
@@ -782,8 +775,42 @@ const IncomingQC = () => {
     }
   };
 
-  const groupedData = _.groupBy(
-    iqc.filter((i) => {
+  // Process and group the IQC data
+  const groupedData = {};
+  iqc.forEach((transaction) => {
+    const filteredItems = transaction.pendingItems.filter((item) => {
+      if (!searchQuery) return true;
+      const search = searchQuery.toLowerCase();
+      return (
+        item.itemName?.toLowerCase().includes(search) ||
+        item.itemCode?.toLowerCase().includes(search) ||
+        item.batchNumber?.toLowerCase().includes(search) ||
+        item.vendorName?.toLowerCase().includes(search) ||
+        transaction.transactionNumber?.toLowerCase().includes(search) ||
+        transaction.invoiceNumber?.toLowerCase().includes(search)
+      );
+    });
+    if (filteredItems.length > 0) {
+      groupedData[transaction.transactionNumber] = filteredItems.map(
+        (item) => ({
+          ...item,
+          transactionNumber: transaction.transactionNumber,
+          invoiceNumber: transaction.invoiceNumber,
+          entryDate: transaction.entryDate,
+        })
+      );
+    }
+  });
+
+  // Function to export data to Excel
+  const handleExportToExcel = () => {
+    if (iqc.length === 0) {
+      toast.warning("No data available to export!");
+      return;
+    }
+
+    // Format data for export based on filtered data
+    const filteredData = iqc.filter((i) => {
       const search = searchQuery.toLowerCase();
       return (
         i.itemName?.toLowerCase().includes(search) ||
@@ -791,9 +818,29 @@ const IncomingQC = () => {
         i.batchNumber?.toLowerCase().includes(search) ||
         i.vendorName?.toLowerCase().includes(search)
       );
-    }),
-    "transactionNumber"
-  );
+    });
+
+    // Format data for export
+    const exportData = filteredData.map((item) => ({
+      "TR No": item.transactionNumber || "-",
+      "Item Code": item.itemCode || "-",
+      "Item Name": item.itemName || "-",
+      "Batch No": item.batchNumber || "-",
+      Quantity: item.quantity || "0",
+      Status: item.status || "-",
+      Vendor: item.vendorName || "-",
+      Date: item.date ? new Date(item.date).toLocaleString() : "-",
+    }));
+
+    // Create worksheet
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Incoming QC");
+
+    // Generate and save file
+    XLSX.writeFile(wb, "Incoming_QC_Data.xlsx");
+    toast.success("Successfully exported to Excel");
+  };
 
   // Batch details button change
   const [batchStatuses, setBatchStatuses] = useState({}); // { batchId: {status, warehouseId} }
@@ -1029,13 +1076,13 @@ const IncomingQC = () => {
       </nav>
 
       {/* Form Header Section */}
-      {/* <div className="table-form-container mx-2 mb-4">
+      <div className="table-form-container mx-2 mb-4">
         <div className="form-header">
           <h2>
             <i className="fas fa-qrcode"></i> Scan Batch
           </h2>
         </div>
-        
+        {/* Form Fields */}
         <form autoComplete="off" className="padding-2">
           <div className="form-grid pt-0 m-0">
             <div className="row form-style">
@@ -1061,7 +1108,7 @@ const IncomingQC = () => {
             </div>
           </div>
         </form>
-      </div> */}
+      </div>
 
       {/* Quality Check Form */}
       {isShowQualityCheckForm && (
@@ -1480,19 +1527,22 @@ const IncomingQC = () => {
               </label>
             </div>
             <div className="bulk-actions">
-              <button className="btn-action">
-                <i className="fas fa-file-export"></i>
-                Export Selected
+              <button
+                className="btn btn-outline-success text-8"
+                onClick={handleExportToExcel}
+              >
+                <i className="fas fa-file-export me-1"></i>
+                Export Excel
               </button>
-              <button className="btn-action">
-                <i className="fas fa-clock-rotate-left"></i>
+              <button className="btn btn-outline-secondary text-8">
+                <i className="fas fa-clock-rotate-left me-1"></i>
                 View Recent
               </button>
               <button
-                className="btn-action btn-danger"
+                className="btn btn-outline-danger text-8"
                 onClick={handleShowConfirm}
               >
-                <i className="fas fa-trash"></i> Delete Selected
+                <i className="fas fa-trash me-1"></i> Delete Selected
               </button>
             </div>
           </div>
@@ -1501,6 +1551,8 @@ const IncomingQC = () => {
               <thead>
                 <tr>
                   <th>TrNo.</th>
+                  <th>Invoice No.</th>
+                  <th>Entry Date</th>
                   <th>Total Items</th>
                   <th>Batch Quantity</th>
                   <th>Actions</th>
@@ -1508,6 +1560,20 @@ const IncomingQC = () => {
               </thead>
               <tbody id="transactionsTable" className="accordion">
                 {Object.entries(groupedData).map(([trNo, items], index) => {
+                  const transaction = Object.values(iqc).find(
+                    (item) => item.transactionNumber === trNo
+                  );
+                  const invoiceNumber = transaction?.invoiceNumber || "-";
+                  const entryDate = transaction?.entryDate
+                    ? new Date(transaction.entryDate).toLocaleString("en-GB", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: true,
+                      })
+                    : "-";
                   const collapseId = `collapse-${index}`;
                   const totalQty = items.reduce(
                     (total, item) => total + Number(item.quantity || 0),
@@ -1526,6 +1592,8 @@ const IncomingQC = () => {
                         <td className="px-3 py-2 text-decoration-none text-reset">
                           {trNo}
                         </td>
+                        <td>{invoiceNumber}</td>
+                        <td>{entryDate}</td>
                         <td>{items.length}</td>
                         <td>{totalQty}</td>
                         <td className="actions">
@@ -1555,7 +1623,7 @@ const IncomingQC = () => {
 
                       {/* Accordion Content Row */}
                       <tr className="p-0">
-                        <td colSpan={4} className="p-0 border-0">
+                        <td colSpan={6} className="p-0 border-0">
                           <div
                             id={collapseId}
                             className="accordion-collapse collapse"
@@ -1568,21 +1636,15 @@ const IncomingQC = () => {
                                   <th>Batch No</th>
                                   <th>Vendor Name</th>
                                   <th>Quantity</th>
-                                  <th>Received Date</th>
+                                  <th>Created At</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {items.map((item) => (
                                   <tr key={item.id}>
-                                    <td className="px-3 py-2 ">{`(${item.itemCode}) ${item.itemName}`}</td>
+                                    <td className="px-3 py-2">{`(${item.itemCode}) ${item.itemName}`}</td>
                                     <td>{item.batchNumber}</td>
-                                    <td>
-                                      {" "}
-                                      {"(" +
-                                        item.vendorCode +
-                                        ") " +
-                                        item.vendorName}
-                                    </td>
+                                    <td>{item.vendorName}</td>
                                     <td>{item.quantity}</td>
                                     <td>{item.createdAt}</td>
                                   </tr>
@@ -1683,11 +1745,6 @@ const IncomingQC = () => {
                           handleSearchHoldBatchNo(pfqc.items[0].batchNumber);
                           setTrno(pfqc.trNumber);
                           setIsShowQualityCheckForm(true);
-                          setTimeout(() => {
-                            qcRef.current?.scrollIntoView({
-                              behavior: "smooth",
-                            });
-                          }, 100);
                         }}
                       >
                         <i className="fa-solid fa-clipboard-check me-1"></i>{" "}
@@ -1744,6 +1801,7 @@ const IncomingQC = () => {
               <thead>
                 <tr>
                   <th>Item Name</th>
+                  <th>Item Code</th>
                   <th>Batch No</th>
                   <th>Vendor Name</th>
                   <th>Quantity</th>
@@ -1755,9 +1813,10 @@ const IncomingQC = () => {
               <tbody className="text-break">
                 {currentCompletedItems.map((pfqc) => (
                   <tr key={pfqc.id}>
-                    <td>{"(" + pfqc.itemCode + ") " + pfqc.itemName}</td>
+                    <td>{pfqc.itemName}</td>
+                    <td>{pfqc.itemCode}</td>
                     <td>{pfqc.batchNumber}</td>
-                    <td>{"(" + pfqc.vendorCode + ") " + pfqc.vendorName}</td>
+                    <td>{pfqc.vendorName}</td>
                     <td>{pfqc.quantity}</td>
                     <td>{pfqc.createdAt}</td>
                     <td>

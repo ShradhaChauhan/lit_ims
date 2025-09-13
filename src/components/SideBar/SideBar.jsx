@@ -442,7 +442,7 @@ const SideBar = () => {
         {!isCollapsed && <p className="heading">MAIN MENU</p>}
         <Link
           to="/dashboard"
-          className="home-link mb-0 py-0 mt-2 text-decoration-none menuListItem"
+          className="home-link mb-0 py-0 mt-2 text-decoration-none menuListItem align-items-center"
           style={{ color: "#8D91AD", textDecoration: "none" }}
           onClick={() => {
             setIsActiveComponent("dashboard");

@@ -175,9 +175,9 @@ const MaterialIncoming = () => {
     // Validate numberOfBatches for manual mode
     if (mode === "manual") {
       const numberOfBatches = parseInt(data.numberOfBatches);
-      if (!numberOfBatches || numberOfBatches < 1 || numberOfBatches > 100) {
+      if (!numberOfBatches || numberOfBatches < 1 || numberOfBatches > 500) {
         errors.numberOfBatches =
-          "Number of batch numbers must be between 1 and 100";
+          "Number of batch numbers must be between 1 and 500";
       }
     }
 
@@ -288,8 +288,8 @@ const MaterialIncoming = () => {
         }
 
         const numberOfBatches = parseInt(formData.numberOfBatches) || 1;
-        if (numberOfBatches < 1 || numberOfBatches > 100) {
-          toast.error("Number of batch numbers must be between 1 and 100");
+        if (numberOfBatches < 1 || numberOfBatches > 500) {
+          toast.error("Number of batch numbers must be between 1 and 500");
           setLoading(false);
           return;
         }
