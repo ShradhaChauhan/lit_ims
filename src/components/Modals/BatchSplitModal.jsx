@@ -35,67 +35,16 @@ const showUniqueToast = (message, type = 'error') => {
 const BatchSplitModal = ({ show, onHide, selectedProduct, formData, transactionNumber, onSave }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [batchSplits, setBatchSplits] = useState({});
+  const [generateBatchNo, setGenerateBatchNo] = useState(0);
 
-  // Initialize first row with full quantity when modal opens
+  // Reset splits when modal opens
   React.useEffect(() => {
-    if (show && selectedProduct?.code && formData?.producedQty && !batchSplits[selectedProduct.code]) {
-      setBatchSplits({
-        [selectedProduct.code]: [{
-          batchNo: "P123456" + selectedProduct.code + "250912000100000002",
-          quantity: parseFloat(formData.producedQty)
-        }]
-      });
+    if (show) {
+      setBatchSplits({});
+      setGenerateBatchNo(0);
     }
-  }, [show, selectedProduct?.code, formData?.producedQty]);
+  }, [show]);
 
-  // Handle adding a new batch split
-  const handleAddBatchSplit = (isFirstAdd = false) => {
-    if (!selectedProduct?.code) return;
-    
-    const mainBatchNo = "P123456" + selectedProduct.code + "250912000100000002";
-    
-    setBatchSplits((prev) => {
-      const currentSplits = prev[selectedProduct.code] || [];
-      
-      // Check if all existing rows have quantities filled
-      const hasEmptyQuantities = currentSplits.some(split => 
-        !split.quantity || parseFloat(split.quantity) === 0
-      );
-      
-      if (!isFirstAdd && hasEmptyQuantities) {
-        showUniqueToast("Please fill quantity in existing rows before adding new ones");
-        return prev;
-      }
-
-      if (isFirstAdd) {
-        return {
-          ...prev,
-          [selectedProduct.code]: [
-            {
-              batchNo: mainBatchNo,
-              quantity: 0
-            }
-          ]
-        };
-      } else {
-        // Get the last row's batch number and increment its last digit
-        const lastSplit = currentSplits[currentSplits.length - 1];
-        const lastDigit = parseInt(lastSplit.batchNo.slice(-1));
-        const newBatchNo = lastSplit.batchNo.slice(0, -1) + (lastDigit + 1).toString();
-
-        return {
-          ...prev,
-          [selectedProduct.code]: [
-            ...currentSplits,
-            {
-              batchNo: newBatchNo,
-              quantity: 0
-            }
-          ]
-        };
-      }
-    });
-  };
 
   // Handle quantity change
   const handleQuantityChange = (index, value) => {
@@ -227,22 +176,58 @@ const BatchSplitModal = ({ show, onHide, selectedProduct, formData, transactionN
                   <div>
                     <strong>Total Produced Quantity:</strong> {formData.producedQty || "0"}
                   </div>
+                  <div>
+                    <strong>Generate Batch No:</strong>
+                    <input 
+                      type="number" 
+                      value={generateBatchNo} 
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value) || 0;
+                        const totalQuantity = parseFloat(formData.producedQty) || 0;
+                        
+                        // Validate the input value
+                        if (value < 0) {
+                          showUniqueToast('Number of batches cannot be negative');
+                          return;
+                        }
+                        
+                        if (value > totalQuantity) {
+                          showUniqueToast(`Number of batches cannot exceed total quantity (${totalQuantity})`);
+                          return;
+                        }
+                        
+                        setGenerateBatchNo(value);
+                        
+                        if (!selectedProduct?.code) return;
+                        
+                        // Generate new batch splits based on the value
+                        const newSplits = Array.from({ length: value }, () => ({
+                          batchNo: '',
+                          quantity: 0
+                        }));
+                        
+                        setBatchSplits(prev => ({
+                          ...prev,
+                          [selectedProduct.code]: newSplits
+                        }));
+                      }}
+                      min="0"
+                      className="form-control text-8" />
+                  </div>
                 </div>
               </div>
               <Table striped bordered hover>
                 <thead>
                   <tr className="text-8">
-                    <th>Batch No</th>
+                  <th>Quantity</th>
                     <th>Item Name</th>
-                    <th>Quantity</th>
+                    <th>Batch No</th>
                   </tr>
                 </thead>
                 <tbody className="text-8 text-break">
                   {filteredSplits.map((split, index) => (
                     <tr key={split.batchNo}>
-                      <td>{split.batchNo}</td>
-                      <td>{formData.product?.label || "-"}</td>
-                      <td className="d-flex align-items-center gap-2">
+                        <td className="d-flex align-items-center gap-2">
                         <Form.Control
                           type="number"
                           size="sm"
@@ -251,7 +236,25 @@ const BatchSplitModal = ({ show, onHide, selectedProduct, formData, transactionN
                           min="0"
                           step="0.001"
                         />
-                        <Button
+                       
+                      </td>
+                      <td>{formData.product?.label || "-"}</td>                  
+                      
+                      <td  className="d-flex align-items-center gap-2">
+                        <Form.Control
+                          type="text"
+                          size="sm"
+                          value={split.batchNo}
+                          onChange={(e) => {
+                            setBatchSplits(prev => ({
+                              ...prev,
+                              [selectedProduct.code]: prev[selectedProduct.code].map((s, i) =>
+                                i === index ? { ...s, batchNo: e.target.value } : s
+                              )
+                            }));
+                          }}
+                        />
+                         <Button
                           variant="outline-danger"
                           size="sm"
                           onClick={() => {
@@ -289,17 +292,6 @@ const BatchSplitModal = ({ show, onHide, selectedProduct, formData, transactionN
                   ))}
                 </tbody>
               </Table>
-              <div className="d-flex justify-content-start mt-3">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="text-8"
-                  onClick={() => handleAddBatchSplit(!batchSplits[selectedProduct.code])}
-                >
-                  <i className="fas fa-plus me-2" />
-                  Add
-                </Button>
-              </div>
             </div>
           ) : (
             <div className="alert alert-info">
